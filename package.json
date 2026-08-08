@@ -29,6 +29,10 @@
       "types": "./src/controls/vue/Chip.vue",
       "import": "./src/controls/vue/Chip.vue"
     },
+    "./controls/filter-rail": {
+      "types": "./src/controls/vue/FilterRail.vue",
+      "import": "./src/controls/vue/FilterRail.vue"
+    },
     "./controls/tool": {
       "types": "./src/controls/vue/Tool.vue",
       "import": "./src/controls/vue/Tool.vue"

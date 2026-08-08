@@ -88,13 +88,53 @@ const gClicked = ref<string>('—')
 function onNodeClick(id: string) {
   gClicked.value = id
 }
+
+// ── FilterRail demo (controls/filter-rail) ──
+// Grouping + selection are data; the rail renders one Chip row per group.
+import FilterRail from '@/controls/vue/FilterRail.vue'
+import type { FilterGroup } from '@/controls/core/types'
+const railGroups = ref<FilterGroup[]>([
+  {
+    key: 'type',
+    label: 'Type',
+    selected: new Set<string>(),
+    options: [
+      { value: 'fact', label: 'Fact', count: 6, dotColor: 'var(--aether-cool)' },
+      { value: 'idea', label: 'Idea', count: 3, dotColor: 'var(--aether-warm)' },
+      { value: 'risk', label: 'Risk', count: 2 },
+    ],
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    selected: new Set<string>(),
+    options: [
+      { value: 'open', label: 'Open', count: 4 },
+      { value: 'done', label: 'Done', count: 7 },
+    ],
+  },
+])
+const railHidden = ref(0)
+function onRailToggle(groupKey: string, value: string) {
+  const g = railGroups.value.find((x) => x.key === groupKey)
+  if (!g) return
+  const next = new Set(g.selected)
+  if (next.has(value)) next.delete(value)
+  else next.add(value)
+  g.selected = next
+  railHidden.value = railGroups.value.reduce((n, gg) => n + gg.selected.size, 0)
+}
+function onRailClear() {
+  railGroups.value.forEach((g) => (g.selected = new Set()))
+  railHidden.value = 0
+}
 </script>
 
 <template>
   <div class="gallery">
     <header class="g-head">
       <h1>@aether/ui-kit</h1>
-      <p>Neutral, shared components — framework-free core, thin Vue wrapper. {{ 5 }} components.</p>
+      <p>Neutral, shared components — framework-free core, thin Vue wrapper. {{ 6 }} components.</p>
     </header>
 
     <section class="g-section">
@@ -165,6 +205,26 @@ function onNodeClick(id: string) {
       </div>
       <code class="g-state"
         >clicked = {{ gClicked }} · nodes = {{ gNodes.length }} · edges = {{ gEdges.length }}</code
+      >
+    </section>
+
+    <section class="g-section">
+      <h2>FilterRail <span>controls/filter-rail</span></h2>
+      <p class="g-note">
+        Labelled rail of toggle-chip groups + clear + hidden-count. Grouping and selection are data
+        (FilterGroup[]); it wraps the shared <code>Chip</code>. Domain semantics (what a group
+        means, dot color) stay with the caller.
+      </p>
+      <div class="g-row">
+        <FilterRail
+          :groups="railGroups"
+          :hidden-count="railHidden"
+          @toggle="onRailToggle"
+          @clear="onRailClear"
+        />
+      </div>
+      <code class="g-state"
+        >active = {{ [...railGroups.flatMap((g) => [...g.selected])].join(', ') || '∅' }}</code
       >
     </section>
   </div>

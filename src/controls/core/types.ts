@@ -34,3 +34,13 @@ export interface ToolProps {
   hot?: boolean
   disabled?: boolean
 }
+
+// A named group of toggles inside a FilterRail. `options` are ChipOption rows;
+// `selected` is the active Set for this group. Grouping + selection are data —
+// the rail renders one Chip row per group and wires toggle/clear mechanically.
+export interface FilterGroup<V extends string = string> {
+  key: string
+  label: string
+  options: ChipOption<V>[]
+  selected: Set<V>
+}

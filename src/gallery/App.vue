@@ -37,7 +37,8 @@ const chipOpts: ChipOption[] = [
 ]
 function toggleChip(v: string) {
   const next = new Set(active.value)
-  next.has(v) ? next.delete(v) : next.add(v)
+  if (next.has(v)) next.delete(v)
+  else next.add(v)
   active.value = next
 }
 
@@ -131,7 +132,7 @@ function onNodeClick(id: string) {
       <h2>PropertyEditor <span>property-editor</span></h2>
       <p class="g-note">Field-driven form: text, textarea, enum (buttons), boolean toggle.</p>
       <div class="g-row g-pe">
-        <PropertyEditor :fields="peFields" :model-value="peValues" @update:modelValue="peOut = $event" />
+        <PropertyEditor :fields="peFields" :model-value="peValues" @update:model-value="peOut = $event" />
       </div>
       <code class="g-state">values = {{ JSON.stringify(peOut) }}</code>
     </section>

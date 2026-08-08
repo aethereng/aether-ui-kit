@@ -5,6 +5,7 @@ import Chip from '@/controls/vue/Chip.vue'
 import Tool from '@/controls/vue/Tool.vue'
 import PropertyEditor from '@/property-editor/vue/PropertyEditor.vue'
 import Graph2D from '@/viz/vue/Graph2D.vue'
+import Transport from '@/controls/vue/Transport.vue'
 import type { GNode, GEdge } from '@/viz/core'
 import type { SegOption, ChipOption } from '@/controls/core/types'
 import type { FieldDescriptor, FieldValues as PEValues } from '@/property-editor/core/types'
@@ -128,13 +129,59 @@ function onRailClear() {
   railGroups.value.forEach((g) => (g.selected = new Set()))
   railHidden.value = 0
 }
+
+// ── Transport demo (controls/transport) ──
+// Controlled: this demo owns the clock; Transport only renders + emits.
+const tCur = ref(0)
+const tDur = ref(6)
+const tPlaying = ref(false)
+const tSpeed = ref(1)
+let tRaf = 0
+let tLast = 0
+function tStep(ts: number) {
+  if (!tPlaying.value) return
+  const dt = (ts - tLast) / 1000
+  tLast = ts
+  tCur.value += dt * tSpeed.value
+  if (tCur.value >= tDur.value) {
+    tCur.value = tDur.value
+    tPlaying.value = false
+    return
+  }
+  tRaf = requestAnimationFrame(tStep)
+}
+function tToggle() {
+  if (tPlaying.value) {
+    tPlaying.value = false
+    return
+  }
+  if (tCur.value >= tDur.value) tCur.value = 0
+  tPlaying.value = true
+  tLast = performance.now()
+  if (tRaf) cancelAnimationFrame(tRaf)
+  tRaf = requestAnimationFrame(tStep)
+}
+function tSeek(t: number) {
+  tCur.value = Math.max(0, Math.min(t, tDur.value))
+}
+function tSetSpeed(s: number) {
+  tSpeed.value = s
+}
+let tWasPlaying = false
+function tScrubStart() {
+  tWasPlaying = tPlaying.value
+  tPlaying.value = false
+}
+function tScrubEnd() {
+  if (tWasPlaying) tToggle()
+}
 </script>
 
 <template>
   <div class="gallery">
     <header class="g-head">
       <h1>@aether/ui-kit</h1>
-      <p>Neutral, shared components — framework-free core, thin Vue wrapper. {{ 6 }} components.</p>
+      <p>Neutral, shared components — framework-free core, thin Vue wrapper. {{ 7 }} components.</p>
     </header>
 
     <section class="g-section">
@@ -225,6 +272,33 @@ function onRailClear() {
       </div>
       <code class="g-state"
         >active = {{ [...railGroups.flatMap((g) => [...g.selected])].join(', ') || '∅' }}</code
+      >
+    </section>
+
+    <section class="g-section">
+      <h2>Transport <span>controls/transport</span></h2>
+      <p class="g-note">
+        Neutral, controlled playback transport: play/pause/replay, scrub (one clock, writes seek),
+        speed presets, <code>pos / duration</code> readout. Pauses on scrub-start, resumes on
+        scrub-end. Replaces the two duplicated Vuetify transports with one shared component. The
+        demo below owns the clock; Transport only renders + emits.
+      </p>
+      <div class="g-row">
+        <Transport
+          :current="tCur"
+          :duration="tDur"
+          :playing="tPlaying"
+          :speed="tSpeed"
+          @toggle="tToggle"
+          @seek="tSeek"
+          @set-speed="tSetSpeed"
+          @scrub-start="tScrubStart"
+          @scrub-end="tScrubEnd"
+          @stop="tCur = 0"
+        />
+      </div>
+      <code class="g-state"
+        >cur = {{ tCur.toFixed(2) }}s · playing = {{ tPlaying }} · speed = {{ tSpeed }}×</code
       >
     </section>
   </div>

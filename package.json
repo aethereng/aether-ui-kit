@@ -37,6 +37,10 @@
       "types": "./src/controls/vue/Tool.vue",
       "import": "./src/controls/vue/Tool.vue"
     },
+    "./controls/transport": {
+      "types": "./src/controls/vue/Transport.vue",
+      "import": "./src/controls/vue/Transport.vue"
+    },
     "./controls/core": {
       "types": "./src/controls/core/index.ts",
       "import": "./src/controls/core/index.ts"

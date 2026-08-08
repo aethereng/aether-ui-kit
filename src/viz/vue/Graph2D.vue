@@ -19,7 +19,14 @@ const props = withDefaults(
     selection?: string | null
     neighbors?: Set<string> | null
   }>(),
-  { width: 720, height: 460, projection: 'ortho2d', running: true, selection: null, neighbors: null },
+  {
+    width: 720,
+    height: 460,
+    projection: 'ortho2d',
+    running: true,
+    selection: null,
+    neighbors: null,
+  },
 )
 
 const emit = defineEmits<{
@@ -139,13 +146,7 @@ function onNodeUp() {
 </script>
 
 <template>
-  <svg
-    ref="svgRef"
-    :viewBox="`0 0 ${W} ${H}`"
-    class="aether-graph"
-    :width="W"
-    :height="H"
-  >
+  <svg ref="svgRef" :viewBox="`0 0 ${W} ${H}`" class="aether-graph" :width="W" :height="H">
     <line
       v-for="(e, i) in edges"
       :key="'e' + i"
@@ -199,7 +200,9 @@ function onNodeUp() {
 }
 .aether-graph__label {
   fill: var(--aether-ink-soft);
-  font: 600 10px ui-monospace, monospace;
+  font:
+    600 10px ui-monospace,
+    monospace;
   text-anchor: middle;
 }
 .aether-graph__label.dim {

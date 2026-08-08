@@ -37,6 +37,14 @@
       "types": "./src/controls/core/index.ts",
       "import": "./src/controls/core/index.ts"
     },
+    "./viz/graph": {
+      "types": "./src/viz/vue/Graph2D.vue",
+      "import": "./src/viz/vue/Graph2D.vue"
+    },
+    "./viz/core": {
+      "types": "./src/viz/core/index.ts",
+      "import": "./src/viz/core/index.ts"
+    },
     "./styles": {
       "import": "./src/styles/ui-kit.css"
     }

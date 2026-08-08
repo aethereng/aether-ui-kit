@@ -4,6 +4,8 @@ import Seg from '@/controls/vue/Seg.vue'
 import Chip from '@/controls/vue/Chip.vue'
 import Tool from '@/controls/vue/Tool.vue'
 import PropertyEditor from '@/property-editor/vue/PropertyEditor.vue'
+import Graph2D from '@/viz/vue/Graph2D.vue'
+import type { GNode, GEdge } from '@/viz/core'
 import type { SegOption, ChipOption } from '@/controls/core/types'
 import type { FieldDescriptor, FieldValues as PEValues } from '@/property-editor/core/types'
 
@@ -64,13 +66,34 @@ const peFields: FieldDescriptor[] = [
 ]
 const peValues: PEValues = { title: '', body: '', kind: 'fact', live: true }
 const peOut = ref<PEValues>({ ...peValues })
+
+// ── Graph demo (viz/graph) ──
+// A small synthetic graph: two hubs with satellites. pos is seed-only; the
+// force layout fills it in. The 3rd axis (pos[2]) is ready for spatial z later.
+const palette = ['var(--aether-cool)', 'var(--aether-warm)', 'var(--aether-cool-soft)']
+const gNodes: GNode[] = Array.from({ length: 18 }, (_, i) => ({
+  id: 'n' + i,
+  pos: [(Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200, 0],
+  label: i % 5 === 0 ? 'hub' + i : undefined,
+  color: palette[i % 3],
+  r: i % 5 === 0 ? 10 : 5,
+}))
+const gEdges: GEdge[] = []
+for (let i = 1; i < gNodes.length; i++) {
+  const target = i % 5 === 0 ? i : (Math.floor(i / 5) * 5)
+  gEdges.push({ a: 'n' + target, b: 'n' + i, w: 1 })
+}
+const gClicked = ref<string>('—')
+function onNodeClick(id: string) {
+  gClicked.value = id
+}
 </script>
 
 <template>
   <div class="gallery">
     <header class="g-head">
       <h1>@aether/ui-kit</h1>
-      <p>Neutral, shared components — framework-free core, thin Vue wrapper. {{ 4 }} components.</p>
+      <p>Neutral, shared components — framework-free core, thin Vue wrapper. {{ 5 }} components.</p>
     </header>
 
     <section class="g-section">
@@ -111,6 +134,18 @@ const peOut = ref<PEValues>({ ...peValues })
         <PropertyEditor :fields="peFields" :model-value="peValues" @update:modelValue="peOut = $event" />
       </div>
       <code class="g-state">values = {{ JSON.stringify(peOut) }}</code>
+    </section>
+
+    <section class="g-section">
+      <h2>Graph2D <span>viz/graph</span></h2>
+      <p class="g-note">
+        Force-directed graph. Core is dimension-agnostic (<code>pos: number[]</code>) — axis 3 = spatial z,
+        axis 4 = construction sequence, axis 5 = discipline. SVG-2D now; a GL renderer reuses the same core later.
+      </p>
+      <div class="g-row g-graph">
+        <Graph2D :nodes="gNodes" :edges="gEdges" :width="560" :height="360" @node-click="onNodeClick" />
+      </div>
+      <code class="g-state">clicked = {{ gClicked }} · nodes = {{ gNodes.length }} · edges = {{ gEdges.length }}</code>
     </section>
   </div>
 </template>

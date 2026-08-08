@@ -1,0 +1,28 @@
+// Projection strategies: N-D position -> 2D screen space (+ hints).
+// These are pure functions; the wrapper fits world bounds into the viewport.
+import type { Projection, Vec } from './types'
+
+// Orthographic 2D: first two axes are x/y. Extra axes are ignored for position
+// (the caller maps them via projected.depth / t / d — e.g. color a node by its
+// construction-sequence value). This is the Brain Map / Launch Board view today.
+export const ortho2d: Projection = {
+  name: 'ortho2d',
+  project(pos: Vec): { x: number; y: number; depth?: number; t?: number; d?: number } {
+    return { x: pos[0] ?? 0, y: pos[1] ?? 0, depth: pos[2], t: pos[3], d: pos[4] }
+  },
+}
+
+// Isometric 3D: axes 0,1,2 -> screen via a 30° isometric transform; depth = z
+// (radius/opacity in 2D, true depth under a GL renderer). Stub for the 3D path —
+// the math is here so the core already speaks 3D; only the *drawing* differs later.
+export const iso3d: Projection = {
+  name: 'iso3d',
+  project(pos: Vec): { x: number; y: number; depth?: number; t?: number; d?: number } {
+    const x = pos[0] ?? 0
+    const y = pos[1] ?? 0
+    const z = pos[2] ?? 0
+    const sx = (x - y) * Math.cos(Math.PI / 6)
+    const sy = (x + y) * Math.sin(Math.PI / 6) - z
+    return { x: sx, y: sy, depth: z, t: pos[3], d: pos[4] }
+  },
+}

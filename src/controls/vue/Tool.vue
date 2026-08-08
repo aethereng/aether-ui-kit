@@ -16,7 +16,7 @@ const emit = defineEmits<{
 <template>
   <button
     type="button"
-    :class="{ tool: true, hot: !!hot }"
+    :class="{ 'aether-tool': true, hot: !!hot }"
     :disabled="disabled"
     @click="emit('click')"
   >

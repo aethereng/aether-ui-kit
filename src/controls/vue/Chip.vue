@@ -29,7 +29,7 @@ function click(opt: ChipOption<V>) {
       :key="opt.value"
       type="button"
       :disabled="opt.disabled"
-      :class="{ chip: true, on: isChipActive(opt.value, modelValue) }"
+      :class="{ 'aether-chip': true, on: isChipActive(opt.value, modelValue) }"
       @click="click(opt)"
     >
       <span v-if="opt.dotColor" class="dot" :style="{ background: opt.dotColor }"></span>

@@ -36,6 +36,9 @@
     "./controls/core": {
       "types": "./src/controls/core/index.ts",
       "import": "./src/controls/core/index.ts"
+    },
+    "./styles": {
+      "import": "./src/styles/ui-kit.css"
     }
   },
   "files": [

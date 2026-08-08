@@ -1,0 +1,251 @@
+/* @aether/ui-kit — component CSS, shipped with the kit so it is portable.
+ * Consumers import this once. A consumer may override any --aether-* token or
+ * the .aether-* rules; the kit does not depend on aether-os's app.css.
+ * The :root block below is a *fallback* palette — if the host app already
+ * defines --aether-surface etc., these are inert. Tokens are kept to the
+ * minimal set the components actually consume. */
+
+:root {
+  --aether-surface: #fbf8f2;
+  --aether-panel: #e5dfd2;
+  --aether-ink: #1b1e23;
+  --aether-ink-soft: #4a4f57;
+  --aether-line: rgba(27, 30, 35, 0.14);
+  --aether-line-strong: rgba(27, 30, 35, 0.26);
+  --aether-warm: #a9591b;
+  --aether-cool: #2f6f6b;
+  --aether-cool-soft: #5fa4a0;
+  --aether-cool-wash: rgba(95, 164, 160, 0.15);
+  --aether-shadow: 0 1px 2px rgba(27, 30, 35, 0.06);
+  --aether-radius: 8px;
+}
+
+/* ---- PropertyEditor (forms) ---- */
+.aether-property-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.aether-property-editor__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.aether-property-editor__field label {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aether-ink-soft);
+}
+.aether-property-editor__field input,
+.aether-property-editor__field textarea,
+.aether-property-editor__field select {
+  border: 1px solid var(--aether-line-strong);
+  border-radius: var(--aether-radius);
+  background: var(--aether-surface);
+  color: var(--aether-ink);
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 13px;
+}
+.aether-property-editor__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.aether-property-editor__buttons button {
+  border: 1px solid var(--aether-line-strong);
+  background: var(--aether-surface);
+  color: var(--aether-ink-soft);
+  border-radius: var(--aether-radius);
+  padding: 5px 11px;
+  font-size: 12.5px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.aether-property-editor__buttons button.on {
+  background: var(--aether-cool-wash);
+  color: var(--aether-cool);
+  border-color: var(--aether-cool-soft);
+}
+.aether-property-editor__error {
+  color: var(--aether-warm);
+  font-size: 12px;
+}
+
+/* ---- Seg (controls) ---- */
+.aether-seg {
+  display: flex;
+  border: 1px solid var(--aether-line-strong);
+  border-radius: var(--aether-radius);
+  overflow: hidden;
+  box-shadow: var(--aether-shadow);
+}
+.aether-seg button {
+  border: 0;
+  background: var(--aether-surface);
+  color: var(--aether-ink-soft);
+  padding: 6px 11px;
+  font-size: 12.5px;
+  cursor: pointer;
+  font-family: inherit;
+  border-right: 1px solid var(--aether-line);
+}
+.aether-seg button:last-child {
+  border-right: 0;
+}
+.aether-seg button.on {
+  background: var(--aether-panel);
+  color: var(--aether-ink);
+  font-weight: 600;
+}
+
+/* ---- Chip (controls) ---- */
+.aether-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.aether-chip {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--aether-radius);
+  border: 1px solid var(--aether-line-strong);
+  background: var(--aether-surface);
+  box-shadow: var(--aether-shadow);
+  font-size: 11.5px;
+  color: var(--aether-ink-soft);
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: inherit;
+}
+.aether-chip.on {
+  background: var(--aether-cool-wash);
+  color: var(--aether-cool);
+  border-color: var(--aether-cool-soft);
+}
+.aether-chip .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  align-self: center;
+  flex: none;
+}
+.aether-chip .n {
+  font-weight: 600;
+}
+
+/* ---- Tool (controls) ---- */
+.aether-tool {
+  border: 1px solid var(--aether-line-strong);
+  background: var(--aether-surface);
+  color: var(--aether-ink-soft);
+  border-radius: var(--aether-radius);
+  padding: 6px 11px;
+  font-size: 12.5px;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: var(--aether-shadow);
+  font-family: inherit;
+}
+.aether-tool.hot {
+  background: var(--aether-warm);
+  border-color: var(--aether-warm);
+  color: #fbf8f2;
+}
+.aether-tool:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ---- PropertyEditor: full field styling incl. boolean toggle ---- */
+.aether-property-editor__field > label {
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aether-ink-soft);
+}
+.aether-property-editor__field input[type='text'],
+.aether-property-editor__field input[type='date'],
+.aether-property-editor__field textarea,
+.aether-property-editor__field select {
+  width: 100%;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--aether-ink);
+  background: var(--aether-surface);
+  border: 1px solid var(--aether-line-strong);
+  border-radius: 7px;
+  padding: 7px 9px;
+}
+.aether-property-editor__field input:focus,
+.aether-property-editor__field textarea:focus,
+.aether-property-editor__field select:focus {
+  outline: none;
+  border-color: var(--aether-ink-soft);
+}
+.aether-property-editor__field textarea {
+  min-height: 64px;
+  resize: vertical;
+}
+.aether-property-editor__buttons button {
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 12.5px;
+}
+.aether-property-editor__buttons button.on {
+  border-color: var(--aether-ink);
+  background: var(--aether-panel);
+  font-weight: 600;
+  color: var(--aether-ink);
+}
+
+/* boolean field: native checkbox reads as unfinished — give it a clean token-driven switch */
+.aether-property-editor__field:has(input[type='checkbox']) {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.aether-property-editor__field:has(input[type='checkbox']) > label {
+  order: 2;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  color: var(--aether-ink);
+  font-weight: 500;
+}
+.aether-property-editor__field input[type='checkbox'] {
+  order: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 38px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--aether-line-strong);
+  position: relative;
+  cursor: pointer;
+  flex: none;
+  transition: background 0.15s;
+  margin: 0;
+}
+.aether-property-editor__field input[type='checkbox']::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--aether-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s;
+}
+.aether-property-editor__field input[type='checkbox']:checked {
+  background: var(--aether-cool);
+}
+.aether-property-editor__field input[type='checkbox']:checked::after {
+  transform: translateX(16px);
+}

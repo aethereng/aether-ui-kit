@@ -68,7 +68,10 @@ export class PropertyEditorEngine {
       if (field.type === 'enum' && !isEmpty && field.options) {
         const valid = field.options.some((o) => o.value === value)
         if (!valid) {
-          errors.push({ key: field.key, message: `${field.label}: "${String(value)}" is not a valid option` })
+          errors.push({
+            key: field.key,
+            message: `${field.label}: "${String(value)}" is not a valid option`,
+          })
         }
       }
     }

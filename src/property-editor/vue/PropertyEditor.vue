@@ -94,7 +94,10 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
 
       <!-- enum: two variants of the SAME underlying value, per Decision 4's field-type table --
            the desk's button-group vs Etere's dropdown, same descriptor, caller picks the display. -->
-      <div v-else-if="field.type === 'enum' && field.variant === 'buttons'" class="aether-property-editor__buttons">
+      <div
+        v-else-if="field.type === 'enum' && field.variant === 'buttons'"
+        class="aether-property-editor__buttons"
+      >
         <button
           v-for="opt in field.options"
           :key="opt.value"
@@ -111,20 +114,36 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
         :value="engine.getValue(field.key) as string"
         @change="onFieldInput(field.key, ($event.target as HTMLSelectElement).value)"
       >
-        <option v-for="opt in field.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+        <option v-for="opt in field.options" :key="opt.value" :value="opt.value">
+          {{ opt.label }}
+        </option>
       </select>
 
       <!-- reference / placement: the widget a real consumer supplies via a slot, since only the
            caller knows how to pick a referenced entity or edit a 3D placement -- this component
            renders the raw value and gets out of the way rather than guessing at that UI. -->
-      <slot v-else-if="field.type === 'reference'" name="reference" :field="field" :value="engine.getValue(field.key)" :set="(v: unknown) => onFieldInput(field.key, v)">
+      <slot
+        v-else-if="field.type === 'reference'"
+        name="reference"
+        :field="field"
+        :value="engine.getValue(field.key)"
+        :set="(v: unknown) => onFieldInput(field.key, v)"
+      >
         <input readonly :value="String(engine.getValue(field.key) ?? '')" />
       </slot>
-      <slot v-else-if="field.type === 'placement'" name="placement" :field="field" :value="engine.getValue(field.key)" :set="(v: unknown) => onFieldInput(field.key, v)">
+      <slot
+        v-else-if="field.type === 'placement'"
+        name="placement"
+        :field="field"
+        :value="engine.getValue(field.key)"
+        :set="(v: unknown) => onFieldInput(field.key, v)"
+      >
         <input readonly :value="JSON.stringify(engine.getValue(field.key) ?? null)" />
       </slot>
 
-      <span v-if="errors[field.key]" class="aether-property-editor__error">{{ errors[field.key] }}</span>
+      <span v-if="errors[field.key]" class="aether-property-editor__error">{{
+        errors[field.key]
+      }}</span>
     </div>
   </div>
 </template>

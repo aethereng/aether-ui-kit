@@ -70,7 +70,10 @@ describe('PropertyEditorEngine — static field list (desk drawer shape)', () =>
   })
 
   it('rejects an enum value outside its own option list', () => {
-    const engine = new PropertyEditorEngine(timelineEventFields, { title: 'X', start: '2026-08-21' })
+    const engine = new PropertyEditorEngine(timelineEventFields, {
+      title: 'X',
+      start: '2026-08-21',
+    })
     engine.setValue('status', 'not-a-real-status')
     const errors = engine.validate()
     expect(errors.some((e) => e.key === 'status')).toBe(true)
@@ -86,7 +89,9 @@ describe('PropertyEditorEngine — schema-derived field list (Etere IfcEntityPan
   /* The point of this second block: the SAME engine, unmodified, handles a field list built at
      runtime from a schema rather than typed out by hand -- proving the static/schema-derived axis
      is a caller concern, not something this engine needs to know about. */
-  function fieldsFromIfcAttributeSchema(attrs: Array<{ name: string; kind: string }>): FieldDescriptor[] {
+  function fieldsFromIfcAttributeSchema(
+    attrs: Array<{ name: string; kind: string }>,
+  ): FieldDescriptor[] {
     return attrs.map((a) => ({
       key: a.name,
       label: a.name,

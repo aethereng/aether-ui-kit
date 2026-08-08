@@ -81,7 +81,7 @@ const gNodes: GNode[] = Array.from({ length: 18 }, (_, i) => ({
 }))
 const gEdges: GEdge[] = []
 for (let i = 1; i < gNodes.length; i++) {
-  const target = i % 5 === 0 ? i : (Math.floor(i / 5) * 5)
+  const target = i % 5 === 0 ? i : Math.floor(i / 5) * 5
   gEdges.push({ a: 'n' + target, b: 'n' + i, w: 1 })
 }
 const gClicked = ref<string>('—')
@@ -99,11 +99,17 @@ function onNodeClick(id: string) {
 
     <section class="g-section">
       <h2>Seg <span>controls/seg</span></h2>
-      <p class="g-note">One-active selector. Emits <code>update:modelValue</code> + <code>change</code>.</p>
+      <p class="g-note">
+        One-active selector. Emits <code>update:modelValue</code> + <code>change</code>.
+      </p>
       <div class="g-row">
         <Seg :options="segOpts" :model-value="view" aria-label="View" @change="setView" />
         <Seg :options="themeOpts" :model-value="theme" aria-label="Theme" @change="setTheme" />
-        <Seg :options="[{ value: 'a', label: 'Disabled' }]" :model-value="'a'" aria-label="Locked" />
+        <Seg
+          :options="[{ value: 'a', label: 'Disabled' }]"
+          :model-value="'a'"
+          aria-label="Locked"
+        />
       </div>
       <code class="g-state">view = "{{ view }}" · theme = "{{ theme }}"</code>
     </section>
@@ -132,7 +138,11 @@ function onNodeClick(id: string) {
       <h2>PropertyEditor <span>property-editor</span></h2>
       <p class="g-note">Field-driven form: text, textarea, enum (buttons), boolean toggle.</p>
       <div class="g-row g-pe">
-        <PropertyEditor :fields="peFields" :model-value="peValues" @update:model-value="peOut = $event" />
+        <PropertyEditor
+          :fields="peFields"
+          :model-value="peValues"
+          @update:model-value="peOut = $event"
+        />
       </div>
       <code class="g-state">values = {{ JSON.stringify(peOut) }}</code>
     </section>
@@ -140,13 +150,22 @@ function onNodeClick(id: string) {
     <section class="g-section">
       <h2>Graph2D <span>viz/graph</span></h2>
       <p class="g-note">
-        Force-directed graph. Core is dimension-agnostic (<code>pos: number[]</code>) — axis 3 = spatial z,
-        axis 4 = construction sequence, axis 5 = discipline. SVG-2D now; a GL renderer reuses the same core later.
+        Force-directed graph. Core is dimension-agnostic (<code>pos: number[]</code>) — axis 3 =
+        spatial z, axis 4 = construction sequence, axis 5 = discipline. SVG-2D now; a GL renderer
+        reuses the same core later.
       </p>
       <div class="g-row g-graph">
-        <Graph2D :nodes="gNodes" :edges="gEdges" :width="560" :height="360" @node-click="onNodeClick" />
+        <Graph2D
+          :nodes="gNodes"
+          :edges="gEdges"
+          :width="560"
+          :height="360"
+          @node-click="onNodeClick"
+        />
       </div>
-      <code class="g-state">clicked = {{ gClicked }} · nodes = {{ gNodes.length }} · edges = {{ gEdges.length }}</code>
+      <code class="g-state"
+        >clicked = {{ gClicked }} · nodes = {{ gNodes.length }} · edges = {{ gEdges.length }}</code
+      >
     </section>
   </div>
 </template>

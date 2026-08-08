@@ -122,7 +122,9 @@ watch(ticking, (on) => {
 }
 .aether-graph__label {
   fill: var(--aether-ink-soft);
-  font: 600 10px ui-monospace, monospace;
+  font:
+    600 10px ui-monospace,
+    monospace;
   text-anchor: middle;
 }
 </style>

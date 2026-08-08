@@ -13,7 +13,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'toggle': [value: V]
+  toggle: [value: V]
 }>()
 
 function click(opt: ChipOption<V>) {

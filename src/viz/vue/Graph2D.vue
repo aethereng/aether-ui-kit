@@ -1,36 +1,53 @@
 <script setup lang="ts">
-/* Thin Vue wrapper over viz/core. Owns only SVG rendering + the rAF loop that
- * steps the force layout; all geometry (projection, layout) lives in core. A
- * future GraphGL.vue reuses the same core and only changes the draw call. */
+/* Thin Vue wrapper over viz/core. Two modes:
+ *  - running (default, e.g. gallery): owns the force sim, steps it each frame.
+ *  - controlled (running=false, e.g. Brain Map): the caller owns nodes[].pos
+ *    (store-backed positions, pinning, layout modes); Graph2D only renders and
+ *    emits interaction. Same core, same projection — only who drives pos differs.
+ * A future GraphGL.vue reuses the same core and only swaps the draw call. */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ForceLayout, ortho2d, iso3d, type GNode, type GEdge, type Projection } from '../core'
 
-const props = defineProps<{
-  nodes: GNode[]
-  edges: GEdge[]
-  width?: number
-  height?: number
-  projection?: 'ortho2d' | 'iso3d'
-  running?: boolean
+const props = withDefaults(
+  defineProps<{
+    nodes: GNode[]
+    edges: GEdge[]
+    width?: number
+    height?: number
+    projection?: 'ortho2d' | 'iso3d'
+    running?: boolean
+    selection?: string | null
+    neighbors?: Set<string> | null
+  }>(),
+  { width: 720, height: 460, projection: 'ortho2d', running: true, selection: null, neighbors: null },
+)
+
+const emit = defineEmits<{
+  nodeClick: [id: string]
+  nodeDown: [id: string, x: number, y: number]
+  drag: [id: string, x: number, y: number]
+  dragEnd: [id: string]
 }>()
 
-const emit = defineEmits<{ nodeClick: [id: string] }>()
-
-const W = props.width ?? 720
-const H = props.height ?? 460
+const W = props.width
+const H = props.height
 const strategy: Projection = props.projection === 'iso3d' ? iso3d : ortho2d
 const dims = Math.max(2, ...props.nodes.map((n) => n.pos.length))
 
+// In running mode we copy positions into an internal ForceLayout that we step.
+// In controlled mode (running=false) we read props.nodes[].pos directly each render.
 const layout = new ForceLayout(
   props.nodes.map((n) => ({ ...n, pos: [...n.pos] })),
   props.edges,
   { dims },
 )
 
+const live = computed(() => (props.running ? layout.nodes : props.nodes))
+
 // project + fit world bounds into the viewport
 const screen = computed(() => {
-  void tick.value // recompute after each force step
-  const projected = layout.nodes.map((n) => strategy.project(n.pos, dims))
+  void tick.value // recompute after each force step (running mode)
+  const projected = live.value.map((n) => strategy.project(n.pos, dims))
   const minX = Math.min(...projected.map((p) => p.x))
   const maxX = Math.max(...projected.map((p) => p.x))
   const minY = Math.min(...projected.map((p) => p.y))
@@ -38,16 +55,16 @@ const screen = computed(() => {
   const spanX = maxX - minX || 1
   const spanY = maxY - minY || 1
   const pad = 40
-  const sx = (W - 2 * pad) / spanX
-  const sy = (H - 2 * pad) / spanY
-  const s = Math.min(sx, sy)
-  return layout.nodes.map((n, i) => {
+  const s = Math.min((W - 2 * pad) / spanX, (H - 2 * pad) / spanY)
+  return live.value.map((n, i) => {
     const p = projected[i]!
+    const dim = props.neighbors ? !props.neighbors.has(n.id) : false
     return {
       id: n.id,
       label: n.label,
       color: n.color,
       r: n.r ?? 6,
+      dim,
       cx: pad + (p.x - minX) * s,
       cy: pad + (p.y - minY) * s,
     }
@@ -55,8 +72,12 @@ const screen = computed(() => {
 })
 
 const posById = computed(() => new Map(screen.value.map((s) => [s.id, s])))
+function edgeLit(e: GEdge): boolean {
+  return !!props.selection && (e.a === props.selection || e.b === props.selection)
+}
+
 const raf = ref<number | null>(null)
-const ticking = ref(props.running ?? true)
+const ticking = ref(props.running)
 const tick = ref(0) // reactive bump so `screen` recomputes after each force step
 
 function loop() {
@@ -72,7 +93,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (raf.value) cancelAnimationFrame(raf.value)
 })
-
 watch(ticking, (on) => {
   if (on && !raf.value) raf.value = requestAnimationFrame(loop)
   if (!on && raf.value) {
@@ -80,10 +100,52 @@ watch(ticking, (on) => {
     raf.value = null
   }
 })
+
+// ---- drag (controlled mode) ----
+const svgRef = ref<SVGSVGElement | null>(null)
+let dragId: string | null = null
+let moved = false
+function toView(e: PointerEvent): { x: number; y: number } {
+  const r = svgRef.value?.getBoundingClientRect()
+  if (!r) return { x: 0, y: 0 }
+  return { x: ((e.clientX - r.left) / r.width) * W, y: ((e.clientY - r.top) / r.height) * H }
+}
+function onNodeDown(e: PointerEvent, id: string) {
+  const t = e.target as Element
+  const tid = t?.getAttribute?.('data-id') || id
+  dragId = tid
+  moved = false
+  const v = toView(e)
+  emit('nodeDown', tid, v.x, v.y)
+  window.addEventListener('pointermove', onNodeMove)
+  window.addEventListener('pointerup', onNodeUp)
+  e.preventDefault()
+}
+function onNodeMove(e: PointerEvent) {
+  if (!dragId) return
+  moved = true
+  const v = toView(e)
+  emit('drag', dragId, v.x, v.y)
+}
+function onNodeUp() {
+  if (!dragId) return
+  const id = dragId
+  dragId = null
+  window.removeEventListener('pointermove', onNodeMove)
+  window.removeEventListener('pointerup', onNodeUp)
+  if (!moved) emit('nodeClick', id)
+  emit('dragEnd', id)
+}
 </script>
 
 <template>
-  <svg :viewBox="`0 0 ${W} ${H}`" class="aether-graph" :width="W" :height="H">
+  <svg
+    ref="svgRef"
+    :viewBox="`0 0 ${W} ${H}`"
+    class="aether-graph"
+    :width="W"
+    :height="H"
+  >
     <line
       v-for="(e, i) in edges"
       :key="'e' + i"
@@ -92,13 +154,16 @@ watch(ticking, (on) => {
       :x2="posById.get(e.b)?.cx ?? 0"
       :y2="posById.get(e.b)?.cy ?? 0"
       class="aether-graph__edge"
+      :class="{ lit: edgeLit(e) }"
     />
     <g
       v-for="n in screen"
       :key="n.id"
       class="aether-graph__node"
+      :class="{ dim: n.dim, sel: n.id === selection }"
       :transform="`translate(${n.cx},${n.cy})`"
-      @click="emit('nodeClick', n.id)"
+      :data-id="n.id"
+      @pointerdown="onNodeDown($event, n.id)"
     >
       <circle :r="n.r" :fill="n.color ?? 'var(--aether-cool)'" />
       <text v-if="n.label" :dy="n.r + 11" class="aether-graph__label">{{ n.label }}</text>
@@ -112,19 +177,32 @@ watch(ticking, (on) => {
   background: var(--aether-surface);
   border: 1px solid var(--aether-line-strong);
   border-radius: 10px;
+  touch-action: none;
 }
 .aether-graph__edge {
   stroke: var(--aether-line-strong);
   stroke-width: 1;
 }
+.aether-graph__edge.lit {
+  stroke: var(--aether-cool-soft);
+  stroke-width: 1.7;
+}
 .aether-graph__node {
   cursor: pointer;
 }
+.aether-graph__node.dim {
+  opacity: 0.12;
+}
+.aether-graph__node.sel circle {
+  stroke: var(--aether-cool);
+  stroke-width: 3;
+}
 .aether-graph__label {
   fill: var(--aether-ink-soft);
-  font:
-    600 10px ui-monospace,
-    monospace;
+  font: 600 10px ui-monospace, monospace;
   text-anchor: middle;
+}
+.aether-graph__label.dim {
+  opacity: 0.12;
 }
 </style>

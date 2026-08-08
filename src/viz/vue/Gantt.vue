@@ -1,0 +1,566 @@
+<script setup lang="ts">
+/* Thin Vue wrapper over viz/core/gantt. Controlled (like Graph2D/Transport): the caller owns
+ * the data; Gantt renders and emits deltas in DAY-INDEX space. The caller maps
+ * day-indices ↔ its own dates. First consumer: Quarter Timeline (ChartView).
+ * A future GanttGL.vue reuses the same core and only swaps the draw call. */
+import { computed, ref } from 'vue'
+import {
+  SPINE_H,
+  LANE_ROW,
+  LANE_PAD,
+  LANE_MIN,
+  DENS_H,
+  laneLayout,
+  lanesHeight,
+  densGeom,
+  type GanttItem,
+  type GanttLane,
+} from '../core/gantt'
+
+const props = withDefaults(
+  defineProps<{
+    items: GanttItem[]
+    lanes: GanttLane[]
+    ppd: number
+    ndays: number
+    currentDay?: number | null
+    selection?: string | null
+    markers?: { day: number; label: string }[] // month lines + labels
+    weekends?: number[] // day indices that are weekend columns
+    weekdays?: number[] // day indices that are week separators
+  }>(),
+  { currentDay: null, selection: null, markers: () => [], weekends: () => [], weekdays: () => [] },
+)
+
+interface GanttEmit {
+  select: [id: string]
+  move: [id: string, start: number, end: number | null]
+  resize: [id: string, edge: 'l' | 'r', value: number]
+  newAt: [day: number, type: string]
+  expandDay: [day: { t: string; i: number } | null]
+}
+const emit = defineEmits<GanttEmit>()
+
+const expandDay = ref<{ t: string; i: number } | null>(null)
+const tI = computed(() => props.currentDay)
+const W = computed(() => props.ndays * props.ppd)
+const lanes = computed(() => laneLayout(props.lanes, props.items, expandDay.value))
+
+// lane vertical positions
+const laneBoxes = computed(() => {
+  const out: {
+    t: string
+    top: number
+    height: number
+    L: ReturnType<typeof laneLayout>[string]
+  }[] = []
+  let y = SPINE_H
+  for (const m of props.lanes) {
+    const L = lanes.value[m.type]!
+    if (L.empty) continue
+    out.push({ t: m.type, top: y, height: L.height, L })
+    y += L.height
+  }
+  return out
+})
+
+// ── interactions ──────────────────────────────────────────────────────────────
+interface Drag {
+  id: string
+  mode: 'move' | 'l' | 'r'
+  x0: number
+  s0: number
+  e0: number | null
+  moved: boolean
+}
+let drag: Drag | null = null
+
+function onPointerDown(e: PointerEvent) {
+  const tgt = e.target as HTMLElement
+  const dday = tgt.closest('.dday') as HTMLElement | null
+  if (dday) {
+    const t = dday.dataset.lane!,
+      i = +dday.dataset.day!
+    const lane = lanes.value[t]
+    const one = lane ? (lane.byDay[i] ?? []) : []
+    if (one.length === 1) emit('select', one[0]?.id ?? '')
+    else {
+      const cur = expandDay.value
+      const same = cur != null && cur.t === t && cur.i === i
+      expandDay.value = same ? null : { t, i }
+    }
+    e.stopPropagation()
+    return
+  }
+  // anchors: select on click, never drag (regression fix, source 1162)
+  const anc = tgt.closest('.anchor') as HTMLElement | null
+  if (anc) {
+    emit('select', anc.dataset.id!)
+    e.stopPropagation()
+    return
+  }
+  const el = tgt.closest('.ev, .ms') as HTMLElement | null
+  if (!el) return
+  const it = props.items.find((x) => x.id === el.dataset.id)
+  if (!it) return
+  const mode = tgt.classList.contains('h') ? (tgt.classList.contains('l') ? 'l' : 'r') : 'move'
+  drag = {
+    id: it.id,
+    mode,
+    x0: e.clientX,
+    s0: it.start,
+    e0: it.end != null ? it.end : null,
+    moved: false,
+  }
+  ;(e.target as HTMLElement).setPointerCapture?.(
+    (e as PointerEvent & { pointerId: number }).pointerId,
+  )
+  e.preventDefault()
+}
+function onPointerMove(e: PointerEvent) {
+  const d = drag
+  if (!d) return
+  const dd = Math.round((e.clientX - d.x0) / props.ppd)
+  if (!d.moved && Math.abs(e.clientX - d.x0) > 4) d.moved = true
+  if (!d.moved) return
+  const it = props.items.find((x) => x.id === d.id)
+  if (!it) return
+  if (d.mode === 'move') {
+    const len = d.e0 !== null ? d.e0 - d.s0 : 0
+    const ns = Math.max(0, Math.min(d.s0 + dd, props.ndays - 1 - len))
+    emit('move', d.id, ns, d.e0 !== null ? ns + len : null)
+  } else if (d.mode === 'l') {
+    const ns = Math.max(0, Math.min(d.s0 + dd, d.e0 !== null ? d.e0 : d.s0))
+    emit('resize', d.id, 'l', ns)
+  } else {
+    const ne = Math.max(0, Math.max(d.e0! + dd, it.start))
+    emit('resize', d.id, 'r', ne)
+  }
+}
+function onPointerUp() {
+  if (!drag) return
+  const wasClick = !drag.moved,
+    id = drag.id
+  drag = null
+  if (wasClick) emit('select', id)
+}
+function onDblClick(e: MouseEvent) {
+  const lane = (e.target as HTMLElement).closest('.lane') as HTMLElement | null
+  if (!lane || (e.target as HTMLElement).closest('.ev,.ms')) return
+  const rect = lane.getBoundingClientRect()
+  const day = Math.max(
+    0,
+    Math.min(props.ndays - 1, Math.floor((e.clientX - rect.left) / props.ppd)),
+  )
+  const type = lane.dataset.type!
+  emit('newAt', day, type)
+}
+
+const anchors = computed(() =>
+  props.items.filter((i) => i.anchor).sort((a, b) => a.start - b.start),
+)
+</script>
+
+<template>
+  <div class="aether-gantt">
+    <div class="ag-labels">
+      <div class="ag-spine-label" :style="{ height: SPINE_H + 'px' }">anchors · T-minus</div>
+      <div
+        v-for="b in laneBoxes"
+        :key="'lbl' + b.t"
+        class="ag-lane-label"
+        :style="{ height: b.height + 'px' }"
+      >
+        <span class="nm" :style="{ color: b.L.meta.color }">{{ b.L.meta.name }}</span>
+        <span class="ct"
+          >{{ b.L.spans.length }} span{{ b.L.spans.length === 1 ? '' : 's'
+          }}{{ b.L.points.length ? ' · ' + b.L.points.length + ' one-day' : '' }}</span
+        >
+      </div>
+    </div>
+
+    <div class="ag-scroll">
+      <div
+        class="ag-inner"
+        :style="{ width: W + 'px', height: SPINE_H + lanesHeight(lanes) + 'px' }"
+        @pointerdown="onPointerDown"
+        @pointermove="onPointerMove"
+        @pointerup="onPointerUp"
+        @pointercancel="onPointerUp"
+        @dblclick="onDblClick"
+      >
+        <!-- grid furniture -->
+        <div
+          v-for="i in weekends"
+          :key="'wknd' + i"
+          class="ag-wknd"
+          :style="{ left: i * ppd + 'px', width: 2 * ppd + 'px' }"
+        />
+        <div
+          v-for="i in weekdays"
+          :key="'wk' + i"
+          class="ag-wk"
+          :style="{ left: i * ppd + 'px' }"
+        />
+        <div
+          v-for="m in markers"
+          :key="'ml' + m.day"
+          class="ag-mline"
+          :style="{ left: m.day * ppd + 'px' }"
+        />
+        <div
+          v-for="m in markers"
+          :key="'mlab' + m.day"
+          class="ag-mlabel"
+          :style="{ left: m.day * ppd + 10 + 'px' }"
+        >
+          {{ m.label }}
+        </div>
+        <div
+          v-if="tI != null && tI >= 0 && tI < ndays"
+          class="ag-today"
+          :style="{ left: (tI + 0.5) * ppd + 'px' }"
+          data-txt="TODAY"
+        />
+
+        <!-- spine + anchors -->
+        <div class="ag-spine" :style="{ width: W + 'px', height: SPINE_H + 'px' }">
+          <div
+            v-for="a in anchors"
+            :key="a.id"
+            class="ag-canchor"
+            :class="{ sel: selection === a.id }"
+            :data-id="a.id"
+            :style="{
+              left: (a.start + 0.5) * ppd + 'px',
+              color: a.status === 'done' ? 'var(--aether-ink-soft)' : 'var(--aether-rose)',
+            }"
+          >
+            <div class="stem" />
+            <div class="dia" />
+            <div class="atxt">
+              <span class="t">{{ a.title }}</span>
+              <span class="tm mono"
+                >{{ a.end ? '–' + (a.end - a.start + 1) + 'd' : '' }} ·
+                {{
+                  a.status === 'done'
+                    ? '✓ done'
+                    : a.start - (tI ?? 0) > 0
+                      ? 'T−' + (a.start - (tI ?? 0))
+                      : a.start - (tI ?? 0) === 0
+                        ? 'today'
+                        : -(a.start - (tI ?? 0)) + 'd ago'
+                }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- lanes -->
+        <template v-for="b in laneBoxes" :key="'lane' + b.t">
+          <div
+            class="ag-lane"
+            :data-type="b.t"
+            :style="{
+              position: 'absolute',
+              top: b.top + 'px',
+              left: 0,
+              width: W + 'px',
+              height: b.height + 'px',
+            }"
+          >
+            <!-- spans -->
+            <template v-for="ev in b.L.spans" :key="ev.id">
+              <div
+                v-if="ev.end != null"
+                class="ag-ev"
+                :class="['st-' + (ev.status || 'open'), { sel: selection === ev.id }]"
+                :data-id="ev.id"
+                :style="{
+                  left: ev.start * ppd + 1 + 'px',
+                  top: LANE_PAD + (ev as any)._row * LANE_ROW + 'px',
+                  width: Math.max(ppd, (ev.end - ev.start + 1) * ppd - 3) + 'px',
+                  background: b.L.meta.wash,
+                  borderColor: b.L.meta.color,
+                  color: b.L.meta.color,
+                }"
+                :title="ev.title"
+              >
+                <div class="h l" />
+                <span>{{ ev.status === 'done' ? '✓ ' : '' }}{{ ev.title }}</span>
+                <div class="h r" />
+              </div>
+              <div
+                v-else
+                class="ag-ms"
+                :class="['st-' + (ev.status || 'open'), { sel: selection === ev.id }]"
+                :data-id="ev.id"
+                :style="{
+                  left: (ev.start + 0.5) * ppd - 6.5 + 'px',
+                  top: LANE_PAD + (ev as any)._row * LANE_ROW + 5 + 'px',
+                  background: b.L.meta.color,
+                  borderColor: b.L.meta.color,
+                }"
+                :title="ev.title"
+              />
+              <div
+                v-if="ev.end == null"
+                class="ag-ms-label"
+                :style="{
+                  left: (ev.start + 0.5) * ppd + 11 + 'px',
+                  top: LANE_PAD + (ev as any)._row * LANE_ROW + 3 + 'px',
+                  color: b.L.meta.color,
+                }"
+              >
+                {{ ev.title }}
+              </div>
+            </template>
+
+            <!-- density row -->
+            <template v-if="b.L.points.length">
+              <div class="ag-dens" :style="{ top: densGeom(b.L).dy + 'px', width: W + 'px' }" />
+              <div
+                v-for="(dayItems, key) in b.L.byDay"
+                :key="'d' + key"
+                class="ag-dday"
+                :class="{
+                  on: expandDay && expandDay.t === b.t && expandDay.i === +key,
+                  sel: dayItems.some((x: GanttItem) => x.id === selection),
+                }"
+                :data-lane="b.t"
+                :data-day="key"
+                :style="{
+                  left: (+key + 0.5) * ppd - Math.max(6, Math.min(ppd - 3, 13)) / 2 + 'px',
+                  top:
+                    densGeom(b.L).base -
+                    Math.min(9 + (dayItems.length - 1) * 7, DENS_H - 12) +
+                    'px',
+                  width: Math.max(6, Math.min(ppd - 3, 13)) + 'px',
+                  height: Math.min(9 + (dayItems.length - 1) * 7, DENS_H - 12) + 'px',
+                  background: b.L.meta.color,
+                }"
+                :title="dayItems.length + ' one-day item' + (dayItems.length === 1 ? '' : 's')"
+              />
+              <template v-for="(dayItems, key) in b.L.byDay" :key="'dn' + key">
+                <div
+                  v-if="dayItems.length > 1"
+                  class="ag-ddayn mono"
+                  :style="{
+                    left: (+key + 0.5) * ppd - Math.max(6, Math.min(ppd - 3, 13)) / 2 + 'px',
+                    width: Math.max(6, Math.min(ppd - 3, 13)) + 'px',
+                    top:
+                      densGeom(b.L).base -
+                      Math.min(9 + (dayItems.length - 1) * 7, DENS_H - 12) -
+                      12 +
+                      'px',
+                    color: b.L.meta.color,
+                  }"
+                >
+                  {{ dayItems.length }}
+                </div>
+              </template>
+
+              <!-- expanded day -->
+              <template v-if="b.L.expanded">
+                <div
+                  v-for="ev in b.L.expanded"
+                  :key="'ex' + ev.id"
+                  class="ag-ms"
+                  :class="['st-' + (ev.status || 'open'), { sel: selection === ev.id }]"
+                  :data-id="ev.id"
+                  :style="{
+                    left: (ev.start + 0.5) * ppd - 6.5 + 'px',
+                    top:
+                      Math.max(LANE_MIN, b.L.rows.length * LANE_ROW + LANE_PAD * 2) +
+                      DENS_H +
+                      5 +
+                      'px',
+                    background: b.L.meta.color,
+                    borderColor: b.L.meta.color,
+                  }"
+                  :title="ev.title"
+                />
+              </template>
+            </template>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.aether-gantt {
+  display: flex;
+  height: 100%;
+  background: var(--aether-surface);
+  color: var(--aether-ink);
+  font:
+    13px ui-monospace,
+    monospace;
+}
+.ag-labels {
+  width: 132px;
+  flex: none;
+  border-right: 1px solid var(--aether-line-strong);
+  overflow: hidden;
+}
+.ag-spine-label {
+  display: flex;
+  align-items: flex-end;
+  padding: 6px 10px;
+  color: var(--aether-ink-soft);
+  font-weight: 600;
+  border-bottom: 1px solid var(--aether-line);
+}
+.ag-lane-label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--aether-line);
+}
+.ag-lane-label .nm {
+  font-weight: 700;
+}
+.ag-lane-label .ct {
+  color: var(--aether-ink-soft);
+  font-size: 11px;
+}
+.ag-scroll {
+  flex: 1;
+  overflow: auto;
+}
+.ag-inner {
+  position: relative;
+}
+.ag-wknd {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--aether-line);
+  opacity: 0.5;
+}
+.ag-wk {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--aether-line);
+}
+.ag-mline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 2px solid var(--aether-line-strong);
+}
+.ag-mlabel {
+  position: absolute;
+  top: 4px;
+  font-weight: 700;
+}
+.ag-today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 2px dashed var(--aether-cool);
+}
+.ag-today::after {
+  content: attr(data-txt);
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  font-size: 9px;
+  color: var(--aether-cool);
+}
+.ag-spine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-bottom: 1px solid var(--aether-line-strong);
+}
+.ag-canchor {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.ag-canchor .stem {
+  width: 2px;
+  flex: 1;
+  background: currentColor;
+}
+.ag-canchor .dia {
+  width: 9px;
+  height: 9px;
+  transform: rotate(45deg);
+  background: currentColor;
+}
+.ag-canchor .atxt {
+  position: absolute;
+  top: 10px;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.ag-canchor.sel .dia {
+  outline: 2px solid var(--aether-cool);
+}
+.ag-lane {
+  border-bottom: 1px solid var(--aether-line);
+}
+.ag-ev {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: grab;
+  user-select: none;
+}
+.ag-ev.sel {
+  outline: 2px solid var(--aether-cool);
+}
+.ag-ev .h {
+  width: 6px;
+  align-self: stretch;
+  cursor: ew-resize;
+}
+.ag-ms {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid;
+  cursor: grab;
+}
+.ag-ms.sel {
+  outline: 2px solid var(--aether-cool);
+}
+.ag-ms-label {
+  position: absolute;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.ag-dens {
+  position: absolute;
+  left: 0;
+  height: 2px;
+  background: var(--aether-line-strong);
+}
+.ag-dday {
+  position: absolute;
+  border-radius: 2px;
+  opacity: 0.8;
+}
+.ag-dday.on {
+  outline: 2px solid var(--aether-cool);
+}
+.ag-ddayn {
+  position: absolute;
+  font-size: 10px;
+  text-align: center;
+}
+</style>

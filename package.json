@@ -49,6 +49,14 @@
       "types": "./src/viz/vue/Graph2D.vue",
       "import": "./src/viz/vue/Graph2D.vue"
     },
+    "./viz/gantt": {
+      "types": "./src/viz/vue/Gantt.vue",
+      "import": "./src/viz/vue/Gantt.vue"
+    },
+    "./viz/core/gantt": {
+      "types": "./src/viz/core/gantt.ts",
+      "import": "./src/viz/core/gantt.ts"
+    },
     "./viz/core": {
       "types": "./src/viz/core/index.ts",
       "import": "./src/viz/core/index.ts"

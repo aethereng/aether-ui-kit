@@ -6,7 +6,9 @@ import Tool from '@/controls/vue/Tool.vue'
 import PropertyEditor from '@/property-editor/vue/PropertyEditor.vue'
 import Graph2D from '@/viz/vue/Graph2D.vue'
 import Transport from '@/controls/vue/Transport.vue'
+import Gantt from '@/viz/vue/Gantt.vue'
 import type { GNode, GEdge } from '@/viz/core'
+import type { GanttItem, GanttLane } from '@/viz/core/gantt'
 import type { SegOption, ChipOption } from '@/controls/core/types'
 import type { FieldDescriptor, FieldValues as PEValues } from '@/property-editor/core/types'
 
@@ -175,13 +177,71 @@ function tScrubStart() {
 function tScrubEnd() {
   if (tWasPlaying) tToggle()
 }
+
+// ── Gantt demo (viz/gantt) ──
+// Controlled: demo owns the items; Gantt renders + emits deltas (day-index space).
+const gItems = ref<GanttItem[]>([
+  { id: 'a1', start: 2, end: 9, type: 'design', status: 'done', title: 'Concept' },
+  { id: 'a2', start: 10, end: 20, type: 'design', status: 'open', title: 'Schematics' },
+  { id: 'b1', start: 12, type: 'fabricate', status: 'open', title: 'Cut members' },
+  { id: 'b2', start: 21, end: 30, type: 'fabricate', status: 'open', title: 'Weld frame' },
+  { id: 'c1', start: 31, end: 45, type: 'erect', status: 'open', title: 'Site assembly' },
+  { id: 'x1', start: 0, type: 'design', anchor: true, status: 'done', title: 'Day-0 kickoff' },
+  { id: 'x2', start: 24, type: 'erect', anchor: true, status: 'open', title: 'Steel milestone' },
+])
+const gLanes: GanttLane[] = [
+  {
+    type: 'design',
+    name: 'Design',
+    color: 'var(--aether-cool-soft)',
+    wash: 'rgba(56,139,253,0.16)',
+  },
+  {
+    type: 'fabricate',
+    name: 'Fabricate',
+    color: 'var(--aether-warm)',
+    wash: 'rgba(230,160,60,0.16)',
+  },
+  { type: 'erect', name: 'Erect', color: 'var(--aether-ink)', wash: 'rgba(120,120,140,0.16)' },
+]
+const gPPD = 26
+const gNDays = 60
+const gSel = ref<string | null>(null)
+const gMarkers = [
+  { day: 0, label: 'Aug' },
+  { day: 31, label: 'Sep' },
+]
+function onGanttSelect(id: string) {
+  gSel.value = id
+}
+function onGanttMove(id: string, start: number, end: number | null) {
+  const it = gItems.value.find((x) => x.id === id)
+  if (!it) return
+  it.start = start
+  it.end = end
+}
+function onGanttResize(id: string, _edge: 'l' | 'r', value: number) {
+  const it = gItems.value.find((x) => x.id === id)
+  if (!it) return
+  if (_edge === 'l') it.start = value
+  else it.end = value
+}
+function onGanttNewAt(day: number, type: string) {
+  gItems.value.push({
+    id: 'n' + day + type,
+    start: day,
+    type,
+    status: 'open',
+    title: 'New ' + type,
+  })
+}
 </script>
 
 <template>
   <div class="gallery">
     <header class="g-head">
       <h1>@aether/ui-kit</h1>
-      <p>Neutral, shared components — framework-free core, thin Vue wrapper. {{ 7 }} components.</p>
+      <p>Neutral, shared components — framework-free core, thin Vue wrapper. {{ 8 }} components.</p>
     </header>
 
     <section class="g-section">
@@ -300,6 +360,31 @@ function tScrubEnd() {
       <code class="g-state"
         >cur = {{ tCur.toFixed(2) }}s · playing = {{ tPlaying }} · speed = {{ tSpeed }}×</code
       >
+    </section>
+
+    <section class="g-section">
+      <h2>Gantt <span>viz/gantt</span></h2>
+      <p class="g-note">
+        Controlled timeline: lanes from props, items as day-index spans/points/anchors, drag to
+        move, edge-handles to resize, double-click a lane to create. Emits deltas in day-index
+        space; the caller maps to dates. Reuses the same core contract as Graph2D (caller owns
+        data).
+      </p>
+      <div class="g-row g-gantt">
+        <Gantt
+          :items="gItems"
+          :lanes="gLanes"
+          :ppd="gPPD"
+          :ndays="gNDays"
+          :selection="gSel"
+          :markers="gMarkers"
+          @select="onGanttSelect"
+          @move="onGanttMove"
+          @resize="onGanttResize"
+          @new-at="onGanttNewAt"
+        />
+      </div>
+      <code class="g-state">selected = {{ gSel || '∅' }} · items = {{ gItems.length }}</code>
     </section>
   </div>
 </template>

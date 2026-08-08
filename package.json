@@ -14,16 +14,28 @@
   ],
   "exports": {
     "./property-editor": {
-      "types": "./src/property-editor/vue/index.ts",
-      "import": "./src/property-editor/vue/index.ts"
+      "types": "./src/property-editor/vue/PropertyEditor.vue",
+      "import": "./src/property-editor/vue/PropertyEditor.vue"
     },
     "./property-editor/core": {
       "types": "./src/property-editor/core/index.ts",
       "import": "./src/property-editor/core/index.ts"
     },
-    "./property-editor/element": {
-      "types": "./src/property-editor/element/index.ts",
-      "import": "./src/property-editor/element/index.ts"
+    "./controls/seg": {
+      "types": "./src/controls/vue/Seg.vue",
+      "import": "./src/controls/vue/Seg.vue"
+    },
+    "./controls/chip": {
+      "types": "./src/controls/vue/Chip.vue",
+      "import": "./src/controls/vue/Chip.vue"
+    },
+    "./controls/tool": {
+      "types": "./src/controls/vue/Tool.vue",
+      "import": "./src/controls/vue/Tool.vue"
+    },
+    "./controls/core": {
+      "types": "./src/controls/core/index.ts",
+      "import": "./src/controls/core/index.ts"
     }
   },
   "files": [

@@ -49,6 +49,10 @@ export interface LayoutOptions {
   /** Pull toward the origin, per sub-step. Without it nothing holds the cloud together and a
    *  layout with no edges simply expands forever. */
   centering?: number
+  /** Hard clamp on the first two axes, [minX, minY, maxX, maxY], applied after each step.
+   *  The reference implementation pins nodes inside the viewport this way so the layout can
+   *  be drawn 1:1 with no rescaling — which is what lets a drag track the cursor exactly. */
+  bounds?: [number, number, number, number]
   /** Force sub-steps per step(). Forces accumulate into velocity across sub-steps, then the
    *  layout damps and integrates ONCE — matching the reference implementation this came from. */
   substeps?: number

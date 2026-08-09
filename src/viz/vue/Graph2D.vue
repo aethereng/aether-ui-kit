@@ -26,6 +26,12 @@ const props = withDefaults(
     running?: boolean
     selection?: string | null
     neighbors?: Set<string> | null
+    /** How positions map to the viewport.
+     *  'fit'   — rescale the cloud to fill the box every render. Convenient, but the scale
+     *            changes as the data moves, so a dragged node does not track the cursor.
+     *  'direct'— positions ARE viewport coordinates, drawn 1:1. What the reference does; pair
+     *            it with the layout's `bounds` so nothing can leave the stage. */
+    mapping?: 'fit' | 'direct'
   }>(),
   {
     width: 720,
@@ -34,6 +40,7 @@ const props = withDefaults(
     running: true,
     selection: null,
     neighbors: null,
+    mapping: 'fit',
   },
 )
 
@@ -63,8 +70,12 @@ const live = computed(() => (props.running ? layout.nodes : props.nodes))
 const screen = computed(() => {
   void tick.value // recompute after each force step (running mode)
   const projected = live.value.map((n) => strategy.project(n.pos, dims))
-  // shared with viz/core so a caller can invert it (see unproject) instead of guessing
-  const { minX, minY, s, pad } = fitToViewport(projected, W, H)
+  // 'direct' draws 1:1; 'fit' shares its transform with viz/core so a caller can invert it
+  // (see unproject) instead of guessing
+  const { minX, minY, s, pad } =
+    props.mapping === 'direct'
+      ? { minX: 0, minY: 0, s: 1, pad: 0 }
+      : fitToViewport(projected, W, H)
   return live.value.map((n, i) => {
     const p = projected[i]!
     const dim = props.neighbors ? !props.neighbors.has(n.id) : false

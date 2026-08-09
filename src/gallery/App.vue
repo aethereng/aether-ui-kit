@@ -18,7 +18,7 @@ import PropertyEditor from '@/property-editor/vue/PropertyEditor.vue'
 import Graph2D from '@/viz/vue/Graph2D.vue'
 import Gantt from '@/viz/vue/Gantt.vue'
 
-import { ForceLayout, fitToViewport, ortho2d, unproject } from '@/viz/core'
+import { ForceLayout } from '@/viz/core'
 import { computePPD } from '@/viz/core/gantt'
 import type { GNode, GEdge } from '@/viz/core'
 import type { GanttItem, GanttLane } from '@/viz/core/gantt'
@@ -193,10 +193,17 @@ const peOut = ref<PEValues>({ ...peValues })
  * only mode where dragging a node can work, because in running mode the component's
  * internal layout owns the positions and a caller's write is ignored. */
 const palette = ['var(--aether-cool)', 'var(--aether-warm)', 'var(--aether-cool-soft)']
+const GRAPH_W = 560
+const GRAPH_H = 360
+/* Positions are VIEWPORT coordinates and the sim is clamped to the stage, so the graph is
+ * drawn 1:1: nothing can wander off the canvas and a dragged node sits exactly under the
+ * cursor. Refitting the cloud every frame instead made the scale drift as nodes moved, and a
+ * drag tracked at about a third of the pointer. */
+const GRAPH_BOUNDS: [number, number, number, number] = [30, 24, GRAPH_W - 30, GRAPH_H - 20]
 const gNodes = ref<GNode[]>(
   Array.from({ length: 18 }, (_, i) => ({
     id: 'n' + i,
-    pos: [(Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200, 0],
+    pos: [GRAPH_W / 2 + (Math.random() - 0.5) * 220, GRAPH_H / 2 + (Math.random() - 0.5) * 180, 0],
     label: i % 5 === 0 ? 'hub' + i : undefined,
     color: palette[i % 3],
     r: i % 5 === 0 ? 10 : 5,
@@ -218,7 +225,7 @@ const gDragged = ref<string>('—')
 const gLayout = new ForceLayout(
   gNodes.value.map((n) => ({ ...n, pos: [...n.pos] })),
   gEdges,
-  { dims: 3 },
+  { dims: 3, bounds: GRAPH_BOUNDS },
 )
 const publish = () => {
   gNodes.value = gLayout.nodes.map((n) => ({ ...n, pos: [...n.pos] }))
@@ -259,17 +266,10 @@ function onGraphNodeClick(id: string) {
   gSelected.value = gSelected.value === id ? null : id
 }
 function onGraphDrag(id: string, x: number, y: number) {
-  // `drag` reports VIEWPORT coords; invert the component's own fit to get world coords.
-  const fit = fitToViewport(
-    gLayout.nodes.map((n) => ortho2d.project(n.pos, 3)),
-    560,
-    360,
-  )
-  const w = unproject(x, y, fit)
-  // Pin the dragged node so it tracks the cursor exactly, and re-heat so its neighbours
-  // relax around it. Without the re-heat the sim is settled and only this node moves --
-  // which reads as "the graph has no forces".
-  gLayout.pin(id, [w.x, w.y, 0])
+  // `drag` reports viewport coords, and with mapping="direct" those ARE the coordinates the
+  // layout works in — no inverse transform, and no scale to get wrong. Pin so the node tracks
+  // the cursor, re-heat so its neighbours relax around it.
+  gLayout.pin(id, [x, y, 0])
   // Publish straight away rather than waiting for the next animation frame. The frame is not
   // guaranteed — requestAnimationFrame is paused whenever the tab is not visible — and a node
   // that only follows the cursor while the sim happens to be ticking is a node that stutters.
@@ -539,8 +539,9 @@ const groupAnchor = (g: Group) => g.toLowerCase()
           <Graph2D
             :nodes="gNodes"
             :edges="gEdges"
-            :width="560"
-            :height="360"
+            :width="GRAPH_W"
+            :height="GRAPH_H"
+            mapping="direct"
             :running="false"
             :selection="gSelected"
             :neighbors="gNeighbors"

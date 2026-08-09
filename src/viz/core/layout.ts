@@ -42,6 +42,7 @@ export class ForceLayout {
       cutoff: opts.cutoff ?? 200,
       centering: opts.centering ?? 0.0018,
       substeps: opts.substeps ?? 2,
+      bounds: opts.bounds ?? [-Infinity, -Infinity, Infinity, Infinity],
     }
     this.alphaValue = 1
     this.vel = new Map()
@@ -71,7 +72,13 @@ export class ForceLayout {
     this.pinned.add(id)
     if (pos) {
       const n = this.nodes.find((x) => x.id === id)
-      if (n) n.pos = [...pos]
+      if (n) {
+        const [x0, y0, x1, y1] = this.opts.bounds
+        const next = [...pos]
+        next[0] = Math.max(x0, Math.min(x1, next[0] ?? 0))
+        next[1] = Math.max(y0, Math.min(y1, next[1] ?? 0))
+        n.pos = next
+      }
     }
     this.vel.set(id, Array(this.opts.dims).fill(0))
   }
@@ -141,6 +148,10 @@ export class ForceLayout {
         v[k] = nv
         n.pos[k] = (n.pos[k] ?? 0) + nv * this.alphaValue
       }
+      // clamp the two drawn axes, so nothing can leave the stage
+      const [x0, y0, x1, y1] = this.opts.bounds
+      n.pos[0] = Math.max(x0, Math.min(x1, n.pos[0] ?? 0))
+      n.pos[1] = Math.max(y0, Math.min(y1, n.pos[1] ?? 0))
     }
     this.alphaValue *= 0.985
   }

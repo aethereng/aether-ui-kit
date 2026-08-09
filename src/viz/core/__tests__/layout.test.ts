@@ -218,4 +218,38 @@ describe('ForceLayout', () => {
       expect(mk(2)).toBeGreaterThan(mk(1))
     })
   })
+
+  describe('bounds', () => {
+    const BOX: [number, number, number, number] = [30, 24, 530, 340]
+
+    it('never lets a node leave the stage, however hard it is pushed', () => {
+      // a tight cluster at one corner: repulsion would fling several outside without a clamp
+      const packed: GNode[] = Array.from({ length: 10 }, (_, i) => ({
+        id: 'n' + i,
+        pos: [40 + (i % 3), 30 + Math.floor(i / 3), 0],
+      }))
+      const l = new ForceLayout(packed, [], { dims: 3, bounds: BOX })
+      for (let i = 0; i < 300; i++) l.step()
+      for (const n of packed) {
+        expect(n.pos[0]!).toBeGreaterThanOrEqual(BOX[0])
+        expect(n.pos[0]!).toBeLessThanOrEqual(BOX[2])
+        expect(n.pos[1]!).toBeGreaterThanOrEqual(BOX[1])
+        expect(n.pos[1]!).toBeLessThanOrEqual(BOX[3])
+      }
+    })
+
+    it('clamps a pinned position too, so a drag cannot park a node off-stage', () => {
+      const l = new ForceLayout(nodes(), edges, { dims: 3, bounds: BOX })
+      l.pin('a', [9999, -9999, 0])
+      const a = l.nodes.find((n) => n.id === 'a')!
+      expect(a.pos[0]).toBe(BOX[2])
+      expect(a.pos[1]).toBe(BOX[1])
+    })
+
+    it('is unbounded by default, so an existing consumer is unaffected', () => {
+      const l = new ForceLayout(nodes(), edges, { dims: 3 })
+      l.pin('a', [9999, 0, 0])
+      expect(l.nodes.find((n) => n.id === 'a')!.pos[0]).toBe(9999)
+    })
+  })
 })

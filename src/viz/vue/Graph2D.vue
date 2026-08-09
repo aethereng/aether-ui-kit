@@ -6,7 +6,15 @@
  *    emits interaction. Same core, same projection — only who drives pos differs.
  * A future GraphGL.vue reuses the same core and only swaps the draw call. */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { ForceLayout, ortho2d, iso3d, type GNode, type GEdge, type Projection } from '../core'
+import {
+  ForceLayout,
+  ortho2d,
+  iso3d,
+  fitToViewport,
+  type GNode,
+  type GEdge,
+  type Projection,
+} from '../core'
 
 const props = withDefaults(
   defineProps<{
@@ -55,14 +63,8 @@ const live = computed(() => (props.running ? layout.nodes : props.nodes))
 const screen = computed(() => {
   void tick.value // recompute after each force step (running mode)
   const projected = live.value.map((n) => strategy.project(n.pos, dims))
-  const minX = Math.min(...projected.map((p) => p.x))
-  const maxX = Math.max(...projected.map((p) => p.x))
-  const minY = Math.min(...projected.map((p) => p.y))
-  const maxY = Math.max(...projected.map((p) => p.y))
-  const spanX = maxX - minX || 1
-  const spanY = maxY - minY || 1
-  const pad = 40
-  const s = Math.min((W - 2 * pad) / spanX, (H - 2 * pad) / spanY)
+  // shared with viz/core so a caller can invert it (see unproject) instead of guessing
+  const { minX, minY, s, pad } = fitToViewport(projected, W, H)
   return live.value.map((n, i) => {
     const p = projected[i]!
     const dim = props.neighbors ? !props.neighbors.has(n.id) : false

@@ -18,7 +18,7 @@ import PropertyEditor from '@/property-editor/vue/PropertyEditor.vue'
 import Graph2D from '@/viz/vue/Graph2D.vue'
 import Gantt from '@/viz/vue/Gantt.vue'
 
-import { ForceLayout } from '@/viz/core'
+import { ForceLayout, fitToViewport, ortho2d, unproject } from '@/viz/core'
 import type { GNode, GEdge } from '@/viz/core'
 import type { GanttItem, GanttLane } from '@/viz/core/gantt'
 import type { SegOption, ChipOption, FilterGroup } from '@/controls/core/types'
@@ -255,11 +255,18 @@ function onGraphNodeClick(id: string) {
   gSelected.value = gSelected.value === id ? null : id
 }
 function onGraphDrag(id: string, x: number, y: number) {
-  // `drag` reports viewport coords; a controlled caller decides what they mean. Write into
-  // the sim's own node too, so a later re-run starts from where the user put it.
+  // `drag` reports VIEWPORT coords. Graph2D scaled world -> viewport to fit the box, so the
+  // caller has to run that fit backwards; a plain offset makes the node jump (a 7px drag
+  // moved it 100px before this). Same fit function the component uses, inverted.
   const target = gLayout.nodes.find((v) => v.id === id)
   if (!target) return
-  target.pos = [x - 280, y - 180, target.pos[2] ?? 0]
+  const fit = fitToViewport(
+    gLayout.nodes.map((n) => ortho2d.project(n.pos, 3)),
+    560,
+    360,
+  )
+  const w = unproject(x, y, fit)
+  target.pos = [w.x, w.y, target.pos[2] ?? 0]
   publish()
   gDragged.value = id
 }

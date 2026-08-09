@@ -26,3 +26,40 @@ export const iso3d: Projection = {
     return { x: sx, y: sy, depth: z, t: pos[3], d: pos[4] }
   },
 }
+
+/* Fitting projected points into a viewport, and getting back out again.
+ *
+ * Graph2D scales world coordinates to fill its box: cx = pad + (x - minX) * s. A caller
+ * handling `drag` receives VIEWPORT coordinates and, in controlled mode, has to write world
+ * coordinates back — so it needs the inverse. Leaving that arithmetic for each consumer to
+ * rediscover produced exactly the bug you would expect: a fixed offset instead of the real
+ * inverse, and a node that teleported ~100px on a 7px drag. One implementation, both
+ * directions, tested. */
+export interface Fit {
+  minX: number
+  minY: number
+  s: number
+  pad: number
+}
+
+export function fitToViewport(
+  pts: { x: number; y: number }[],
+  w: number,
+  h: number,
+  pad = 40,
+): Fit {
+  if (!pts.length) return { minX: 0, minY: 0, s: 1, pad }
+  const xs = pts.map((p) => p.x)
+  const ys = pts.map((p) => p.y)
+  const minX = Math.min(...xs)
+  const minY = Math.min(...ys)
+  const spanX = Math.max(...xs) - minX || 1
+  const spanY = Math.max(...ys) - minY || 1
+  return { minX, minY, s: Math.min((w - 2 * pad) / spanX, (h - 2 * pad) / spanY), pad }
+}
+
+/** Viewport point -> the world coordinate that projects to it. */
+export function unproject(vx: number, vy: number, f: Fit): { x: number; y: number } {
+  const s = f.s || 1
+  return { x: (vx - f.pad) / s + f.minX, y: (vy - f.pad) / s + f.minY }
+}

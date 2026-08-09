@@ -17,15 +17,27 @@ const emit = defineEmits<{
   change: [key: string, value: unknown]
 }>()
 
-const engine = new PropertyEditorEngine(props.fields, props.modelValue)
+let engine = new PropertyEditorEngine(props.fields, props.modelValue)
 const errors = reactive<Record<string, string>>({})
 
-const unsubscribe = engine.onChange((e) => {
-  emit('update:modelValue', engine.getValues())
-  emit('change', e.key, e.value)
-  revalidate()
-})
-onScopeDispose(unsubscribe)
+/* The engine is a plain class and knows nothing about Vue, which is the point -- but it means
+ * reading engine.getValue() from the template registers NO reactive dependency, so a change
+ * would never re-render. Native inputs hid this (the browser mutates its own DOM), but the
+ * enum button group has no native state and sat frozen on its initial value while the model
+ * moved underneath it. `view` is the reactive mirror the template reads; the engine stays the
+ * source of truth and this follows it. */
+const view = reactive<FieldValues>({ ...props.modelValue })
+
+let unsubscribe = subscribe()
+function subscribe() {
+  return engine.onChange((e) => {
+    view[e.key] = e.value
+    emit('update:modelValue', engine.getValues())
+    emit('change', e.key, e.value)
+    revalidate()
+  })
+}
+onScopeDispose(() => unsubscribe())
 
 function revalidate() {
   for (const key of Object.keys(errors)) delete errors[key]
@@ -34,15 +46,18 @@ function revalidate() {
 revalidate()
 
 /* Incoming modelValue changes (e.g. selecting a different entity) re-seed the engine rather than
-   mutate it in place -- a new selection is a new editing session, not a diff of the old one. */
+   mutate it in place -- a new selection is a new editing session, not a diff of the old one.
+   This previously evaluated a bare expression and did nothing at all, so a host that swapped
+   the bound object kept editing the previous one's values indefinitely. */
 watch(
   () => props.modelValue,
   (next) => {
-    for (const field of props.fields) {
-      if (engine.getValue(field.key) !== next[field.key]) {
-        engine['values'] // eslint-disable-line @typescript-eslint/no-unused-expressions
-      }
-    }
+    unsubscribe()
+    engine = new PropertyEditorEngine(props.fields, next)
+    unsubscribe = subscribe()
+    for (const key of Object.keys(view)) delete view[key]
+    Object.assign(view, next)
+    revalidate()
   },
 )
 
@@ -64,7 +79,7 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
         :id="`pe-${field.key}`"
         type="text"
         :placeholder="field.placeholder"
-        :value="engine.getValue(field.key) as string"
+        :value="view[field.key] as string"
         @input="onFieldInput(field.key, ($event.target as HTMLInputElement).value)"
       />
 
@@ -72,7 +87,7 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
         v-else-if="field.type === 'textarea'"
         :id="`pe-${field.key}`"
         :placeholder="field.placeholder"
-        :value="engine.getValue(field.key) as string"
+        :value="view[field.key] as string"
         @input="onFieldInput(field.key, ($event.target as HTMLTextAreaElement).value)"
       />
 
@@ -80,7 +95,7 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
         v-else-if="field.type === 'date'"
         :id="`pe-${field.key}`"
         type="date"
-        :value="engine.getValue(field.key) as string"
+        :value="view[field.key] as string"
         @input="onFieldInput(field.key, ($event.target as HTMLInputElement).value)"
       />
 
@@ -88,7 +103,7 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
         v-else-if="field.type === 'boolean'"
         :id="`pe-${field.key}`"
         type="checkbox"
-        :checked="engine.getValue(field.key) as boolean"
+        :checked="view[field.key] as boolean"
         @change="onFieldInput(field.key, ($event.target as HTMLInputElement).checked)"
       />
 
@@ -102,7 +117,7 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
           v-for="opt in field.options"
           :key="opt.value"
           type="button"
-          :class="{ on: engine.getValue(field.key) === opt.value }"
+          :class="{ on: view[field.key] === opt.value }"
           @click="onFieldInput(field.key, opt.value)"
         >
           {{ opt.label }}
@@ -111,7 +126,7 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
       <select
         v-else-if="field.type === 'enum'"
         :id="`pe-${field.key}`"
-        :value="engine.getValue(field.key) as string"
+        :value="view[field.key] as string"
         @change="onFieldInput(field.key, ($event.target as HTMLSelectElement).value)"
       >
         <option v-for="opt in field.options" :key="opt.value" :value="opt.value">
@@ -126,19 +141,19 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
         v-else-if="field.type === 'reference'"
         name="reference"
         :field="field"
-        :value="engine.getValue(field.key)"
+        :value="view[field.key]"
         :set="(v: unknown) => onFieldInput(field.key, v)"
       >
-        <input readonly :value="String(engine.getValue(field.key) ?? '')" />
+        <input readonly :value="String(view[field.key] ?? '')" />
       </slot>
       <slot
         v-else-if="field.type === 'placement'"
         name="placement"
         :field="field"
-        :value="engine.getValue(field.key)"
+        :value="view[field.key]"
         :set="(v: unknown) => onFieldInput(field.key, v)"
       >
-        <input readonly :value="JSON.stringify(engine.getValue(field.key) ?? null)" />
+        <input readonly :value="JSON.stringify(view[field.key] ?? null)" />
       </slot>
 
       <span v-if="errors[field.key]" class="aether-property-editor__error">{{

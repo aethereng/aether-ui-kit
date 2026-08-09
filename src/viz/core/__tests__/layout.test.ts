@@ -156,4 +156,66 @@ describe('ForceLayout', () => {
       expect(a.pos).not.toEqual(p0)
     })
   })
+
+  describe('bounded forces, as the reference implementation has them', () => {
+    it('stops repelling beyond the cutoff', () => {
+      // two far-apart nodes with no edge: inside the cutoff they push apart, beyond it they
+      // are simply left alone. Without this a disconnected component accelerates away forever.
+      const far: GNode[] = [
+        { id: 'a', pos: [0, 0, 0] },
+        { id: 'b', pos: [900, 0, 0] },
+      ]
+      const l = new ForceLayout(far, [], { dims: 3, centering: 0 })
+      const gap0 = Math.abs(far[1]!.pos[0]! - far[0]!.pos[0]!)
+      for (let i = 0; i < 30; i++) l.step()
+      const gap1 = Math.abs(far[1]!.pos[0]! - far[0]!.pos[0]!)
+      expect(Math.abs(gap1 - gap0)).toBeLessThan(1)
+    })
+
+    it('still repels inside the cutoff', () => {
+      const near: GNode[] = [
+        { id: 'a', pos: [0, 0, 0] },
+        { id: 'b', pos: [40, 0, 0] },
+      ]
+      const l = new ForceLayout(near, [], { dims: 3, centering: 0 })
+      const gap0 = Math.abs(near[1]!.pos[0]! - near[0]!.pos[0]!)
+      for (let i = 0; i < 30; i++) l.step()
+      expect(Math.abs(near[1]!.pos[0]! - near[0]!.pos[0]!)).toBeGreaterThan(gap0)
+    })
+
+    it('pulls a lone node toward the origin rather than letting it sit adrift', () => {
+      const lone: GNode[] = [{ id: 'x', pos: [700, 500, 0] }]
+      const l = new ForceLayout(lone, [], { dims: 3 })
+      const d0 = Math.hypot(lone[0]!.pos[0]!, lone[0]!.pos[1]!)
+      for (let i = 0; i < 60; i++) l.step()
+      expect(Math.hypot(lone[0]!.pos[0]!, lone[0]!.pos[1]!)).toBeLessThan(d0)
+    })
+
+    it('keeps a disconnected graph bounded', () => {
+      // no edges at all — the case that made the previous version expand without limit
+      const loose: GNode[] = Array.from({ length: 12 }, (_, i) => ({
+        id: 'n' + i,
+        pos: [(i % 4) * 60 - 90, Math.floor(i / 4) * 60 - 60, 0],
+      }))
+      const l = new ForceLayout(loose, [], { dims: 3 })
+      for (let i = 0; i < 400; i++) l.step()
+      const extent = Math.max(...loose.map((n) => Math.hypot(n.pos[0]!, n.pos[1]!)))
+      expect(Number.isFinite(extent)).toBe(true)
+      expect(extent).toBeLessThan(2000)
+    })
+
+    it('accumulates force across sub-steps before damping once', () => {
+      // one sub-step vs two must not settle identically, or `substeps` is doing nothing
+      const mk = (substeps: number) => {
+        const ns: GNode[] = [
+          { id: 'a', pos: [0, 0, 0] },
+          { id: 'b', pos: [40, 0, 0] },
+        ]
+        const l = new ForceLayout(ns, [], { dims: 3, substeps, centering: 0 })
+        for (let i = 0; i < 10; i++) l.step()
+        return Math.abs(ns[1]!.pos[0]! - ns[0]!.pos[0]!)
+      }
+      expect(mk(2)).toBeGreaterThan(mk(1))
+    })
+  })
 })

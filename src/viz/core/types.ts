@@ -43,6 +43,15 @@ export interface LayoutOptions {
   spring?: number
   damping?: number
   rest?: number // base spring rest length (scaled by edge weight)
+  /** Repulsion range. Beyond this distance nodes stop pushing each other, which is what keeps
+   *  a graph with disconnected parts from drifting apart without bound. 0 disables the cutoff. */
+  cutoff?: number
+  /** Pull toward the origin, per sub-step. Without it nothing holds the cloud together and a
+   *  layout with no edges simply expands forever. */
+  centering?: number
+  /** Force sub-steps per step(). Forces accumulate into velocity across sub-steps, then the
+   *  layout damps and integrates ONCE — matching the reference implementation this came from. */
+  substeps?: number
 }
 
 export interface Viewport {

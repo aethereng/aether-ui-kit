@@ -270,6 +270,10 @@ function onGraphDrag(id: string, x: number, y: number) {
   // relax around it. Without the re-heat the sim is settled and only this node moves --
   // which reads as "the graph has no forces".
   gLayout.pin(id, [w.x, w.y, 0])
+  // Publish straight away rather than waiting for the next animation frame. The frame is not
+  // guaranteed — requestAnimationFrame is paused whenever the tab is not visible — and a node
+  // that only follows the cursor while the sim happens to be ticking is a node that stutters.
+  publish()
   gLayout.reheat(0.5)
   ensureRunning()
   gDragged.value = id

@@ -3,15 +3,16 @@
 // ~1k nodes. The GL/3D+ path later swaps the *renderer*, not this engine.
 import type { GNode, GEdge, LayoutOptions } from './types'
 
-function dist(a: number[], b: number[]): number {
+function dist2(a: number[], b: number[]): number {
   let s = 0
   const n = Math.max(a.length, b.length)
   for (let k = 0; k < n; k++) {
     const d = (a[k] ?? 0) - (b[k] ?? 0)
     s += d * d
   }
-  return Math.sqrt(s)
+  return s
 }
+
 
 export class ForceLayout {
   nodes: GNode[]
@@ -28,12 +29,19 @@ export class ForceLayout {
   constructor(nodes: GNode[], edges: GEdge[], opts: LayoutOptions) {
     this.nodes = nodes
     this.edges = edges
+    /* Defaults are the reference implementation's, measured rather than guessed. The port had
+     * drifted to repulsion 9000 / spring 0.03 / rest 120 with one sub-step, no range cutoff
+     * and no centring — roughly 3.5x the effective repulsion with nothing holding the cloud
+     * together, which settles looser and, with disconnected nodes, never settles at all. */
     this.opts = {
       dims: opts.dims,
-      repulsion: opts.repulsion ?? 9000,
-      spring: opts.spring ?? 0.03,
-      damping: opts.damping ?? 0.86,
-      rest: opts.rest ?? 120,
+      repulsion: opts.repulsion ?? 1300,
+      spring: opts.spring ?? 0.01,
+      damping: opts.damping ?? 0.85,
+      rest: opts.rest ?? 110,
+      cutoff: opts.cutoff ?? 200,
+      centering: opts.centering ?? 0.0018,
+      substeps: opts.substeps ?? 2,
     }
     this.alphaValue = 1
     this.vel = new Map()
@@ -77,51 +85,59 @@ export class ForceLayout {
   }
 
   step(): void {
-    const { dims, repulsion, spring, damping, rest } = this.opts
+    const { dims, repulsion, spring, damping, rest, cutoff, centering, substeps } = this.opts
     const byId = new Map(this.nodes.map((n) => [n.id, n]))
-    const f = new Map<string, number[]>()
-    for (const n of this.nodes) f.set(n.id, Array(dims).fill(0))
+    const cutoff2 = cutoff > 0 ? cutoff * cutoff : Infinity
 
-    // repulsion
-    for (let i = 0; i < this.nodes.length; i++) {
-      for (let j = i + 1; j < this.nodes.length; j++) {
+    /* Forces accumulate straight into velocity, across every sub-step, and the layout damps
+     * and integrates once at the end. Damping per sub-step instead would bleed off most of
+     * the force before it ever moved anything. */
+    for (let s = 0; s < substeps; s++) {
+      // repulsion — short range, so a distant component stops pushing entirely
+      for (let i = 0; i < this.nodes.length; i++) {
         const a = this.nodes[i]!
-        const b = this.nodes[j]!
-        const d = dist(a.pos, b.pos)
-        if (d < 0.01) continue
-        const force = repulsion / (d * d)
-        const fa = f.get(a.id)!
-        const fb = f.get(b.id)!
+        const va = this.vel.get(a.id)!
+        for (let j = i + 1; j < this.nodes.length; j++) {
+          const b = this.nodes[j]!
+          const d2 = dist2(a.pos, b.pos)
+          if (d2 > cutoff2 || d2 < 1e-9) continue
+          const d = Math.sqrt(d2)
+          const force = repulsion / d2
+          const vb = this.vel.get(b.id)!
+          for (let k = 0; k < dims; k++) {
+            const u = (((b.pos[k] ?? 0) - (a.pos[k] ?? 0)) / d) * force
+            va[k] = (va[k] ?? 0) - u
+            vb[k] = (vb[k] ?? 0) + u
+          }
+        }
+        // pull toward the origin; the projection re-centres afterwards, so origin is centre
+        if (centering) {
+          for (let k = 0; k < dims; k++) va[k] = (va[k] ?? 0) - (a.pos[k] ?? 0) * centering
+        }
+      }
+      // springs
+      for (const e of this.edges) {
+        const a = byId.get(e.a)
+        const b = byId.get(e.b)
+        if (!a || !b) continue
+        const d = Math.sqrt(dist2(a.pos, b.pos)) || 0.01
+        const force = (d - (e.w ?? 1) * rest) * spring
+        const va = this.vel.get(a.id)!
+        const vb = this.vel.get(b.id)!
         for (let k = 0; k < dims; k++) {
-          const u = ((a.pos[k] ?? 0) - (b.pos[k] ?? 0)) / d
-          fa[k] = (fa[k] ?? 0) + u * force
-          fb[k] = (fb[k] ?? 0) - u * force
+          const u = (((b.pos[k] ?? 0) - (a.pos[k] ?? 0)) / d) * force
+          va[k] = (va[k] ?? 0) + u
+          vb[k] = (vb[k] ?? 0) - u
         }
       }
     }
-    // springs
-    for (const e of this.edges) {
-      const a = byId.get(e.a)
-      const b = byId.get(e.b)
-      if (!a || !b) continue
-      const d = dist(a.pos, b.pos) || 0.01
-      const target = (e.w ?? 1) * rest
-      const force = (d - target) * spring
-      const fa = f.get(a.id)!
-      const fb = f.get(b.id)!
-      for (let k = 0; k < dims; k++) {
-        const u = ((b.pos[k] ?? 0) - (a.pos[k] ?? 0)) / d
-        fa[k] = (fa[k] ?? 0) + u * force
-        fb[k] = (fb[k] ?? 0) - u * force
-      }
-    }
-    // integrate — scaled by alpha, and skipping whatever the caller is holding
+
+    // damp and integrate once, scaled by alpha; pinned nodes are held by the caller
     for (const n of this.nodes) {
       if (this.pinned.has(n.id)) continue
       const v = this.vel.get(n.id)!
-      const fn = f.get(n.id)!
       for (let k = 0; k < dims; k++) {
-        const nv = ((v[k] ?? 0) + (fn[k] ?? 0)) * damping
+        const nv = (v[k] ?? 0) * damping
         v[k] = nv
         n.pos[k] = (n.pos[k] ?? 0) + nv * this.alphaValue
       }

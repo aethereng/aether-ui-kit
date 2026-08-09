@@ -12,4 +12,9 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  // GitHub Pages serves a project (non-custom-domain) repo at
+  // https://<org>.github.io/<repo>/, so every asset URL needs that prefix — without it
+  // the deployed page 404s on its own JS/CSS. Only apply it in CI: `npm run dev` and a
+  // local `vite build` both still want root-relative paths.
+  base: process.env.GITHUB_ACTIONS ? '/aether-ui-kit/' : '/',
 })

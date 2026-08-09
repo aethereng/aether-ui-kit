@@ -123,7 +123,9 @@ function reschedule(id: string, start: number, end: number | null) {
 
 ## Gallery
 
-Every component, live, with its API and a working theme switch:
+**[aethereng.github.io/aether-ui-kit](https://aethereng.github.io/aether-ui-kit/)** — every component, live, with its API and a working theme switch. Deploys automatically from `main`.
+
+Or run it locally:
 
 ```bash
 npm install

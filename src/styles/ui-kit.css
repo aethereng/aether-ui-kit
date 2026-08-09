@@ -58,7 +58,10 @@
   text-transform: uppercase;
   color: var(--aether-ink-soft);
 }
-.aether-property-editor__field input,
+/* :not([type='checkbox']) because the boolean field is a custom switch with its own
+   dimensions -- inheriting the text-input padding and border made it 60x36 instead of a
+   38x22 pill for any consumer without a box-sizing reset of their own. */
+.aether-property-editor__field input:not([type='checkbox']),
 .aether-property-editor__field textarea,
 .aether-property-editor__field select {
   border: 1px solid var(--aether-line-strong);
@@ -115,6 +118,15 @@
 .aether-seg button:last-child {
   border-right: 0;
 }
+/* the launch-board / brain-map originals both give a non-active segment a hover; the port
+   had none, so a segmented control was inert until clicked */
+.aether-seg button:hover:not(.on):not(:disabled) {
+  color: var(--aether-ink);
+}
+.aether-seg button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 .aether-seg button.on {
   background: var(--aether-panel);
   color: var(--aether-ink);
@@ -141,6 +153,15 @@
   white-space: nowrap;
   cursor: pointer;
   font-family: inherit;
+}
+/* all three original chip variants define a hover; this had none */
+.aether-chip:hover:not(:disabled) {
+  border-color: var(--aether-ink-soft);
+  color: var(--aether-ink);
+}
+.aether-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 .aether-chip.on {
   background: var(--aether-cool-wash);
@@ -266,6 +287,11 @@
 }
 .aether-property-editor__field input[type='checkbox'] {
   order: 1;
+  /* The kit deliberately ships no global reset -- it must not impose one on a host -- so
+     every component that sets an explicit width states its own box model. */
+  box-sizing: border-box;
+  padding: 0;
+  border: 0;
   appearance: none;
   -webkit-appearance: none;
   width: 38px;

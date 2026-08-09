@@ -95,3 +95,53 @@ describe('token contract', () => {
     expect(hexes, `hardcoded colours outside :root: ${hexes.join(', ')}`).toEqual([])
   })
 })
+
+describe('components that set their own dimensions state their own box model', () => {
+  /* The kit ships no global reset on purpose — it must not impose one on a host. The cost is
+   * that any rule setting an explicit width has to say what that width means, or it silently
+   * depends on the host having a reset. The boolean switch did exactly that: 38x22 in the
+   * gallery (which resets), 60x36 for anyone else, because it inherited the text-input
+   * padding and border. */
+  const shared = readFileSync(resolve(root, 'src/styles/ui-kit.css'), 'utf8')
+
+  it('ships no global reset, so this file stays safe to import anywhere', () => {
+    expect(/\*\s*\{[^}]*box-sizing/.test(shared)).toBe(false)
+  })
+
+  it('the boolean switch pins box-sizing, padding and border', () => {
+    const rule = shared.slice(
+      shared.indexOf("__field input[type='checkbox'] {"),
+      shared.indexOf('}', shared.indexOf("__field input[type='checkbox'] {")),
+    )
+    expect(rule, 'switch rule not found').toBeTruthy()
+    for (const decl of ['box-sizing', 'padding', 'border']) {
+      expect(rule.includes(decl), `switch must declare ${decl}`).toBe(true)
+    }
+  })
+
+  it('the shared text-input rule excludes the checkbox', () => {
+    // if this selector ever swallows [type=checkbox] again, the switch inherits padding
+    expect(shared.includes("input:not([type='checkbox'])")).toBe(true)
+  })
+})
+
+describe('interactive controls give feedback before they are clicked', () => {
+  const shared = readFileSync(resolve(root, 'src/styles/ui-kit.css'), 'utf8')
+
+  it.each([
+    ['.aether-tool', '.aether-tool:hover'],
+    ['.aether-chip', '.aether-chip:hover'],
+    ['.aether-seg button', '.aether-seg button:hover'],
+  ])('%s has a hover state', (_name, selector) => {
+    expect(shared.includes(selector), `${selector} missing`).toBe(true)
+  })
+
+  it.each(['.aether-tool:disabled', '.aether-chip:disabled', '.aether-seg button:disabled'])(
+    '%s has a disabled state',
+    (selector) => {
+      // Seg and Chip both expose a `disabled` prop; without a rule it renders identically
+      // to an enabled control, which is an API with no affordance behind it
+      expect(shared.includes(selector), `${selector} missing`).toBe(true)
+    },
+  )
+})

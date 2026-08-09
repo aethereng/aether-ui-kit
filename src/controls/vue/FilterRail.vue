@@ -62,7 +62,7 @@ function anyActive(groups: FilterGroup<V>[]): boolean {
     monospace;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--aether-faint, #9aa0a6);
+  color: var(--aether-faint);
   margin: 0 0 9px;
 }
 .aether-rail__foot {
@@ -73,7 +73,7 @@ function anyActive(groups: FilterGroup<V>[]): boolean {
 .aether-rail__clear {
   border: 0;
   background: transparent;
-  color: var(--aether-cool, #3a8a86);
+  color: var(--aether-cool);
   font:
     600 11px/1 ui-monospace,
     monospace;
@@ -87,6 +87,6 @@ function anyActive(groups: FilterGroup<V>[]): boolean {
   font:
     500 11px/1 ui-monospace,
     monospace;
-  color: var(--aether-faint, #9aa0a6);
+  color: var(--aether-faint);
 }
 </style>

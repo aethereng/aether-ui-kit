@@ -19,8 +19,14 @@ export type ChipOption<V extends string = string> = {
   value: V
   label: string
   count?: number
-  /** Leading swatch. Omit for no dot. */
+  /** Leading dot. Omit for none. */
   dotColor?: string
+  /** A raw CSS declaration list for the leading swatch, e.g. 'background:#c33' or
+   *  'border:1.5px dashed #c33'. Where dotColor gives an 8px colour dot, this gives a wider
+   *  block that can carry the SAME encoding as the thing being filtered — a dashed border for
+   *  "planned", a faded fill for "done". That is what lets a set of chips replace a legend
+   *  rather than sit beside one. Takes precedence over dotColor. */
+  swatch?: string
   /** Accent for the chip's own text and active border. Distinct from dotColor because
    *  the two encode different things and surfaces use them independently: a rail may
    *  colour the dot by category while leaving the label neutral, or colour the label to

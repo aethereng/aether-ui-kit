@@ -81,14 +81,15 @@ const viewOptions: SegOption[] = [
     core: '@aether/ui-kit/controls/core',
     blurb: 'Toggle chips with an optional count and colour dot. Multi-select via a Set.',
     detail:
-      'The dot colour is a caller concern — the kit never decides what a category means, only how a chip behaves. `color` accents the label itself (an option can carry its encoding without a dot); `muted` dims an option without disabling it, for a filter whose count is zero but which should still be visible and clickable.',
+      'The dot colour is a caller concern — the kit never decides what a category means, only how a chip behaves. `color` accents the label itself (an option can carry its encoding without a dot); `muted` dims an option without disabling it, for a filter whose count is zero but which should still be visible and clickable. `swatch` takes a raw CSS declaration list rather than a colour, so a chip can carry the same encoding as the thing it filters — a dashed border for planned, a faded fill for shipped — which is what lets a set of chips replace a legend instead of sitting beside one.',
     props: [
       {
         name: 'options',
         type: 'ChipOption<V>[]',
-        note: '{ value, label, count?, dotColor?, color?, muted?, disabled? }',
+        note: '{ value, label, count?, dotColor?, swatch?, color?, muted?, disabled? }',
       },
       { name: 'modelValue', type: 'V | Set<V>', note: 'single value or a Set for multi-select' },
+      { name: 'variant', type: "'pill' | 'row'?", note: 'inline filter chip vs sidebar list row' },
       { name: 'ariaLabel', type: 'string?' },
     ],
     emits: [{ name: 'toggle', type: '[value: V]', note: 'caller owns the Set; chip only reports' }],

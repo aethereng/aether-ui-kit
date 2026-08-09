@@ -41,6 +41,7 @@ function anyActive(groups: FilterGroup<V>[]): boolean {
       <Chip
         :options="g.options"
         :model-value="g.selected"
+        :variant="orientation === 'vertical' ? 'row' : 'pill'"
         :aria-label="g.label"
         @toggle="(v: V) => emit('toggle', g.key, v)"
       />

@@ -75,6 +75,9 @@ const chipOpts: ChipOption[] = [
   { value: 'risk', label: 'Risks', count: 2, dotColor: 'var(--aether-warm)' },
   { value: 'link', label: 'Links', count: 0, muted: true },
   { value: 'lane', label: 'Colour-accented', count: 4, color: 'var(--aether-warm)' },
+  // a swatch carries the encoding of the thing being filtered, so the chips ARE the legend
+  { value: 'planned', label: 'Planned', count: 5, swatch: 'border:1.5px dashed var(--aether-warm)' },
+  { value: 'shipped', label: 'Shipped', count: 9, swatch: 'background:var(--aether-cool);opacity:.45' },
 ]
 function toggleChip(v: string) {
   const next = new Set(active.value)

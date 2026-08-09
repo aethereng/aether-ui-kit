@@ -139,6 +139,13 @@
   flex-wrap: wrap;
   gap: 6px;
 }
+/* A sidebar rail is a LIST, not a wrapping row of pills — one full-width row per option. */
+.aether-chips--row {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 1px;
+  width: 100%;
+}
 .aether-chip {
   display: flex;
   align-items: baseline;
@@ -185,6 +192,47 @@
 }
 .aether-chip .n {
   font-weight: 600;
+}
+/* The wider swatch: carries the encoding of the thing being filtered (a dashed border for
+   "planned", a faded fill for "done"), where .dot can only carry a colour. */
+.aether-chip .sw {
+  width: 16px;
+  height: 9px;
+  border-radius: 3px;
+  align-self: center;
+  flex: none;
+  box-sizing: border-box;
+}
+
+/* ---- Chip: row variant (sidebar rail) ---- */
+.aether-chip--row {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 12.4px;
+  text-align: left;
+  transition: background 0.18s;
+}
+.aether-chip--row:hover:not(:disabled) {
+  background: var(--aether-panel);
+  border-color: transparent;
+}
+.aether-chip--row.on {
+  background: var(--aether-panel);
+  color: var(--aether-ink);
+  border-color: transparent;
+}
+/* the count sits in its own right-hand column, which is what makes a rail scannable */
+.aether-chip--row .n {
+  margin-left: auto;
+  font-family: var(--aether-font-mono);
+  font-size: 10px;
+  line-height: 1;
+  color: var(--aether-faint);
 }
 
 /* ---- Tool (controls) ---- */

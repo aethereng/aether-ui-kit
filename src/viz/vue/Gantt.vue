@@ -34,8 +34,15 @@ const props = withDefaults(
 
 interface GanttEmit {
   select: [id: string]
+  /** Fired once, when a gesture crosses the movement threshold — BEFORE the first move/resize.
+   *  A caller that supports undo checkpoints here; without it, a drag emits a stream of
+   *  mutations with no boundary and undo has nothing coherent to restore. */
+  dragStart: [id: string]
   move: [id: string, start: number, end: number | null]
   resize: [id: string, edge: 'l' | 'r', value: number]
+  /** Fired once when a real (moved) gesture ends. Callers persist here rather than on every
+   *  pointermove. Not fired for a click that never moved — that emits `select` instead. */
+  dragEnd: [id: string]
   newAt: [day: number, type: string]
   expandDay: [day: { t: string; i: number } | null]
 }
@@ -77,7 +84,7 @@ let drag: Drag | null = null
 
 function onPointerDown(e: PointerEvent) {
   const tgt = e.target as HTMLElement
-  const dday = tgt.closest('.dday') as HTMLElement | null
+  const dday = tgt.closest('.ag-dday') as HTMLElement | null
   if (dday) {
     const t = dday.dataset.lane!,
       i = +dday.dataset.day!
@@ -88,18 +95,19 @@ function onPointerDown(e: PointerEvent) {
       const cur = expandDay.value
       const same = cur != null && cur.t === t && cur.i === i
       expandDay.value = same ? null : { t, i }
+      emit('expandDay', expandDay.value)
     }
     e.stopPropagation()
     return
   }
   // anchors: select on click, never drag (regression fix, source 1162)
-  const anc = tgt.closest('.anchor') as HTMLElement | null
+  const anc = tgt.closest('.ag-canchor') as HTMLElement | null
   if (anc) {
     emit('select', anc.dataset.id!)
     e.stopPropagation()
     return
   }
-  const el = tgt.closest('.ev, .ms') as HTMLElement | null
+  const el = tgt.closest('.ag-ev, .ag-ms') as HTMLElement | null
   if (!el) return
   const it = props.items.find((x) => x.id === el.dataset.id)
   if (!it) return
@@ -121,7 +129,12 @@ function onPointerMove(e: PointerEvent) {
   const d = drag
   if (!d) return
   const dd = Math.round((e.clientX - d.x0) / props.ppd)
-  if (!d.moved && Math.abs(e.clientX - d.x0) > 4) d.moved = true
+  // The threshold crossing is the gesture's real start — announce it once, before the first
+  // mutation, so a caller can snapshot the pre-drag state.
+  if (!d.moved && Math.abs(e.clientX - d.x0) > 4) {
+    d.moved = true
+    emit('dragStart', d.id)
+  }
   if (!d.moved) return
   const it = props.items.find((x) => x.id === d.id)
   if (!it) return
@@ -143,10 +156,11 @@ function onPointerUp() {
     id = drag.id
   drag = null
   if (wasClick) emit('select', id)
+  else emit('dragEnd', id)
 }
 function onDblClick(e: MouseEvent) {
-  const lane = (e.target as HTMLElement).closest('.lane') as HTMLElement | null
-  if (!lane || (e.target as HTMLElement).closest('.ev,.ms')) return
+  const lane = (e.target as HTMLElement).closest('.ag-lane') as HTMLElement | null
+  if (!lane || (e.target as HTMLElement).closest('.ag-ev,.ag-ms')) return
   const rect = lane.getBoundingClientRect()
   const day = Math.max(
     0,
@@ -278,7 +292,7 @@ const anchors = computed(() =>
                 :data-id="ev.id"
                 :style="{
                   left: ev.start * ppd + 1 + 'px',
-                  top: LANE_PAD + (ev as any)._row * LANE_ROW + 'px',
+                  top: LANE_PAD + (b.L.rowOf[ev.id] ?? 0) * LANE_ROW + 'px',
                   width: Math.max(ppd, (ev.end - ev.start + 1) * ppd - 3) + 'px',
                   background: b.L.meta.wash,
                   borderColor: b.L.meta.color,
@@ -297,7 +311,7 @@ const anchors = computed(() =>
                 :data-id="ev.id"
                 :style="{
                   left: (ev.start + 0.5) * ppd - 6.5 + 'px',
-                  top: LANE_PAD + (ev as any)._row * LANE_ROW + 5 + 'px',
+                  top: LANE_PAD + (b.L.rowOf[ev.id] ?? 0) * LANE_ROW + 5 + 'px',
                   background: b.L.meta.color,
                   borderColor: b.L.meta.color,
                 }"
@@ -308,7 +322,7 @@ const anchors = computed(() =>
                 class="ag-ms-label"
                 :style="{
                   left: (ev.start + 0.5) * ppd + 11 + 'px',
-                  top: LANE_PAD + (ev as any)._row * LANE_ROW + 3 + 'px',
+                  top: LANE_PAD + (b.L.rowOf[ev.id] ?? 0) * LANE_ROW + 3 + 'px',
                   color: b.L.meta.color,
                 }"
               >

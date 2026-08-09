@@ -43,6 +43,12 @@ export interface LaneLayout {
   byDay: Record<number, GanttItem[]>
   expanded: GanttItem[] | null
   rows: number[] // highest occupied end-day per row (greedy stacking)
+  /** Stacking row per span id. Returned as data rather than stamped onto the caller's
+   *  objects: this function must not mutate its input. A consumer may hand us a deep
+   *  reactive array (the gallery does), and writing to it from inside the computed that
+   *  reads it is a write-during-read — currently idempotent, but it stops being so the
+   *  moment a drag changes rows mid-gesture. */
+  rowOf: Record<string, number>
 }
 
 // A POINT is a zero-duration, non-anchor item. Anchors keep the spine; spans keep their bars.
@@ -69,6 +75,7 @@ export function laneLayout(
       byDay: {},
       expanded: null,
       rows: [],
+      rowOf: {},
     }
   }
   for (const t of Object.keys(lanes)) {
@@ -84,7 +91,7 @@ export function laneLayout(
       while (row < L.rows.length && (L.rows[row] ?? -1) >= s) row++
       if (row === L.rows.length) L.rows.push(-1)
       L.rows[row] = Math.max(L.rows[row] ?? -1, e)
-      ;(ev as GanttItem & { _row?: number })._row = row
+      L.rowOf[ev.id] = row
     }
     L.byDay = {}
     for (const ev of L.points) {

@@ -223,8 +223,10 @@ export const COMPONENTS: CompMeta[] = [
     ],
     emits: [
       { name: 'select', type: '[id: string]' },
+      { name: 'dragStart', type: '[id: string]', note: 'once, before the first move — snapshot here' },
       { name: 'move', type: '[id, start, end | null]' },
       { name: 'resize', type: "[id, edge: 'l' | 'r', value]" },
+      { name: 'dragEnd', type: '[id: string]', note: 'once, when a moved gesture ends — persist here' },
       { name: 'newAt', type: '[day: number, type: string]' },
       { name: 'expandDay', type: '[day | null]', note: 'many one-day items on the same date' },
     ],

@@ -5,7 +5,7 @@
  * itself (light + dark below) and the kit's components follow, which is exactly the contract
  * a consumer gets. The theme switch at the top is not a mock — it re-themes this page, and the
  * components re-theme with it because they never hardcode a colour. */
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import GSection from './GSection.vue'
 import { COMPONENTS, GROUPS, byGroup, type Group } from './meta'
 
@@ -18,6 +18,7 @@ import PropertyEditor from '@/property-editor/vue/PropertyEditor.vue'
 import Graph2D from '@/viz/vue/Graph2D.vue'
 import Gantt from '@/viz/vue/Gantt.vue'
 
+import { ForceLayout } from '@/viz/core'
 import type { GNode, GEdge } from '@/viz/core'
 import type { GanttItem, GanttLane } from '@/viz/core/gantt'
 import type { SegOption, ChipOption, FilterGroup } from '@/controls/core/types'
@@ -181,21 +182,91 @@ const peFields: FieldDescriptor[] = [
 const peValues: PEValues = { title: '', body: '', kind: 'fact', live: true }
 const peOut = ref<PEValues>({ ...peValues })
 
-/* ── Graph2D ── */
+/* ── Graph2D ──
+ * Deliberately run CONTROLLED (:running="false"), the same way Brain Map uses it: the
+ * gallery owns nodes[].pos and drives the force sim itself with the kit's exported
+ * ForceLayout. That is the whole thesis made visible — the layout core is framework-free
+ * and usable without the component, and the component only renders + emits. It is also the
+ * only mode where dragging a node can work, because in running mode the component's
+ * internal layout owns the positions and a caller's write is ignored. */
 const palette = ['var(--aether-cool)', 'var(--aether-warm)', 'var(--aether-cool-soft)']
-const gNodes: GNode[] = Array.from({ length: 18 }, (_, i) => ({
-  id: 'n' + i,
-  pos: [(Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200, 0],
-  label: i % 5 === 0 ? 'hub' + i : undefined,
-  color: palette[i % 3],
-  r: i % 5 === 0 ? 10 : 5,
-}))
+const gNodes = ref<GNode[]>(
+  Array.from({ length: 18 }, (_, i) => ({
+    id: 'n' + i,
+    pos: [(Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200, 0],
+    label: i % 5 === 0 ? 'hub' + i : undefined,
+    color: palette[i % 3],
+    r: i % 5 === 0 ? 10 : 5,
+  })),
+)
 const gEdges: GEdge[] = []
-for (let i = 1; i < gNodes.length; i++) {
+for (let i = 1; i < gNodes.value.length; i++) {
   const target = i % 5 === 0 ? i : Math.floor(i / 5) * 5
   gEdges.push({ a: 'n' + target, b: 'n' + i, w: 1 })
 }
 const gClicked = ref<string>('—')
+const gSelected = ref<string | null>(null)
+const gDragged = ref<string>('—')
+
+// The gallery drives the kit's exported ForceLayout itself — the clearest possible proof
+// that the layout core is framework-free and usable without the component. The sim owns its
+// own node copies and we publish a fresh array each frame; replacing the objects (rather
+// than mutating pos in place) is what actually makes Vue re-render.
+const gLayout = new ForceLayout(
+  gNodes.value.map((n) => ({ ...n, pos: [...n.pos] })),
+  gEdges,
+  { dims: 3 },
+)
+const publish = () => {
+  gNodes.value = gLayout.nodes.map((n) => ({ ...n, pos: [...n.pos] }))
+}
+const gRunning = ref(true)
+let gRaf = 0
+let gSteps = 0
+function gLoop() {
+  gLayout.step()
+  publish()
+  gSteps += 1
+  // stop at convergence rather than burning a frame forever on a settled graph
+  if (gSteps >= 220) {
+    gRunning.value = false
+    return
+  }
+  gRaf = requestAnimationFrame(gLoop)
+}
+function gRerun() {
+  if (gRunning.value) return
+  gSteps = 0
+  gRunning.value = true
+  gRaf = requestAnimationFrame(gLoop)
+}
+// neighbours of the selection, to show the `neighbors` emphasis prop doing something
+const gNeighbors = computed<Set<string> | null>(() => {
+  if (!gSelected.value) return null
+  const s = new Set<string>([gSelected.value])
+  for (const e of gEdges) {
+    if (e.a === gSelected.value) s.add(e.b)
+    if (e.b === gSelected.value) s.add(e.a)
+  }
+  return s
+})
+function onGraphNodeClick(id: string) {
+  gClicked.value = id
+  gSelected.value = gSelected.value === id ? null : id
+}
+function onGraphDrag(id: string, x: number, y: number) {
+  // `drag` reports viewport coords; a controlled caller decides what they mean. Write into
+  // the sim's own node too, so a later re-run starts from where the user put it.
+  const target = gLayout.nodes.find((v) => v.id === id)
+  if (!target) return
+  target.pos = [x - 280, y - 180, target.pos[2] ?? 0]
+  publish()
+  gDragged.value = id
+}
+onMounted(() => {
+  gRaf = requestAnimationFrame(gLoop)
+})
+onBeforeUnmount(() => cancelAnimationFrame(gRaf))
 
 /* ── Gantt ── */
 const gItems = ref<GanttItem[]>([
@@ -392,20 +463,33 @@ const groupAnchor = (g: Group) => g.toLowerCase()
 
         <!-- Visualization -->
         <GSection v-else-if="c.id === 'graph2d'" :meta="c">
+          <p class="g-hint">
+            Drag a node to move it. Click one to light its neighbourhood.
+            <button class="g-mini" type="button" @click="gRerun()">Re-run layout</button>
+          </p>
           <Graph2D
             :nodes="gNodes"
             :edges="gEdges"
             :width="560"
             :height="360"
-            @node-click="gClicked = $event"
+            :running="false"
+            :selection="gSelected"
+            :neighbors="gNeighbors"
+            @node-click="onGraphNodeClick"
+            @drag="onGraphDrag"
+            @drag-end="gDragged = $event"
           />
           <template #state
-            >clicked = {{ gClicked }} · nodes = {{ gNodes.length }} · edges =
-            {{ gEdges.length }}</template
+            >selected = {{ gSelected || '∅' }} · last drag = {{ gDragged }} · layout =
+            {{ gRunning ? 'running' : 'settled' }} · nodes = {{ gNodes.length }}</template
           >
         </GSection>
 
         <GSection v-else-if="c.id === 'gantt'" :meta="c">
+          <p class="g-hint">
+            Drag a bar to move it, its edges to resize. Double-click empty lane space to
+            create. Undo checkpoints come from drag-start / drag-end, not every pixel.
+          </p>
           <Gantt
             :items="gItems"
             :lanes="gLanes"
@@ -701,6 +785,29 @@ body {
   flex-direction: column;
   gap: 22px;
   width: 100%;
+}
+.g-hint {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  color: var(--aether-ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.g-mini {
+  border: 1px solid var(--aether-line-strong);
+  background: var(--aether-surface);
+  color: var(--aether-ink);
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-family: var(--g-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+.g-mini:hover {
+  border-color: var(--aether-cool);
+  color: var(--aether-cool);
 }
 .g-variant {
   display: block;

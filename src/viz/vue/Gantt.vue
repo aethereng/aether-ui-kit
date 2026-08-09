@@ -502,8 +502,16 @@ const anchors = computed(() =>
   background: var(--aether-panel);
   border-bottom: 1px solid var(--aether-line-strong);
 }
+/* The anchor is a stem dropping from the top of the band to a diamond just above the lanes,
+   with its label beneath. That only works if the column has the band's height to fill: with
+   no height the flex box collapsed to its content, the stem's `flex: 1` grew to 0, and the
+   whole marker sat squashed against the top of a 92px band with two thirds of it empty. */
 .ag-canchor {
   position: absolute;
+  top: 0;
+  height: 100%;
+  box-sizing: border-box;
+  padding-bottom: 19px; /* room for the label under the diamond */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -521,7 +529,9 @@ const anchors = computed(() =>
 }
 .ag-canchor .atxt {
   position: absolute;
-  top: 10px;
+  /* pinned to the foot of the band, under the diamond -- absolute so the anchor stays
+     zero-width at its day and a long title cannot shift the diamond off it */
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;

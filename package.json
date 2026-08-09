@@ -1,16 +1,17 @@
 {
   "name": "@aether/ui-kit",
-  "version": "0.1.0",
-  "description": "Neutral, shared UI components for AetherOS, the Etere app, and the Quintus app -- framework-free core plus a thin wrapper per consumer. Home neutral to both engines, same reasoning as the determinism contract.",
+  "version": "0.2.0",
+  "description": "Framework-free component cores with thin Vue wrappers, for engineering interfaces.",
   "license": "Apache-2.0",
   "type": "module",
   "keywords": [
-    "ui",
-    "components",
     "vue",
-    "web-component",
-    "custom-element",
-    "property-editor"
+    "components",
+    "design-system",
+    "gantt",
+    "graph",
+    "timeline",
+    "engineering"
   ],
   "exports": {
     "./property-editor": {
@@ -107,5 +108,17 @@
     "semi": false,
     "singleQuote": true,
     "printWidth": 100
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aethereng/aether-ui-kit.git"
+  },
+  "homepage": "https://github.com/aethereng/aether-ui-kit#readme",
+  "bugs": {
+    "url": "https://github.com/aethereng/aether-ui-kit/issues"
+  },
+  "author": "Aether Engineering",
+  "sideEffects": [
+    "*.css"
+  ]
 }

@@ -299,9 +299,11 @@ const gLanes: GanttLane[] = [
   { type: 'erect', name: 'Erect', color: 'var(--aether-ink-soft)', wash: 'rgba(120,120,140,0.16)' },
 ]
 const gSel = ref<string | null>(null)
+// Period boundaries, deliberately NOT month names: Gantt works in day indices and never
+// touches dates, so a demo naming real months would contradict the component it documents.
 const gMarkers = [
-  { day: 0, label: 'Aug' },
-  { day: 31, label: 'Sep' },
+  { day: 0, label: 'Month 1' },
+  { day: 31, label: 'Month 2' },
 ]
 function onGanttMove(id: string, start: number, end: number | null) {
   const it = gItems.value.find((x) => x.id === id)

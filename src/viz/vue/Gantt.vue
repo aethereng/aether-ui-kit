@@ -429,7 +429,9 @@ const anchors = computed(() =>
   padding: 6px 10px;
   color: var(--aether-ink-soft);
   font-weight: 600;
-  border-bottom: 1px solid var(--aether-line);
+  /* matches the band it labels, so the two read as one region across the gutter */
+  background: var(--aether-panel);
+  border-bottom: 1px solid var(--aether-line-strong);
 }
 .ag-lane-label {
   display: flex;
@@ -490,10 +492,14 @@ const anchors = computed(() =>
   font-size: 9px;
   color: var(--aether-cool);
 }
+/* Anchors are plan-level milestones that belong to no single lane, so they get their own
+   band above the lanes. It is tinted rather than left transparent: with only a hairline
+   under it, the band read as part of the first lane and the anchors looked misplaced. */
 .ag-spine {
   position: absolute;
   top: 0;
   left: 0;
+  background: var(--aether-panel);
   border-bottom: 1px solid var(--aether-line-strong);
 }
 .ag-canchor {

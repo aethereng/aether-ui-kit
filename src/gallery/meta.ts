@@ -540,8 +540,8 @@ const lanes: GanttLane[] = [
 ]
 
 const markers = [
-  { day: 0, label: 'Aug' },
-  { day: 31, label: 'Sep' },
+  { day: 0, label: 'Month 1' },
+  { day: 31, label: 'Month 2' },
 ]
 const selected = ref<string | null>(null)
 

@@ -327,6 +327,7 @@ const groupAnchor = (g: Group) => g.toLowerCase()
         <GSection v-else-if="c.id === 'tool'" :meta="c">
           <Tool label="New card" hot @click="pressed++" />
           <Tool label="Plain" @click="pressed++" />
+          <Tool label="Delete" danger @click="pressed++" />
           <Tool label="Disabled" disabled @click="pressed++" />
           <template #state>clicks = {{ pressed }}</template>
         </GSection>

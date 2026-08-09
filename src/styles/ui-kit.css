@@ -13,7 +13,13 @@
   --aether-line: rgba(27, 30, 35, 0.14);
   --aether-line-strong: rgba(27, 30, 35, 0.26);
   --aether-warm: #a9591b;
+  --aether-warm-soft: #c8742e;
+  /* Foreground for text sitting ON --aether-warm. A host with a dark theme usually inverts
+     --aether-warm to a light amber, at which point a near-white foreground is unreadable —
+     so this is a token, not a constant. */
+  --aether-warm-ink: #fbf8f2;
   --aether-rose: #a33b52;
+  --aether-rose-wash: rgba(163, 59, 82, 0.12);
   --aether-cool: #2f6f6b;
   --aether-cool-soft: #5fa4a0;
   --aether-cool-wash: rgba(95, 164, 160, 0.15);
@@ -151,10 +157,28 @@
   box-shadow: var(--aether-shadow);
   font-family: inherit;
 }
+.aether-tool:hover:not(:disabled) {
+  border-color: var(--aether-ink-soft);
+  color: var(--aether-ink);
+}
 .aether-tool.hot {
   background: var(--aether-warm);
   border-color: var(--aether-warm);
-  color: #fbf8f2;
+  color: var(--aether-warm-ink);
+}
+.aether-tool.hot:hover:not(:disabled) {
+  background: var(--aether-warm-soft);
+  border-color: var(--aether-warm-soft);
+  color: var(--aether-warm-ink);
+}
+.aether-tool.danger {
+  color: var(--aether-rose);
+  border-color: var(--aether-rose);
+}
+.aether-tool.danger:hover:not(:disabled) {
+  background: var(--aether-rose-wash);
+  color: var(--aether-rose);
+  border-color: var(--aether-rose);
 }
 .aether-tool:disabled {
   opacity: 0.5;

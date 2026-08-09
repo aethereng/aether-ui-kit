@@ -80,14 +80,19 @@ export const COMPONENTS: CompMeta[] = [
     name: 'Tool',
     subpath: '@aether/ui-kit/controls/tool',
     group: 'Controls',
-    blurb: 'Header action button. `hot` marks the primary action.',
+    blurb: 'Header action button, in three variants: neutral, primary, destructive.',
+    detail:
+      'A closed variant set rather than an open style hook. If both hot and danger are passed, danger wins — mislabelling a destructive action as primary is the worse failure.',
     props: [
       { name: 'label', type: 'string' },
-      { name: 'hot', type: 'boolean?', note: 'primary/emphasised variant' },
+      { name: 'hot', type: 'boolean?', note: 'the primary action on a surface' },
+      { name: 'danger', type: 'boolean?', note: 'destructive — delete, discard' },
       { name: 'disabled', type: 'boolean?' },
+      { name: 'title', type: 'string?', note: 'native tooltip' },
     ],
     emits: [{ name: 'click', type: '[]' }],
-    usage: `<Tool label="New card" hot @click="create()" />`,
+    usage: `<Tool label="New card" hot @click="create()" />
+<Tool label="Delete" danger @click="remove()" />`,
   },
   {
     id: 'filter-rail',

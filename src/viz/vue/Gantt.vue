@@ -243,7 +243,11 @@ const anchors = computed(() =>
             v-for="a in anchors"
             :key="a.id"
             class="ag-canchor"
-            :class="{ sel: selection === a.id }"
+            :class="{
+              sel: selection === a.id,
+              'edge-l': (a.start + 0.5) * ppd < 80,
+              'edge-r': (ndays - a.start) * ppd < 80,
+            }"
             :data-id="a.id"
             :style="{
               left: (a.start + 0.5) * ppd + 'px',
@@ -512,8 +516,22 @@ const anchors = computed(() =>
 .ag-canchor .atxt {
   position: absolute;
   top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
   white-space: nowrap;
   font-size: 11px;
+}
+/* An anchor on the first or last few days would centre its label off the end of the chart,
+   where it is clipped to an unreadable tail. Near an edge, align the label inwards instead
+   -- the diamond stays exactly on its day either way. */
+.ag-canchor.edge-l .atxt {
+  left: 0;
+  transform: none;
+}
+.ag-canchor.edge-r .atxt {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 .ag-canchor.sel .dia {
   outline: 2px solid var(--aether-cool);

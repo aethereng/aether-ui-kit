@@ -28,8 +28,8 @@ import type { FieldDescriptor, FieldValues as PEValues } from '@/property-editor
 const THEME_KEY = 'aether-theme'
 const theme = ref<'paper' | 'timber'>('paper')
 const themeOpts: SegOption[] = [
-  { value: 'paper', label: 'Paper' },
-  { value: 'timber', label: 'Timber' },
+  { value: 'paper', label: 'Light' },
+  { value: 'timber', label: 'Dark' },
 ]
 function applyTheme(t: 'paper' | 'timber') {
   theme.value = t
@@ -374,7 +374,7 @@ const groupAnchor = (g: Group) => g.toLowerCase()
       <p>
         Components never hardcode a colour. They read <code>--aether-*</code> custom properties; the
         kit ships a light fallback palette so it renders standalone, and a host app overrides those
-        tokens to make the kit its own. <strong>This page is that host</strong> — the Paper/Timber
+        tokens to make the kit its own. <strong>This page is that host</strong> — the light/dark
         switch above rewrites the tokens and every component below follows, with no component code
         involved.
       </p>
@@ -541,7 +541,7 @@ import Seg from '@aether/ui-kit/controls/seg'</code></pre>
 
 <style>
 /* ── the gallery acting as a host app: it owns the --aether-* tokens ──
-   Values are a real application's Paper/Timber palettes, so what you see here is what the
+   Values are a real application's light and dark palettes, so what you see here is what the
    kit looks like in the app it was extracted from — not a gallery-only fiction. */
 :root {
   --aether-surface: #fbf8f2;

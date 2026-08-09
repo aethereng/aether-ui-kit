@@ -19,7 +19,17 @@ export type ChipOption<V extends string = string> = {
   value: V
   label: string
   count?: number
+  /** Leading swatch. Omit for no dot. */
   dotColor?: string
+  /** Accent for the chip's own text and active border. Distinct from dotColor because
+   *  the two encode different things and surfaces use them independently: a rail may
+   *  colour the dot by category while leaving the label neutral, or colour the label to
+   *  carry the encoding with no dot at all. */
+  color?: string
+  /** De-emphasise without disabling. The canonical desk filter dims an option whose count
+   *  is zero but keeps it clickable, so a user can still see the axis exists. Distinct from
+   *  `disabled`, which removes the interaction entirely. */
+  muted?: boolean
   disabled?: boolean
 }
 

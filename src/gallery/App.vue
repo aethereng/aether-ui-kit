@@ -69,7 +69,8 @@ const chipOpts: ChipOption[] = [
   { value: 'fact', label: 'Facts', count: 6, dotColor: 'var(--aether-cool-soft)' },
   { value: 'idea', label: 'Ideas', count: 3 },
   { value: 'risk', label: 'Risks', count: 2, dotColor: 'var(--aether-warm)' },
-  { value: 'link', label: 'Links', count: 0, dotColor: 'transparent' },
+  { value: 'link', label: 'Links', count: 0, muted: true },
+  { value: 'lane', label: 'Colour-accented', count: 4, color: 'var(--aether-warm)' },
 ]
 function toggleChip(v: string) {
   const next = new Set(active.value)
@@ -333,12 +334,27 @@ const groupAnchor = (g: Group) => g.toLowerCase()
         </GSection>
 
         <GSection v-else-if="c.id === 'filter-rail'" :meta="c">
-          <FilterRail
-            :groups="railGroups"
-            :hidden-count="railHidden"
-            @toggle="onRailToggle"
-            @clear="onRailClear"
-          />
+          <div class="g-rails">
+            <div>
+              <span class="g-variant">orientation="vertical" — Brain Map's sidebar</span>
+              <FilterRail
+                :groups="railGroups"
+                :hidden-count="railHidden"
+                @toggle="onRailToggle"
+                @clear="onRailClear"
+              />
+            </div>
+            <div>
+              <span class="g-variant">orientation="horizontal" — Quarter Timeline's header bar</span>
+              <FilterRail
+                :groups="railGroups"
+                :hidden-count="railHidden"
+                orientation="horizontal"
+                @toggle="onRailToggle"
+                @clear="onRailClear"
+              />
+            </div>
+          </div>
           <template #state
             >active = {{ railGroups.flatMap((g2) => [...g2.selected]).join(', ') || '∅' }}</template
           >
@@ -679,6 +695,20 @@ body {
 .g-pe {
   width: 100%;
   max-width: 380px;
+}
+.g-rails {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+}
+.g-variant {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--g-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--aether-faint);
 }
 
 /* ── footer ── */

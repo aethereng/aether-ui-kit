@@ -7,11 +7,18 @@
 import Chip from './Chip.vue'
 import type { FilterGroup } from '../core/types'
 
-defineProps<{
-  groups: FilterGroup<V>[]
-  hiddenCount?: number
-  clearLabel?: string
-}>()
+withDefaults(
+  defineProps<{
+    groups: FilterGroup<V>[]
+    hiddenCount?: number
+    clearLabel?: string
+    /** 'vertical' stacks groups down a sidebar (label above its chips); 'horizontal' lays
+     *  them along a bar (label inline before its chips). The mechanics are identical —
+     *  this is the layout axis these surfaces genuinely differ on, not two components. */
+    orientation?: 'vertical' | 'horizontal'
+  }>(),
+  { orientation: 'vertical', hiddenCount: 0, clearLabel: 'clear' },
+)
 
 const emit = defineEmits<{
   toggle: [groupKey: string, value: V]
@@ -24,7 +31,11 @@ function anyActive(groups: FilterGroup<V>[]): boolean {
 </script>
 
 <template>
-  <aside class="aether-rail" :aria-label="'Filters'">
+  <aside
+    class="aether-rail"
+    :class="'aether-rail--' + orientation"
+    :aria-label="'Filters'"
+  >
     <section v-for="g in groups" :key="g.key" class="aether-rail__group">
       <h4 class="aether-rail__label">{{ g.label }}</h4>
       <Chip
@@ -41,7 +52,7 @@ function anyActive(groups: FilterGroup<V>[]): boolean {
         type="button"
         @click="emit('clear')"
       >
-        {{ clearLabel ?? 'clear' }}
+        {{ clearLabel }}
       </button>
       <span v-if="hiddenCount" class="aether-rail__say">
         <b>{{ hiddenCount }}</b> hidden
@@ -53,8 +64,30 @@ function anyActive(groups: FilterGroup<V>[]): boolean {
 <style scoped>
 .aether-rail {
   display: flex;
+}
+/* sidebar: groups stack, label sits above its chips */
+.aether-rail--vertical {
   flex-direction: column;
   gap: 18px;
+}
+/* bar: groups run inline, label sits before its chips, and the whole thing wraps
+   rather than overflowing a header */
+.aether-rail--horizontal {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.aether-rail--horizontal .aether-rail__group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.aether-rail--horizontal .aether-rail__label {
+  margin: 0;
+}
+.aether-rail--horizontal .aether-rail__foot {
+  margin-left: auto;
 }
 .aether-rail__label {
   font:

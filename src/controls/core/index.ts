@@ -3,8 +3,18 @@
 // option is active, what a click emits) lives here, domain semantics stay with the caller.
 import type { ChipOption } from './types'
 
-export type { ChipOption } from './types'
-export type { SegProps, ChipProps, ToolProps } from './types'
+// Re-export the whole type surface. A consumer types its own state against these —
+// FilterGroup[] in particular is the shape a caller must build to use FilterRail, so
+// omitting it made the component unusable from outside without reaching past the
+// exports map into ./types directly.
+export type {
+  SegOption,
+  ChipOption,
+  FilterGroup,
+  SegProps,
+  ChipProps,
+  ToolProps,
+} from './types'
 
 // Return true if `value` is the active selection among `options`.
 export function isSegActive<V extends string>(value: V, active: V): boolean {

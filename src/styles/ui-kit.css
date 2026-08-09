@@ -132,7 +132,15 @@
 .aether-chip.on {
   background: var(--aether-cool-wash);
   color: var(--aether-cool);
-  border-color: var(--aether-cool-soft);
+  /* currentColor, not a fixed accent: when an option carries its own `color`, the active
+     border follows that colour rather than fighting it. With no option colour this
+     resolves to the cool accent above, so the default is unchanged. */
+  border-color: currentColor;
+  font-weight: 600;
+}
+/* de-emphasised but still clickable — see ChipOption.muted */
+.aether-chip.muted {
+  opacity: 0.4;
 }
 .aether-chip .dot {
   width: 8px;

@@ -79,4 +79,81 @@ describe('ForceLayout', () => {
     l.step()
     for (const v of l.nodes[0]!.pos) expect(Number.isFinite(v)).toBe(true)
   })
+
+  describe('alpha (temperature)', () => {
+    it('starts hot and cools with every step', () => {
+      const l = new ForceLayout(nodes(), edges, { dims: 3 })
+      const a0 = l.alpha()
+      l.step()
+      expect(l.alpha()).toBeLessThan(a0)
+    })
+
+    it('reports running until it has cooled, then stops', () => {
+      const l = new ForceLayout(nodes(), edges, { dims: 3 })
+      expect(l.running).toBe(true)
+      for (let i = 0; i < 400; i++) l.step()
+      expect(l.running).toBe(false)
+    })
+
+    it('reheat revives a settled sim — this is what makes a drag look physical', () => {
+      const l = new ForceLayout(nodes(), edges, { dims: 3 })
+      for (let i = 0; i < 400; i++) l.step()
+      expect(l.running).toBe(false)
+      l.reheat(0.5)
+      expect(l.running).toBe(true)
+    })
+
+    it('reheat never cools a hotter sim', () => {
+      const l = new ForceLayout(nodes(), edges, { dims: 3 })
+      const hot = l.alpha()
+      l.reheat(0.1)
+      expect(l.alpha()).toBe(hot)
+    })
+  })
+
+  describe('pinning', () => {
+    it('holds a pinned node exactly where it was put', () => {
+      const l = new ForceLayout(nodes(), edges, { dims: 3 })
+      l.pin('a', [500, 500, 0])
+      for (let i = 0; i < 20; i++) l.step()
+      const a = l.nodes.find((n) => n.id === 'a')!
+      expect(a.pos[0]).toBe(500)
+      expect(a.pos[1]).toBe(500)
+    })
+
+    it('drags the neighbourhood along: connected nodes move TOWARD a pinned node', () => {
+      // the behaviour the gallery was missing — a drag that moves one node and nothing else
+      // reads as "the graph has no forces"
+      const l = new ForceLayout(nodes(), edges, { dims: 3 })
+      l.pin('a', [600, 600, 0])
+      l.reheat(1)
+      const b = l.nodes.find((n) => n.id === 'b')!
+      const before = Math.hypot(b.pos[0]! - 600, b.pos[1]! - 600)
+      for (let i = 0; i < 40; i++) l.step()
+      const after = Math.hypot(b.pos[0]! - 600, b.pos[1]! - 600)
+      expect(after).toBeLessThan(before) // 'b' is edge-connected to 'a', so the spring pulls it
+    })
+
+    it('leaves an unconnected node alone', () => {
+      const l = new ForceLayout(nodes(), edges, { dims: 3 })
+      l.pin('a', [600, 600, 0])
+      const d = l.nodes.find((n) => n.id === 'd')!
+      const before = Math.hypot(d.pos[0]! - 600, d.pos[1]! - 600)
+      for (let i = 0; i < 40; i++) l.step()
+      // 'd' has no edge to 'a' — repulsion should push it away, never pull it in
+      expect(Math.hypot(d.pos[0]! - 600, d.pos[1]! - 600)).toBeGreaterThan(before * 0.9)
+    })
+
+    it('unpin returns the node to the simulation', () => {
+      const l = new ForceLayout(nodes(), edges, { dims: 3 })
+      l.pin('a', [500, 500, 0])
+      expect(l.isPinned('a')).toBe(true)
+      l.unpin('a')
+      l.reheat(1)
+      const a = l.nodes.find((n) => n.id === 'a')!
+      const p0 = [...a.pos]
+      for (let i = 0; i < 20; i++) l.step()
+      expect(a.pos).not.toEqual(p0)
+    })
+  })
 })

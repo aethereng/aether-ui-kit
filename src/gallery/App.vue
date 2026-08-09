@@ -224,23 +224,24 @@ const publish = () => {
 }
 const gRunning = ref(true)
 let gRaf = 0
-let gSteps = 0
 function gLoop() {
   gLayout.step()
   publish()
-  gSteps += 1
-  // stop at convergence rather than burning a frame forever on a settled graph
-  if (gSteps >= 220) {
+  // the sim decides when it is done -- alpha decays every step and a drag re-heats it
+  if (!gLayout.running) {
     gRunning.value = false
     return
   }
   gRaf = requestAnimationFrame(gLoop)
 }
-function gRerun() {
+function ensureRunning() {
   if (gRunning.value) return
-  gSteps = 0
   gRunning.value = true
   gRaf = requestAnimationFrame(gLoop)
+}
+function gRerun() {
+  gLayout.reheat(1)
+  ensureRunning()
 }
 // neighbours of the selection, to show the `neighbors` emphasis prop doing something
 const gNeighbors = computed<Set<string> | null>(() => {
@@ -257,20 +258,25 @@ function onGraphNodeClick(id: string) {
   gSelected.value = gSelected.value === id ? null : id
 }
 function onGraphDrag(id: string, x: number, y: number) {
-  // `drag` reports VIEWPORT coords. Graph2D scaled world -> viewport to fit the box, so the
-  // caller has to run that fit backwards; a plain offset makes the node jump (a 7px drag
-  // moved it 100px before this). Same fit function the component uses, inverted.
-  const target = gLayout.nodes.find((v) => v.id === id)
-  if (!target) return
+  // `drag` reports VIEWPORT coords; invert the component's own fit to get world coords.
   const fit = fitToViewport(
     gLayout.nodes.map((n) => ortho2d.project(n.pos, 3)),
     560,
     360,
   )
   const w = unproject(x, y, fit)
-  target.pos = [w.x, w.y, target.pos[2] ?? 0]
-  publish()
+  // Pin the dragged node so it tracks the cursor exactly, and re-heat so its neighbours
+  // relax around it. Without the re-heat the sim is settled and only this node moves --
+  // which reads as "the graph has no forces".
+  gLayout.pin(id, [w.x, w.y, 0])
+  gLayout.reheat(0.5)
+  ensureRunning()
   gDragged.value = id
+}
+function onGraphDragEnd(id: string) {
+  gLayout.unpin(id)
+  gLayout.reheat(0.3) // let the neighbourhood settle back after release
+  ensureRunning()
 }
 onMounted(() => {
   gRaf = requestAnimationFrame(gLoop)
@@ -473,7 +479,7 @@ const groupAnchor = (g: Group) => g.toLowerCase()
         <!-- Visualization -->
         <GSection v-else-if="c.id === 'graph2d'" :meta="c">
           <p class="g-hint">
-            Drag a node to move it. Click one to light its neighbourhood.
+            Drag a node — its neighbours follow. Click one to light its neighbourhood.
             <button class="g-mini" type="button" @click="gRerun()">Re-run layout</button>
           </p>
           <Graph2D
@@ -486,7 +492,7 @@ const groupAnchor = (g: Group) => g.toLowerCase()
             :neighbors="gNeighbors"
             @node-click="onGraphNodeClick"
             @drag="onGraphDrag"
-            @drag-end="gDragged = $event"
+            @drag-end="onGraphDragEnd"
           />
           <template #state
             >selected = {{ gSelected || '∅' }} · last drag = {{ gDragged }} · layout =

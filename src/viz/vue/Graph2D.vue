@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* Thin Vue wrapper over viz/core. Two modes:
  *  - running (default, e.g. gallery): owns the force sim, steps it each frame.
- *  - controlled (running=false, e.g. Brain Map): the caller owns nodes[].pos
+ *  - controlled (running=false): the caller owns nodes[].pos
  *    (store-backed positions, pinning, layout modes); Graph2D only renders and
  *    emits interaction. Same core, same projection — only who drives pos differs.
  * A future GraphGL.vue reuses the same core and only swaps the draw call. */

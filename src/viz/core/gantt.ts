@@ -1,7 +1,7 @@
 // Gantt layout math — generic, framework-free, no date dependencies.
 // Operates on DAY-INDICES (numbers), not dates: the caller maps dates→index via its own
-// domain helpers. Ported from aether-os/src/lib/chart.ts (itself a faithful port of
-// aether-quarter-timeline.html renderChart()/laneLayout()); the only change is generics:
+// domain helpers. Extracted from a working timeline surface's chart code; the only
+// change on the way out was generics:
 // day-indices instead of date strings, and TYPES/lane-meta passed in rather than imported.
 
 export const SPINE_H = 92

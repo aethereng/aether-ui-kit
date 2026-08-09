@@ -108,7 +108,7 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
       />
 
       <!-- enum: two variants of the SAME underlying value, per Decision 4's field-type table --
-           the desk's button-group vs Etere's dropdown, same descriptor, caller picks the display. -->
+           a button group vs a dropdown, same descriptor, caller picks the display. -->
       <div
         v-else-if="field.type === 'enum' && field.variant === 'buttons'"
         class="aether-property-editor__buttons"

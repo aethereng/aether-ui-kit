@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { PropertyEditorEngine } from '../PropertyEditorEngine'
 import type { FieldDescriptor } from '../types'
 
-/* This static field set mirrors aether-quarter-timeline.html's drawer verbatim (title, type,
-   status, start, end, anchor, note) -- the desk's own simplest real caller. */
+/* A static field set of the shape a timeline drawer really uses (title, type, status,
+   start, end, anchor, note) -- the simplest real caller. */
 const timelineEventFields: FieldDescriptor[] = [
   { key: 'title', type: 'text', label: 'Title', required: true },
   {
@@ -34,7 +34,7 @@ const timelineEventFields: FieldDescriptor[] = [
   { key: 'note', type: 'textarea', label: 'Note' },
 ]
 
-describe('PropertyEditorEngine — static field list (desk drawer shape)', () => {
+describe('PropertyEditorEngine — static field list (editing-drawer shape)', () => {
   it('reads back the initial values it was constructed with', () => {
     const engine = new PropertyEditorEngine(timelineEventFields, {
       title: 'Scope freeze',
@@ -85,7 +85,7 @@ describe('PropertyEditorEngine — static field list (desk drawer shape)', () =>
   })
 })
 
-describe('PropertyEditorEngine — schema-derived field list (Etere IfcEntityPanel shape)', () => {
+describe('PropertyEditorEngine — schema-derived field list (IFC entity-panel shape)', () => {
   /* The point of this second block: the SAME engine, unmodified, handles a field list built at
      runtime from a schema rather than typed out by hand -- proving the static/schema-derived axis
      is a caller concern, not something this engine needs to know about. */

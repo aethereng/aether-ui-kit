@@ -26,7 +26,7 @@ export type ChipOption<V extends string = string> = {
    *  colour the dot by category while leaving the label neutral, or colour the label to
    *  carry the encoding with no dot at all. */
   color?: string
-  /** De-emphasise without disabling. The canonical desk filter dims an option whose count
+  /** De-emphasise without disabling. The canonical filter behaviour dims an option whose count
    *  is zero but keeps it clickable, so a user can still see the axis exists. Distinct from
    *  `disabled`, which removes the interaction entirely. */
   muted?: boolean

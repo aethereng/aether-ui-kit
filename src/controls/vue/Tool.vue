@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* Thin Vue wrapper over the Tool primitive. A header action button used across
- * all six desk surfaces. Click handler is the caller's; this wrapper owns only
+ * every surface that has a header. Click handler is the caller's; this wrapper owns only
  * presentation + emit.
  *
  * Three variants, deliberately a closed set rather than an open style hook:

@@ -50,6 +50,8 @@ onMounted(() => {
   applyTheme(saved === 'timber' ? 'timber' : 'paper')
 })
 
+const KIT_VERSION = __KIT_VERSION__
+
 /* ── stats: derived, never hand-counted, so they cannot go stale ── */
 const stats = computed(() => ({
   components: COMPONENTS.length,
@@ -183,8 +185,8 @@ const peValues: PEValues = { title: '', body: '', kind: 'fact', live: true }
 const peOut = ref<PEValues>({ ...peValues })
 
 /* ── Graph2D ──
- * Deliberately run CONTROLLED (:running="false"), the same way Brain Map uses it: the
- * gallery owns nodes[].pos and drives the force sim itself with the kit's exported
+ * Deliberately run CONTROLLED (:running="false"), the way a host that owns its own node
+ * positions does: the caller owns nodes[].pos and drives the force sim with the exported
  * ForceLayout. That is the whole thesis made visible — the layout core is framework-free
  * and usable without the component, and the component only renders + emits. It is also the
  * only mode where dragging a node can work, because in running mode the component's
@@ -345,7 +347,7 @@ const groupAnchor = (g: Group) => g.toLowerCase()
         thin Vue wrapper, so the mechanics can outlive the framework.
       </p>
       <p class="g-hero__sub">
-        Every component here runs in production in AetherOS. The kit decides how a control
+        Every component here runs in production in our own tools. The kit decides how a control
         <em>behaves</em>; what a category means, what a colour encodes, and what the data
         <em>is</em> stay with the caller.
       </p>
@@ -356,7 +358,7 @@ const groupAnchor = (g: Group) => g.toLowerCase()
         <div><dt>Runtime dependencies</dt><dd>0</dd></div>
       </dl>
       <p class="g-hero__meta">
-        <code>v0.1.0</code> · Apache-2.0 · Vue 3.5 peer dependency · no runtime dependencies of its
+        <code>v{{ KIT_VERSION }}</code> · Apache-2.0 · Vue 3.5 peer dependency · no runtime dependencies of its
         own
       </p>
     </header>
@@ -414,7 +416,7 @@ const groupAnchor = (g: Group) => g.toLowerCase()
         <GSection v-else-if="c.id === 'filter-rail'" :meta="c">
           <div class="g-rails">
             <div>
-              <span class="g-variant">orientation="vertical" — Brain Map's sidebar</span>
+              <span class="g-variant">orientation="vertical" — a filter sidebar</span>
               <FilterRail
                 :groups="railGroups"
                 :hidden-count="railHidden"
@@ -423,7 +425,7 @@ const groupAnchor = (g: Group) => g.toLowerCase()
               />
             </div>
             <div>
-              <span class="g-variant">orientation="horizontal" — Quarter Timeline's header bar</span>
+              <span class="g-variant">orientation="horizontal" — the same rail as a header bar</span>
               <FilterRail
                 :groups="railGroups"
                 :hidden-count="railHidden"
@@ -533,7 +535,7 @@ import Seg from '@aether/ui-kit/controls/seg'</code></pre>
 
 <style>
 /* ── the gallery acting as a host app: it owns the --aether-* tokens ──
-   Values are AetherOS's real Paper/Timber palettes, so what you see here is what the
+   Values are a real application's Paper/Timber palettes, so what you see here is what the
    kit looks like in the app it was extracted from — not a gallery-only fiction. */
 :root {
   --aether-surface: #fbf8f2;
@@ -548,6 +550,19 @@ import Seg from '@aether/ui-kit/controls/seg'</code></pre>
   --aether-cool-soft: #5fa4a0;
   --aether-cool-wash: rgba(95, 164, 160, 0.15);
   --aether-shadow: 0 1px 2px rgba(27, 30, 35, 0.06);
+  /* The rest of the contract. A host that maps only the obvious tokens silently inherits
+     the kit's light fallbacks for the others -- which is precisely how a near-white
+     --aether-warm-ink ended up on Timber's light amber at 2.02:1. A host defines the whole
+     set or it does not really have a theme. */
+  --aether-faint: #8a857a;
+  --aether-warm-soft: #c8742e;
+  --aether-warm-ink: #fbf8f2;
+  --aether-rose-wash: rgba(163, 59, 82, 0.12);
+  --aether-font-mono: var(--g-mono);
+  --aether-transport-bg: rgba(251, 248, 242, 0.82);
+  --aether-transport-backdrop: blur(8px) saturate(1.1);
+  --aether-transport-radius: 10px;
+  --aether-transport-shadow: 0 4px 20px rgba(27, 30, 35, 0.14);
 
   /* gallery-own chrome — deliberately NOT --aether-*, so it is obvious which tokens
      belong to the kit's contract and which are this page's own furniture */
@@ -571,6 +586,17 @@ html[data-theme='timber'] {
   --aether-cool-soft: #a8d8d4;
   --aether-cool-wash: rgba(143, 198, 194, 0.16);
   --aether-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --aether-faint: #8fa39a;
+  --aether-warm-soft: #c8742e;
+  /* Timber inverts --aether-warm to a LIGHT amber, so the text sitting on it has to go
+     dark. This is the token's whole reason for existing. */
+  --aether-warm-ink: #0e1b1a;
+  --aether-rose-wash: rgba(224, 143, 164, 0.16);
+  --aether-font-mono: var(--g-mono);
+  --aether-transport-bg: rgba(19, 32, 31, 0.8);
+  --aether-transport-backdrop: blur(8px) saturate(1.1);
+  --aether-transport-radius: 10px;
+  --aether-transport-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
 
   --g-page: #0e1b1a;
   --g-code: #182726;

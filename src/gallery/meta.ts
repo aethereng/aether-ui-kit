@@ -78,6 +78,7 @@ const viewOptions: SegOption[] = [
     name: 'Chip',
     subpath: '@aether/ui-kit/controls/chip',
     group: 'Controls',
+    core: '@aether/ui-kit/controls/core',
     blurb: 'Toggle chips with an optional count and colour dot. Multi-select via a Set.',
     detail:
       'The dot colour is a caller concern — the kit never decides what a category means, only how a chip behaves. `color` accents the label itself (an option can carry its encoding without a dot); `muted` dims an option without disabling it, for a filter whose count is zero but which should still be visible and clickable.',
@@ -156,7 +157,7 @@ function noop() {}`,
     group: 'Controls',
     blurb: 'A labelled rail of toggle-chip groups, with clear-all and a hidden-count readout.',
     detail:
-      'Grouping and selection are pure data (FilterGroup[]); the rail renders one Chip row per group and wires toggle/clear mechanically. The one component extracted after a three-surface duplication audit — the other candidates were rejected as look-alikes. Both real consumers ship: Brain Map as a vertical sidebar, Quarter Timeline as a horizontal header bar.',
+      'Grouping and selection are pure data (FilterGroup[]); the rail renders one Chip row per group and wires toggle/clear mechanically. The one component extracted after a three-surface duplication audit — the other candidates were rejected as look-alikes. Both real consumers ship: one as a vertical sidebar, one as a horizontal header bar.',
     props: [
       { name: 'groups', type: 'FilterGroup<V>[]', note: '{ key, label, options, selected: Set<V> }' },
       { name: 'hiddenCount', type: 'number?', note: 'shown as "N hidden" when non-zero' },
@@ -229,7 +230,7 @@ function onClear() {
     blurb:
       'Controlled playback transport: play/pause/replay, scrub, speed presets, position readout.',
     detail:
-      'Pauses on scrub-start and resumes on scrub-end, so a drag and a running clock can never both write the playhead — the release is caught on the window, so a pointer let go outside the slider cannot strand playback paused. Deliberately unit-agnostic: the same component drives simulation seconds and calendar days. It sizes and positions nothing; both real consumers float it over a 3-D canvas at their own width. Shipping in quintus twice — the viewer dynamics player and the editor diagnostic.',
+      'Pauses on scrub-start and resumes on scrub-end, so a drag and a running clock can never both write the playhead — the release is caught on the window, so a pointer let go outside the slider cannot strand playback paused. Deliberately unit-agnostic: the same component drives simulation seconds and calendar days. It sizes and positions nothing; both real consumers float it over a 3-D canvas at their own width. Shipping in two applications: a 3-D playback player, and a solver diagnostic.',
     props: [
       { name: 'current', type: 'number', note: 'playhead position — caller owns the clock' },
       { name: 'duration', type: 'number' },

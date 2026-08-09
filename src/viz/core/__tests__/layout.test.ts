@@ -30,7 +30,7 @@ describe('ForceLayout', () => {
   })
 
   it('mutates the node objects it was given, so a caller can share them', () => {
-    // the gallery and Brain Map both rely on this — the layout is not a black box that
+    // both real consumers rely on this — the layout is not a black box that
     // hands back copies, it owns the array you passed it
     const ns = nodes()
     const l = new ForceLayout(ns, edges, { dims: 3 })

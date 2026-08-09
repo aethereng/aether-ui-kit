@@ -1,6 +1,6 @@
-/* The shared contract. Every consumer -- a desk drawer's fixed six fields, or Etere's
+/* The shared contract. Every consumer -- a drawer's fixed handful of fields, or an
  * schema-derived IFC entity fields -- describes what it needs with FieldDescriptor[]. Nothing here
- * knows what an IFC entity is, or what a Quarter Timeline event is: that is the whole point. The
+ * knows what an IFC entity is, or what a timeline event is: that is the whole point. The
  * static-list-vs-schema-derived axis lives entirely in how the CALLER builds this array, not in
  * this file. */
 
@@ -18,12 +18,12 @@ export interface EnumOption {
   label: string
 }
 
-/* Same underlying type, two ways to show it -- the desk's drawers use button-groups
-   (aether-quarter-timeline.html's .typepick/.statpick), Etere's IfcEntityPanel uses dropdowns.
+/* Same underlying type, two ways to show it -- a compact drawer uses button-groups
+   a timeline surface uses a button group, an IFC entity panel uses dropdowns.
    Neither caller has to know the other exists; both just set `variant`. */
 export type EnumVariant = 'buttons' | 'dropdown'
 
-/* A generic 3D placement -- position + rotation. Etere's IfcPlacementField almost certainly maps
+/* A generic 3D placement -- position + rotation. An IFC placement field maps
    onto a richer IFC-specific placement type; this is the neutral shape a caller's adapter converts
    to and from. Not guessing at IFC's real field names here -- that mapping is the caller's job. */
 export interface PlacementValue {

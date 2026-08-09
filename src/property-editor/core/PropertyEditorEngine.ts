@@ -3,8 +3,8 @@ import type { ChangeEvent, FieldDescriptor, FieldValues, ValidationError } from 
 type ChangeListener = (e: ChangeEvent) => void
 
 /* Framework-free by construction -- no DOM, no Vue, no custom-element APIs. This is the piece a
- * desk drawer, a Vue wrapper, and a future non-Vue consumer can all sit on top of without agreeing
- * on anything except this contract. Mirrors @quintus/viewer's actual shape (core/ has zero Vue
+ * editing drawer, a Vue wrapper, and a future non-Vue consumer can all sit on top of without agreeing
+ * on anything except this contract. Follows the same split as the viz core (core/ has zero Vue
  * imports; the wrapper is a separate, thin layer) -- not a new convention invented for this. */
 export class PropertyEditorEngine {
   private fields: FieldDescriptor[]
@@ -34,7 +34,7 @@ export class PropertyEditorEngine {
 
   /* The one mutation path. Every value change -- whatever widget it came from -- goes through
      here, so "what changed and to what" is always observable the same way, regardless of field
-     type. A caller building an undo stack (the desk drawers already have one -- Quarter Timeline's
+     type. A caller building an undo stack (as the timeline surfaces do -- the
      snapshot()/undo()) hooks in here, once, rather than once per field type. */
   setValue(key: string, value: unknown): void {
     const field = this.getField(key)

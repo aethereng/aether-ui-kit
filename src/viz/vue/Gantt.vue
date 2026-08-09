@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* Thin Vue wrapper over viz/core/gantt. Controlled (like Graph2D/Transport): the caller owns
  * the data; Gantt renders and emits deltas in DAY-INDEX space. The caller maps
- * day-indices ↔ its own dates. First consumer: Quarter Timeline (ChartView).
+ * day-indices ↔ its own dates, which is what keeps it usable outside a calendar.
  * A future GanttGL.vue reuses the same core and only swaps the draw call. */
 import { computed, ref } from 'vue'
 import {

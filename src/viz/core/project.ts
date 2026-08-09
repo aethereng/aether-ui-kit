@@ -4,7 +4,7 @@ import type { Projection, Vec } from './types'
 
 // Orthographic 2D: first two axes are x/y. Extra axes are ignored for position
 // (the caller maps them via projected.depth / t / d — e.g. color a node by its
-// construction-sequence value). This is the Brain Map / Launch Board view today.
+// construction-sequence value). This is the plain 2-D graph view today.
 export const ortho2d: Projection = {
   name: 'ortho2d',
   project(pos: Vec): { x: number; y: number; depth?: number; t?: number; d?: number } {

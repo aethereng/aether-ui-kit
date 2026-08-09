@@ -566,20 +566,66 @@ const anchors = computed(() =>
   outline: 2px solid var(--aether-cool);
 }
 .ag-lane {
+  position: relative;
   border-bottom: 1px solid var(--aether-line);
 }
+.ag-lane:nth-child(even) {
+  background: var(--aether-lane-alt);
+}
+/* Bars, ported from the desk original. The status STATES matter as much as the geometry:
+   the original tells planned / open / done / risk apart by border style and opacity, so a
+   reader sees status without consulting a legend. The kit emitted the st-* classes but had
+   no rules behind them, leaving every status identical apart from its lane colour. */
 .ag-ev {
   position: absolute;
   display: flex;
   align-items: center;
   gap: 4px;
   height: 26px;
-  padding: 0 6px;
-  border: 1px solid;
-  border-radius: 5px;
-  font-size: 12px;
+  padding: 0 8px;
+  border: 1.5px solid;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 550;
   cursor: grab;
   user-select: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  box-shadow: var(--aether-shadow);
+  transition: box-shadow 0.1s;
+}
+.ag-ev span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ag-ev:hover {
+  box-shadow: var(--aether-shadow-hover);
+  z-index: 2;
+}
+.ag-ev.dragging {
+  cursor: grabbing;
+  opacity: 0.85;
+  z-index: 6;
+}
+.ag-ev.st-planned {
+  border-style: dashed;
+}
+.ag-ev.st-open {
+  border-style: dotted;
+  background: transparent !important;
+}
+.ag-ev.st-done {
+  opacity: 0.45;
+}
+.ag-ev.st-done span {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.ag-ev.st-risk {
+  box-shadow:
+    inset 3.5px 0 0 var(--aether-warm-soft),
+    var(--aether-shadow);
 }
 .ag-ev.sel {
   outline: 2px solid var(--aether-cool);
@@ -593,9 +639,14 @@ const anchors = computed(() =>
   position: absolute;
   width: 13px;
   height: 13px;
-  border-radius: 50%;
-  border: 1px solid;
+  /* a rotated square, matching the anchor diamond -- the kit had drawn a circle */
+  transform: rotate(45deg);
+  border: 1.5px solid;
+  box-shadow: var(--aether-shadow);
   cursor: grab;
+}
+.ag-ms.st-open {
+  background: var(--aether-surface) !important;
 }
 .ag-ms.sel {
   outline: 2px solid var(--aether-cool);

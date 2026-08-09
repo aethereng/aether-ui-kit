@@ -243,11 +243,7 @@ const anchors = computed(() =>
             v-for="a in anchors"
             :key="a.id"
             class="ag-canchor"
-            :class="{
-              sel: selection === a.id,
-              'edge-l': (a.start + 0.5) * ppd < 80,
-              'edge-r': (ndays - a.start) * ppd < 80,
-            }"
+            :class="{ sel: selection === a.id, open: a.status !== 'done' }"
             :data-id="a.id"
             :style="{
               left: (a.start + 0.5) * ppd + 'px',
@@ -257,7 +253,7 @@ const anchors = computed(() =>
             <div class="stem" />
             <div class="dia" />
             <div class="atxt">
-              <span class="t">{{ a.title }}</span>
+              <span class="t">{{ a.title }}</span><br />
               <span class="tm mono"
                 >{{ a.end ? '–' + (a.end - a.start + 1) + 'd' : '' }} ·
                 {{
@@ -478,19 +474,28 @@ const anchors = computed(() =>
   top: 4px;
   font-weight: 700;
 }
+/* Ported from the desk original: a solid warm hairline, not a dashed cool one. Today is the
+   one thing on the chart the reader is orienting against -- it gets the accent colour and
+   sits above the bars. */
 .ag-today {
   position: absolute;
   top: 0;
   bottom: 0;
-  border-left: 2px dashed var(--aether-cool);
+  width: 1.5px;
+  background: var(--aether-warm);
+  z-index: 3;
+  pointer-events: none;
 }
 .ag-today::after {
   content: attr(data-txt);
   position: absolute;
   top: 2px;
-  left: 3px;
-  font-size: 9px;
-  color: var(--aether-cool);
+  left: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--aether-warm);
+  font-family: var(--aether-font-mono);
 }
 /* Anchors are plan-level milestones that belong to no single lane, so they get their own
    band above the lanes. It is tinted rather than left transparent: with only a hairline
@@ -502,36 +507,44 @@ const anchors = computed(() =>
   background: var(--aether-panel);
   border-bottom: 1px solid var(--aether-line-strong);
 }
-/* The anchor is a stem dropping from the top of the band to a diamond just above the lanes,
-   with its label beneath. That only works if the column has the band's height to fill: with
-   no height the flex box collapsed to its content, the stem's `flex: 1` grew to 0, and the
-   whole marker sat squashed against the top of a 92px band with two thirds of it empty. */
+/* Ported from the desk original: the anchor hangs from the BOTTOM of the band -- a short
+   hairline stem, the diamond above it, and the label above that. Children are absolutely
+   placed against a zero-width anchor sitting on its day, so a long title can never shift the
+   diamond off the date. Left-aligned rather than centred, which is also why an anchor on
+   day 0 has never needed edge handling: its label runs rightwards into the chart. */
 .ag-canchor {
   position: absolute;
-  top: 0;
+  bottom: 0;
   height: 100%;
-  box-sizing: border-box;
-  padding-bottom: 19px; /* room for the label under the diamond */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  cursor: pointer;
 }
 .ag-canchor .stem {
-  width: 2px;
-  flex: 1;
-  background: currentColor;
+  position: absolute;
+  left: -0.5px;
+  bottom: 0;
+  width: 1px;
+  height: 14px;
+  background: var(--aether-line-strong);
 }
 .ag-canchor .dia {
-  width: 9px;
-  height: 9px;
+  position: absolute;
+  left: -5px;
+  bottom: 12px;
+  width: 10px;
+  height: 10px;
   transform: rotate(45deg);
+  border: 1.5px solid currentColor;
   background: currentColor;
+}
+/* an open anchor reads hollow; a done one is filled */
+.ag-canchor.open .dia {
+  background: var(--aether-surface);
 }
 .ag-canchor .atxt {
   position: absolute;
-  /* pinned to the foot of the band, under the diamond -- absolute so the anchor stays
-     zero-width at its day and a long title cannot shift the diamond off it */
-  bottom: 0;
+  /* just under the diamond -- absolute so the anchor stays zero-width at its day and a
+     long title cannot shift the diamond off the date it marks */
+  top: 50%;
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;

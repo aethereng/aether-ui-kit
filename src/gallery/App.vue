@@ -19,6 +19,7 @@ import Graph2D from '@/viz/vue/Graph2D.vue'
 import Gantt from '@/viz/vue/Gantt.vue'
 
 import { ForceLayout, fitToViewport, ortho2d, unproject } from '@/viz/core'
+import { computePPD } from '@/viz/core/gantt'
 import type { GNode, GEdge } from '@/viz/core'
 import type { GanttItem, GanttLane } from '@/viz/core/gantt'
 import type { SegOption, ChipOption, FilterGroup } from '@/controls/core/types'
@@ -287,7 +288,11 @@ onBeforeUnmount(() => cancelAnimationFrame(gRaf))
 const gItems = ref<GanttItem[]>([
   { id: 'a1', start: 2, end: 9, type: 'design', status: 'done', title: 'Concept' },
   { id: 'a2', start: 10, end: 20, type: 'design', status: 'open', title: 'Schematics' },
+  // several one-day items, some sharing a date: this is what the density row exists for
   { id: 'b1', start: 12, type: 'fabricate', status: 'open', title: 'Cut members' },
+  { id: 'b3', start: 12, type: 'fabricate', status: 'done', title: 'Order plate' },
+  { id: 'b4', start: 12, type: 'fabricate', status: 'open', title: 'Mark holes' },
+  { id: 'b5', start: 34, type: 'fabricate', status: 'open', title: 'Ship batch' },
   { id: 'b2', start: 21, end: 30, type: 'fabricate', status: 'open', title: 'Weld frame' },
   { id: 'c1', start: 31, end: 45, type: 'erect', status: 'open', title: 'Site assembly' },
   { id: 'x1', start: 0, type: 'design', anchor: true, status: 'done', title: 'Day-0 kickoff' },
@@ -299,6 +304,43 @@ const gLanes: GanttLane[] = [
   { type: 'erect', name: 'Erect', color: 'var(--aether-ink-soft)', wash: 'rgba(120,120,140,0.16)' },
 ]
 const gSel = ref<string | null>(null)
+const gExpanded = ref<string>('—')
+
+/* Zoom to fit. The chart was pinned at 26px/day, so 60 days always came to 1560px and always
+ * scrolled, even on a wide desktop with room to spare. computePPD divides the width we
+ * actually have by the days we actually show, with a floor so a phone still gets a legible
+ * chart behind a scroller rather than an illegible one that fits. */
+const GANTT_DAYS = 60
+// a fixed day index, not a real date: the component works in day indices, and a demo whose
+// marker wanders with the calendar would be a demo nobody can screenshot
+const GANTT_TODAY = 18
+const gantHost = ref<HTMLElement | null>(null)
+const gPpd = ref(26)
+let gRO: ResizeObserver | null = null
+function measureGantt() {
+  // NOTE: a plain `ref="..."` here would be collected into an ARRAY, because this sits
+  // inside the v-for over components — clientWidth came back undefined and the chart
+  // silently kept its default zoom. Hence the function ref.
+  // Measure the SCROLLER, not the host: the chart also renders a lane-label gutter, so the
+  // days get roughly 130px less than the section is wide. Sizing off the host overshot and
+  // the chart still scrolled. clientWidth here is unaffected by ppd (only scrollWidth is),
+  // so this cannot feed back into itself.
+  const host = gantHost.value
+  if (!host) return
+  const scroller = host.querySelector('.ag-scroll') as HTMLElement | null
+  const w = scroller?.clientWidth || host.clientWidth
+  if (w > 0) gPpd.value = computePPD('all', w, GANTT_DAYS)
+}
+onMounted(() => {
+  measureGantt()
+  if (typeof ResizeObserver !== 'undefined') {
+    gRO = new ResizeObserver(measureGantt)
+    if (gantHost.value) gRO.observe(gantHost.value)
+    // measure again once the chart has laid out and the scroller exists
+    requestAnimationFrame(measureGantt)
+  }
+})
+onBeforeUnmount(() => gRO?.disconnect())
 // Period boundaries, deliberately NOT month names: Gantt works in day indices and never
 // touches dates, so a demo naming real months would contradict the component it documents.
 const gMarkers = [
@@ -506,20 +548,29 @@ const groupAnchor = (g: Group) => g.toLowerCase()
           <p class="g-hint">
             Drag a bar to move it, its edges to resize. Double-click empty lane space to
             create. Undo checkpoints come from drag-start / drag-end, not every pixel.
+            The strip under each lane is the one-day row — three items share day 12, so they
+            are stacked into one block rather than overlapping. Click it to expand them.
           </p>
-          <Gantt
-            :items="gItems"
-            :lanes="gLanes"
-            :ppd="26"
-            :ndays="60"
-            :selection="gSel"
-            :markers="gMarkers"
-            @select="gSel = $event"
-            @move="onGanttMove"
-            @resize="onGanttResize"
-            @new-at="onGanttNewAt"
-          />
-          <template #state>selected = {{ gSel || '∅' }} · items = {{ gItems.length }}</template>
+          <div :ref="(el) => (gantHost = el as HTMLElement | null)" class="g-fill">
+            <Gantt
+              :items="gItems"
+              :lanes="gLanes"
+              :ppd="gPpd"
+              :ndays="GANTT_DAYS"
+              :current-day="GANTT_TODAY"
+              :selection="gSel"
+              :markers="gMarkers"
+              @select="gSel = $event"
+              @move="onGanttMove"
+              @resize="onGanttResize"
+              @new-at="onGanttNewAt"
+              @expand-day="gExpanded = $event ? $event.t + ' day ' + $event.i : '—'"
+            />
+          </div>
+          <template #state
+            >selected = {{ gSel || '∅' }} · expanded = {{ gExpanded }} · zoom =
+            {{ gPpd }}px/day · items = {{ gItems.length }}</template
+          >
         </GSection>
       </template>
     </template>
@@ -820,6 +871,10 @@ body {
 .g-pe {
   width: 100%;
   max-width: 380px;
+}
+.g-fill {
+  width: 100%;
+  min-width: 0;
 }
 .g-rails {
   display: flex;

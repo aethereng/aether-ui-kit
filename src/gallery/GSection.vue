@@ -1,30 +1,43 @@
 <script setup lang="ts">
-/* Section shell for one component: heading, import line, live demo, state readout,
- * usage snippet and the generated API tables. Every section has the same shape so the
- * gallery reads as one document rather than eight ad-hoc pages. */
-import { ref } from 'vue'
+/* Section shell for one component: heading, import line, live demo, state readout, and a
+ * tabbed source/API panel. Every section has the same shape so the gallery reads as one
+ * document rather than eight ad-hoc pages.
+ *
+ * The tabs are the kit's own Seg component. The gallery is built out of the thing it
+ * documents on purpose — if Seg broke, this page would visibly break with it. */
+import { computed, ref } from 'vue'
+import Seg from '@/controls/vue/Seg.vue'
+import type { SegOption } from '@/controls/core/types'
 import type { CompMeta } from './meta'
 
 const props = defineProps<{ meta: CompMeta }>()
 
-const copied = ref(false)
-let copyT: ReturnType<typeof setTimeout> | undefined
 const importLine = `import ${props.meta.name} from '${props.meta.subpath}'`
 
-async function copyImport() {
+/* one copy handler for every code block on the section, keyed by which block was copied,
+ * so two buttons can't both claim success */
+const copiedKey = ref<string | null>(null)
+let copyT: ReturnType<typeof setTimeout> | undefined
+async function copy(key: string, text: string) {
   try {
-    await navigator.clipboard.writeText(importLine)
-    copied.value = true
+    await navigator.clipboard.writeText(text)
+    copiedKey.value = key
   } catch {
-    // clipboard is blocked in some contexts (file://, insecure origin) — say so rather
-    // than flashing a success state that did not happen
-    copied.value = false
+    // clipboard is blocked on insecure origins — don't flash a success that didn't happen
+    copiedKey.value = null
   }
   clearTimeout(copyT)
-  copyT = setTimeout(() => (copied.value = false), 1400)
+  copyT = setTimeout(() => (copiedKey.value = null), 1400)
 }
 
-const showApi = ref(false)
+type Tab = 'template' | 'script' | 'props' | 'emits'
+const tab = ref<Tab>('template')
+const tabs = computed<SegOption<Tab>[]>(() => [
+  { value: 'template', label: 'Template' },
+  { value: 'script', label: 'Script' },
+  { value: 'props', label: `Props ${props.meta.props.length}` },
+  { value: 'emits', label: `Emits ${props.meta.emits.length}` },
+])
 </script>
 
 <template>
@@ -40,8 +53,8 @@ const showApi = ref(false)
 
     <div class="g-import">
       <code>{{ importLine }}</code>
-      <button class="g-copy" type="button" @click="copyImport">
-        {{ copied ? 'copied' : 'copy' }}
+      <button class="g-copy" type="button" @click="copy('import', importLine)">
+        {{ copiedKey === 'import' ? 'copied' : 'copy' }}
       </button>
     </div>
 
@@ -51,17 +64,28 @@ const showApi = ref(false)
 
     <code v-if="$slots.state" class="g-state"><slot name="state" /></code>
 
-    <button class="g-apitoggle" type="button" :aria-expanded="showApi" @click="showApi = !showApi">
-      {{ showApi ? '▾' : '▸' }} API — {{ meta.props.length }} props · {{ meta.emits.length }} emits
-    </button>
+    <!-- Source + API. A bordered panel with real tabs, because the old version was a
+         borderless text toggle that read as a caption and nobody would think to click. -->
+    <div class="g-panel">
+      <div class="g-panel__bar">
+        <Seg :options="tabs" :model-value="tab" aria-label="Source and API" @change="tab = $event" />
+        <button
+          v-if="tab === 'template' || tab === 'script'"
+          class="g-copy"
+          type="button"
+          @click="copy(tab, tab === 'template' ? meta.template : meta.script)"
+        >
+          {{ copiedKey === tab ? 'copied' : 'copy' }}
+        </button>
+      </div>
 
-    <div v-if="showApi" class="g-api">
-      <pre class="g-usage"><code>{{ meta.usage }}</code></pre>
+      <pre v-if="tab === 'template'" class="g-code"><code>{{ meta.template }}</code></pre>
+      <pre v-else-if="tab === 'script'" class="g-code"><code>{{ meta.script }}</code></pre>
 
-      <table>
-        <caption>
-          Props
-        </caption>
+      <table v-else-if="tab === 'props'" class="g-table">
+        <thead>
+          <tr><th>Prop</th><th>Type</th><th>Notes</th></tr>
+        </thead>
         <tbody>
           <tr v-for="p in meta.props" :key="p.name">
             <td><code>{{ p.name }}</code></td>
@@ -71,10 +95,10 @@ const showApi = ref(false)
         </tbody>
       </table>
 
-      <table>
-        <caption>
-          Emits
-        </caption>
+      <table v-else class="g-table">
+        <thead>
+          <tr><th>Emit</th><th>Payload</th><th>Notes</th></tr>
+        </thead>
         <tbody>
           <tr v-for="e in meta.emits" :key="e.name">
             <td><code>{{ e.name }}</code></td>
@@ -196,75 +220,77 @@ const showApi = ref(false)
   color: var(--aether-ink-soft);
 }
 
-.g-apitoggle {
-  margin-top: 14px;
-  font-family: var(--g-mono);
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  background: transparent;
-  border: 0;
-  padding: 4px 0;
-  color: var(--aether-cool);
-  cursor: pointer;
+.g-panel {
+  margin-top: 16px;
+  border: 1px solid var(--aether-line-strong);
+  border-radius: 10px;
+  overflow: hidden;
 }
-.g-apitoggle:hover {
-  text-decoration: underline;
-}
-
-.g-api {
-  margin-top: 10px;
-}
-.g-usage {
-  margin: 0 0 14px;
-  padding: 12px 14px;
+.g-panel__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
   background: var(--g-code);
-  border: 1px solid var(--aether-line);
-  border-radius: 8px;
-  overflow-x: auto;
+  border-bottom: 1px solid var(--aether-line);
+  flex-wrap: wrap;
 }
-.g-usage code {
+.g-code {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--aether-surface);
+}
+.g-code code {
   font-family: var(--g-mono);
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.6;
   white-space: pre;
+  color: var(--aether-ink);
 }
-.g-api table {
+.g-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 0 0 14px;
+  background: var(--aether-surface);
 }
-.g-api caption {
+.g-table th {
   text-align: left;
   font-family: var(--g-mono);
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--aether-ink-soft);
-  padding-bottom: 6px;
+  font-weight: 500;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--aether-line);
 }
-.g-api td {
+.g-table td {
   border-top: 1px solid var(--aether-line);
-  padding: 6px 10px 6px 0;
+  padding: 8px 14px;
   font-size: 13px;
   vertical-align: top;
   color: var(--aether-ink-soft);
 }
-.g-api td:first-child {
+.g-table td:first-child {
   width: 1%;
   white-space: nowrap;
 }
-.g-api td code {
+.g-table td code {
   font-family: var(--g-mono);
   font-size: 12px;
   color: var(--aether-ink);
 }
-.g-api td code.g-type {
+.g-table td code.g-type {
   color: var(--aether-cool);
 }
 .g-corenote {
   font-size: 12.5px;
   color: var(--aether-ink-soft);
   margin: 0;
+  padding: 12px 14px;
+  border-top: 1px solid var(--aether-line);
+  background: var(--aether-surface);
 }
 .g-corenote code {
   font-family: var(--g-mono);

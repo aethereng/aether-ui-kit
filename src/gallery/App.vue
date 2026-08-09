@@ -314,6 +314,12 @@ const GANTT_DAYS = 60
 // a fixed day index, not a real date: the component works in day indices, and a demo whose
 // marker wanders with the calendar would be a demo nobody can screenshot
 const GANTT_TODAY = 18
+/* Week furniture. The component knows only day indices, so the CALLER decides which days are
+ * weekends and where weeks begin -- that is what keeps Gantt usable on a schedule that is not
+ * a calendar at all. Day 0 is treated as a Monday here. */
+const gWeekends = Array.from({ length: GANTT_DAYS }, (_, i) => i).filter((i) => i % 7 === 5)
+const gWeekdays = Array.from({ length: GANTT_DAYS }, (_, i) => i).filter((i) => i > 0 && i % 7 === 0)
+const gWeekLabels = gWeekdays.map((d) => ({ day: d, label: 'W' + (d / 7 + 1) }))
 const gantHost = ref<HTMLElement | null>(null)
 const gPpd = ref(26)
 let gRO: ResizeObserver | null = null
@@ -558,6 +564,9 @@ const groupAnchor = (g: Group) => g.toLowerCase()
               :ppd="gPpd"
               :ndays="GANTT_DAYS"
               :current-day="GANTT_TODAY"
+              :weekends="gWeekends"
+              :weekdays="gWeekdays"
+              :week-labels="gWeekLabels"
               :selection="gSel"
               :markers="gMarkers"
               @select="gSel = $event"

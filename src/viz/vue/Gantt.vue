@@ -28,8 +28,19 @@ const props = withDefaults(
     markers?: { day: number; label: string }[] // month lines + labels
     weekends?: number[] // day indices that are weekend columns
     weekdays?: number[] // day indices that are week separators
+    /** Small labels down the spine, one per week separator. The original desk chart fills the
+     *  middle of the anchor band with these; without them the band reads as empty space.
+     *  Labels are caller-supplied because the component works in day indices, not dates. */
+    weekLabels?: { day: number; label: string }[]
   }>(),
-  { currentDay: null, selection: null, markers: () => [], weekends: () => [], weekdays: () => [] },
+  {
+    currentDay: null,
+    selection: null,
+    markers: () => [],
+    weekends: () => [],
+    weekdays: () => [],
+    weekLabels: () => [],
+  },
 )
 
 interface GanttEmit {
@@ -239,6 +250,14 @@ const anchors = computed(() =>
 
         <!-- spine + anchors -->
         <div class="ag-spine" :style="{ width: W + 'px', height: SPINE_H + 'px' }">
+          <div
+            v-for="w in weekLabels"
+            :key="'wk' + w.day"
+            class="ag-wkno"
+            :style="{ left: w.day * ppd + 3 + 'px' }"
+          >
+            {{ w.label }}
+          </div>
           <div
             v-for="a in anchors"
             :key="a.id"
@@ -512,6 +531,15 @@ const anchors = computed(() =>
    placed against a zero-width anchor sitting on its day, so a long title can never shift the
    diamond off the date. Left-aligned rather than centred, which is also why an anchor on
    day 0 has never needed edge handling: its label runs rightwards into the chart. */
+/* week numbers down the middle of the band, as the original has them */
+.ag-wkno {
+  position: absolute;
+  top: 44px;
+  font-size: 9px;
+  color: var(--aether-faint);
+  font-family: var(--aether-font-mono);
+  pointer-events: none;
+}
 .ag-canchor {
   position: absolute;
   bottom: 0;

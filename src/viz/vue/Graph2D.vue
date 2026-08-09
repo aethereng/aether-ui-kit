@@ -51,8 +51,11 @@ const emit = defineEmits<{
   dragEnd: [id: string]
 }>()
 
-const W = props.width
-const H = props.height
+/* Reactive, not snapshotted. These were read once at setup, so a stage that resized -- or a
+ * host that measured its container after mount, which is the normal case -- kept the viewBox
+ * it happened to have at first render and the graph never filled its space. */
+const W = computed(() => props.width)
+const H = computed(() => props.height)
 const strategy: Projection = props.projection === 'iso3d' ? iso3d : ortho2d
 const dims = Math.max(2, ...props.nodes.map((n) => n.pos.length))
 
@@ -75,7 +78,7 @@ const screen = computed(() => {
   const { minX, minY, s, pad } =
     props.mapping === 'direct'
       ? { minX: 0, minY: 0, s: 1, pad: 0 }
-      : fitToViewport(projected, W, H)
+      : fitToViewport(projected, W.value, H.value)
   return live.value.map((n, i) => {
     const p = projected[i]!
     const dim = props.neighbors ? !props.neighbors.has(n.id) : false
@@ -128,7 +131,10 @@ let moved = false
 function toView(e: PointerEvent): { x: number; y: number } {
   const r = svgRef.value?.getBoundingClientRect()
   if (!r) return { x: 0, y: 0 }
-  return { x: ((e.clientX - r.left) / r.width) * W, y: ((e.clientY - r.top) / r.height) * H }
+  return {
+    x: ((e.clientX - r.left) / r.width) * W.value,
+    y: ((e.clientY - r.top) / r.height) * H.value,
+  }
 }
 function onNodeDown(e: PointerEvent, id: string) {
   const t = e.target as Element

@@ -62,6 +62,7 @@
       "import": "./src/viz/core/index.ts"
     },
     "./styles": {
+      "types": "./src/styles/styles.d.ts",
       "import": "./src/styles/ui-kit.css"
     }
   },

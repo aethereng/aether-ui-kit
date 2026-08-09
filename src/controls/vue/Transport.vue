@@ -4,6 +4,9 @@
  * duplicated Vuetify transports (DiagnosticTransport.vue, DynamicsPlayer.vue) with one
  * shared, framework-free component. Uses a native range input — no Vuetify dependency.
  *
+ * It does NOT position or size itself. Both real consumers float it over a 3-D canvas at
+ * their own width and offset, so the host owns the wrapper; the transport fills it.
+ *
  * Emits:
  *   toggle   — play/pause (or replay when at end)
  *   seek     — (t:number) scrub to time t
@@ -11,7 +14,7 @@
  *   stop     — dismiss the player
  *   scrub-start / scrub-end — caller pauses on start, resumes on end (one playhead rule)
  */
-import { computed } from 'vue'
+import { computed, onBeforeUnmount } from 'vue'
 import { DEFAULT_SPEEDS, cycleSpeed, isAtEnd } from '../core/transport'
 
 const props = withDefaults(
@@ -24,6 +27,17 @@ const props = withDefaults(
     phase?: 'play' | 'precompute'
     precomputePct?: number
     format?: (t: number) => string
+    /** 'cycle' is one button that steps through `speeds`; 'presets' lays them all out as a
+     *  row of toggles. Both real consumers exist — the editor diagnostic cycles, the viewer
+     *  shows the ladder — so this is the interaction axis they differ on, not two components. */
+    speedMode?: 'cycle' | 'presets'
+    /** Label a speed. Defaults to `1×`; a host wanting `½×` supplies its own. */
+    speedLabel?: (s: number) => string
+    /** Render the dismiss button. The editor diagnostic has no stop affordance of its own —
+     *  it is left via the surrounding UI — so the button has to be omittable. */
+    stoppable?: boolean
+    /** Text shown beside the progress bar during `phase: 'precompute'`. */
+    computeLabel?: string
   }>(),
   {
     speed: 1,
@@ -31,6 +45,10 @@ const props = withDefaults(
     phase: 'play',
     precomputePct: 0,
     format: (t: number) => `${t.toFixed(2)} s`,
+    speedMode: 'cycle',
+    speedLabel: (s: number) => `${s}×`,
+    stoppable: true,
+    computeLabel: 'Computing…',
   },
 )
 
@@ -44,8 +62,10 @@ const emit = defineEmits<{
 }>()
 
 const atEnd = computed(() => isAtEnd(props.current, props.duration))
-const speedLabel = computed(() => `${props.speed}×`)
 const pct = computed(() => Math.round(props.precomputePct))
+// A zero-length timeline would make step 0, which browsers reject — fall back to a
+// continuous range until a real duration arrives.
+const step = computed(() => (props.duration > 0 ? props.duration / 600 : 'any'))
 
 function onToggle() {
   // replay from 0 when parked at the end, else play/pause
@@ -55,23 +75,50 @@ function onToggle() {
 function onSpeed() {
   emit('set-speed', cycleSpeed(props.speeds, props.speed))
 }
-function onScrubStart() {
-  emit('scrub-start')
-}
-function onScrubEnd() {
+
+/* The scrub handshake has to survive the pointer leaving the slider. A release outside the
+ * input never fires pointerup on it, so binding scrub-end to the element alone strands the
+ * caller in the paused state it entered on scrub-start — the transport looks alive but the
+ * clock never restarts. Listen on the window for the release instead. */
+let scrubbing = false
+function endScrub() {
+  if (!scrubbing) return
+  scrubbing = false
+  window.removeEventListener('pointerup', endScrub)
+  window.removeEventListener('pointercancel', endScrub)
   emit('scrub-end')
 }
+function onScrubStart() {
+  if (scrubbing) return
+  scrubbing = true
+  window.addEventListener('pointerup', endScrub)
+  window.addEventListener('pointercancel', endScrub)
+  emit('scrub-start')
+}
+onBeforeUnmount(() => {
+  // unmounting mid-drag (the host hides the player) must not leak the listeners
+  window.removeEventListener('pointerup', endScrub)
+  window.removeEventListener('pointercancel', endScrub)
+})
 </script>
 
 <template>
   <div class="aether-transport" :class="{ compute: phase === 'precompute' }">
     <template v-if="phase === 'precompute'">
-      <span class="at-label">Computing…</span>
-      <div class="at-scrub">
-        <div class="at-scrub-fill" :style="{ width: pct + '%' }" />
+      <span class="at-label">{{ computeLabel }}</span>
+      <div class="at-progress">
+        <div class="at-progress-fill" :style="{ width: pct + '%' }" />
       </div>
       <span class="at-time">{{ pct }}%</span>
-      <button class="at-btn at-stop" title="Stop" aria-label="Stop" @click="emit('stop')">✕</button>
+      <button
+        v-if="stoppable"
+        class="at-btn at-stop"
+        title="Stop"
+        aria-label="Stop"
+        @click="emit('stop')"
+      >
+        ✕
+      </button>
     </template>
 
     <template v-else>
@@ -88,44 +135,64 @@ function onScrubEnd() {
         type="range"
         :min="0"
         :max="Math.max(duration, 1e-6)"
-        :step="duration / 600"
+        :step="step"
         :value="current"
         aria-label="Scrub"
         @pointerdown="onScrubStart"
-        @pointerup="onScrubEnd"
         @input="emit('seek', +($event.target as HTMLInputElement).value)"
       />
 
       <span class="at-time">{{ format(current) }} / {{ format(duration) }}</span>
 
-      <button class="at-btn at-speed" :aria-label="'Playback speed'" @click="onSpeed">
-        {{ speedLabel }}
+      <template v-if="speedMode === 'presets'">
+        <div class="at-speeds" role="group" aria-label="Playback speed">
+          <button
+            v-for="s in speeds"
+            :key="s"
+            class="at-btn at-speed-opt"
+            :class="{ on: s === speed }"
+            :aria-pressed="s === speed"
+            @click="emit('set-speed', s)"
+          >
+            {{ speedLabel(s) }}
+          </button>
+        </div>
+      </template>
+      <button v-else class="at-btn at-speed" aria-label="Playback speed" @click="onSpeed">
+        {{ speedLabel(speed) }}
       </button>
 
-      <button class="at-btn at-stop" title="Stop" aria-label="Stop" @click="emit('stop')">✕</button>
+      <button
+        v-if="stoppable"
+        class="at-btn at-stop"
+        title="Stop"
+        aria-label="Stop"
+        @click="emit('stop')"
+      >
+        ✕
+      </button>
     </template>
   </div>
 </template>
 
 <style scoped>
+/* Every surface value here is a token, because both real consumers float this over a 3-D
+ * canvas: they need a transparent, blurred bar, which an opaque hardcoded background makes
+ * impossible. The kit's own palette supplies the defaults. */
 .aether-transport {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: min(560px, calc(100% - 32px));
+  width: 100%;
   padding: 6px 12px 6px 8px;
-  border-radius: 999px;
-  background: var(--aether-surface);
+  border-radius: var(--aether-transport-radius);
+  background: var(--aether-transport-bg);
+  backdrop-filter: var(--aether-transport-backdrop);
+  -webkit-backdrop-filter: var(--aether-transport-backdrop);
   border: 1px solid var(--aether-line-strong);
   color: var(--aether-ink);
-  font:
-    13px/1.4 ui-monospace,
-    monospace;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
-}
-.aether-transport.compute {
-  width: min(420px, calc(100% - 32px));
-  padding-left: 16px;
+  font: 13px/1.4 var(--aether-font-mono);
+  box-shadow: var(--aether-transport-shadow);
 }
 .at-btn {
   flex: none;
@@ -137,9 +204,7 @@ function onScrubEnd() {
   background: var(--aether-surface);
   color: var(--aether-ink);
   cursor: pointer;
-  font:
-    13px/1 ui-monospace,
-    monospace;
+  font: 13px/1 var(--aether-font-mono);
 }
 .at-btn:hover {
   border-color: var(--aether-cool);
@@ -153,20 +218,38 @@ function onScrubEnd() {
 .at-stop {
   min-width: 28px;
 }
+.at-speeds {
+  flex: none;
+  display: flex;
+  gap: 2px;
+}
+.at-speed-opt {
+  min-width: 30px;
+  padding: 0 5px;
+  font-size: 11px;
+}
+.at-speed-opt.on {
+  background: var(--aether-cool-wash);
+  color: var(--aether-cool);
+  border-color: currentColor;
+  font-weight: 600;
+}
 .at-scrub {
   flex: 1 1 auto;
   min-width: 120px;
   accent-color: var(--aether-cool);
 }
-/* progress variant uses a div bar (no native range) */
-.aether-transport.compute .at-scrub {
+/* the precompute bar is a plain div — there is nothing to scrub yet */
+.at-progress {
+  flex: 1 1 auto;
+  min-width: 120px;
   position: relative;
   height: 4px;
   background: var(--aether-line-strong);
   border-radius: 999px;
   overflow: hidden;
 }
-.at-scrub-fill {
+.at-progress-fill {
   position: absolute;
   inset: 0 auto 0 0;
   background: var(--aether-cool);

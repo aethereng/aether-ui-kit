@@ -128,7 +128,7 @@ export const COMPONENTS: CompMeta[] = [
     blurb:
       'Controlled playback transport: play/pause/replay, scrub, speed presets, position readout.',
     detail:
-      'Pauses on scrub-start and resumes on scrub-end, so a drag and a running clock can never both write the playhead. Deliberately unit-agnostic — the same component drives simulation seconds and calendar days.',
+      'Pauses on scrub-start and resumes on scrub-end, so a drag and a running clock can never both write the playhead — the release is caught on the window, so a pointer let go outside the slider cannot strand playback paused. Deliberately unit-agnostic: the same component drives simulation seconds and calendar days. It sizes and positions nothing; both real consumers float it over a 3-D canvas at their own width. Shipping in quintus twice — the viewer dynamics player and the editor diagnostic.',
     props: [
       { name: 'current', type: 'number', note: 'playhead position — caller owns the clock' },
       { name: 'duration', type: 'number' },
@@ -138,6 +138,10 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'phase', type: "'play' | 'precompute'?", note: 'shows a progress bar while building' },
       { name: 'precomputePct', type: 'number?' },
       { name: 'format', type: '(t: number) => string?', note: 'override the readout formatting' },
+      { name: 'speedMode', type: "'cycle' | 'presets'?", note: 'one stepping button vs the whole ladder' },
+      { name: 'speedLabel', type: '(s: number) => string?', note: 'e.g. ½× instead of 0.5×' },
+      { name: 'stoppable', type: 'boolean?', note: 'render the dismiss button; default true' },
+      { name: 'computeLabel', type: 'string?', note: 'text beside the precompute bar' },
     ],
     emits: [
       { name: 'toggle', type: '[]' },

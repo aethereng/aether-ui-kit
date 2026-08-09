@@ -31,3 +31,10 @@ export function isChipActive<V extends string>(value: V, active: V | Set<V>): bo
 export function hasVisibleOptions<V extends string>(options: ChipOption<V>[]): boolean {
   return options.some((o) => (o.count ?? 0) > 0)
 }
+
+// The transport core is the other half of controls/. Re-exported here because the scrub
+// bargain in particular (beginScrub/endScrub) is a decision every playback host must make
+// identically — leaving it reachable only from inside the kit meant the one consumer that
+// needed it wrote its own copy, which is the duplication this package exists to end.
+export { DEFAULT_SPEEDS, cycleSpeed, isAtEnd, beginScrub, endScrub } from './transport'
+export type { ScrubHandle } from './transport'

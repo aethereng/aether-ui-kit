@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import Graph2D from '../Graph2D.vue'
 import type { GNode, GEdge } from '../../core'
 
@@ -31,8 +32,19 @@ const edges: GEdge[] = [
   { a: 'b', b: 'c' },
 ]
 
+/* Every mount is tracked and torn down in afterEach below. None of this file's OTHER tests
+ * notice a leaked mount -- they only read their own wrapper's DOM/emitted state synchronously
+ * -- but Graph2D attaches its drag/pan listeners to `window`, not to its own element, so a
+ * mount nobody unmounts keeps them live for the rest of the file. Harmless on its own; the
+ * dev-warning tests below are the first thing in this file that can actually observe it, since
+ * a stale listener firing on some LATER test's window-level pointer dispatch is exactly the
+ * kind of cross-test noise a global side effect (console.warn) surfaces and a per-wrapper
+ * assertion never would. */
+const mounted: ReturnType<typeof mount>[] = []
+afterEach(() => { mounted.forEach((w) => w.unmount()); mounted.length = 0 })
+
 function mountGraph(extra: Record<string, unknown> = {}) {
-  return mount(Graph2D, {
+  const w = mount(Graph2D, {
     props: {
       nodes: nodes(),
       edges,
@@ -44,6 +56,8 @@ function mountGraph(extra: Record<string, unknown> = {}) {
     },
     attachTo: document.body,
   })
+  mounted.push(w)
+  return w
 }
 
 beforeAll(() => {
@@ -53,6 +67,14 @@ beforeAll(() => {
     return { x: 0, y: 0, top: 0, left: 0, right: W, bottom: H, width: W, height: H } as DOMRect
   }
 })
+
+/* Silenced by default: mountGraph's nodes fixture is a static array these tests never write
+ * back to, which is exactly the shape the dev-only "did the drag actually land" check (further
+ * down) is built to flag -- every drag test above that point would otherwise warn on its first
+ * move. The "Graph2D warns" suite below reads warnSpy directly to assert on it instead. */
+let warnSpy: ReturnType<typeof vi.spyOn>
+beforeEach(() => { warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {}) })
+afterEach(() => { warnSpy.mockRestore() })
 
 const pd = (el: Element, x: number, y: number, pointerId = 1) =>
   el.dispatchEvent(
@@ -473,5 +495,106 @@ describe('Graph2D labels hold their size while the graph scales', () => {
     expect(dy).toBeCloseTo(6 + 11 / k, 5)
     // rendered gap below the circle is unchanged: (dy - r) * k == 11
     expect((dy - 6) * k).toBeCloseTo(11, 5)
+  })
+})
+
+describe('Graph2D drops edges whose endpoint is not in nodes[]', () => {
+  /* The regression this guards: a host that filters which nodes it shows (Brain Map's
+     folder/flag/search filters) but keeps passing every edge in the whole dataset used to
+     still render an edge into a now-hidden node -- the missing endpoint fell back to (0,0),
+     so every one of those edges converged on the same phantom point in the corner. */
+  it('renders exactly the edges whose both ends are visible', () => {
+    const w = mountGraph({
+      edges: [
+        { a: 'a', b: 'b' }, // both visible
+        { a: 'b', b: 'ghost' }, // ghost is not in nodes()
+        { a: 'ghost', b: 'a' }, // same, other position
+      ],
+    })
+    expect(w.element.querySelectorAll('.aether-graph__edge').length).toBe(1)
+  })
+
+  it('never renders a line touching the origin fallback -- proof the old ?? 0 path is gone', () => {
+    const w = mountGraph({ edges: [{ a: 'a', b: 'ghost' }] })
+    const lines = [...w.element.querySelectorAll('.aether-graph__edge')]
+    expect(lines.length).toBe(0) // dropped entirely, not drawn to (0,0)
+  })
+
+  it('keeps a valid edge even when it is listed alongside several invalid ones', () => {
+    const w = mountGraph({
+      edges: [{ a: 'x', b: 'y' }, { a: 'a', b: 'c' }, { a: 'z', b: 'a' }],
+    })
+    const lines = [...w.element.querySelectorAll('.aether-graph__edge')]
+    expect(lines.length).toBe(1)
+    const aPos = w.element.querySelector('[data-id="a"]')!.getAttribute('transform')
+    const cPos = w.element.querySelector('[data-id="c"]')!.getAttribute('transform')
+    const [ax, ay] = aPos!.match(/[\d.]+/g)!.map(Number)
+    const [cx, cy] = cPos!.match(/[\d.]+/g)!.map(Number)
+    expect(lines[0]!.getAttribute('x1')).toBe(String(ax))
+    expect(lines[0]!.getAttribute('y1')).toBe(String(ay))
+    expect(lines[0]!.getAttribute('x2')).toBe(String(cx))
+    expect(lines[0]!.getAttribute('y2')).toBe(String(cy))
+  })
+})
+
+describe('Graph2D warns when a controlled drag never reaches nodes[]', () => {
+  /* The regression this guards: Brain Map's drag handler mutated its position store correctly
+     but never told Vue to look again, so the emitted `drag` was fine and the node just never
+     moved on screen -- silently, every time, once the initial physics settle finished. This
+     check is the automated version of the exact manual test that caught it originally: drag,
+     then ask "did nodes[] actually change to match?" */
+
+  it('stays quiet when the host updates nodes[] in response to drag, as a correct one does', async () => {
+    const w = mountGraph()
+    pd(w.element.querySelector('[data-id="a"]')!, 100, 100)
+    pm(window, 160, 130)
+    const [id, x, y] = w.emitted('drag')!.at(-1) as [string, number, number]
+    // simulate a host whose @drag handler updates its store AND triggers a re-render --
+    // the two things together are what setProps models here
+    await w.setProps({ nodes: nodes().map((n) => (n.id === id ? { ...n, pos: [x, y] } : n)) })
+    await nextTick()
+    expect(warnSpy).not.toHaveBeenCalled()
+    pu(window)
+  })
+
+  it('warns once, naming the node, when nodes[] never catches up', async () => {
+    const w = mountGraph() // fixture nodes() is never written back to -- the bug, reproduced
+    pd(w.element.querySelector('[data-id="a"]')!, 100, 100)
+    pm(window, 160, 130)
+    await nextTick()
+    expect(warnSpy).toHaveBeenCalledTimes(1)
+    expect(warnSpy.mock.calls[0]![0]).toContain('"a"')
+    pu(window)
+  })
+
+  it('does not re-warn on subsequent moves of the same gesture -- one signal is enough', async () => {
+    const w = mountGraph()
+    const el = w.element.querySelector('[data-id="a"]')!
+    pd(el, 100, 100)
+    pm(window, 160, 130)
+    await nextTick()
+    pm(window, 170, 140)
+    pm(window, 180, 150)
+    await nextTick()
+    expect(warnSpy).toHaveBeenCalledTimes(1)
+    pu(window)
+  })
+
+  it('does not check at all under mapping="fit" -- nodes[].pos and the emitted (x,y) are not even the same coordinate space there', async () => {
+    const w = mountGraph({ mapping: 'fit' })
+    pd(w.element.querySelector('[data-id="a"]')!, 100, 100)
+    pm(window, 160, 130)
+    await nextTick()
+    expect(warnSpy).not.toHaveBeenCalled()
+    pu(window)
+  })
+
+  it('does not check in running mode -- Graph2D owns positions itself there', async () => {
+    const w = mountGraph({ running: true })
+    pd(w.element.querySelector('[data-id="a"]')!, 100, 100)
+    pm(window, 160, 130)
+    await nextTick()
+    expect(warnSpy).not.toHaveBeenCalled()
+    pu(window)
   })
 })

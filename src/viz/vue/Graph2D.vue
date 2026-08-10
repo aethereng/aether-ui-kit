@@ -5,7 +5,7 @@
  *    (store-backed positions, pinning, layout modes); Graph2D only renders and
  *    emits interaction. Same core, same projection — only who drives pos differs.
  * A future GraphGL.vue reuses the same core and only swaps the draw call. */
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
   ForceLayout,
   ortho2d,
@@ -113,6 +113,12 @@ const screen = computed(() => {
 })
 
 const posById = computed(() => new Map(screen.value.map((s) => [s.id, s])))
+/* An edge whose endpoint isn't in `nodes` used to still draw: the missing side's coordinates
+ * fell back to (0,0), so every edge into a node the caller had filtered out of view converged
+ * on the same phantom point in the corner. A caller can always filter its own edge list first,
+ * but the whole point of a shared component is that it shouldn't have to -- this is the one
+ * invariant every consumer needs, so it lives here once instead of at each call site. */
+const visibleEdges = computed(() => props.edges.filter((e) => posById.value.has(e.a) && posById.value.has(e.b)))
 function edgeLit(e: GEdge): boolean {
   return !!props.selection && (e.a === props.selection || e.b === props.selection)
 }
@@ -304,10 +310,39 @@ function onNodeDown(e: PointerEvent, id: string) {
 }
 function onNodeMove(e: PointerEvent) {
   if (!dragId) return
+  const firstMove = !moved
   moved = true
   lastClientX = e.clientX; lastClientY = e.clientY
   const v = toView(e)
   emit('drag', dragId, v.x, v.y)
+  if (firstMove) checkDragApplied(dragId, v.x, v.y)
+}
+
+/* Dev-only sanity check for the failure mode controlled mode invites: Graph2D only redraws
+ * when Vue sees `nodes` change, so a host that stores positions outside Vue's reactivity (a
+ * plain object, for the same performance reason this kit's own gallery demo does it) has to
+ * remember to trigger a re-render itself after every mutation. Forget, and the failure is
+ * silent -- `drag` fires correctly, nothing throws, the node just never visibly moves. Checked
+ * once per gesture, on the first move, because "nothing is wired up at all" is exactly what
+ * that first move already proves either way; every move after it would just repeat the same
+ * answer. Scoped to running=false + mapping='direct', the only combination where nodes[].pos
+ * is even comparable to the emitted (x,y) -- under 'fit' the two live in unrelated coordinate
+ * spaces, and in running mode Graph2D owns positions itself, so there is nothing to check. */
+async function checkDragApplied(id: string, expectedX: number, expectedY: number) {
+  if (!import.meta.env.DEV || props.running || props.mapping !== 'direct') return
+  await nextTick()
+  if (dragId !== id) return // gesture already ended, or moved to a different node
+  const n = props.nodes.find((nn) => nn.id === id)
+  if (!n) return
+  const [x = 0, y = 0] = n.pos
+  if (Math.abs(x - expectedX) > 0.5 || Math.abs(y - expectedY) > 0.5) {
+    console.warn(
+      `[Graph2D] dragged "${id}" to (${expectedX.toFixed(1)}, ${expectedY.toFixed(1)}), but nodes[] still reports ` +
+      `(${x.toFixed(1)}, ${y.toFixed(1)}) after the next tick. In controlled mode Graph2D only redraws when Vue ` +
+      `sees the "nodes" prop change -- if positions live in a plain (non-reactive) store, something has to ` +
+      `explicitly trigger a re-render after every drag (bumping a counter the nodes computed reads, for example).`,
+    )
+  }
 }
 function onNodeUp() {
   if (!dragId) return
@@ -426,12 +461,12 @@ function onSurfaceLeave() {
     <!-- one group carries the view transform; everything inside stays in world space -->
     <g :transform="viewTransform">
       <line
-        v-for="(e, i) in edges"
+        v-for="(e, i) in visibleEdges"
         :key="'e' + i"
-        :x1="posById.get(e.a)?.cx ?? 0"
-        :y1="posById.get(e.a)?.cy ?? 0"
-        :x2="posById.get(e.b)?.cx ?? 0"
-        :y2="posById.get(e.b)?.cy ?? 0"
+        :x1="posById.get(e.a)!.cx"
+        :y1="posById.get(e.a)!.cy"
+        :x2="posById.get(e.b)!.cx"
+        :y2="posById.get(e.b)!.cy"
         class="aether-graph__edge"
         :class="{ lit: edgeLit(e) }"
       />

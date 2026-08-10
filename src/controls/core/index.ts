@@ -14,6 +14,7 @@ export type {
   SegProps,
   ChipProps,
   ToolProps,
+  ChatMessage,
 } from './types'
 
 // Return true if `value` is the active selection among `options`.

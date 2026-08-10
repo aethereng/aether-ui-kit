@@ -15,6 +15,7 @@ import Tool from '@/controls/vue/Tool.vue'
 import FilterRail from '@/controls/vue/FilterRail.vue'
 import SearchField from '@/controls/vue/SearchField.vue'
 import Transport from '@/controls/vue/Transport.vue'
+import ChatPanel from '@/controls/vue/ChatPanel.vue'
 import PropertyEditor from '@/property-editor/vue/PropertyEditor.vue'
 import Graph2D from '@/viz/vue/Graph2D.vue'
 import Gantt from '@/viz/vue/Gantt.vue'
@@ -23,6 +24,7 @@ import { ForceLayout } from '@/viz/core'
 import { computePPD } from '@/viz/core/gantt'
 import type { GNode, GEdge } from '@/viz/core'
 import type { GanttItem, GanttLane } from '@/viz/core/gantt'
+import type { ChatMessage } from '@/controls/core'
 import type { SegOption, ChipOption, FilterGroup } from '@/controls/core/types'
 import type { FieldDescriptor, FieldValues as PEValues } from '@/property-editor/core/types'
 
@@ -405,6 +407,28 @@ function onGanttNewAt(day: number, type: string) {
   gItems.value.push({ id: 'n' + day + type, start: day, type, status: 'open', title: 'New ' + type })
 }
 
+// ── ChatPanel ──
+// A fake round trip: Send marks the queued messages sent, Apply reply hands back a
+// canned agent line. Real hosts export/import an actual file; the gallery mimics the
+// round trip without one so the demo is self-contained.
+const cMessages = ref<ChatMessage[]>([{ role: 'agent', text: 'Ready when you are.' }])
+const cCompose = ref('')
+function cQueue() {
+  const t = cCompose.value.trim()
+  if (!t) return
+  cMessages.value.push({ role: 'you', text: t, queued: true })
+  cCompose.value = ''
+}
+function cSend() {
+  const reqs = cMessages.value.filter((m) => m.role === 'you' && m.queued)
+  if (!reqs.length) return
+  reqs.forEach((m) => (m.queued = false))
+  cMessages.value.push({ role: 'sys', text: 'Sent ' + reqs.length + ' request(s) — exported as request.json.' })
+}
+function cApplyReply() {
+  cMessages.value.push({ role: 'agent', text: 'Done — see the diff.' })
+}
+
 const groupAnchor = (g: Group) => g.toLowerCase()
 </script>
 
@@ -646,6 +670,30 @@ const groupAnchor = (g: Group) => g.toLowerCase()
           <template #state
             >selected = {{ gSel || '∅' }} · expanded = {{ gExpanded }} · zoom =
             {{ gPpd }}px/day · items = {{ gItems.length }}</template
+          >
+        </GSection>
+
+        <GSection v-else-if="c.id === 'chat-panel'" :meta="c">
+          <p class="g-hint">
+            Type a line, hit Queue, then Send — the count on the button clears and a system
+            note lands in the log. Apply reply hands back a canned response, the way a real
+            host would after importing a reply file.
+          </p>
+          <div class="g-chat">
+            <ChatPanel
+              :messages="cMessages"
+              v-model="cCompose"
+              placeholder="Ask the agent…"
+              @queue="cQueue"
+              @send="cSend"
+              @apply-reply="cApplyReply"
+            >
+              <template #empty>Queue a message, then Send to export a request file.</template>
+            </ChatPanel>
+          </div>
+          <template #state
+            >messages = {{ cMessages.length }} · queued =
+            {{ cMessages.filter((m) => m.role === 'you' && m.queued).length }}</template
           >
         </GSection>
       </template>
@@ -951,6 +999,16 @@ body {
 .g-fill {
   width: 100%;
   min-width: 0;
+}
+/* ChatPanel is height:100% internally (it's meant to fill a tab pane) -- the demo needs to
+   BE that bounded box, or the log has nothing to scroll within. */
+.g-chat {
+  width: 100%;
+  max-width: 480px;
+  height: 360px;
+  border: 1px solid var(--aether-line-strong);
+  border-radius: var(--aether-radius);
+  overflow: hidden;
 }
 .g-rails {
   display: flex;

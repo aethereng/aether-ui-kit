@@ -652,6 +652,71 @@ function onNewAt(day: number, type: string) {
   items.value.push({ id: 'n' + day + type, start: day, type, status: 'open', title: 'New ' + type })
 }`,
   },
+  {
+    id: 'chat-panel',
+    name: 'ChatPanel',
+    subpath: '@aether/ui-kit/controls/chat-panel',
+    group: 'Controls',
+    core: '@aether/ui-kit/controls/core',
+    blurb: 'A message log and compose box for the "queue, send, apply the reply" agent pattern.',
+    detail:
+      'Extracted after two hosts shipped it identically — a file browser and a card board — with only the export/import logic actually differing between them. The split follows from that: ChatPanel owns the log and the compose box, and emits queue / send / apply-reply; what those three DO — building a request file, importing a reply — stays with the caller entirely. Auto-scrolls to the newest message on its own, so no host has to reach into its DOM for that. Shipping in two applications: a knowledge-graph browser and a decision board.',
+    props: [
+      { name: 'messages', type: 'ChatMessage[]', note: "{ role: 'you'|'agent'|'sys', text, queued?, refs? }" },
+      { name: 'modelValue', type: 'string', note: 'the compose box — caller owns it' },
+      { name: 'placeholder', type: 'string?' },
+      { name: 'queueLabel', type: 'string?', note: "default 'Queue'" },
+      { name: 'sendLabel', type: 'string?', note: "default 'Send'" },
+      { name: 'applyLabel', type: 'string?', note: "default 'Apply reply'" },
+      { name: 'historyLimit', type: 'number?', note: 'most recent N rendered — default 50' },
+    ],
+    emits: [
+      { name: 'update:modelValue', type: '[value: string]' },
+      { name: 'queue', type: '[]', note: 'Queue button, or Ctrl/Cmd+Enter in the textarea' },
+      { name: 'send', type: '[]' },
+      { name: 'apply-reply', type: '[]' },
+    ],
+    exposed: [{ name: 'focus()', type: '() => void', note: 'for an "ask about this" shortcut that prefills modelValue and jumps to the box' }],
+    template: `<ChatPanel
+  ref="panel"
+  :messages="messages"
+  v-model="compose"
+  placeholder="Ask the agent…"
+  @queue="queue"
+  @send="send"
+  @apply-reply="applyReply"
+>
+  <template #empty>Queue a message, then Send to export a request file.</template>
+</ChatPanel>`,
+    script: `import { ref } from 'vue'
+import ChatPanel from '@aether/ui-kit/controls/chat-panel'
+import type { ChatMessage } from '@aether/ui-kit/controls/core'
+
+const messages = ref<ChatMessage[]>([
+  { role: 'agent', text: 'Ready when you are.' },
+])
+const compose = ref('')
+const panel = ref<{ focus(): void } | null>(null)
+
+function queue() {
+  const t = compose.value.trim()
+  if (!t) return
+  messages.value.push({ role: 'you', text: t, queued: true })
+  compose.value = ''
+}
+
+function send() {
+  const reqs = messages.value.filter((m) => m.role === 'you' && m.queued)
+  if (!reqs.length) return
+  reqs.forEach((m) => (m.queued = false))
+  messages.value.push({ role: 'sys', text: 'Sent ' + reqs.length + ' request(s) — exported as request.json.' })
+}
+
+function applyReply() {
+  // a real host reads a dropped reply file here; the gallery fakes the round trip
+  messages.value.push({ role: 'agent', text: 'Done — see the diff.' })
+}`,
+  },
 ]
 
 export const GROUPS: Group[] = ['Controls', 'Forms', 'Visualization']

@@ -181,15 +181,22 @@ function onDblClick(e: MouseEvent) {
   emit('newAt', day, type)
 }
 
+/* An anchor takes its LANE's colour, exactly as the original does — the port coloured by
+ * STATUS instead, so every open anchor came out rose and the lane encoding was lost. */
 const anchors = computed(() =>
-  props.items.filter((i) => i.anchor).sort((a, b) => a.start - b.start),
+  props.items
+    .filter((i) => i.anchor)
+    .sort((a, b) => a.start - b.start)
+    .map((a) => ({ ...a, laneColor: props.lanes.find((l) => l.type === a.type)?.color })),
 )
 </script>
 
 <template>
   <div class="aether-gantt">
     <div class="ag-labels">
-      <div class="ag-spine-label" :style="{ height: SPINE_H + 'px' }">anchors · T-minus</div>
+      <!-- the band is self-evident from the markers in it; the gutter only holds its height
+           so the lane labels below stay aligned with their rows -->
+      <div class="ag-spine-label" :style="{ height: SPINE_H + 'px' }"></div>
       <div
         v-for="b in laneBoxes"
         :key="'lbl' + b.t"
@@ -266,7 +273,7 @@ const anchors = computed(() =>
             :data-id="a.id"
             :style="{
               left: (a.start + 0.5) * ppd + 'px',
-              color: a.status === 'done' ? 'var(--aether-ink-soft)' : 'var(--aether-rose)',
+              color: a.laneColor ?? 'var(--aether-ink-soft)',
             }"
           >
             <div class="stem" />
@@ -568,30 +575,40 @@ const anchors = computed(() =>
 .ag-canchor.open .dia {
   background: var(--aether-surface);
 }
+/* Label sits ABOVE the diamond and is left-aligned from the day, as the original has it.
+   Absolute so the anchor stays zero-width on its date — a long title must never drag the
+   diamond off the day it marks — and left-aligned is also why an anchor on day 0 needs no
+   special edge handling: the text runs rightwards into the chart. */
 .ag-canchor .atxt {
   position: absolute;
-  /* just under the diamond -- absolute so the anchor stays zero-width at its day and a
-     long title cannot shift the diamond off the date it marks */
-  top: 50%;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 40px; /* clears the diamond's rotated box, which reaches ~30px */
+  left: -4px;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--aether-ink-soft);
 }
-/* An anchor on the first or last few days would centre its label off the end of the chart,
-   where it is clipped to an unreadable tail. Near an edge, align the label inwards instead
-   -- the diamond stays exactly on its day either way. */
-.ag-canchor.edge-l .atxt {
-  left: 0;
-  transform: none;
+.ag-canchor .atxt .t {
+  font-weight: 700;
+  color: currentColor;
+  letter-spacing: 0.3px;
 }
-.ag-canchor.edge-r .atxt {
-  left: auto;
-  right: 0;
-  transform: none;
+/* Its own line under the title, not trailing it. --aether-faint is too dim to read at 10px on
+   a dark surface, and the date is information rather than chrome. */
+.ag-canchor .atxt .tm {
+  display: block;
+  color: var(--aether-ink-soft);
+  font-size: 10px;
+  opacity: 0.85;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.ag-canchor:hover .atxt .t {
+  text-decoration: underline;
 }
 .ag-canchor.sel .dia {
   outline: 2px solid var(--aether-cool);
+  outline-offset: 1.5px;
 }
 .ag-lane {
   position: relative;

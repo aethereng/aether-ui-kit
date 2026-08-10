@@ -34,6 +34,10 @@
       "types": "./src/controls/vue/FilterRail.vue",
       "import": "./src/controls/vue/FilterRail.vue"
     },
+    "./controls/search-field": {
+      "types": "./src/controls/vue/SearchField.vue",
+      "import": "./src/controls/vue/SearchField.vue"
+    },
     "./controls/tool": {
       "types": "./src/controls/vue/Tool.vue",
       "import": "./src/controls/vue/Tool.vue"

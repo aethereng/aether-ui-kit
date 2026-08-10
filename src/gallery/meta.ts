@@ -223,6 +223,40 @@ function onClear() {
 }`,
   },
   {
+    id: 'search-field',
+    name: 'SearchField',
+    subpath: '@aether/ui-kit/controls/search-field',
+    group: 'Controls',
+    blurb: 'Search input with a clear button that appears only once there is something to clear.',
+    detail:
+      'Extracted after two surfaces shipped it identically — same wrapper, same absolutely positioned circular button, same glyph, down to matching CSS in both source files. An always-visible clear button on an empty field is a control that does nothing, so it stays hidden until the field has text; clearing returns the caret to the input, because clearing is almost always followed by retyping.',
+    props: [
+      { name: 'modelValue', type: 'string', note: 'the query — the caller owns it' },
+      { name: 'placeholder', type: 'string?' },
+      { name: 'ariaLabel', type: 'string?', note: 'defaults to the placeholder' },
+      { name: 'clearLabel', type: 'string?', note: 'tooltip + accessible name for the clear button' },
+    ],
+    emits: [
+      { name: 'update:modelValue', type: '[value: string]', note: 'v-model' },
+      { name: 'clear', type: '[]', note: 'fires alongside the empty update, for callers that reset more than the query' },
+    ],
+    template: `<SearchField
+  v-model="q"
+  placeholder="Search titles, paths, tags…"
+  @clear="onClear"
+/>`,
+    script: `import { ref } from 'vue'
+import SearchField from '@aether/ui-kit/controls/search-field'
+
+const q = ref('')
+
+// the clear event is for anything BEYOND emptying the query — resetting a
+// page, collapsing a result tree — since v-model already handles the string
+function onClear() {
+  /* … */
+}`,
+  },
+  {
     id: 'transport',
     name: 'Transport',
     subpath: '@aether/ui-kit/controls/transport',

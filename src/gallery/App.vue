@@ -13,6 +13,7 @@ import Seg from '@/controls/vue/Seg.vue'
 import Chip from '@/controls/vue/Chip.vue'
 import Tool from '@/controls/vue/Tool.vue'
 import FilterRail from '@/controls/vue/FilterRail.vue'
+import SearchField from '@/controls/vue/SearchField.vue'
 import Transport from '@/controls/vue/Transport.vue'
 import PropertyEditor from '@/property-editor/vue/PropertyEditor.vue'
 import Graph2D from '@/viz/vue/Graph2D.vue'
@@ -125,6 +126,10 @@ function onRailClear() {
   railGroups.value.forEach((g) => (g.selected = new Set()))
   railHidden.value = 0
 }
+
+/* ── SearchField ── */
+const query = ref('')
+const cleared = ref(0)
 
 /* ── Transport — the demo owns the clock; Transport renders + emits ── */
 const tCur = ref(0)
@@ -500,6 +505,17 @@ const groupAnchor = (g: Group) => g.toLowerCase()
           </div>
           <template #state
             >active = {{ railGroups.flatMap((g2) => [...g2.selected]).join(', ') || '∅' }}</template
+          >
+        </GSection>
+
+        <GSection v-else-if="c.id === 'search-field'" :meta="c">
+          <SearchField
+            v-model="query"
+            placeholder="Search titles, paths, tags…"
+            @clear="cleared++"
+          />
+          <template #state
+            >query = {{ query ? '"' + query + '"' : '∅' }} · cleared {{ cleared }}×</template
           >
         </GSection>
 

@@ -235,6 +235,72 @@
   color: var(--aether-faint);
 }
 
+/* ---- SearchField (controls) ---- */
+/* Ported from the desk originals, where both surfaces carried this identically. The clear
+   button is hidden until there is text: an always-visible X on an empty field is a control
+   that does nothing, and it reads as one. */
+.aether-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 80px;
+  max-width: 340px;
+}
+.aether-search input {
+  flex: 1 1 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 34px 7px 11px;
+  background: var(--aether-panel);
+  border: 1px solid var(--aether-line);
+  border-radius: var(--aether-radius);
+  color: var(--aether-ink);
+  font: inherit;
+  font-size: 12.5px;
+}
+.aether-search input:focus {
+  outline: none;
+  border-color: var(--aether-cool-soft);
+}
+/* the UA's own clear affordance would sit beside ours */
+.aether-search input::-webkit-search-cancel-button {
+  appearance: none;
+}
+.aether-search__clear {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  translate: 0 -50%;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: var(--aether-line-strong);
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.aether-search.has .aether-search__clear {
+  display: flex;
+}
+.aether-search__clear svg {
+  display: block;
+  width: 9px;
+  height: 9px;
+  fill: none;
+  stroke: var(--aether-surface);
+  stroke-width: 1.9;
+  stroke-linecap: round;
+}
+.aether-search__clear:hover {
+  background: var(--aether-cool);
+}
+
 /* ---- Tool (controls) ---- */
 .aether-tool {
   border: 1px solid var(--aether-line-strong);

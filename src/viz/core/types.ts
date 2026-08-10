@@ -12,6 +12,12 @@ export interface GNode {
   label?: string
   color?: string
   r?: number // base radius (screen px) before any depth scaling
+  /** Fill opacity, e.g. to fade a parked/archived node without removing it from the layout. */
+  opacity?: number
+  /** Ring colour — a second visual channel independent of fill, e.g. "this is yours" without
+   *  giving up the fill colour that already encodes type/category. */
+  stroke?: string
+  strokeWidth?: number
   meta?: Record<string, unknown>
 }
 

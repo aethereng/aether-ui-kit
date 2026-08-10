@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import Graph2D from '../Graph2D.vue'
 import type { GNode, GEdge } from '../../core'
@@ -317,6 +317,136 @@ describe('Graph2D hover', () => {
     expect(w.emitted('nodeHover')!.length).toBe(1) // no new hover
     expect(w.emitted('nodeLeave')!.length).toBe(1) // and the open card was dismissed
     pu(window)
+  })
+})
+
+describe('Graph2D per-node opacity and stroke', () => {
+  it('forwards opacity, stroke and strokeWidth from GNode to the circle', () => {
+    const w = mountGraph({
+      nodes: [
+        { id: 'a', pos: [100, 100], r: 6, opacity: 0.34 },
+        { id: 'b', pos: [300, 200], r: 6, stroke: 'purple', strokeWidth: 2.5 },
+        { id: 'c', pos: [200, 150], r: 6 },
+      ],
+    })
+    const circleOf = (id: string) => w.element.querySelector(`[data-id="${id}"] circle`)!
+    expect(circleOf('a').getAttribute('opacity')).toBe('0.34')
+    expect(circleOf('b').getAttribute('stroke')).toBe('purple')
+    expect(circleOf('b').getAttribute('stroke-width')).toBe('2.5')
+    // unset on a node -> unset on its circle, not a stray "null"/"undefined" attribute
+    expect(circleOf('c').hasAttribute('opacity')).toBe(false)
+    expect(circleOf('c').hasAttribute('stroke')).toBe(false)
+  })
+})
+
+describe('Graph2D cursor state', () => {
+  it('is not zoomable or dragging by default', () => {
+    const w = mountGraph()
+    expect(w.element.classList.contains('zoomable')).toBe(false)
+    expect(w.element.classList.contains('dragging')).toBe(false)
+  })
+
+  it('marks the surface zoomable', () => {
+    const w = mountGraph({ zoomable: true })
+    expect(w.element.classList.contains('zoomable')).toBe(true)
+  })
+
+  it('marks dragging for the duration of a node drag, on the SVG root', async () => {
+    const w = mountGraph()
+    const node = w.element.querySelector('[data-id="a"]')!
+    pd(node, 100, 100)
+    await w.vm.$nextTick()
+    expect(w.element.classList.contains('dragging')).toBe(true)
+    pu(window)
+    await w.vm.$nextTick()
+    expect(w.element.classList.contains('dragging')).toBe(false)
+  })
+
+  it('marks dragging for the duration of a background pan', async () => {
+    const w = mountGraph({ zoomable: true })
+    pd(w.element, 20, 20)
+    await w.vm.$nextTick()
+    expect(w.element.classList.contains('dragging')).toBe(true)
+    pu(window)
+    await w.vm.$nextTick()
+    expect(w.element.classList.contains('dragging')).toBe(false)
+  })
+
+  it('marks dragging on press even for a click that never moves -- and clears it on release', async () => {
+    const w = mountGraph()
+    const node = w.element.querySelector('[data-id="b"]')!
+    pd(node, 300, 200)
+    await w.vm.$nextTick()
+    expect(w.element.classList.contains('dragging')).toBe(true) // true for the down...
+    pu(window)
+    await w.vm.$nextTick()
+    expect(w.element.classList.contains('dragging')).toBe(false) // ...false again by the click
+  })
+})
+
+describe('Graph2D edge-pan while dragging a node', () => {
+  /* The SVG root clips to its own box (overflow:hidden is the UA default for <svg>), so a
+     dragged node's WORLD position can be unbounded and still visually vanish at the edge --
+     indistinguishable from a hard wall even though nothing actually stopped it. Holding a
+     drag near the edge should scroll the view to follow, the way Figma/Miro do. This is a
+     real regression test: the first version had the two edge directions backwards, which
+     doesn't pan the wrong way so much as fight clampPan to a standstill -- net motion looks
+     like nothing happened, not like it moved backwards, so a plain "did it move" check would
+     have caught it, but knowing the DIRECTION is what actually distinguishes "fixed" from
+     "silently doing nothing" again. */
+  beforeAll(() => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame'] })
+  })
+  afterAll(() => {
+    vi.useRealTimers() // don't leak fake rAF into any test file that runs after this one
+  })
+
+  it('pans left (shrinks zx) while held near the right edge', async () => {
+    const w = mountGraph({ zoomable: true })
+    const node = w.element.querySelector('[data-id="a"]')!
+    pd(node, 100, 100)
+    pm(window, W - 10, H / 2) // 10px from the right edge, inside the 36px margin
+    await vi.advanceTimersByTimeAsync(200)
+    expect(translateOf(w).x).toBeLessThan(0)
+  })
+
+  it('pans right (grows zx) while held near the left edge', async () => {
+    const w = mountGraph({ zoomable: true })
+    const node = w.element.querySelector('[data-id="a"]')!
+    pd(node, 100, 100)
+    pm(window, 10, H / 2) // 10px from the left edge
+    await vi.advanceTimersByTimeAsync(200)
+    expect(translateOf(w).x).toBeGreaterThan(0)
+  })
+
+  it('does nothing while comfortably inside the margin', async () => {
+    const w = mountGraph({ zoomable: true })
+    const node = w.element.querySelector('[data-id="a"]')!
+    pd(node, 100, 100)
+    pm(window, W / 2, H / 2) // dead centre
+    await vi.advanceTimersByTimeAsync(200)
+    expect(translateOf(w)).toEqual({ x: 0, y: 0 })
+  })
+
+  it('stops as soon as the pointer releases, even mid-margin', async () => {
+    const w = mountGraph({ zoomable: true })
+    const node = w.element.querySelector('[data-id="a"]')!
+    pd(node, 100, 100)
+    pm(window, W - 10, H / 2)
+    await vi.advanceTimersByTimeAsync(50)
+    pu(window)
+    const afterRelease = translateOf(w)
+    await vi.advanceTimersByTimeAsync(200)
+    expect(translateOf(w)).toEqual(afterRelease) // no further motion once released
+  })
+
+  it('does not edge-pan when the graph is not zoomable', async () => {
+    const w = mountGraph() // zoomable defaults to false
+    const node = w.element.querySelector('[data-id="a"]')!
+    pd(node, 100, 100)
+    pm(window, W - 10, H / 2)
+    await vi.advanceTimersByTimeAsync(200)
+    expect(translateOf(w)).toEqual({ x: 0, y: 0 })
   })
 })
 

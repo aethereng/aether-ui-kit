@@ -102,6 +102,9 @@ const screen = computed(() => {
       label: n.label,
       color: n.color,
       r: n.r ?? 6,
+      opacity: n.opacity,
+      stroke: n.stroke,
+      strokeWidth: n.strokeWidth,
       dim,
       cx: pad + (p.x - minX) * s,
       cy: pad + (p.y - minY) * s,
@@ -131,6 +134,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   if (raf.value) cancelAnimationFrame(raf.value)
+  if (edgePanRaf !== null) cancelAnimationFrame(edgePanRaf)
   svgRef.value?.removeEventListener('wheel', onWheel)
   window.removeEventListener('pointermove', onNodeMove)
   window.removeEventListener('pointerup', onNodeUp)
@@ -219,31 +223,89 @@ defineExpose({ zoomIn, zoomOut, zoomFit, zoomAt, zoom: zk })
 const svgRef = ref<SVGSVGElement | null>(null)
 let dragId: string | null = null
 let moved = false
+/* mirrors dragId purely so the cursor can react -- see `dragging` below */
+const nodeDragging = ref(false)
+/* True for either kind of drag, node or background pan. A node keeps its own `cursor:pointer`
+ * rule, which normally wins over an ancestor's cursor because it is a rule on the element
+ * itself, not an inherited value -- so panning is not enough by itself to show "grabbing"
+ * while the pointer happens to cross a node mid-drag. `.dragging .aether-graph__node` below
+ * is written to be MORE specific than `.aether-graph__node` alone so it wins without `!important`. */
+const dragging = computed(() => panning.value || nodeDragging.value)
 /* Client coords -> viewBox coords. */
 function toBox(clientX: number, clientY: number): { x: number; y: number } {
   const r = svgRef.value?.getBoundingClientRect()
   if (!r) return { x: 0, y: 0 }
   return { x: ((clientX - r.left) / r.width) * W.value, y: ((clientY - r.top) / r.height) * H.value }
 }
-/* ...and on through the view transform, so a drag is in the same space as nodes[].pos. */
-function toView(e: PointerEvent): { x: number; y: number } {
-  const b = toBox(e.clientX, e.clientY)
+/* ...and on through the view transform, so a drag is in the same space as nodes[].pos. Takes
+ * a plain {clientX,clientY} rather than a PointerEvent so the edge-pan loop below can call it
+ * with the last-known pointer position on frames where no real event fired. */
+function toView(p: { clientX: number; clientY: number }): { x: number; y: number } {
+  const b = toBox(p.clientX, p.clientY)
   return { x: (b.x - zx.value) / zk.value, y: (b.y - zy.value) / zk.value }
 }
+
+/* ---- edge-pan while dragging a node ---------------------------------------------------
+ * A dragged node's world position is never clamped (see the layout core's default bounds:
+ * unbounded), but the SVG viewport clips to its own box regardless -- overflow:hidden is the
+ * UA default for <svg>. Drag far enough and the node vanishes at the edge, indistinguishable
+ * from a hard wall even though the data underneath kept moving. So when the pointer is near
+ * an edge during a node drag, nudge the view toward it each frame, the way Figma/Miro/Maps
+ * do -- the node stays under the cursor, the canvas scrolls to meet it. Panning the
+ * background never had this problem (nothing is clipped by revealing empty canvas), so this
+ * is scoped to node drags only, and only when zoomable (no view transform to shift otherwise). */
+const EDGE_MARGIN = 36 // px from the SVG's edge where auto-pan kicks in
+const EDGE_MAX_SPEED = 10 // px/frame at the very edge
+let lastClientX = 0, lastClientY = 0
+let edgePanRaf: number | null = null
+/* Near the low edge (pos small): reveal content further toward negative-world-X, which means
+ * shifting the CONTENT toward positive screen-X (zx grows) so the unseen low side scrolls
+ * in. Near the high edge: the opposite, zx shrinks. Getting this backwards doesn't just pan
+ * the wrong way -- clampPan sees the main cluster sliding toward the OPPOSITE edge and pulls
+ * it back, so the two fight every frame and net to a standstill near zero, not a wrong-but-
+ * visible pan. That is exactly what a naive sign flip looks like when you test it: nothing
+ * moves, rather than moving backwards. */
+function edgePanDelta(pos: number, size: number): number {
+  if (pos < EDGE_MARGIN) return EDGE_MAX_SPEED * (1 - pos / EDGE_MARGIN)
+  if (pos > size - EDGE_MARGIN) return -EDGE_MAX_SPEED * (1 - (size - pos) / EDGE_MARGIN)
+  return 0
+}
+function edgePanStep() {
+  if (!dragId) { edgePanRaf = null; return }
+  const r = svgRef.value?.getBoundingClientRect()
+  if (r && r.width && r.height) {
+    const dx = edgePanDelta(lastClientX - r.left, r.width)
+    const dy = edgePanDelta(lastClientY - r.top, r.height)
+    if (dx || dy) {
+      zx.value += dx; zy.value += dy
+      clampPan()
+      // the same screen point now maps to a different world point -- keep the drag in sync
+      // rather than let the node lag behind while the canvas scrolls under a still cursor
+      const v = toView({ clientX: lastClientX, clientY: lastClientY })
+      emit('drag', dragId, v.x, v.y)
+    }
+  }
+  edgePanRaf = requestAnimationFrame(edgePanStep)
+}
+
 function onNodeDown(e: PointerEvent, id: string) {
   const t = e.target as Element
   const tid = t?.getAttribute?.('data-id') || id
   dragId = tid
+  nodeDragging.value = true
   moved = false
+  lastClientX = e.clientX; lastClientY = e.clientY
   const v = toView(e)
   emit('nodeDown', tid, v.x, v.y)
   window.addEventListener('pointermove', onNodeMove)
   window.addEventListener('pointerup', onNodeUp)
+  if (props.zoomable && edgePanRaf === null) edgePanRaf = requestAnimationFrame(edgePanStep)
   e.preventDefault()
 }
 function onNodeMove(e: PointerEvent) {
   if (!dragId) return
   moved = true
+  lastClientX = e.clientX; lastClientY = e.clientY
   const v = toView(e)
   emit('drag', dragId, v.x, v.y)
 }
@@ -251,6 +313,7 @@ function onNodeUp() {
   if (!dragId) return
   const id = dragId
   dragId = null
+  nodeDragging.value = false
   window.removeEventListener('pointermove', onNodeMove)
   window.removeEventListener('pointerup', onNodeUp)
   if (!moved) emit('nodeClick', id)
@@ -352,7 +415,7 @@ function onSurfaceLeave() {
     ref="svgRef"
     :viewBox="`0 0 ${W} ${H}`"
     class="aether-graph"
-    :class="{ zoomable, panning }"
+    :class="{ zoomable, dragging }"
     :width="W"
     :height="H"
     :style="{ '--aether-graph-label-scale': (1 / zk).toFixed(3) }"
@@ -381,7 +444,13 @@ function onSurfaceLeave() {
         :data-id="n.id"
         @pointerdown="onNodeDown($event, n.id)"
       >
-        <circle :r="n.r" :fill="n.color ?? 'var(--aether-cool)'" />
+        <circle
+          :r="n.r"
+          :fill="n.color ?? 'var(--aether-cool)'"
+          :opacity="n.opacity"
+          :stroke="n.stroke"
+          :stroke-width="n.strokeWidth"
+        />
         <!-- the gap is in SCREEN px, so it divides the scale out the same way the type size
              does; a flat world-space offset walked the label away from its node as you zoomed -->
         <text v-if="n.label" :dy="n.r + 11 / zk" class="aether-graph__label">{{ n.label }}</text>
@@ -416,10 +485,18 @@ function onSurfaceLeave() {
   stroke: var(--aether-cool);
   stroke-width: 3;
 }
+/* Three states, consistently: grab over the canvas (it can be panned), pointer over a node
+ * (it can be clicked or dragged), grabbing the moment either turns into an actual drag.
+ * The last rule is written MORE specific than `.aether-graph__node { cursor: pointer }` above
+ * -- two classes beats one -- so it wins outright without `!important`, even while the
+ * pointer is directly over a node mid-pan or over a different node mid-node-drag. */
 .aether-graph.zoomable {
   cursor: grab;
 }
-.aether-graph.panning {
+.aether-graph.dragging {
+  cursor: grabbing;
+}
+.aether-graph.dragging .aether-graph__node {
   cursor: grabbing;
 }
 .aether-graph__label {

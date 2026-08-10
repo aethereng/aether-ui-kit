@@ -32,6 +32,11 @@ const props = withDefaults(
      *  'direct'— positions ARE viewport coordinates, drawn 1:1. What the reference does; pair
      *            it with the layout's `bounds` so nothing can leave the stage. */
     mapping?: 'fit' | 'direct'
+    /** Wheel/pinch to zoom, background-drag to pan. Off by default: a graph that eats the
+     *  wheel is hostile inside a scrolling page, so the host opts in. */
+    zoomable?: boolean
+    minZoom?: number
+    maxZoom?: number
   }>(),
   {
     width: 720,
@@ -41,6 +46,9 @@ const props = withDefaults(
     selection: null,
     neighbors: null,
     mapping: 'fit',
+    zoomable: false,
+    minZoom: 0.25,
+    maxZoom: 6,
   },
 )
 
@@ -49,6 +57,13 @@ const emit = defineEmits<{
   nodeDown: [id: string, x: number, y: number]
   drag: [id: string, x: number, y: number]
   dragEnd: [id: string]
+  /** Current scale, after every zoom. Hosts that show a percentage read this. */
+  zoom: [k: number]
+  /** Pointer is over a node — fired on entry and on every move while it stays there, so a
+   *  host card can track the cursor. The kit does not own tooltip content: only the host
+   *  knows what a node means. Paired with nodeLeave. */
+  nodeHover: [id: string, clientX: number, clientY: number]
+  nodeLeave: []
 }>()
 
 /* Reactive, not snapshotted. These were read once at setup, so a stage that resized -- or a
@@ -112,9 +127,16 @@ function loop() {
 
 onMounted(() => {
   if (ticking.value) raf.value = requestAnimationFrame(loop)
+  svgRef.value?.addEventListener('wheel', onWheel, { passive: false })
 })
 onBeforeUnmount(() => {
   if (raf.value) cancelAnimationFrame(raf.value)
+  svgRef.value?.removeEventListener('wheel', onWheel)
+  window.removeEventListener('pointermove', onNodeMove)
+  window.removeEventListener('pointerup', onNodeUp)
+  window.removeEventListener('pointermove', onSurfaceMove)
+  window.removeEventListener('pointerup', onSurfaceUp)
+  window.removeEventListener('pointercancel', onSurfaceUp)
 })
 watch(ticking, (on) => {
   if (on && !raf.value) raf.value = requestAnimationFrame(loop)
@@ -124,17 +146,89 @@ watch(ticking, (on) => {
   }
 })
 
+/* ---- zoom + pan ----------------------------------------------------------
+ * The layout keeps running in world coordinates; one <g> carries the view transform, and
+ * pointer maths converts back through it, so a dragged node still lands under the cursor at
+ * any scale. Labels divide the scale back out so they stay legible instead of ballooning. */
+const zk = ref(1)
+const zx = ref(0)
+const zy = ref(0)
+const viewTransform = computed(
+  () => `translate(${zx.value.toFixed(2)},${zy.value.toFixed(2)}) scale(${zk.value.toFixed(4)})`,
+)
+
+/* Content bounds in world space, used to keep a pan from losing the graph off-screen. */
+function contentBox() {
+  const s = screen.value
+  if (!s.length) return { x0: 0, y0: 0, x1: W.value, y1: H.value }
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (const n of s) {
+    x0 = Math.min(x0, n.cx - n.r); y0 = Math.min(y0, n.cy - n.r)
+    x1 = Math.max(x1, n.cx + n.r); y1 = Math.max(y1, n.cy + n.r)
+  }
+  return { x0, y0, x1, y1 }
+}
+/* Pan is clamped, unlike the reference, which lets you drag the graph clean off the canvas
+ * with no way back but Fit. At least KEEP_VISIBLE px of content stays inside the box. */
+const KEEP_VISIBLE = 60
+function clampPan() {
+  const b = contentBox()
+  const left = zx.value + b.x0 * zk.value
+  const right = zx.value + b.x1 * zk.value
+  const top = zy.value + b.y0 * zk.value
+  const bottom = zy.value + b.y1 * zk.value
+  const visX = Math.min(KEEP_VISIBLE, right - left)
+  const visY = Math.min(KEEP_VISIBLE, bottom - top)
+  if (right < visX) zx.value += visX - right
+  else if (left > W.value - visX) zx.value -= left - (W.value - visX)
+  if (bottom < visY) zy.value += visY - bottom
+  else if (top > H.value - visY) zy.value -= top - (H.value - visY)
+}
+
+function zoomAt(mx: number, my: number, factor: number) {
+  const k = Math.min(props.maxZoom, Math.max(props.minZoom, zk.value * factor))
+  if (k === zk.value) return
+  // world point under the cursor, kept pinned there across the scale change
+  const wx = (mx - zx.value) / zk.value
+  const wy = (my - zy.value) / zk.value
+  zk.value = k
+  zx.value = mx - wx * k
+  zy.value = my - wy * k
+  clampPan()
+  emit('zoom', zk.value)
+}
+function zoomIn() { zoomAt(W.value / 2, H.value / 2, 1.25) }
+function zoomOut() { zoomAt(W.value / 2, H.value / 2, 1 / 1.25) }
+/* A real fit, not just a reset to identity: the content box is scaled into the viewport. On a
+ * layout already clamped to the stage that lands at ~1, which is what the reference's Fit did. */
+function zoomFit(pad = 16) {
+  const b = contentBox()
+  const bw = b.x1 - b.x0
+  const bh = b.y1 - b.y0
+  if (bw <= 0 || bh <= 0) { zk.value = 1; zx.value = 0; zy.value = 0; emit('zoom', 1); return }
+  const k = Math.min(props.maxZoom, Math.max(props.minZoom,
+    Math.min((W.value - pad * 2) / bw, (H.value - pad * 2) / bh)))
+  zk.value = k
+  zx.value = (W.value - (b.x0 + b.x1) * k) / 2
+  zy.value = (H.value - (b.y0 + b.y1) * k) / 2
+  emit('zoom', k)
+}
+defineExpose({ zoomIn, zoomOut, zoomFit, zoomAt, zoom: zk })
+
 // ---- drag (controlled mode) ----
 const svgRef = ref<SVGSVGElement | null>(null)
 let dragId: string | null = null
 let moved = false
-function toView(e: PointerEvent): { x: number; y: number } {
+/* Client coords -> viewBox coords. */
+function toBox(clientX: number, clientY: number): { x: number; y: number } {
   const r = svgRef.value?.getBoundingClientRect()
   if (!r) return { x: 0, y: 0 }
-  return {
-    x: ((e.clientX - r.left) / r.width) * W.value,
-    y: ((e.clientY - r.top) / r.height) * H.value,
-  }
+  return { x: ((clientX - r.left) / r.width) * W.value, y: ((clientY - r.top) / r.height) * H.value }
+}
+/* ...and on through the view transform, so a drag is in the same space as nodes[].pos. */
+function toView(e: PointerEvent): { x: number; y: number } {
+  const b = toBox(e.clientX, e.clientY)
+  return { x: (b.x - zx.value) / zk.value, y: (b.y - zy.value) / zk.value }
 }
 function onNodeDown(e: PointerEvent, id: string) {
   const t = e.target as Element
@@ -162,31 +256,136 @@ function onNodeUp() {
   if (!moved) emit('nodeClick', id)
   emit('dragEnd', id)
 }
+
+// ---- background pan, wheel zoom, pinch ----
+let pan: { x: number; y: number; ox: number; oy: number } | null = null
+/* mirrored as a ref purely so the cursor can change: a plain `let` is invisible to Vue */
+const panning = ref(false)
+/* Every pointer currently down on the stage. Two of them is a pinch. */
+const pointers = new Map<number, { x: number; y: number }>()
+let pinchDist = 0
+
+function onSurfaceDown(e: PointerEvent) {
+  if (!props.zoomable) return
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+  /* Release listeners go on for EVERY tracked pointer, before any early return. They used to
+   * be attached only when a pan actually started, so a press that landed on a node put its id
+   * in the map and nothing ever took it out. Two node drags later the map held two stale
+   * pointers, the next gesture took the pinch branch, and the graph zoomed off a distance
+   * between two fingers that were no longer down. Re-adding the same handler is a DOM no-op. */
+  window.addEventListener('pointermove', onSurfaceMove)
+  window.addEventListener('pointerup', onSurfaceUp)
+  window.addEventListener('pointercancel', onSurfaceUp)
+  if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()]
+    pinchDist = Math.hypot(a!.x - b!.x, a!.y - b!.y)
+    pan = null
+    panning.value = false
+    return
+  }
+  // a node drag wins over a pan
+  if ((e.target as Element)?.closest?.('[data-id]')) return
+  pan = { x: e.clientX, y: e.clientY, ox: zx.value, oy: zy.value }
+  panning.value = true
+}
+function onSurfaceMove(e: PointerEvent) {
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+  if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()]
+    const d = Math.hypot(a!.x - b!.x, a!.y - b!.y)
+    if (pinchDist > 0 && d > 0) {
+      const c = toBox((a!.x + b!.x) / 2, (a!.y + b!.y) / 2)
+      zoomAt(c.x, c.y, d / pinchDist)
+    }
+    pinchDist = d
+    return
+  }
+  if (!pan) return
+  // the pointer moves in CSS px; the transform lives in viewBox units
+  const r = svgRef.value?.getBoundingClientRect()
+  const sx = r && r.width ? W.value / r.width : 1
+  const sy = r && r.height ? H.value / r.height : 1
+  zx.value = pan.ox + (e.clientX - pan.x) * sx
+  zy.value = pan.oy + (e.clientY - pan.y) * sy
+  clampPan()
+}
+function onSurfaceUp(e: PointerEvent) {
+  pointers.delete(e.pointerId)
+  if (pointers.size < 2) pinchDist = 0
+  if (pointers.size) return
+  pan = null
+  panning.value = false
+  window.removeEventListener('pointermove', onSurfaceMove)
+  window.removeEventListener('pointerup', onSurfaceUp)
+  window.removeEventListener('pointercancel', onSurfaceUp)
+}
+/* Bound by hand, not with @wheel: preventDefault needs a non-passive listener, and the
+ * browser makes wheel listeners passive by default in enough places to be a coin-toss. */
+function onWheel(e: WheelEvent) {
+  if (!props.zoomable) return
+  e.preventDefault()
+  const b = toBox(e.clientX, e.clientY)
+  zoomAt(b.x, b.y, e.deltaY < 0 ? 1.12 : 1 / 1.12)
+}
+
+// ---- hover ----
+let hoverId: string | null = null
+function onSurfaceHover(e: PointerEvent) {
+  // a card that follows you around mid-drag is noise, not information
+  if (dragId || pan) { onSurfaceLeave(); return }
+  const el = (e.target as Element)?.closest?.('[data-id]')
+  const id = el?.getAttribute('data-id') || null
+  if (!id) {
+    if (hoverId) { hoverId = null; emit('nodeLeave') }
+    return
+  }
+  hoverId = id
+  emit('nodeHover', id, e.clientX, e.clientY)
+}
+function onSurfaceLeave() {
+  if (hoverId) { hoverId = null; emit('nodeLeave') }
+}
 </script>
 
 <template>
-  <svg ref="svgRef" :viewBox="`0 0 ${W} ${H}`" class="aether-graph" :width="W" :height="H">
-    <line
-      v-for="(e, i) in edges"
-      :key="'e' + i"
-      :x1="posById.get(e.a)?.cx ?? 0"
-      :y1="posById.get(e.a)?.cy ?? 0"
-      :x2="posById.get(e.b)?.cx ?? 0"
-      :y2="posById.get(e.b)?.cy ?? 0"
-      class="aether-graph__edge"
-      :class="{ lit: edgeLit(e) }"
-    />
-    <g
-      v-for="n in screen"
-      :key="n.id"
-      class="aether-graph__node"
-      :class="{ dim: n.dim, sel: n.id === selection }"
-      :transform="`translate(${n.cx},${n.cy})`"
-      :data-id="n.id"
-      @pointerdown="onNodeDown($event, n.id)"
-    >
-      <circle :r="n.r" :fill="n.color ?? 'var(--aether-cool)'" />
-      <text v-if="n.label" :dy="n.r + 11" class="aether-graph__label">{{ n.label }}</text>
+  <svg
+    ref="svgRef"
+    :viewBox="`0 0 ${W} ${H}`"
+    class="aether-graph"
+    :class="{ zoomable, panning }"
+    :width="W"
+    :height="H"
+    :style="{ '--aether-graph-label-scale': (1 / zk).toFixed(3) }"
+    @pointerdown="onSurfaceDown"
+    @pointermove="onSurfaceHover"
+    @pointerleave="onSurfaceLeave"
+  >
+    <!-- one group carries the view transform; everything inside stays in world space -->
+    <g :transform="viewTransform">
+      <line
+        v-for="(e, i) in edges"
+        :key="'e' + i"
+        :x1="posById.get(e.a)?.cx ?? 0"
+        :y1="posById.get(e.a)?.cy ?? 0"
+        :x2="posById.get(e.b)?.cx ?? 0"
+        :y2="posById.get(e.b)?.cy ?? 0"
+        class="aether-graph__edge"
+        :class="{ lit: edgeLit(e) }"
+      />
+      <g
+        v-for="n in screen"
+        :key="n.id"
+        class="aether-graph__node"
+        :class="{ dim: n.dim, sel: n.id === selection }"
+        :transform="`translate(${n.cx},${n.cy})`"
+        :data-id="n.id"
+        @pointerdown="onNodeDown($event, n.id)"
+      >
+        <circle :r="n.r" :fill="n.color ?? 'var(--aether-cool)'" />
+        <!-- the gap is in SCREEN px, so it divides the scale out the same way the type size
+             does; a flat world-space offset walked the label away from its node as you zoomed -->
+        <text v-if="n.label" :dy="n.r + 11 / zk" class="aether-graph__label">{{ n.label }}</text>
+      </g>
     </g>
   </svg>
 </template>
@@ -217,11 +416,18 @@ function onNodeUp() {
   stroke: var(--aether-cool);
   stroke-width: 3;
 }
+.aether-graph.zoomable {
+  cursor: grab;
+}
+.aether-graph.panning {
+  cursor: grabbing;
+}
 .aether-graph__label {
   fill: var(--aether-ink-soft);
-  font:
-    600 10px ui-monospace,
-    monospace;
+  /* the scale is divided back out so labels stay legible instead of ballooning with the zoom */
+  font-size: calc(10px * var(--aether-graph-label-scale, 1));
+  font-family: var(--aether-font-mono, ui-monospace, monospace);
+  font-weight: 600;
   text-anchor: middle;
 }
 .aether-graph__label.dim {

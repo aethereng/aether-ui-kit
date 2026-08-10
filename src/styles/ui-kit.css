@@ -39,6 +39,10 @@
   --aether-transport-backdrop: none;
   --aether-transport-radius: 999px;
   --aether-transport-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+  /* Inverse of the graph's current zoom. Graph2D writes it inline on every scale change so
+     type inside the transformed group can divide the scale back out and hold its size; the
+     value here is the identity fallback for an unzoomed graph. */
+  --aether-graph-label-scale: 1;
 }
 
 /* ---- PropertyEditor (forms) ---- */

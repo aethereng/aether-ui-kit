@@ -34,6 +34,8 @@ export interface CompMeta {
   core?: string
   props: ApiRow[]
   emits: ApiRow[]
+  /** Methods and refs reachable through a template ref, for the components that expose any. */
+  exposed?: ApiRow[]
   /** The example's markup. */
   template: string
   /** The example's script, including its data — a snippet you can actually run. */
@@ -417,14 +419,40 @@ function onChange(key: string, value: unknown) {
       { name: 'running', type: 'boolean?', note: 'default true — the component owns the sim' },
       { name: 'selection', type: 'string | null?' },
       { name: 'neighbors', type: 'Set<string> | null?', note: 'emphasise a neighbourhood' },
+      {
+        name: 'zoomable',
+        type: 'boolean?',
+        note: 'default false — wheel/pinch zoom, background-drag pan. Off by default because a graph that eats the wheel is hostile inside a scrolling page.',
+      },
+      { name: 'minZoom', type: 'number?', note: 'default 0.25' },
+      { name: 'maxZoom', type: 'number?', note: 'default 6' },
     ],
     emits: [
       { name: 'nodeClick', type: '[id: string]' },
       { name: 'nodeDown', type: '[id: string, x: number, y: number]' },
-      { name: 'drag', type: '[id: string, x: number, y: number]', note: 'viewport coords' },
+      {
+        name: 'drag',
+        type: '[id: string, x: number, y: number]',
+        note: 'world coords — the view transform is already inverted, so a drag lands under the cursor at any zoom',
+      },
       { name: 'dragEnd', type: '[id: string]' },
+      { name: 'zoom', type: '[k: number]', note: 'current scale, after every zoom' },
+      {
+        name: 'nodeHover',
+        type: '[id: string, clientX: number, clientY: number]',
+        note: 'on entry and on every move while it stays there. The kit does not own tooltip content — only you know what a node means, so you render the card.',
+      },
+      { name: 'nodeLeave', type: '[]' },
+    ],
+    exposed: [
+      { name: 'zoomIn()', type: '() => void' },
+      { name: 'zoomOut()', type: '() => void' },
+      { name: 'zoomFit(pad?)', type: '(pad?: number) => void', note: 'scales the content box into the viewport; undoes a pan too' },
+      { name: 'zoomAt(x, y, factor)', type: '(x, y, factor) => void', note: 'zoom about a point in viewBox coords' },
+      { name: 'zoom', type: 'Ref<number>', note: 'the current scale' },
     ],
     template: `<Graph2D
+  ref="graph"
   :nodes="nodes"
   :edges="edges"
   :width="560"
@@ -432,9 +460,17 @@ function onChange(key: string, value: unknown) {
   :running="false"
   :selection="selected"
   :neighbors="neighbors"
+  zoomable
   @node-click="onNodeClick"
   @drag="onDrag"
-/>`,
+  @node-hover="onHover"
+  @node-leave="hover = null"
+/>
+
+<!-- the chrome is yours: the kit ships the behaviour, you ship the buttons -->
+<button @click="graph?.zoomOut()">−</button>
+<button @click="graph?.zoomIn()">+</button>
+<button @click="graph?.zoomFit()">Fit</button>`,
     script: `import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import Graph2D from '@aether/ui-kit/viz/graph'
 import { ForceLayout } from '@aether/ui-kit/viz/core'
@@ -497,6 +533,16 @@ function onDrag(id: string, x: number, y: number) {
   if (!n) return
   n.pos = [x - 280, y - 180, n.pos[2] ?? 0] // viewport -> world; the caller decides
   publish()
+}
+
+// Zoom controls come from the component's exposed methods, through a template ref.
+const graph = ref<{ zoomIn(): void; zoomOut(): void; zoomFit(pad?: number): void } | null>(null)
+
+// The hover card is yours. Graph2D says WHICH node and WHERE the pointer is; what a node
+// means — a file, a part, a person — is knowledge the kit does not have.
+const hover = ref<{ id: string; x: number; y: number } | null>(null)
+function onHover(id: string, clientX: number, clientY: number) {
+  hover.value = { id, x: clientX + 14, y: clientY + 14 }
 }`,
   },
   {

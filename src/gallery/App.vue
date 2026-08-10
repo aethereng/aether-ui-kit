@@ -273,6 +273,30 @@ function onGraphNodeClick(id: string) {
   gClicked.value = id
   gSelected.value = gSelected.value === id ? null : id
 }
+
+/* Zoom is driven through the component's exposed methods rather than a prop, because the
+ * host owns the chrome: the kit ships the behaviour, you ship the buttons.
+ *
+ * Bound with a FUNCTION ref, not `ref="gGraph"`. Every section here is rendered inside a
+ * v-for, and a string ref under a v-for collects into an ARRAY -- so `gGraph.zoomIn` was
+ * undefined and `gGraph?.zoomIn()` swallowed it silently: all three buttons dead, no error.
+ * Same reason the Gantt host below uses a function ref. */
+type GraphApi = { zoomIn: () => void; zoomOut: () => void; zoomFit: (pad?: number) => void }
+const gGraph = ref<GraphApi | null>(null)
+const gZoom = ref(1)
+
+/* The hover card is the host's, not the kit's — Graph2D emits which node and where the
+ * pointer is, and only the host knows what a node means. */
+const gHover = ref<{ id: string; x: number; y: number } | null>(null)
+function onGraphHover(id: string, x: number, y: number) {
+  gHover.value = { id, x: x + 14, y: y + 14 }
+}
+const gHoverNode = computed(() =>
+  gHover.value ? gNodes.value.find((n) => n.id === gHover.value!.id) : null,
+)
+const gHoverDegree = computed(() =>
+  gHover.value ? gEdges.filter((e) => e.a === gHover.value!.id || e.b === gHover.value!.id).length : 0,
+)
 function onGraphDrag(id: string, x: number, y: number) {
   // `drag` reports viewport coords, and with mapping="direct" those ARE the coordinates the
   // layout works in — no inverse transform, and no scale to get wrong. Pin so the node tracks
@@ -552,10 +576,15 @@ const groupAnchor = (g: Group) => g.toLowerCase()
         <!-- Visualization -->
         <GSection v-else-if="c.id === 'graph2d'" :meta="c">
           <p class="g-hint">
-            Drag a node — its neighbours follow. Click one to light its neighbourhood.
+            Drag a node — its neighbours follow. Click one to light its neighbourhood. Wheel or
+            pinch to zoom, drag the background to pan; hover a node for the card.
             <button class="g-mini" type="button" @click="gRerun()">Re-run layout</button>
+            <button class="g-mini" type="button" @click="gGraph?.zoomOut()">−</button>
+            <button class="g-mini" type="button" @click="gGraph?.zoomIn()">+</button>
+            <button class="g-mini" type="button" @click="gGraph?.zoomFit()">Fit</button>
           </p>
           <Graph2D
+            :ref="(el) => (gGraph = el as unknown as GraphApi | null)"
             :nodes="gNodes"
             :edges="gEdges"
             :width="GRAPH_W"
@@ -564,13 +593,27 @@ const groupAnchor = (g: Group) => g.toLowerCase()
             :running="false"
             :selection="gSelected"
             :neighbors="gNeighbors"
+            zoomable
             @node-click="onGraphNodeClick"
             @drag="onGraphDrag"
             @drag-end="onGraphDragEnd"
+            @zoom="gZoom = $event"
+            @node-hover="onGraphHover"
+            @node-leave="gHover = null"
           />
+          <!-- the card lives in the host, positioned from the client coords the kit hands over -->
+          <div
+            v-if="gHover && gHoverNode"
+            class="g-hovcard"
+            :style="{ left: gHover.x + 'px', top: gHover.y + 'px' }"
+          >
+            <b>{{ gHoverNode.label || gHoverNode.id }}</b>
+            <span>{{ gHoverDegree }} edge{{ gHoverDegree === 1 ? '' : 's' }} · r {{ gHoverNode.r }}</span>
+          </div>
           <template #state
             >selected = {{ gSelected || '∅' }} · last drag = {{ gDragged }} · layout =
-            {{ gRunning ? 'running' : 'settled' }} · nodes = {{ gNodes.length }}</template
+            {{ gRunning ? 'running' : 'settled' }} · nodes = {{ gNodes.length }} · zoom =
+            {{ Math.round(gZoom * 100) }}%</template
           >
         </GSection>
 
@@ -923,6 +966,28 @@ body {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+/* The graph's hover card. Fixed, because it is positioned from the client coordinates
+   Graph2D hands over — this is host chrome, deliberately not part of the component. */
+.g-hovcard {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 11px;
+  border: 1px solid var(--aether-line-strong);
+  border-radius: 9px;
+  background: var(--aether-surface);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  font-size: 12px;
+}
+.g-hovcard span {
+  font-family: var(--g-mono);
+  font-size: 10.5px;
+  color: var(--aether-faint);
 }
 .g-mini {
   border: 1px solid var(--aether-line-strong);

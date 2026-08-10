@@ -30,14 +30,21 @@ async function copy(key: string, text: string) {
   copyT = setTimeout(() => (copiedKey.value = null), 1400)
 }
 
-type Tab = 'template' | 'script' | 'props' | 'emits'
+type Tab = 'template' | 'script' | 'props' | 'emits' | 'exposed'
 const tab = ref<Tab>('template')
-const tabs = computed<SegOption<Tab>[]>(() => [
-  { value: 'template', label: 'Template' },
-  { value: 'script', label: 'Script' },
-  { value: 'props', label: `Props ${props.meta.props.length}` },
-  { value: 'emits', label: `Emits ${props.meta.emits.length}` },
-])
+const tabs = computed<SegOption<Tab>[]>(() => {
+  const t: SegOption<Tab>[] = [
+    { value: 'template', label: 'Template' },
+    { value: 'script', label: 'Script' },
+    { value: 'props', label: `Props ${props.meta.props.length}` },
+    { value: 'emits', label: `Emits ${props.meta.emits.length}` },
+  ]
+  // only the components that expose anything get the tab
+  if (props.meta.exposed?.length) {
+    t.push({ value: 'exposed', label: `Exposed ${props.meta.exposed.length}` })
+  }
+  return t
+})
 </script>
 
 <template>
@@ -95,7 +102,7 @@ const tabs = computed<SegOption<Tab>[]>(() => [
         </tbody>
       </table>
 
-      <table v-else class="g-table">
+      <table v-else-if="tab === 'emits'" class="g-table">
         <thead>
           <tr><th>Emit</th><th>Payload</th><th>Notes</th></tr>
         </thead>
@@ -104,6 +111,19 @@ const tabs = computed<SegOption<Tab>[]>(() => [
             <td><code>{{ e.name }}</code></td>
             <td><code class="g-type">{{ e.type }}</code></td>
             <td>{{ e.note || '' }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table v-else class="g-table">
+        <thead>
+          <tr><th>Via template ref</th><th>Type</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="x in meta.exposed" :key="x.name">
+            <td><code>{{ x.name }}</code></td>
+            <td><code class="g-type">{{ x.type }}</code></td>
+            <td>{{ x.note || '' }}</td>
           </tr>
         </tbody>
       </table>

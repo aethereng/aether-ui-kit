@@ -305,6 +305,31 @@
   background: var(--aether-cool);
 }
 
+/* ---- Toast (controls) ---- */
+/* Fixed to the viewport, not to a host container: all three original consumers floated it
+   over full-bleed surfaces (a board, a graph, a chart) where an in-flow pill would have been
+   clipped by whichever pane it happened to live in. */
+.aether-toast {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  opacity: 0;
+  background: var(--aether-ink);
+  color: var(--aether-surface);
+  padding: 9px 16px;
+  border-radius: 999px;
+  font: 600 12px/1 inherit;
+  transition: opacity 0.2s, transform 0.2s;
+  /* never intercepts a click: it sits over live surfaces and must not block them */
+  pointer-events: none;
+  z-index: 30;
+}
+.aether-toast.on {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* ---- ChatPanel (controls) ---- */
 .aether-chat {
   display: flex;

@@ -46,6 +46,10 @@
       "types": "./src/controls/vue/ChatPanel.vue",
       "import": "./src/controls/vue/ChatPanel.vue"
     },
+    "./controls/toast": {
+      "types": "./src/controls/vue/Toast.vue",
+      "import": "./src/controls/vue/Toast.vue"
+    },
     "./controls/transport": {
       "types": "./src/controls/vue/Transport.vue",
       "import": "./src/controls/vue/Transport.vue"

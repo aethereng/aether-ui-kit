@@ -137,6 +137,63 @@
   font-weight: 600;
 }
 
+/* ---- Seg: pill variant ---- */
+/* The knowledge-graph header's look: a fully rounded capsule of uppercase mono labels with an
+   accent-wash active segment. Shipped hand-rolled in a consumer before it was a variant here,
+   which is why it is a variant and not a style hook -- same bar Chip's `variant` cleared. */
+.aether-seg--pill {
+  border-radius: 999px;
+  box-shadow: none;
+}
+.aether-seg--pill button {
+  background: transparent;
+  border-right: 0;
+  padding: 7px 14px;
+  font-family: var(--aether-font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.aether-seg--pill button.on {
+  background: var(--aether-cool-wash);
+  color: var(--aether-cool);
+}
+
+/* ---- Button group (controls) ---- */
+/* A joined row of ACTIONS -- zoom out / in / fit, export / import / copy. It looks like a Seg
+   and is repeatedly mistaken for one, but nothing in it is ever "active": every child is a
+   stateless command. That is why this is a layout class over real .aether-tool buttons rather
+   than a variant of Seg -- Seg's whole contract is modelValue + one selected option, and
+   bending it to hold three unrelated commands would make it lie about what it is.
+   Composing Tool is the point: hover, cursor and disabled come from Tool, once. */
+.aether-button-group {
+  display: inline-flex;
+  flex: none;
+}
+.aether-button-group > .aether-tool {
+  border-radius: 0;
+  box-shadow: none;
+  /* collapse the shared border between neighbours so the row reads as one control */
+  margin-left: -1px;
+}
+.aether-button-group > .aether-tool:first-child {
+  border-top-left-radius: var(--aether-radius);
+  border-bottom-left-radius: var(--aether-radius);
+  margin-left: 0;
+}
+.aether-button-group > .aether-tool:last-child {
+  border-top-right-radius: var(--aether-radius);
+  border-bottom-right-radius: var(--aether-radius);
+}
+/* a hovered/focused button must paint its full outline over its neighbour's */
+.aether-button-group > .aether-tool:hover:not(:disabled),
+.aether-button-group > .aether-tool:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
 /* ---- Chip (controls) ---- */
 .aether-chips {
   display: flex;

@@ -4,11 +4,19 @@
  * and what a selection emits is the caller's domain. */
 import type { SegOption } from '../core/types'
 
-const props = defineProps<{
-  options: SegOption<V>[]
-  modelValue: V
-  ariaLabel?: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    options: SegOption<V>[]
+    modelValue: V
+    ariaLabel?: string
+    /** 'default' — square-cornered, panel-grey active segment.
+     *  'pill'    — fully rounded, uppercase mono, accent-wash active segment. A second real
+     *              look that already shipped in a consumer's header, not a style hook: the
+     *              same precedent Chip's `variant` set. */
+    variant?: 'default' | 'pill'
+  }>(),
+  { ariaLabel: undefined, variant: 'default' },
+)
 
 const emit = defineEmits<{
   'update:modelValue': [value: V]
@@ -23,7 +31,12 @@ function select(opt: SegOption<V>) {
 </script>
 
 <template>
-  <div class="aether-seg" role="tablist" :aria-label="ariaLabel">
+  <div
+    class="aether-seg"
+    :class="{ 'aether-seg--pill': variant === 'pill' }"
+    role="tablist"
+    :aria-label="ariaLabel"
+  >
     <button
       v-for="opt in options"
       :key="opt.value"

@@ -429,23 +429,39 @@ function cApplyReply() {
   cMessages.value.push({ role: 'agent', text: 'Done — see the diff.' })
 }
 
+/* The component rail. Open state only matters below the dock breakpoint, where it is a
+   sheet; above it the rail is permanently docked and this flag is inert. */
+const railOpen = ref(false)
+function onRailKey(e: KeyboardEvent) {
+  if (e.key === 'Escape' && railOpen.value) railOpen.value = false
+}
+onMounted(() => window.addEventListener('keydown', onRailKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onRailKey))
+
 const groupAnchor = (g: Group) => g.toLowerCase()
 </script>
 
 <template>
   <a class="g-skip" href="#controls">Skip to components</a>
 
+  <!-- The bar holds three things and only ever three: brand, the rail trigger, the theme
+       switch. The component links used to live here too, and there is no width at which that
+       works -- 10 components already overflowed a 1265px desktop by 89px, clipping Graph2D
+       and Gantt behind a deliberately hidden scrollbar, and the list grows with every
+       component added. They live in the rail below now. -->
   <nav class="g-nav">
     <div class="g-nav__in">
       <a class="g-nav__brand" href="#top">@aether/ui-kit</a>
-      <div class="g-nav__links">
-        <template v-for="g in GROUPS" :key="g">
-          <a class="g-nav__group" :href="'#' + groupAnchor(g)">{{ g }}</a>
-          <a v-for="c in byGroup(g)" :key="c.id" class="g-nav__item" :href="'#' + c.id">{{
-            c.name
-          }}</a>
-        </template>
-      </div>
+      <button
+        class="g-nav__trigger"
+        type="button"
+        :aria-expanded="railOpen"
+        aria-controls="g-rail"
+        @click="railOpen = !railOpen"
+      >
+        {{ railOpen ? 'Close' : 'Components' }}
+      </button>
+      <span class="g-nav__spacer" />
       <Seg
         :options="themeOpts"
         :model-value="theme"
@@ -454,6 +470,23 @@ const groupAnchor = (g: Group) => g.toLowerCase()
       />
     </div>
   </nav>
+
+  <!-- Docked beside the content on a wide screen, a dismissible sheet below that. One list,
+       one source of truth, and it scrolls itself -- so it holds 25 components as happily as
+       10, which the old strip could not. -->
+  <aside id="g-rail" class="g-rail" :class="{ open: railOpen }" aria-label="Components">
+    <template v-for="g in GROUPS" :key="g">
+      <a class="g-rail__group" :href="'#' + groupAnchor(g)" @click="railOpen = false">{{ g }}</a>
+      <a
+        v-for="c in byGroup(g)"
+        :key="c.id"
+        class="g-rail__item"
+        :href="'#' + c.id"
+        @click="railOpen = false"
+      >{{ c.name }}</a>
+    </template>
+  </aside>
+  <div v-if="railOpen" class="g-rail__scrim" @click="railOpen = false"></div>
 
   <div id="top" class="gallery">
     <header class="g-hero">
@@ -836,18 +869,59 @@ body {
   text-decoration: none;
   flex: none;
 }
-.g-nav__links {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
+.g-nav__spacer {
   flex: 1 1 auto;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
-.g-nav__links::-webkit-scrollbar {
+.g-nav__trigger {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--aether-line-strong);
+  border-radius: var(--aether-radius);
+  background: transparent;
+  color: var(--aether-ink-soft);
+  font-family: var(--g-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.g-nav__trigger:hover {
+  color: var(--aether-ink);
+  border-color: var(--aether-ink-soft);
+}
+
+/* ── component rail ──
+   Sheet by default (any width below the dock breakpoint), docked beside the content above it.
+   Its own scroll, so the list length stops being a layout constraint. */
+.g-rail {
+  position: fixed;
+  z-index: 30;
+  top: 50px;
+  left: 0;
+  bottom: 0;
+  width: min(260px, 82vw);
   display: none;
+  flex-direction: column;
+  gap: 1px;
+  padding: 14px 12px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--g-page);
+  border-right: 1px solid var(--aether-line);
+  box-shadow: 6px 0 24px rgba(0, 0, 0, 0.16);
 }
-.g-nav__group {
+.g-rail.open {
+  display: flex;
+}
+.g-rail__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+}
+.g-rail__group {
   font-family: var(--g-mono);
   font-size: 9.5px;
   letter-spacing: 0.11em;
@@ -855,21 +929,27 @@ body {
   color: var(--aether-ink-soft);
   opacity: 0.65;
   text-decoration: none;
-  margin-left: 6px;
-  white-space: nowrap;
+  margin: 14px 0 4px;
+  padding: 0 10px;
 }
-.g-nav__group:first-child {
-  margin-left: 0;
+.g-rail__group:first-child {
+  margin-top: 0;
 }
-.g-nav__item {
-  font-size: 12.5px;
+.g-rail__item {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font-size: 13px;
   color: var(--aether-ink-soft);
   text-decoration: none;
-  white-space: nowrap;
 }
-.g-nav__item:hover {
+.g-rail__item:hover {
+  background: var(--aether-panel);
   color: var(--aether-cool);
 }
+
 
 .gallery {
   max-width: 980px;
@@ -1102,8 +1182,33 @@ body {
   .g-hero h1 {
     font-size: 32px;
   }
-  .g-nav__links {
+  /* the `.g-nav__links { display: none }` that used to live here is gone with the strip
+     itself -- it left a phone with no component navigation whatsoever */
+}
+
+/* ── rail: docked ──
+   1180px is where a 980px column and a 260px rail both fit without overlapping; below it the
+   rail stays a sheet rather than squeezing either.
+   Deliberately the LAST block in this stylesheet: `.gallery` and `.g-nav__in` both set the
+   `margin` SHORTHAND (`0 auto`), which resets margin-left wholesale. Declared any earlier,
+   this loses at equal specificity and the content renders underneath the rail -- which is
+   exactly what it did when it sat next to the other rail rules. */
+@media (min-width: 1180px) {
+  .g-nav__trigger {
     display: none;
+  }
+  .g-rail {
+    display: flex;
+    top: 51px;
+    box-shadow: none;
+    background: transparent;
+  }
+  .g-rail__scrim {
+    display: none;
+  }
+  .g-nav__in,
+  .gallery {
+    margin-left: 260px;
   }
 }
 </style>

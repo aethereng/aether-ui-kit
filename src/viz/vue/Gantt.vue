@@ -440,7 +440,10 @@ const anchors = computed(() =>
     monospace;
 }
 .ag-labels {
-  width: 132px;
+  /* A fixed 132px was 34% of a 390px phone before the chart got a single pixel. Clamped
+     instead: it gives ground on a narrow screen and is unchanged on a desktop, where 22vw
+     is well past 132px. The lane name and its counts still fit at the low end. */
+  width: clamp(88px, 22vw, 132px);
   flex: none;
   border-right: 1px solid var(--aether-line-strong);
   overflow: hidden;

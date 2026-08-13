@@ -252,4 +252,117 @@ describe('ForceLayout', () => {
       expect(l.nodes.find((n) => n.id === 'a')!.pos[0]).toBe(9999)
     })
   })
+
+  describe('center: where the centering force pulls', () => {
+    /* A caller drawing 1:1 works in VIEWPORT coordinates, where the origin is the top-left
+       corner. Centering toward the origin there drags the whole graph into the corner, which
+       is why `center` exists at all. */
+    const far = (): GNode[] => [
+      { id: 'a', pos: [400, 300, 0] },
+      { id: 'b', pos: [420, 320, 0] },
+    ]
+
+    it('defaults to the origin, so a fit-mapped consumer is unaffected', () => {
+      const l = new ForceLayout(far(), [], { dims: 3, centering: 0.02, cutoff: 0 })
+      for (let i = 0; i < 60; i++) l.step()
+      // both nodes should have travelled toward (0,0)
+      for (const n of l.nodes) {
+        expect(n.pos[0]!).toBeLessThan(400)
+        expect(n.pos[1]!).toBeLessThan(300)
+      }
+    })
+
+    it('pulls toward an explicit centre instead, leaving a cloud already there alone', () => {
+      const c = [410, 310, 0]
+      const l = new ForceLayout(far(), [], { dims: 3, centering: 0.02, cutoff: 0, center: c })
+      const before = snapshot(l)
+      for (let i = 0; i < 60; i++) l.step()
+      // the pair straddles the centre, so centering should hold it there rather than drag it
+      // to the origin -- assert it stayed in the neighbourhood it started in
+      for (let i = 0; i < l.nodes.length; i++) {
+        expect(Math.abs(l.nodes[i]!.pos[0]! - before[i]![0]!)).toBeLessThan(25)
+        expect(Math.abs(l.nodes[i]!.pos[1]! - before[i]![1]!)).toBeLessThan(25)
+      }
+    })
+
+    it('a node offset from an explicit centre is pulled back toward it, not toward 0,0', () => {
+      const l = new ForceLayout(
+        [{ id: 'a', pos: [600, 300, 0] }],
+        [],
+        { dims: 3, centering: 0.05, cutoff: 0, center: [400, 300, 0] },
+      )
+      for (let i = 0; i < 40; i++) l.step()
+      const x = l.nodes[0]!.pos[0]!
+      expect(x).toBeLessThan(600) // moved toward the centre
+      /* Settles AROUND 400, not exactly on it: centering is a damped spring, so it overshoots
+         and rings down. The property that matters is that it converges on the supplied centre
+         rather than continuing on to the origin, which is what the old behaviour did. */
+      expect(Math.abs(x - 400)).toBeLessThan(20)
+    })
+  })
+
+  describe('maxSpeed: terminal velocity', () => {
+    /* The failure this bounds: repulsion is k/d², so a pair seeded a few px apart produces an
+       enormous force. Uncapped, a dense graph explodes on the first frames and strands nodes
+       where alpha decays before centering recovers them. */
+    const collided = (): GNode[] => [
+      { id: 'a', pos: [0, 0, 0] },
+      { id: 'b', pos: [0.5, 0, 0] }, // essentially on top of each other
+    ]
+
+    it('is uncapped by default, so the pair flies apart', () => {
+      const l = new ForceLayout(collided(), [], { dims: 3, centering: 0 })
+      l.step()
+      const moved = Math.abs(l.nodes[1]!.pos[0]! - 0.5)
+      expect(moved).toBeGreaterThan(100)
+    })
+
+    it('caps the per-step distance when set', () => {
+      const l = new ForceLayout(collided(), [], { dims: 3, centering: 0, maxSpeed: 20 })
+      l.step()
+      for (const n of l.nodes) {
+        // alpha starts at 1, so one step moves at most maxSpeed
+        expect(Math.abs(n.pos[0]! - (n.id === 'a' ? 0 : 0.5))).toBeLessThanOrEqual(20.001)
+      }
+    })
+
+    it('caps total speed, not each axis, so a diagonal does not travel maxSpeed*sqrt(2)', () => {
+      const l = new ForceLayout(
+        [
+          { id: 'a', pos: [0, 0, 0] },
+          { id: 'b', pos: [0.4, 0.4, 0] }, // equal push on x and y
+        ],
+        [],
+        { dims: 3, centering: 0, maxSpeed: 10 },
+      )
+      const before = snapshot(l)
+      l.step()
+      for (let i = 0; i < l.nodes.length; i++) {
+        const dx = l.nodes[i]!.pos[0]! - before[i]![0]!
+        const dy = l.nodes[i]!.pos[1]! - before[i]![1]!
+        expect(Math.hypot(dx, dy)).toBeLessThanOrEqual(10.001)
+      }
+    })
+
+    it('settles to a comparable scale -- it bounds the transient, it does not shrink the layout', () => {
+      /* Note what this deliberately does NOT claim: that the capped and uncapped runs settle
+         to the SAME positions. They do not, and cannot be expected to. The cap changes the
+         trajectory, and a force layout has many local minima, so a different path lands in a
+         different one -- measured ~13px of spread difference on this fixture. What IS true is
+         that the forces and rest lengths are untouched, so the settled layout stays the same
+         order of size rather than collapsing or exploding. */
+      const mk = (maxSpeed?: number) =>
+        new ForceLayout(nodes(), edges, { dims: 3, ...(maxSpeed ? { maxSpeed } : {}) })
+      const a = mk()
+      const b = mk(20)
+      for (let i = 0; i < 400; i++) { a.step(); b.step() }
+      const spread = (l: ForceLayout) => {
+        const xs = l.nodes.map((n) => n.pos[0]!)
+        return Math.max(...xs) - Math.min(...xs)
+      }
+      const ratio = spread(b) / spread(a)
+      expect(ratio).toBeGreaterThan(0.75)
+      expect(ratio).toBeLessThan(1.33)
+    })
+  })
 })

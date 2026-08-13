@@ -41,6 +41,8 @@ export class ForceLayout {
       rest: opts.rest ?? 110,
       cutoff: opts.cutoff ?? 200,
       centering: opts.centering ?? 0.0018,
+      center: opts.center ?? [],
+      maxSpeed: opts.maxSpeed ?? Infinity,
       substeps: opts.substeps ?? 2,
       bounds: opts.bounds ?? [-Infinity, -Infinity, Infinity, Infinity],
     }
@@ -92,7 +94,8 @@ export class ForceLayout {
   }
 
   step(): void {
-    const { dims, repulsion, spring, damping, rest, cutoff, centering, substeps } = this.opts
+    const { dims, repulsion, spring, damping, rest, cutoff, centering, center, maxSpeed, substeps } =
+      this.opts
     const byId = new Map(this.nodes.map((n) => [n.id, n]))
     const cutoff2 = cutoff > 0 ? cutoff * cutoff : Infinity
 
@@ -117,9 +120,11 @@ export class ForceLayout {
             vb[k] = (vb[k] ?? 0) + u
           }
         }
-        // pull toward the origin; the projection re-centres afterwards, so origin is centre
+        // pull toward `center` (the origin unless a 1:1 caller supplies the stage centre)
         if (centering) {
-          for (let k = 0; k < dims; k++) va[k] = (va[k] ?? 0) - (a.pos[k] ?? 0) * centering
+          for (let k = 0; k < dims; k++) {
+            va[k] = (va[k] ?? 0) - ((a.pos[k] ?? 0) - (center[k] ?? 0)) * centering
+          }
         }
       }
       // springs
@@ -143,10 +148,21 @@ export class ForceLayout {
     for (const n of this.nodes) {
       if (this.pinned.has(n.id)) continue
       const v = this.vel.get(n.id)!
+      for (let k = 0; k < dims; k++) v[k] = (v[k] ?? 0) * damping
+      /* Terminal velocity, applied across ALL axes together rather than per-axis: clamping
+         each axis independently would let a diagonal move travel maxSpeed*sqrt(dims) and
+         would bend its direction, which is a force the simulation never applied. */
+      if (maxSpeed < Infinity) {
+        let sq = 0
+        for (let k = 0; k < dims; k++) sq += (v[k] ?? 0) ** 2
+        const sp = Math.sqrt(sq)
+        if (sp > maxSpeed) {
+          const s = maxSpeed / sp
+          for (let k = 0; k < dims; k++) v[k] = (v[k] ?? 0) * s
+        }
+      }
       for (let k = 0; k < dims; k++) {
-        const nv = (v[k] ?? 0) * damping
-        v[k] = nv
-        n.pos[k] = (n.pos[k] ?? 0) + nv * this.alphaValue
+        n.pos[k] = (n.pos[k] ?? 0) + (v[k] ?? 0) * this.alphaValue
       }
       // clamp the two drawn axes, so nothing can leave the stage
       const [x0, y0, x1, y1] = this.opts.bounds

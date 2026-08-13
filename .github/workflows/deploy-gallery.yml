@@ -32,7 +32,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Keep in step with .nvmrc. Do NOT lower this: jsdom 30 requires
+          # ^22.22.2 || ^24.15.0 || >=26.0.0 and undici 8 requires >=22.19.0, so on Node 20
+          # `npm ci` only WARNS (EBADENGINE) and then the suite dies at runtime inside
+          # undici with "webidl.util.markAsUncloneable is not a function" -- an error that
+          # names neither Node nor jsdom and reads like a broken test.
+          node-version-file: .nvmrc
           cache: npm
 
       - run: npm ci

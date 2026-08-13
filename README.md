@@ -166,6 +166,14 @@ npm run lint
 npm run build        # type-check + build the gallery
 ```
 
+**Use the Node in `.nvmrc` (24+).** The dev toolchain needs it — jsdom 30 wants
+`^22.22.2 || ^24.15.0 || >=26.0.0` and undici 8 wants `>=22.19.0`. On an older Node,
+`npm ci` merely *warns* and the suite then dies inside undici with
+`webidl.util.markAsUncloneable is not a function`, which names neither Node nor jsdom and
+reads convincingly like a broken test. This is a *development* requirement only: the package
+itself has zero runtime dependencies, so there is deliberately no `engines` field gating
+consumers on a Node they do not need.
+
 175 tests, in three layers that exist for different reasons:
 
 - **Cores (62)** — lane packing, span-vs-point classification, force-layout convergence, the scrub handoff, speed cycling, field coercion. No DOM. This is where the logic lives, so this is where most tests live.

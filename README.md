@@ -24,14 +24,29 @@ Built at [Aether Engineering](https://aethereng.com) for our own tools, and **ex
 
 ## The shape
 
-Every component is two pieces:
+The components that carry real logic are two pieces:
 
 ```
 src/viz/core/gantt.ts     ← layout maths. No Vue, no DOM. Unit-tested directly.
-src/viz/vue/Gantt.vue     ← renders it, emits deltas. ~200 lines of template.
+src/viz/vue/Gantt.vue     ← renders it, emits deltas. 162 lines of template.
 ```
 
-The core knows how to stack overlapping bars into lanes. It does not know what a bar *means*, what a colour encodes, or what happens on drop. That split is why the cores are testable without a browser, and why a second framework wrapper would be a new file rather than a rewrite.
+The core knows how to stack overlapping bars into lanes. It does not know what a bar *means*, what a colour encodes, or what happens on drop. That split is why the cores are testable without a browser.
+
+**How far that goes varies by component, and it is worth being straight about it:**
+
+| | framework-free core | in the Vue wrapper |
+|---|---|---|
+| **Gantt**, **Graph2D** | real algorithms — lane packing, span/point classification, force layout, projections | rendering, pointer handling, CSS |
+| **PropertyEditor**, **Transport** | field coercion and validation; the scrub handoff and speed ladder | rendering |
+| **Seg**, **Chip**, **Tool**, **FilterRail** | types and a couple of predicates | essentially all of it |
+| **SearchField**, **Toast**, **ChatPanel** | none | all of it — the logic *is* a watcher and a timer |
+
+So for `Gantt` and `Graph2D`, a wrapper for another framework genuinely would be a new file importing the same core; that claim is load-bearing, and the gallery already drives `ForceLayout` directly, without the component, to prove the core stands alone. For the small controls it would be a rewrite — there is just not much to rewrite.
+
+Two things travel further than the components do. The cores are **exported separately** (`viz/core`, `viz/core/gantt`, `controls/core`, `property-editor/core`), so the maths is usable from React, Svelte or nothing at all without pulling Vue in. And **`ui-kit.css` is framework-agnostic** — every `.aether-*` class and the whole token contract below is plain CSS.
+
+Today, Vue is the only wrapper that exists.
 
 The same discipline runs through the props. Components are **controlled**: the caller owns the state, the component renders it and emits what changed. `Gantt` never mutates an item. `Transport` never advances the clock. `Graph2D` never decides where a node lives. `Toast` does not own its own message.
 

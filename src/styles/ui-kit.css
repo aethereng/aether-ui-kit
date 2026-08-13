@@ -122,8 +122,8 @@
 .aether-seg button:last-child {
   border-right: 0;
 }
-/* the launch-board / brain-map originals both give a non-active segment a hover; the port
-   had none, so a segmented control was inert until clicked */
+/* both reference surfaces give a non-active segment a hover; the port had none, so a
+   segmented control was inert until clicked */
 .aether-seg button:hover:not(.on):not(:disabled) {
   color: var(--aether-ink);
 }
@@ -297,7 +297,8 @@
 }
 
 /* ---- SearchField (controls) ---- */
-/* Ported from the desk originals, where both surfaces carried this identically. The clear
+/* Ported from the reference implementations, where both surfaces carried this identically.
+   The clear
    button is hidden until there is text: an always-visible X on an empty field is a control
    that does nothing, and it reads as one. */
 .aether-search {

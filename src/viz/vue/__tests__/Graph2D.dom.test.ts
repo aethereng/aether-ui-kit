@@ -499,8 +499,8 @@ describe('Graph2D labels hold their size while the graph scales', () => {
 })
 
 describe('Graph2D drops edges whose endpoint is not in nodes[]', () => {
-  /* The regression this guards: a host that filters which nodes it shows (Brain Map's
-     folder/flag/search filters) but keeps passing every edge in the whole dataset used to
+  /* The regression this guards: a host that filters which nodes it shows (by folder, flag
+     or search) but keeps passing every edge in the whole dataset used to
      still render an edge into a now-hidden node -- the missing endpoint fell back to (0,0),
      so every one of those edges converged on the same phantom point in the corner. */
   it('renders exactly the edges whose both ends are visible', () => {
@@ -538,7 +538,7 @@ describe('Graph2D drops edges whose endpoint is not in nodes[]', () => {
 })
 
 describe('Graph2D warns when a controlled drag never reaches nodes[]', () => {
-  /* The regression this guards: Brain Map's drag handler mutated its position store correctly
+  /* The regression this guards: a consumer's drag handler mutated its position store correctly
      but never told Vue to look again, so the emitted `drag` was fine and the node just never
      moved on screen -- silently, every time, once the initial physics settle finished. This
      check is the automated version of the exact manual test that caught it originally: drag,

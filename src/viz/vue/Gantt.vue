@@ -28,7 +28,7 @@ const props = withDefaults(
     markers?: { day: number; label: string }[] // month lines + labels
     weekends?: number[] // day indices that are weekend columns
     weekdays?: number[] // day indices that are week separators
-    /** Small labels down the spine, one per week separator. The original desk chart fills the
+    /** Small labels down the spine, one per week separator. The reference chart fills the
      *  middle of the anchor band with these; without them the band reads as empty space.
      *  Labels are caller-supplied because the component works in day indices, not dates. */
     weekLabels?: { day: number; label: string }[]
@@ -503,7 +503,7 @@ const anchors = computed(() =>
   top: 4px;
   font-weight: 700;
 }
-/* Ported from the desk original: a solid warm hairline, not a dashed cool one. Today is the
+/* Ported from the reference: a solid warm hairline, not a dashed cool one. Today is the
    one thing on the chart the reader is orienting against -- it gets the accent colour and
    sits above the bars. */
 .ag-today {
@@ -536,7 +536,7 @@ const anchors = computed(() =>
   background: var(--aether-panel);
   border-bottom: 1px solid var(--aether-line-strong);
 }
-/* Ported from the desk original: the anchor hangs from the BOTTOM of the band -- a short
+/* Ported from the reference: the anchor hangs from the BOTTOM of the band -- a short
    hairline stem, the diamond above it, and the label above that. Children are absolutely
    placed against a zero-width anchor sitting on its day, so a long title can never shift the
    diamond off the date. Left-aligned rather than centred, which is also why an anchor on
@@ -620,7 +620,7 @@ const anchors = computed(() =>
 .ag-lane:nth-child(even) {
   background: var(--aether-lane-alt);
 }
-/* Bars, ported from the desk original. The status STATES matter as much as the geometry:
+/* Bars, ported from the reference. The status STATES matter as much as the geometry:
    the original tells planned / open / done / risk apart by border style and opacity, so a
    reader sees status without consulting a legend. The kit emitted the st-* classes but had
    no rules behind them, leaving every status identical apart from its lane colour. */

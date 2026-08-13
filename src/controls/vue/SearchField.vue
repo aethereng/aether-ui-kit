@@ -27,7 +27,7 @@ const emit = defineEmits<{
 
 const inputEl = ref<HTMLInputElement | null>(null)
 
-/* A host with a focus-the-search shortcut (the desk binds "/") needs a way in without
+/* A host with a focus-the-search shortcut (ours binds "/") needs a way in without
  * reaching through the DOM for an input it does not own. */
 defineExpose({ focus: () => inputEl.value?.focus() })
 

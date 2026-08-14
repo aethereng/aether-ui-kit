@@ -389,7 +389,16 @@
   color: var(--aether-surface);
   padding: 9px 16px;
   border-radius: 999px;
-  font: 600 12px/1 inherit;
+  /* Longhands, not a `font` shorthand. This read `font: 600 12px/1 inherit`, which is INVALID --
+     `inherit` is a CSS-wide keyword and may only be a property's entire value, never one
+     component of a shorthand -- so the browser dropped the whole declaration and the toast took
+     the host's inherited font-size. It rendered at 16px in the gallery instead of 12px, which is
+     how a status pill ended up the largest text on a phone screen. There is no shorthand that
+     expresses "inherit the family, set everything else", so this cannot be re-shortened. */
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1;
+  font-family: inherit;
   transition: opacity 0.2s, transform 0.2s;
   /* never intercepts a click: it sits over live surfaces and must not block them */
   pointer-events: none;

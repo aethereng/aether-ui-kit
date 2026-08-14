@@ -624,6 +624,17 @@ body {
    measures 3.03:1 against the panel and so fails WCAG AA -- present in the DOM and invisible in
    practice, which is why two labelled FilterRail orientations read as one component rendered
    twice. --aether-ink-soft clears AA, and 11.5px is small without being decorative. */
+/* The nav's two Tools take the DENSE floor, not the full one. They are chrome in a top bar,
+   where height is the scarcest thing on a phone: at 44px each the bar came to 64px before any
+   content. 32px keeps them equal to each other, keeps them past WCAG 2.2 AA's 24px minimum, and
+   returns 12px of the viewport. Higher specificity than the kit's own coarse rule, so order does
+   not matter here. */
+@media (pointer: coarse) {
+  .g-nav .aether-tool {
+    min-height: var(--aether-touch-dense);
+  }
+}
+
 /* ---- example-file chrome ----
    These live in App.vue's UNSCOPED style block on purpose: the examples are separate .vue files
    (src/gallery/examples/), and a scoped block here would not reach them. They are the only

@@ -627,3 +627,96 @@
 .aether-property-editor__field input[type='checkbox']:checked::after {
   transform: translateX(16px);
 }
+
+/* ==========================================================================================
+   TOUCH TARGETS AND INPUT SIZING — the file's only @media block, and it must stay last.
+   ==========================================================================================
+
+   Everything above this line is an unconditional cascade, and @media contributes ZERO
+   specificity: a rule inside `@media (pointer: coarse)` is cascade-identical to the same
+   selector outside it and wins only by being LATER IN THE FILE. Placed anywhere earlier, three
+   existing blocks would silently revert parts of this -- the `font-size: 13.5px` /
+   `padding: 7px 9px` re-declaration of the PropertyEditor fields, the `padding: 3px 10px`
+   re-declaration of the enum buttons, and the checkbox's explicit width/height. So: append
+   only. Do not insert a new rule after this block; put it above the comment.
+
+   Why it exists: every interactive control the kit ships is under the 44px touch minimum,
+   from 15px to about 32px. Not one passes. And every text field is under 16px, which makes
+   iOS Safari zoom the whole page on focus and leave it scrolled and oversized -- so the input
+   font-size here is a layout fix, not a typography preference.
+
+   `pointer: coarse` rather than a width breakpoint on purpose: the problem is the input
+   device, not the viewport. A touch laptop at 1400px needs these; a 380px desktop window
+   does not.
+*/
+@media (pointer: coarse) {
+  /* Highest-leverage selector in the file. .aether-tool is also every ChatPanel compose
+     button (ChatPanel renders three <Tool>s and carries no button CSS of its own) and every
+     .aether-button-group child, so this one rule covers those too -- as do .hot and .danger,
+     which change colour only. inline-flex + center because a bare min-height would leave the
+     label top-aligned in the taller box. */
+  .aether-tool {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .aether-seg button,
+  .aether-seg--pill button,
+  .aether-property-editor__buttons button {
+    min-height: 44px;
+  }
+
+  /* .aether-chip--row already declares align-items: center; the base chip does not, so it
+     needs it here or the label sits high in the grown box. */
+  .aether-chip,
+  .aether-chip--row {
+    min-height: 44px;
+    align-items: center;
+  }
+
+  /* 16px is the iOS zoom threshold, exactly. Two things to keep in mind if this is edited:
+     `:not([type='checkbox'])` protects the switch below, and the FIRST selector is the only
+     one that reaches PropertyEditor's readonly reference/placement fallbacks -- those <input>
+     elements carry no `type` attribute at all, so an `input[type='text']` selector does not
+     match them. Keep both. */
+  .aether-property-editor__field input:not([type='checkbox']),
+  .aether-property-editor__field textarea,
+  .aether-property-editor__field select,
+  .aether-search input,
+  .aether-chat__compose textarea {
+    font-size: 16px;
+  }
+
+  .aether-property-editor__field input:not([type='checkbox']),
+  .aether-property-editor__field select,
+  .aether-search input {
+    min-height: 44px;
+  }
+
+  /* The search clear button deliberately does NOT take a min-height. It is
+     `position: absolute; right: 7px; top: 50%` inside a field only ~31px tall, so a 44px floor
+     would burst the field it sits in. Grow the HIT AREA instead and leave the painted 20px
+     circle where it is -- free, because the button is already positioned. */
+  .aether-search__clear::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+  }
+
+  /* NOT FIXED HERE, deliberately, so nobody assumes this block covered them:
+
+     - The boolean switch, `input[type='checkbox']`, stays 38x22. Its ::after knob is 18x18 at
+       top/left 2px with translateX(16px) when checked -- every number tuned to a 22px track,
+       and a floor here rewrites the track without the knob. It has been broken that way once
+       already. Reaching 44px needs a padded wrapper in PropertyEditor.vue, not CSS.
+     - Gantt's marks (.ag-ev, .ag-ev .h, .ag-ms, .ag-canchor .dia, .ag-dday) are fixed-geometry
+       and absolutely placed inside JS-computed bands (LANE_ROW = 34 in viz/core/gantt.ts), and
+       a bar can be as narrow as one ppd -- two 44px handles do not fit inside it. Needs the
+       layout maths, not a media query.
+     - Graph2D's nodes are SVG <circle>; min-width/min-height do not apply to them at all.
+       Their size is the `r` geometry attribute, so it is a props/render change.
+     - Transport's .at-* buttons live in that component's scoped CSS and cannot be reached from
+       here. */
+}

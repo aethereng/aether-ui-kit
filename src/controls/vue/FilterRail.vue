@@ -123,4 +123,18 @@ function anyActive(groups: FilterGroup<V>[]): boolean {
     monospace;
   color: var(--aether-faint);
 }
+/* The smallest target the kit ships: 11px text with 2px padding, i.e. 15px tall -- and it is a
+   destructive action (it drops every active filter). Grown only on a coarse pointer.
+   The foot is the LAST element in the rail and its only neighbour is the non-interactive
+   "n hidden" span, so growing it vertically overlaps no other target, and the negative
+   horizontal margin keeps the label optically where it was while widening the hit area. */
+@media (pointer: coarse) {
+  .aether-rail__clear {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 10px;
+    margin: 0 -10px;
+  }
+}
 </style>

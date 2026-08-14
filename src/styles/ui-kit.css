@@ -10,7 +10,14 @@
   --aether-panel: #e5dfd2;
   --aether-ink: #1b1e23;
   --aether-ink-soft: #4a4f57;
-  --aether-faint: #8a857a;
+  /* The most recessed text colour, and it must still clear WCAG AA. #8a857a measured 3.47:1 on
+     --aether-surface and only 2.77:1 on --aether-panel, and it carries the SMALLEST text the kit
+     draws -- rail labels, chip counts, field captions -- so the 4.5:1 small-text floor applies to
+     every one of them, not the 3:1 large-text exemption.
+     #666250 is the minimal value that clears 4.5 against BOTH backgrounds (5.78 / 4.61), chosen to
+     stay as faint as accessibility permits rather than as dark as possible. The ladder survives:
+     --aether-ink-soft is 6.21 on panel, so this is still visibly the recessed step. */
+  --aether-faint: #666250;
   --aether-line: rgba(27, 30, 35, 0.14);
   --aether-line-strong: rgba(27, 30, 35, 0.26);
   --aether-warm: #a9591b;

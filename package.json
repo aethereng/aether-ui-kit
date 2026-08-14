@@ -1,6 +1,6 @@
 {
   "name": "@aether/ui-kit",
-  "version": "0.6.4",
+  "version": "0.7.0",
   "description": "Framework-free component cores with thin Vue wrappers, for engineering interfaces.",
   "license": "Apache-2.0",
   "type": "module",

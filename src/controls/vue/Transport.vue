@@ -209,6 +209,16 @@ onBeforeUnmount(() => {
 .at-btn:hover {
   border-color: var(--aether-cool);
 }
+/* Focus ring, here rather than in ui-kit.css for the same reason the touch targets are: these
+   elements are only reachable from this component's own scoped CSS at a specificity a global rule
+   cannot beat. Without it, the shared stylesheet's ring covered every control EXCEPT the one a
+   Transport-only consumer actually tabs through, and keyboard focus fell back to the browser's
+   blue -- the exact leak the ring exists to stop. */
+.at-btn:focus-visible,
+.at-scrub:focus-visible {
+  outline: 2px solid var(--aether-cool);
+  outline-offset: 2px;
+}
 .at-play {
   font-size: 12px;
 }

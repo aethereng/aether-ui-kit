@@ -8,6 +8,10 @@
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import GSection from './GSection.vue'
 import { COMPONENTS, GROUPS, byGroup, type Group } from './meta'
+/* Examples live in their own files so the gallery can RENDER one and DISPLAY its source from the
+ * same bytes -- see GSection's `source` prop. `?raw` is Vite giving us the file as a string. */
+import SegExample from './examples/SegExample.vue'
+import SegExampleSrc from './examples/SegExample.vue?raw'
 
 import Seg from '@/controls/vue/Seg.vue'
 import Chip from '@/controls/vue/Chip.vue'
@@ -62,32 +66,6 @@ const stats = computed(() => ({
   cores: COMPONENTS.filter((c) => c.core).length,
   props: COMPONENTS.reduce((n, c) => n + c.props.length, 0),
 }))
-
-/* ── Seg ── */
-const view = ref<'cards' | 'graph'>('cards')
-const segOpts: SegOption[] = [
-  { value: 'cards', label: 'Cards' },
-  { value: 'graph', label: 'Graph' },
-]
-
-/* ── Seg: pill variant ── */
-/* Demoed as the TWO-capsule header it was extracted from — a view switch beside a layout
-   switch — because the pairing is the point. The pill's mono uppercase and accent wash are what
-   let two independent selectors share one header without reading as a single six-option control;
-   a lone pill shows the styling but not the reason for it. Both are live, and #state prints both
-   values, so it is visible that they select independently. */
-const pillView = ref<'graph' | 'list' | 'tree'>('graph')
-const pillViewOpts: SegOption[] = [
-  { value: 'graph', label: 'Graph' },
-  { value: 'list', label: 'List' },
-  { value: 'tree', label: 'Tree' },
-]
-const pillLayout = ref<'force' | 'folders' | 'hubs'>('force')
-const pillLayoutOpts: SegOption[] = [
-  { value: 'force', label: 'Force' },
-  { value: 'folders', label: 'Folders' },
-  { value: 'hubs', label: 'Hubs' },
-]
 
 /* ── Chip ── */
 const active = ref<Set<string>>(new Set(['fact', 'risk']))
@@ -557,33 +535,8 @@ const groupAnchor = (g: Group) => g.toLowerCase()
 
       <template v-for="c in byGroup(g)" :key="c.id">
         <!-- Controls -->
-        <GSection v-if="c.id === 'seg'" :meta="c">
-          <Seg
-            :options="segOpts"
-            :model-value="view"
-            aria-label="View"
-            @change="view = $event as 'cards' | 'graph'"
-          />
-          <Seg :options="[{ value: 'a', label: 'Only option' }]" :model-value="'a'" aria-label="Single" />
-          <!-- variant="pill": the two adjacent capsules are the pattern this variant exists
-               for, not decoration. Keep them next to each other. -->
-          <Seg
-            variant="pill"
-            :options="pillViewOpts"
-            :model-value="pillView"
-            aria-label="Graph view"
-            @change="pillView = $event as 'graph' | 'list' | 'tree'"
-          />
-          <Seg
-            variant="pill"
-            :options="pillLayoutOpts"
-            :model-value="pillLayout"
-            aria-label="Graph layout"
-            @change="pillLayout = $event as 'force' | 'folders' | 'hubs'"
-          />
-          <template #state>
-            view = "{{ view }}" · pill: {{ pillView }} / {{ pillLayout }}
-          </template>
+        <GSection v-if="c.id === 'seg'" :meta="c" :source="SegExampleSrc">
+          <SegExample />
         </GSection>
 
         <GSection v-else-if="c.id === 'chip'" :meta="c">
@@ -1195,13 +1148,43 @@ body {
   border-color: var(--aether-cool);
   color: var(--aether-cool);
 }
+/* Caption naming which variant an instance is. It was 10.5px in --aether-faint, a token that
+   measures 3.03:1 against the panel and so fails WCAG AA -- present in the DOM and invisible in
+   practice, which is why two labelled FilterRail orientations read as one component rendered
+   twice. --aether-ink-soft clears AA, and 11.5px is small without being decorative. */
+/* ---- example-file chrome ----
+   These live in App.vue's UNSCOPED style block on purpose: the examples are separate .vue files
+   (src/gallery/examples/), and a scoped block here would not reach them. They are the only
+   gallery-owned classes an example file may use, so an example stays copy-pasteable apart from
+   this thin labelling layer. */
+.g-ex {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+/* siblings that belong side by side rather than stacked -- e.g. two pill capsules that share a
+   header in real use, where stacking them would misrepresent the pattern */
+.g-ex-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+/* the live state readout, when it belongs to the example rather than the section shell */
+.g-ex-state {
+  flex-basis: 100%;
+  font-family: var(--g-mono);
+  font-size: 11.5px;
+  color: var(--aether-ink-soft);
+}
+
 .g-variant {
   display: block;
   margin-bottom: 8px;
   font-family: var(--g-mono);
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.06em;
-  color: var(--aether-faint);
+  color: var(--aether-ink-soft);
 }
 
 /* ── footer ── */

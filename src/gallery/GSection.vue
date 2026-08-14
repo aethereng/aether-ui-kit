@@ -10,9 +10,42 @@ import Seg from '@/controls/vue/Seg.vue'
 import type { SegOption } from '@/controls/core/types'
 import type { CompMeta } from './meta'
 
-const props = defineProps<{ meta: CompMeta }>()
+const props = defineProps<{
+  meta: CompMeta
+  /* The example's own source, handed in via Vite's `?raw`. When present, the Template and Script
+   * tabs are SLICED OUT OF IT rather than read from meta — so the code on screen is literally the
+   * file that rendered the demo above it, and the two cannot drift.
+   *
+   * They did drift, which is why this exists: Seg's demo grew two pill instances and Transport's a
+   * second bar while both Templates still showed one, and Chip's Script listed five options while
+   * the demo rendered seven. Any pair of hand-maintained twins ends up here eventually. */
+  source?: string
+}>()
 
 const importLine = `import ${props.meta.name} from '${props.meta.subpath}'`
+
+/* Slice an SFC into its two blocks. Deliberately dumb string work rather than a parser: the input
+ * is our own example files, and a regex that silently half-matches is worse than one that returns
+ * nothing, so each slice falls back to the meta value if the markers are not found. */
+function sliceBlock(src: string, tag: 'script' | 'template'): string | null {
+  const open = tag === 'script' ? src.indexOf('>', src.indexOf('<script')) : src.indexOf('<template>')
+  if (open < 0) return null
+  const start = tag === 'script' ? open + 1 : open + '<template>'.length
+  // last closer, because a template may itself contain <template #slot> children
+  const end = src.lastIndexOf(`</${tag}>`)
+  if (end < start) return null
+  return src
+    .slice(start, end)
+    .replace(/^\n+|\s+$/g, '')
+    .replace(/^ {2}/gm, '') // examples are indented inside their block; unindent for display
+}
+
+const shownScript = computed(
+  () => (props.source && sliceBlock(props.source, 'script')) || props.meta.script,
+)
+const shownTemplate = computed(
+  () => (props.source && sliceBlock(props.source, 'template')) || props.meta.template,
+)
 
 /* one copy handler for every code block on the section, keyed by which block was copied,
  * so two buttons can't both claim success */
@@ -80,14 +113,14 @@ const tabs = computed<SegOption<Tab>[]>(() => {
           v-if="tab === 'template' || tab === 'script'"
           class="g-copy"
           type="button"
-          @click="copy(tab, tab === 'template' ? meta.template : meta.script)"
+          @click="copy(tab, tab === 'template' ? shownTemplate : shownScript)"
         >
           {{ copiedKey === tab ? 'copied' : 'copy' }}
         </button>
       </div>
 
-      <pre v-if="tab === 'template'" class="g-code"><code>{{ meta.template }}</code></pre>
-      <pre v-else-if="tab === 'script'" class="g-code"><code>{{ meta.script }}</code></pre>
+      <pre v-if="tab === 'template'" class="g-code"><code>{{ shownTemplate }}</code></pre>
+      <pre v-else-if="tab === 'script'" class="g-code"><code>{{ shownScript }}</code></pre>
 
       <table v-else-if="tab === 'props'" class="g-table">
         <thead>

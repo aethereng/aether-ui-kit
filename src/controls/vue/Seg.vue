@@ -2,21 +2,15 @@
 /* Thin Vue wrapper over the framework-free Seg core. Renders a segmented
  * control (one active option). Mechanical contract here; which option is active
  * and what a selection emits is the caller's domain. */
-import type { SegOption } from '../core/types'
+import type { SegOption, SegProps } from '../core/types'
 
-const props = withDefaults(
-  defineProps<{
-    options: SegOption<V>[]
-    modelValue: V
-    ariaLabel?: string
-    /** 'default' — square-cornered, panel-grey active segment.
-     *  'pill'    — fully rounded, uppercase mono, accent-wash active segment. A second real
-     *              look that already shipped in a consumer's header, not a style hook: the
-     *              same precedent Chip's `variant` set. */
-    variant?: 'default' | 'pill'
-  }>(),
-  { ariaLabel: undefined, variant: 'default' },
-)
+/* Props come from the EXPORTED SegProps rather than an inline literal, so the public type and
+ * what the component actually accepts cannot diverge. They had: `variant` was added here and
+ * never reached SegProps, which index.ts tells consumers to type their own state against. */
+const props = withDefaults(defineProps<SegProps<V>>(), {
+  ariaLabel: undefined,
+  variant: 'default',
+})
 
 const emit = defineEmits<{
   'update:modelValue': [value: V]

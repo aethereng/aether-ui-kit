@@ -412,6 +412,11 @@ function onChange(key: string, value: unknown) {
     detail:
       'The core is dimension-agnostic — positions are `number[]`, so axis 3 can be spatial z, axis 4 a construction sequence, axis 5 a discipline. A GL renderer would reuse the same core and change only the draw call. Two modes: running (the component owns the sim, the default) or controlled (running: false, the caller owns nodes[].pos). Dragging needs the controlled mode — in running mode the internal layout owns the positions and a write from the caller is ignored.',
     props: [
+      {
+        name: 'mapping',
+        type: "'fit' | 'direct'?",
+        note: "default 'fit', which refits every frame; 'direct' draws 1:1 so a drag tracks the cursor",
+      },
       { name: 'nodes', type: 'GNode[]', note: '{ id, pos: number[], label?, color?, r? }' },
       { name: 'edges', type: 'GEdge[]', note: '{ a, b, w? }' },
       { name: 'width', type: 'number?' },
@@ -556,6 +561,11 @@ function onHover(id: string, clientX: number, clientY: number) {
     detail:
       'Drag to move, edge-handles to resize, double-click a lane to create. It emits deltas in day indices and never touches dates — the caller maps day index to calendar, which is what keeps it reusable outside a calendar entirely.',
     props: [
+      {
+        name: 'weekLabels',
+        type: '{ day: number; label: string }[]?',
+        note: 'captions down the spine; the demo passes these',
+      },
       { name: 'items', type: 'GanttItem[]', note: '{ id, start, end?, type, status, anchor? }' },
       { name: 'lanes', type: 'GanttLane[]', note: '{ type, name, color, wash }' },
       { name: 'ppd', type: 'number', note: 'pixels per day — the zoom control' },
@@ -581,7 +591,11 @@ function onHover(id: string, clientX: number, clientY: number) {
         note: 'once, when a moved gesture ends — persist here',
       },
       { name: 'newAt', type: '[day: number, type: string]' },
-      { name: 'expandDay', type: '[day | null]', note: 'many one-day items on the same date' },
+      {
+        name: 'expandDay',
+        type: '[day: { t: string; i: number } | null]',
+        note: 'many one-day items on the same date; null closes the expansion',
+      },
     ],
     template: `<Gantt
   :items="items"

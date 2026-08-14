@@ -13,6 +13,11 @@ export interface SegProps<V extends string = string> {
   options: SegOption<V>[]
   modelValue: V
   ariaLabel?: string
+  /** 'default' — square-cornered, panel-grey active segment.
+   *  'pill'    — fully rounded, uppercase mono, accent-wash active segment. A second real look
+   *              that already shipped in a consumer's header, not a style hook: the same
+   *              precedent Chip's `variant` set. */
+  variant?: 'default' | 'pill'
 }
 
 export type ChipOption<V extends string = string> = {

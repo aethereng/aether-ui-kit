@@ -1,6 +1,6 @@
 {
   "name": "@aether/ui-kit",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Framework-free component cores with thin Vue wrappers, for engineering interfaces.",
   "license": "Apache-2.0",
   "type": "module",
@@ -15,63 +15,63 @@
   ],
   "exports": {
     "./property-editor": {
-      "types": "./src/property-editor/vue/PropertyEditor.vue",
+      "types": "./src/property-editor/vue/PropertyEditor.vue.d.ts",
       "import": "./src/property-editor/vue/PropertyEditor.vue"
     },
     "./property-editor/core": {
-      "types": "./src/property-editor/core/index.ts",
+      "types": "./src/property-editor/core/index.d.ts",
       "import": "./src/property-editor/core/index.ts"
     },
     "./controls/seg": {
-      "types": "./src/controls/vue/Seg.vue",
+      "types": "./src/controls/vue/Seg.vue.d.ts",
       "import": "./src/controls/vue/Seg.vue"
     },
     "./controls/chip": {
-      "types": "./src/controls/vue/Chip.vue",
+      "types": "./src/controls/vue/Chip.vue.d.ts",
       "import": "./src/controls/vue/Chip.vue"
     },
     "./controls/filter-rail": {
-      "types": "./src/controls/vue/FilterRail.vue",
+      "types": "./src/controls/vue/FilterRail.vue.d.ts",
       "import": "./src/controls/vue/FilterRail.vue"
     },
     "./controls/search-field": {
-      "types": "./src/controls/vue/SearchField.vue",
+      "types": "./src/controls/vue/SearchField.vue.d.ts",
       "import": "./src/controls/vue/SearchField.vue"
     },
     "./controls/tool": {
-      "types": "./src/controls/vue/Tool.vue",
+      "types": "./src/controls/vue/Tool.vue.d.ts",
       "import": "./src/controls/vue/Tool.vue"
     },
     "./controls/chat-panel": {
-      "types": "./src/controls/vue/ChatPanel.vue",
+      "types": "./src/controls/vue/ChatPanel.vue.d.ts",
       "import": "./src/controls/vue/ChatPanel.vue"
     },
     "./controls/toast": {
-      "types": "./src/controls/vue/Toast.vue",
+      "types": "./src/controls/vue/Toast.vue.d.ts",
       "import": "./src/controls/vue/Toast.vue"
     },
     "./controls/transport": {
-      "types": "./src/controls/vue/Transport.vue",
+      "types": "./src/controls/vue/Transport.vue.d.ts",
       "import": "./src/controls/vue/Transport.vue"
     },
     "./controls/core": {
-      "types": "./src/controls/core/index.ts",
+      "types": "./src/controls/core/index.d.ts",
       "import": "./src/controls/core/index.ts"
     },
     "./viz/graph": {
-      "types": "./src/viz/vue/Graph2D.vue",
+      "types": "./src/viz/vue/Graph2D.vue.d.ts",
       "import": "./src/viz/vue/Graph2D.vue"
     },
     "./viz/gantt": {
-      "types": "./src/viz/vue/Gantt.vue",
+      "types": "./src/viz/vue/Gantt.vue.d.ts",
       "import": "./src/viz/vue/Gantt.vue"
     },
     "./viz/core/gantt": {
-      "types": "./src/viz/core/gantt.ts",
+      "types": "./src/viz/core/gantt.d.ts",
       "import": "./src/viz/core/gantt.ts"
     },
     "./viz/core": {
-      "types": "./src/viz/core/index.ts",
+      "types": "./src/viz/core/index.d.ts",
       "import": "./src/viz/core/index.ts"
     },
     "./styles": {
@@ -89,6 +89,8 @@
     "dev": "vite",
     "build": "run-p type-check build-only",
     "build-only": "vite build",
+    "types": "vue-tsc -p tsconfig.build.json",
+    "types:check": "vue-tsc -p tsconfig.build.json && git diff --exit-code -- \"*.d.ts\"",
     "type-check": "vue-tsc --build",
     "test:unit": "vitest",
     "lint": "eslint . --fix",

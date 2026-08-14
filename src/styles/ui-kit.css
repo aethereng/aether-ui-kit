@@ -717,6 +717,12 @@
        layout maths, not a media query.
      - Graph2D's nodes are SVG <circle>; min-width/min-height do not apply to them at all.
        Their size is the `r` geometry attribute, so it is a props/render change.
-     - Transport's .at-* buttons live in that component's scoped CSS and cannot be reached from
-       here. */
+     - Transport's .at-* buttons are not fixed here, and the reason is specificity rather than
+       reach: a global sheet CAN match a scoped component's elements by class -- scoping only
+       raises the specificity of the component's OWN rules -- so `.at-btn { min-height: 44px }`
+       here would match and then lose to `.at-btn[data-v-hash] { height: 28px }` in Transport.vue.
+       Growing those targets requires an edit inside that component; no global rule can do it.
+       Worth knowing because Transport is the only kit component quintus renders, and its
+       transport bar over a live 3-D canvas is precisely the tablet case this block does not
+       improve. */
 }

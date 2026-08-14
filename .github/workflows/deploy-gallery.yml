@@ -61,6 +61,14 @@ jobs:
 
       - run: npm ci
 
+      # The .d.ts files under src/ are GENERATED and COMMITTED — consumers install straight from
+      # a git tag, so there is no publish step that could build them. Committed artifacts drift,
+      # and a stale declaration is worse than none: it type-checks green against a contract the
+      # component no longer has. This regenerates them and fails if the result differs from what
+      # is committed, which is the whole reason committing them is safe.
+      - name: Declarations are in step with the sources
+        run: npm run types:check
+
       - name: Unit tests
         run: npm run test:unit -- --run
 

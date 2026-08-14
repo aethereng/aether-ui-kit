@@ -1,0 +1,29 @@
+{
+  // Declaration-emit only. The package ships raw sources and has no dist, so this exists purely
+  // to generate the .d.ts files that the `exports` map points `types` at.
+  //
+  // Why they are needed at all: pointing `types` at a raw .vue works under `vue-tsc --noEmit`,
+  // where the Vue language plugin is consulted, but NOT under `vue-tsc --build`, where the
+  // solution builder resolves a dependency's types without it and reports TS2307. A consumer
+  // running --build could not type-check against this package.
+  //
+  // Emitted next to the sources rather than into a dist/, so the existing `files: ["src"]` picks
+  // them up and every export keeps a single directory.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": ".",
+    "outDir": ".",
+    // The gallery is a demo app, not part of the published API surface.
+    "types": ["vite/client"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue"],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/__tests__/**",
+    "src/gallery/**",
+    "src/**/*.d.ts"
+  ]
+}

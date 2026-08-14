@@ -650,6 +650,23 @@ const groupAnchor = (g: Group) => g.toLowerCase()
             @scrub-end="tScrubEnd"
             @stop="tCur = 0"
           />
+          <!-- speed-mode="presets": the other real consumer shape, and the one that most needs a
+               touch floor — a ladder of five adjacent targets instead of one cycling button.
+               Bound to the SAME state as the bar above, so they read as two views of one
+               transport and the speed ladder tracks the cycling button. -->
+          <Transport
+            :current="tCur"
+            :duration="tDur"
+            :playing="tPlaying"
+            :speed="tSpeed"
+            :speeds="[0.2, 0.5, 1, 2, 5]"
+            speed-mode="presets"
+            @toggle="tToggle"
+            @seek="tSeek"
+            @set-speed="tSpeed = $event"
+            @scrub-start="tScrubStart"
+            @scrub-end="tScrubEnd"
+          />
           <template #state
             >cur = {{ tCur.toFixed(2) }}s · playing = {{ tPlaying }} · speed = {{ tSpeed }}×</template
           >

@@ -262,4 +262,50 @@ onBeforeUnmount(() => {
   font-variant-numeric: tabular-nums;
   opacity: 0.85;
 }
+/* ---- touch targets ---- */
+/* Every control in this bar is ~30px, under the 44px touch minimum, and this is the kit
+   component most likely to be used on a tablet: a transport bar floating over a live canvas.
+   It could not be fixed from ui-kit.css -- not because a global sheet cannot reach a scoped
+   component (it can, by class), but because it would lose to these rules on specificity, since
+   scoping adds an attribute selector to them. So the fix belongs here.
+
+   Last block in the file on purpose: `height: 28px` above is overridden by `min-height` here
+   (min-height clamps the used height, so it wins regardless of order), but `min-width` is a
+   straight same-specificity contest against .at-speed's 40px and .at-stop's 28px, and only
+   source order decides it. */
+@media (pointer: coarse) {
+  /* Load-bearing, not cosmetic. The bar's declared minimums already exceed a 390px viewport
+     before any of this, so growing every child without letting the row wrap would make the
+     overflow worse rather than better. Wrapping is what makes the rest of this safe. */
+  .aether-transport {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .at-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* 2px was the tightest spacing between two adjacent targets anywhere in the kit -- adjacent
+     44px buttons 2px apart still mis-tap. */
+  .at-speeds {
+    gap: 6px;
+  }
+  .at-speed-opt {
+    min-width: 44px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+
+  /* A native range input. Its thumb is UA-sized and small, but the whole track responds to a
+     pointer, so a taller box is a genuinely bigger target. Deliberately NOT restyled with
+     appearance:none -- that discards the platform track AND thumb and would mean rebuilding
+     both, which is a visual redesign rather than a touch fix. Left to wrap onto its own row
+     naturally rather than being forced there with flex-basis:100%, so a tablet in landscape
+     keeps a single-row bar. */
+  .at-scrub {
+    min-height: 44px;
+  }
+}
 </style>

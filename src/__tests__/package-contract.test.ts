@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, existsSync, globSync } from 'node:fs'
-import { resolve, dirname } from 'node:path'
+import { dirname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 /* The package's PUBLIC CONTRACT, tested the way a consumer meets it.
@@ -144,4 +144,67 @@ describe('interactive controls give feedback before they are clicked', () => {
       expect(shared.includes(selector), `${selector} missing`).toBe(true)
     },
   )
+})
+
+describe('every symbol a core module exports is reachable through the exports map', () => {
+  /* The bug this exists for: `coerceNumberInput` and `numberStep` were documented as the public
+     API for consumers writing their own numeric inputs, while missing from
+     property-editor/core's barrel. The exports map declares only the barrel for that subpath and
+     carries no wildcard, so the documented import failed with ERR_PACKAGE_PATH_NOT_EXPORTED --
+     invisible to vue-tsc, eslint and every component test, because inside the package the symbol
+     resolves fine by relative path.
+
+     Stated as a rule rather than a list of expected names, so it also covers the next symbol
+     someone adds: a symbol is reachable if its OWN module has an exports-map subpath, or if the
+     barrel for its directory re-exports it. */
+  const subpathTargets = new Set(
+    Object.values(pkg.exports as Record<string, Record<string, string>>).flatMap((c) =>
+      Object.values(c).map((t) => t.replace(/^\.\//, '')),
+    ),
+  )
+
+  /* globSync returns platform separators -- on Windows every path came back with backslashes, so
+     the /index.ts filter matched nothing and every module "failed". Normalise before comparing
+     against package.json's forward-slash targets. */
+  const coreModules = globSync('src/**/core/*.ts', { cwd: root, nodir: true })
+    .map((f) => f.split(sep).join('/'))
+    .filter((f) => !f.includes('__tests__') && !f.endsWith('.d.ts') && !f.endsWith('/index.ts'))
+
+  it('finds core modules to check (guards against the glob silently matching nothing)', () => {
+    expect(coreModules.length).toBeGreaterThan(3)
+  })
+
+  it.each(coreModules)('%s', (file) => {
+    const dir = file.slice(0, file.lastIndexOf('/'))
+    const barrelPath = `${dir}/index.ts`
+    // a module with its own subpath (e.g. viz/core/gantt) is reachable directly
+    if (subpathTargets.has(file)) return
+    const barrel = readFileSync(resolve(root, barrelPath), 'utf8')
+    const src = readFileSync(resolve(root, file), 'utf8')
+
+    const exported = [
+      ...Array.from(src.matchAll(/^export\s+(?:async\s+)?function\s+([A-Za-z_]\w*)/gm), (m) => m[1]!),
+      ...Array.from(src.matchAll(/^export\s+(?:const|class)\s+([A-Za-z_]\w*)/gm), (m) => m[1]!),
+      ...Array.from(src.matchAll(/^export\s+(?:type|interface)\s+([A-Za-z_]\w*)/gm), (m) => m[1]!),
+    ]
+
+    /* Parse the barrel's export LISTS into a set of names, rather than substring-matching the
+       file. A first attempt used new RegExp(`\b${name}\b`) and matched nothing at all: inside a
+       JS string or template literal, \b is the BACKSPACE escape, not a word boundary, so it
+       searched for control characters and reported every symbol unreachable. A set of parsed
+       names has no escaping to get wrong, and it also will not be fooled by a name that appears
+       only in a comment. */
+    const reexported = new Set(
+      Array.from(barrel.matchAll(/export\s+(?:type\s+)?\{([^}]*)\}/g), (m) => m[1]!)
+        .flatMap((inner) => inner.split(','))
+        .map((n) => n.trim().split(/\s+as\s+/).pop()!.trim())
+        .filter(Boolean),
+    )
+    const unreachable = exported.filter((name) => !reexported.has(name))
+    expect(
+      unreachable,
+      `${file} exports ${unreachable.join(', ')} but ${barrelPath} does not re-export them, and ` +
+        `the exports map has no wildcard — a consumer cannot import them at all`,
+    ).toEqual([])
+  })
 })

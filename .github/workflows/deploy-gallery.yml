@@ -30,24 +30,19 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # This repo is public. The internal names were scrubbed by hand before v0.2.0 and the
-      # scrub still holds, but nothing enforced it -- one careless comment is all it takes.
-      # Runs before install so it fails in seconds rather than after a full build.
+      # This repo is public, and nothing enforced the internal-name scrub until this existed.
+      # One implementation, in scripts/guard-names.mjs, so it is runnable locally as
+      # `npm run guard:names` BEFORE pushing. It was inline shell here and nowhere else, which is
+      # exactly how it failed: an internal name entered a CSS comment in v0.4.1 and CI stayed red
+      # across four tagged releases, because the local gate sequence never ran it.
       #
-      # The pattern is deliberately narrow: it must NOT match this project's own identity
-      # ("@aether/ui-kit", "aethereng/aether-ui-kit", "aethereng.github.io", "Aether
-      # Engineering"), all of which were checked against it. Widen it only after checking the
-      # same way -- a guard that cries wolf gets deleted.
-      # --exclude is this file: it carries the pattern, so scanning .github would match itself
-      # and fail every run. Everything else under .github stays in scope, so a name added to a
-      # future workflow is still caught.
+      # The script asserts its own pattern does not match this project's identity ("@aether/ui-kit",
+      # "aethereng/aether-ui-kit", "aethereng.github.io", "Aether Engineering") and exits 2 if it
+      # does -- so widening the pattern cannot silently start failing on a clean tree.
+      #
+      # Plain node with no deps, so it stays ahead of npm ci and fails in seconds.
       - name: Guard — no internal names in the published surface
-        run: |
-          if grep -rniE 'quintus|etere|aetheros|aether-os|deskos|desk-os' \
-               src package.json README.md .github --exclude=deploy-gallery.yml; then
-            echo "::error::Internal name found in the published surface — see the matches above."
-            exit 1
-          fi
+        run: node scripts/guard-names.mjs
 
       - uses: actions/setup-node@v5
         with:

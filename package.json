@@ -1,6 +1,6 @@
 {
   "name": "@aether/ui-kit",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Framework-free component cores with thin Vue wrappers, for engineering interfaces.",
   "license": "Apache-2.0",
   "type": "module",
@@ -91,6 +91,7 @@
     "build-only": "vite build",
     "types": "vue-tsc -p tsconfig.build.json",
     "types:check": "vue-tsc -p tsconfig.build.json && git diff --exit-code -- \"*.d.ts\"",
+    "guard:names": "node scripts/guard-names.mjs",
     "type-check": "vue-tsc --build",
     "test:unit": "vitest",
     "lint": "eslint . --fix",

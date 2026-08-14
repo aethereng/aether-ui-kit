@@ -756,7 +756,7 @@
        raises the specificity of the component's OWN rules -- so `.at-btn { min-height: 44px }`
        here would match and then lose to `.at-btn[data-v-hash] { height: 28px }` in Transport.vue.
        Growing those targets requires an edit inside that component; no global rule can do it.
-       Worth knowing because Transport is the only kit component quintus renders, and its
-       transport bar over a live 3-D canvas is precisely the tablet case this block does not
-       improve. */
+       Worth knowing because a consumer may render Transport and nothing else here, and a
+       transport bar floating over a live 3-D canvas is precisely the tablet case this block does
+       not improve. (Transport got its own coarse block in 0.5.0, so this is now closed there.) */
 }

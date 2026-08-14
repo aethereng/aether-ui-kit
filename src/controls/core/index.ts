@@ -1,7 +1,9 @@
 // Framework-free core for the shared control primitives (Seg, Chip, Tool).
 // Per the packaging decision: zero Vue imports; the mechanical contract (which
 // option is active, what a click emits) lives here, domain semantics stay with the caller.
-import type { ChipOption } from './types'
+//
+// The `import type { ChipOption }` that used to sit here went with hasVisibleOptions — it was that
+// function's parameter type and nothing else's. ChipOption is still re-exported below.
 
 // Re-export the whole type surface. A consumer types its own state against these —
 // FilterGroup[] in particular is the shape a caller must build to use FilterRail, so
@@ -17,20 +19,22 @@ export type {
   ChatMessage,
 } from './types'
 
-// Return true if `value` is the active selection among `options`.
-export function isSegActive<V extends string>(value: V, active: V): boolean {
-  return value === active
-}
-
-// Chip supports single-value or a Set of active values (multi-select filters).
+/* Chip supports a single active value OR a Set of them (multi-select filters), and choosing
+ * between those two shapes is the only real decision in this file — which is why this is the only
+ * predicate left. Chip.vue calls it; a caller reproducing Chip's active-state logic should too.
+ *
+ * REMOVED in 0.7.0: `isSegActive` and `hasVisibleOptions`.
+ *   isSegActive was `return value === active` with zero callers — Seg.vue always inlined the
+ *   comparison. It encoded nothing a caller could not write, and once Seg's modelValue widened to
+ *   `V | null` its own signature could no longer express the contract it was named for.
+ *   hasVisibleOptions was `options.some(o => (o.count ?? 0) > 0)`, also with zero callers, and
+ *   "is a zero-count option worth showing" is a caller's policy, not this kit's mechanics — the
+ *   `muted` flag exists precisely so a host can keep such an option visible.
+ * Neither was used by any component, so their presence claimed a core-logic split that Seg did
+ * not actually have. */
 export function isChipActive<V extends string>(value: V, active: V | Set<V>): boolean {
   if (active instanceof Set) return active.has(value)
   return value === active
-}
-
-// True when any option carries a count > 0 — used by callers to decide visibility.
-export function hasVisibleOptions<V extends string>(options: ChipOption<V>[]): boolean {
-  return options.some((o) => (o.count ?? 0) > 0)
 }
 
 // The transport core is the other half of controls/. Re-exported here because the scrub

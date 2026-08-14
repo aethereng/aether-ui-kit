@@ -29,6 +29,18 @@
   --aether-shadow-hover: 0 2px 6px rgba(27, 30, 35, 0.14);
   --aether-lane-alt: rgba(27, 30, 35, 0.012);
   --aether-radius: 8px;
+  /* Touch-target floors, applied only under `pointer: coarse` (see the block at the end of this
+     file). TWO floors, not one, and the split is the whole point.
+       --aether-touch       44px, the WCAG 2.1 AAA / Apple HIG figure. For controls that stand
+                            alone or where a mis-tap costs something: actions, tabs, nav, fields.
+       --aether-touch-dense 32px, for controls that repeat in a row or a rail -- chips, segment
+                            buttons, enum pickers. Still comfortably past WCAG 2.2 AA's 24px
+                            minimum (2.5.8), which is the level that is actually required.
+     A single 44px floor everywhere was tried first and inflated real headers by 30-35% -- a
+     10-chip filter bar became 94px of chrome -- so density is a first-class input here, not an
+     afterthought. A host wanting the enhanced figure throughout can set both to 44px. */
+  --aether-touch: 44px;
+  --aether-touch-dense: 32px;
   /* The monospace face. A host with a brand mono points
      this at it; the default keeps the kit dependency-free. */
   --aether-font-mono: ui-monospace, monospace;
@@ -656,23 +668,36 @@
      which change colour only. inline-flex + center because a bare min-height would leave the
      label top-aligned in the taller box. */
   .aether-tool {
-    min-height: 44px;
+    min-height: var(--aether-touch);
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
 
+  /* DENSE floor, not the full one. These repeat: a segmented control is 3 buttons, a filter bar
+     is ten chips, a rail is a column of them. At 44px each, a 10-chip bar became 94px of header
+     and every surface lost about a third of its chrome budget. 32px still clears the 24px that
+     WCAG 2.2 AA actually asks for. */
   .aether-seg button,
   .aether-seg--pill button,
   .aether-property-editor__buttons button {
-    min-height: 44px;
+    min-height: var(--aether-touch-dense);
+  }
+
+  /* A .aether-button-group is a joined row of repeated commands -- zoom out / in / fit -- so it
+     is dense by the same test as a Seg, even though its children are .aether-tool. This has to
+     come AFTER the .aether-tool rule above at equal specificity to win; the child combinator
+     does not raise specificity enough to matter here, source order does the work. A tool
+     standing on its own keeps the full floor. */
+  .aether-button-group > .aether-tool {
+    min-height: var(--aether-touch-dense);
   }
 
   /* .aether-chip--row already declares align-items: center; the base chip does not, so it
      needs it here or the label sits high in the grown box. */
   .aether-chip,
   .aether-chip--row {
-    min-height: 44px;
+    min-height: var(--aether-touch-dense);
     align-items: center;
   }
 
@@ -692,7 +717,7 @@
   .aether-property-editor__field input:not([type='checkbox']),
   .aether-property-editor__field select,
   .aether-search input {
-    min-height: 44px;
+    min-height: var(--aether-touch);
   }
 
   /* The search clear button deliberately does NOT take a min-height. It is

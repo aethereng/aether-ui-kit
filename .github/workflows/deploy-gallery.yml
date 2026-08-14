@@ -30,6 +30,25 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # This repo is public. The internal names were scrubbed by hand before v0.2.0 and the
+      # scrub still holds, but nothing enforced it -- one careless comment is all it takes.
+      # Runs before install so it fails in seconds rather than after a full build.
+      #
+      # The pattern is deliberately narrow: it must NOT match this project's own identity
+      # ("@aether/ui-kit", "aethereng/aether-ui-kit", "aethereng.github.io", "Aether
+      # Engineering"), all of which were checked against it. Widen it only after checking the
+      # same way -- a guard that cries wolf gets deleted.
+      # --exclude is this file: it carries the pattern, so scanning .github would match itself
+      # and fail every run. Everything else under .github stays in scope, so a name added to a
+      # future workflow is still caught.
+      - name: Guard — no internal names in the published surface
+        run: |
+          if grep -rniE 'quintus|etere|aetheros|aether-os|deskos|desk-os' \
+               src package.json README.md .github --exclude=deploy-gallery.yml; then
+            echo "::error::Internal name found in the published surface — see the matches above."
+            exit 1
+          fi
+
       - uses: actions/setup-node@v5
         with:
           # Keep in step with .nvmrc. Do NOT lower this: jsdom 30 requires

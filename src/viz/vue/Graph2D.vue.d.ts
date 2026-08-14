@@ -48,8 +48,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {
     onNodeLeave?: (() => any) | undefined;
 }>, {
     width: number;
-    selection: string | null;
     height: number;
+    selection: string | null;
     projection: "ortho2d" | "iso3d";
     running: boolean;
     neighbors: Set<string> | null;

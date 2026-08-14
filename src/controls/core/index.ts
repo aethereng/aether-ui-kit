@@ -16,6 +16,7 @@ export type {
   SegProps,
   ChipProps,
   ToolProps,
+  DisclosureProps,
   ChatMessage,
 } from './types'
 

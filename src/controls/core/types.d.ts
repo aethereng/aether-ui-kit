@@ -58,6 +58,16 @@ export interface ToolProps {
     hot?: boolean;
     disabled?: boolean;
 }
+export interface DisclosureProps {
+    /** Header text, and the toggle's accessible name. */
+    label: string;
+    /** Whether the region is revealed. The caller owns it. */
+    open?: boolean;
+    /** Quieter second line under `label` — a filename, a count, what is inside. */
+    meta?: string;
+    /** Disable the toggle. The region stays in whatever state `open` says. */
+    disabled?: boolean;
+}
 export interface FilterGroup<V extends string = string> {
     key: string;
     label: string;

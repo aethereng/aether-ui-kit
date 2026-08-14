@@ -61,7 +61,7 @@ Not on a public registry. Depend on it by git ref, pinned to a tag:
 ```json
 {
   "dependencies": {
-    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.3.0"
+    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.8.0"
   }
 }
 ```
@@ -109,6 +109,7 @@ That is the whole theming story. There is no theme provider, no runtime, no buil
 | **Seg** | `controls/seg` | One-active segmented selector. `variant="pill"` for the rounded, uppercase form. |
 | **Chip** | `controls/chip` | Toggle chips with counts and colour dots. Multi-select via a `Set`. |
 | **Tool** | `controls/tool` | Header action button: neutral, primary, destructive. A closed variant set, not a style hook. |
+| **Disclosure** | `controls/disclosure` | A collapsible panel whose header row can hold its own controls — a link or badge stays reachable while the panel is shut. Brings its own picker-free chrome; not a <details>, because a <summary> hides everything after it when closed. |
 | **FilterRail** | `controls/filter-rail` | Groups of toggle chips with clear-all and a hidden-count readout. Vertical sidebar or horizontal bar. |
 | **SearchField** | `controls/search-field` | Search input whose clear button appears only once there is something to clear. |
 | **ChatPanel** | `controls/chat-panel` | Message log + compose box for the queue → send → apply-reply agent pattern. Owns the log; you own what Send *does*. |

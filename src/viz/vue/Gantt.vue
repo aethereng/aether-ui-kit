@@ -212,6 +212,15 @@ const anchors = computed(() =>
     </div>
 
     <div class="ag-scroll">
+      <!-- A direct-manipulation surface: pointer drag pans, and a double-click on empty lane space
+           emits `newAt`. It cannot become a button, and a keydown bound to a pan surface is not the
+           keyboard path a user needs.
+           The rule is pointing at something real all the same, and this comment is the record rather
+           than a dismissal: `newAt` has NO keyboard equivalent, so a keyboard-only user cannot
+           create an item by this route. Closing that means an affordance decision — a host-provided
+           "add" control, or a focusable lane with its own key handling — which changes this
+           component's API and is not a lint fix. Left open deliberately, not overlooked. -->
+      <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
       <div
         class="ag-inner"
         :style="{ width: W + 'px', height: SPINE_H + lanesHeight(lanes) + 'px' }"

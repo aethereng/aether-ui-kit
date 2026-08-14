@@ -75,14 +75,17 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
 
   <div class="g-ex" style="flex-basis: 100%">
     <!-- Same state as the bar above, so they read as two views of one transport and the ladder
-         tracks the cycling button. -->
+         tracks the cycling button.
+         No `:speeds` override, deliberately. It used to pass [0.2, 0.5, 1, 2, 5] while the cycling
+         button beside it stepped through DEFAULT_SPEEDS [0.25, 0.5, 1, 2, 4], which made the
+         sentence above false: cycling to 0.25 or 4 highlighted nothing in this row, and clicking 0.2
+         or 5 set a speed the button could not reach. Both now read the one ladder. -->
     <span class="g-variant">speed-mode="presets" — the whole ladder, laid out</span>
     <Transport
       :current="current"
       :duration="duration"
       :playing="playing"
       :speed="speed"
-      :speeds="[0.2, 0.5, 1, 2, 5]"
       speed-mode="presets"
       @toggle="onToggle"
       @seek="onSeek"

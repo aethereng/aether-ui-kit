@@ -1,5 +1,6 @@
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
+import pluginA11y from 'eslint-plugin-vuejs-accessibility'
 import tseslint from 'typescript-eslint'
 import prettier from 'eslint-config-prettier'
 
@@ -41,6 +42,22 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'off',
       'vue/multi-word-component-names': 'off',
       'vue/no-v-html': 'off',
+    },
+  },
+  {
+    /* Two a11y rules, not the plugin's whole recommended preset. They are here because a consuming
+     * app shipped a `<div @click>` as the only way to open a review packet: it took no focus, so
+     * Tab skipped it and the surface was unusable without a mouse. Nothing errored, tests passed,
+     * and it looked correct -- which is exactly the failure a linter catches and review does not.
+     *
+     * Deliberately narrow. The full preset also rules on label association, media captions and
+     * heading content, which are real but are a style decision across an existing codebase; these
+     * two encode one specific defect class and should stay at error with no backlog to triage. */
+    files: ['**/*.vue'],
+    plugins: { 'vuejs-accessibility': pluginA11y },
+    rules: {
+      'vuejs-accessibility/click-events-have-key-events': 'error',
+      'vuejs-accessibility/no-static-element-interactions': 'error',
     },
   },
 )

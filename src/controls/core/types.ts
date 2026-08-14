@@ -68,6 +68,35 @@ export interface ToolProps {
   disabled?: boolean
 }
 
+/* A collapsible panel: a header row that stays visible, and a region below it that does not.
+ *
+ * CONTROLLED, like Graph2D/Gantt/Transport -- the caller owns `open` and the component emits
+ * `update:open`, so `v-model:open` works. It never toggles itself. Deliberate: both app consumers
+ * key open-state by row (a filename, a group id), which a self-managing panel cannot express.
+ *
+ * Why this is NOT a <details>/<summary>, which would give the whole keyboard and screen-reader
+ * contract for free: everything after a <summary> is hidden while the panel is closed -- verified,
+ * not assumed (`checkVisibility()` returns false and the element does not hit-test) -- so a header
+ * control that must stay reachable when collapsed cannot live there. Putting it INSIDE the summary
+ * instead flattens it in the accessibility tree — the exact defect a consuming app shipped, where a
+ * link inside the click target needed an inline stopPropagation to work at all, and the header took
+ * no keyboard focus. A header row the component owns can hold both; a <summary> cannot.
+ * The one thing <details> gave that had to be rebuilt is find-in-page reaching collapsed text --
+ * see `hidden="until-found"` in Disclosure.vue.
+ *
+ * `meta` is a prop rather than a slot so the toggle's accessible name stays deterministic;
+ * `#aside` is for header controls and renders OUTSIDE the button, never nested in it. */
+export interface DisclosureProps {
+  /** Header text, and the toggle's accessible name. */
+  label: string
+  /** Whether the region is revealed. The caller owns it. */
+  open?: boolean
+  /** Quieter second line under `label` — a filename, a count, what is inside. */
+  meta?: string
+  /** Disable the toggle. The region stays in whatever state `open` says. */
+  disabled?: boolean
+}
+
 // A named group of toggles inside a FilterRail. `options` are ChipOption rows;
 // `selected` is the active Set for this group. Grouping + selection are data —
 // the rail renders one Chip row per group and wires toggle/clear mechanically.

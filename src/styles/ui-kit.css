@@ -621,6 +621,81 @@
    Higher SPECIFICITY, not source order, is what strips the inner input's own border/padding/width
    below: getting order right in this file has already cost two regressions, so where either would
    work, prefer specificity. */
+/* A <select>'s dropdown highlights the hovered option with the system blue, the same off-palette
+   colour the date field's segments had — but unlike the date picker, this one HAS a platform fix.
+   `appearance: base-select` opts the control into the customizable-select rendering, which makes
+   the popup and its options ordinary styleable boxes. (This is exactly the opt-in that does not
+   exist for date inputs: `base-select` is the only `base-*` appearance value there is, which is why
+   the date field had to bring its own picker and this one does not.)
+   Behind @supports on purpose: where it is unsupported the native control is left completely alone,
+   because base-select strips the native appearance wholesale and a browser that ignores the opt-in
+   while applying the option styling below would render a half-built dropdown. */
+@supports (appearance: base-select) {
+  .aether-property-editor__field select {
+    appearance: base-select;
+  }
+  /* The disclosure arrow the base appearance draws for us. */
+  .aether-property-editor__field select::picker-icon {
+    color: var(--aether-ink-soft);
+    transition: rotate 0.15s ease;
+  }
+  .aether-property-editor__field select:open::picker-icon {
+    rotate: 180deg;
+  }
+  .aether-property-editor__field select::picker(select) {
+    appearance: base-select;
+    margin-top: 4px;
+    padding: 4px;
+    border: 1px solid var(--aether-line-strong);
+    border-radius: 9px;
+    background: var(--aether-surface);
+    box-shadow: var(--aether-shadow);
+  }
+  .aether-property-editor__field select option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 9px;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--aether-ink);
+    font-size: 13.5px;
+  }
+  /* The blue, replaced. `:hover` is the pointer highlight and `:focus` the keyboard one — both are
+     needed, or arrowing through the list leaves the system colour in place for keyboard users. */
+  .aether-property-editor__field select option:hover,
+  .aether-property-editor__field select option:focus {
+    background: var(--aether-cool-wash);
+    color: var(--aether-cool);
+  }
+  .aether-property-editor__field select option:checked {
+    font-weight: 650;
+  }
+  /* The tick beside the selected row, which base-select adds and the native control never had. */
+  .aether-property-editor__field select option::checkmark {
+    color: var(--aether-cool);
+  }
+}
+
+/* The date field is the same construction, so its inner input needs the same treatment: the box is
+   the wrapper (.aether-datefield, styled in DateField.vue) and the input inside it must give up its
+   own border, background and padding. This rule lives here rather than in the component because a
+   scoped rule compiles to `.aether-datefield__input[data-v-x]` — two classes — and would LOSE to
+   `.aether-property-editor__field input[type='date']` above, which is two classes plus an element.
+   Same lesson as the number field: where either order or specificity would work, use specificity. */
+.aether-property-editor__field .aether-datefield input[type='date'] {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+.aether-property-editor__field .aether-datefield input[type='date']:focus {
+  outline: none;
+}
+
 .aether-property-editor__number {
   display: flex;
   align-items: center;
@@ -691,16 +766,25 @@
 .aether-property-editor__field input[type='date']::-webkit-datetime-edit-year-field:empty {
   color: var(--aether-faint);
 }
-/* The selected segment while typing: accent-color does not reach this, it needs a real background. */
-.aether-property-editor__field
-  input[type='date']::-webkit-datetime-edit-day-field:focus,
-.aether-property-editor__field
-  input[type='date']::-webkit-datetime-edit-month-field:focus,
-.aether-property-editor__field
-  input[type='date']::-webkit-datetime-edit-year-field:focus {
-  background: var(--aether-cool-wash);
-  color: var(--aether-cool);
-  outline: none;
+/* The active segment, and why this is `background: transparent` on ALL THREE rather than a palette
+   colour on the focused one.
+   Chrome paints the segment you are typing in with its own system highlight -- a blue that belongs
+   to no palette. The obvious fix, and what stood here before, was
+   `::-webkit-datetime-edit-month-field:focus { background: var(--aether-cool-wash) }`. It never
+   worked: the sub-field NEVER RECEIVES :focus. Focus stays on the <input> and Chrome marks the
+   active segment internally, with no selector exposed for it. Proven in-browser with three probes --
+   an unconditional background on the sub-field paints, while the same rule behind `:focus` and a
+   `::selection` rule both do nothing. So the rule that lived here was dead code that read like a fix.
+   Since only an unconditional rule matches, the active segment cannot be tinted on its own: the
+   choice is the browser's blue, or none. None wins, because a stray system-blue block inside a
+   themed form is the thing people actually notice. "Which field am I in" is carried by the input's
+   own focus ring below; "which segment" is carried by the caret. */
+.aether-property-editor__field input[type='date']::-webkit-datetime-edit-day-field,
+.aether-property-editor__field input[type='date']::-webkit-datetime-edit-month-field,
+.aether-property-editor__field input[type='date']::-webkit-datetime-edit-year-field {
+  background: transparent;
+  border-radius: 3px;
+  padding: 0 1px;
 }
 /* The calendar glyph is UA-drawn and cannot take `color`; opacity is the only honest lever, and it
    at least stops a hard black icon sitting next to softened ink. */

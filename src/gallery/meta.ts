@@ -102,6 +102,22 @@ export const COMPONENTS: CompMeta[] = [
     emits: [{ name: 'click', type: '[]' }],
   },
   {
+    id: 'disclosure',
+    name: 'Disclosure',
+    subpath: '@aether/ui-kit/controls/disclosure',
+    group: 'Controls',
+    blurb: 'A collapsible panel whose header row can hold its own controls.',
+    detail:
+      'Controlled: the caller owns `open` and binds `v-model:open`, so open-state can be keyed by row and persisted. Deliberately not a <details>/<summary>, which would have given the keyboard and screen-reader contract for free — but everything after a <summary> is hidden while the panel is closed, so a header control cannot stay reachable there, and nesting it inside the summary flattens it in the accessibility tree. That is what the #aside slot is for, and why this owns its header row. Collapsed content still uses hidden="until-found", so find-in-page reaches it and the resulting beforematch becomes update:open.',
+    props: [
+      { name: 'label', type: 'string', note: 'header text, and the toggle’s accessible name' },
+      { name: 'open', type: 'boolean?', note: 'controlled by the caller; the panel never self-toggles' },
+      { name: 'meta', type: 'string?', note: 'quieter second line — a filename, a count, what is inside' },
+      { name: 'disabled', type: 'boolean?', note: 'the toggle emits nothing' },
+    ],
+    emits: [{ name: 'update:open', type: '[boolean]', note: 'also fired by find-in-page reveal' }],
+  },
+  {
     id: 'filter-rail',
     name: 'FilterRail',
     subpath: '@aether/ui-kit/controls/filter-rail',

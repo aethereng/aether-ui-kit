@@ -1,6 +1,6 @@
 {
   "name": "@aether/ui-kit",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Framework-free component cores with thin Vue wrappers, for engineering interfaces.",
   "license": "Apache-2.0",
   "type": "module",
@@ -41,6 +41,10 @@
     "./controls/tool": {
       "types": "./src/controls/vue/Tool.vue.d.ts",
       "import": "./src/controls/vue/Tool.vue"
+    },
+    "./controls/disclosure": {
+      "types": "./src/controls/vue/Disclosure.vue.d.ts",
+      "import": "./src/controls/vue/Disclosure.vue"
     },
     "./controls/chat-panel": {
       "types": "./src/controls/vue/ChatPanel.vue.d.ts",
@@ -111,6 +115,7 @@
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-vue": "^9.33.0",
+    "eslint-plugin-vuejs-accessibility": "^2.6.0",
     "jsdom": "^30.0.1",
     "npm-run-all2": "^7.0.2",
     "prettier": "3.5.3",

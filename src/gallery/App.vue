@@ -21,6 +21,8 @@ import ChipExample from './examples/ChipExample.vue'
 import ChipExampleSrc from './examples/ChipExample.vue?raw'
 import ToolExample from './examples/ToolExample.vue'
 import ToolExampleSrc from './examples/ToolExample.vue?raw'
+import DisclosureExample from './examples/DisclosureExample.vue'
+import DisclosureExampleSrc from './examples/DisclosureExample.vue?raw'
 import SearchFieldExample from './examples/SearchFieldExample.vue'
 import SearchFieldExampleSrc from './examples/SearchFieldExample.vue?raw'
 import FilterRailExample from './examples/FilterRailExample.vue'
@@ -131,6 +133,12 @@ const groupAnchor = (g: Group) => g.toLowerCase()
       >{{ c.name }}</a>
     </template>
   </aside>
+  <!-- A scrim is a mouse convenience, and it cannot carry the keyboard path the rule asks for: it
+       is not focusable, so a keydown bound here would never fire. The keyboard equivalent already
+       exists elsewhere and is what makes this dismissible without a pointer — `onRailKey` closes on
+       Escape, and the toggle carries aria-expanded. Disabled with that as the reason, not to quiet
+       the rule. -->
+  <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
   <div v-if="railOpen" class="g-rail__scrim" @click="railOpen = false"></div>
 
   <div id="top" class="gallery">
@@ -193,6 +201,10 @@ const groupAnchor = (g: Group) => g.toLowerCase()
 
         <GSection v-else-if="c.id === 'tool'" :meta="c" :source="ToolExampleSrc">
           <ToolExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'disclosure'" :meta="c" :source="DisclosureExampleSrc">
+          <DisclosureExample />
         </GSection>
 
         <GSection v-else-if="c.id === 'filter-rail'" :meta="c" :source="FilterRailExampleSrc">

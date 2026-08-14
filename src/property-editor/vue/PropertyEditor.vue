@@ -6,6 +6,7 @@
 import { computed, onScopeDispose, reactive, watch } from 'vue'
 import { coerceNumberInput, numberStep, PropertyEditorEngine } from '../core/PropertyEditorEngine'
 import type { FieldDescriptor, FieldValues } from '../core/types'
+import DateField from './DateField.vue'
 
 const props = defineProps<{
   fields: FieldDescriptor[]
@@ -115,12 +116,13 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
         @input="onFieldInput(field.key, ($event.target as HTMLTextAreaElement).value)"
       />
 
-      <input
+      <!-- Not a bare <input type="date">: the browser's own picker popup cannot be styled, so this
+           wrapper suppresses it and supplies one built from the kit's tokens. See DateField.vue. -->
+      <DateField
         v-else-if="field.type === 'date'"
         :id="`pe-${field.key}`"
-        type="date"
-        :value="view[field.key] as string"
-        @input="onFieldInput(field.key, ($event.target as HTMLInputElement).value)"
+        :model-value="view[field.key] as string"
+        @update:model-value="onFieldInput(field.key, $event)"
       />
 
       <input

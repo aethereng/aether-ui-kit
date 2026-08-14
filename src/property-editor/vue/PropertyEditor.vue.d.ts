@@ -3,19 +3,19 @@ type __VLS_Props = {
     fields: FieldDescriptor[];
     modelValue: FieldValues;
 };
-declare var __VLS_1: {
+declare var __VLS_8: {
     field: FieldDescriptor;
     value: unknown;
     set: (v: unknown) => void;
-}, __VLS_3: {
+}, __VLS_10: {
     field: FieldDescriptor;
     value: unknown;
     set: (v: unknown) => void;
 };
 type __VLS_Slots = {} & {
-    reference?: (props: typeof __VLS_1) => any;
+    reference?: (props: typeof __VLS_8) => any;
 } & {
-    placement?: (props: typeof __VLS_3) => any;
+    placement?: (props: typeof __VLS_10) => any;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {
     isValid: () => boolean;

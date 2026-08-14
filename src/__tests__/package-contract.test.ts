@@ -182,6 +182,14 @@ describe('every symbol a core module exports is reachable through the exports ma
     const barrel = readFileSync(resolve(root, barrelPath), 'utf8')
     const src = readFileSync(resolve(root, file), 'utf8')
 
+    /* `core/` means framework-free, not public — those are different axes, and this test originally
+     * conflated them. A module marked @internal is logic a component keeps to itself, and demanding
+     * it be re-exported would force private helpers into the public API just to satisfy the check.
+     * The marker has to be explicit: the invariant worth keeping is that a module intended as PUBLIC
+     * is reachable, and intent that is never written down cannot be distinguished from an omission —
+     * which is the exact bug this test was added to catch. */
+    if (/@internal\b/.test(src)) return
+
     const exported = [
       ...Array.from(src.matchAll(/^export\s+(?:async\s+)?function\s+([A-Za-z_]\w*)/gm), (m) => m[1]!),
       ...Array.from(src.matchAll(/^export\s+(?:const|class)\s+([A-Za-z_]\w*)/gm), (m) => m[1]!),

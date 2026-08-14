@@ -7,38 +7,42 @@
  * components re-theme with it because they never hardcode a colour. */
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import GSection from './GSection.vue'
+/* The nav's two buttons are the kit's own Tool. This page is the kit's proof, so its chrome
+ * should be built from it: a hand-rolled <button> here would mean a Tool regression could not
+ * show up on the page that documents Tool. It also makes the two the same height on every
+ * pointer type by construction, including the 44px coarse floor. */
+import Tool from '@aether/ui-kit/controls/tool'
 import { COMPONENTS, GROUPS, byGroup, type Group } from './meta'
 /* Examples live in their own files so the gallery can RENDER one and DISPLAY its source from the
  * same bytes -- see GSection's `source` prop. `?raw` is Vite giving us the file as a string. */
 import SegExample from './examples/SegExample.vue'
 import SegExampleSrc from './examples/SegExample.vue?raw'
+import ChipExample from './examples/ChipExample.vue'
+import ChipExampleSrc from './examples/ChipExample.vue?raw'
+import ToolExample from './examples/ToolExample.vue'
+import ToolExampleSrc from './examples/ToolExample.vue?raw'
+import SearchFieldExample from './examples/SearchFieldExample.vue'
+import SearchFieldExampleSrc from './examples/SearchFieldExample.vue?raw'
+import FilterRailExample from './examples/FilterRailExample.vue'
+import FilterRailExampleSrc from './examples/FilterRailExample.vue?raw'
+import ChatPanelExample from './examples/ChatPanelExample.vue'
+import ChatPanelExampleSrc from './examples/ChatPanelExample.vue?raw'
+import ToastExample from './examples/ToastExample.vue'
+import ToastExampleSrc from './examples/ToastExample.vue?raw'
+import TransportExample from './examples/TransportExample.vue'
+import TransportExampleSrc from './examples/TransportExample.vue?raw'
+import PropertyEditorExample from './examples/PropertyEditorExample.vue'
+import PropertyEditorExampleSrc from './examples/PropertyEditorExample.vue?raw'
+import Graph2DExample from './examples/Graph2DExample.vue'
+import Graph2DExampleSrc from './examples/Graph2DExample.vue?raw'
+import GanttExample from './examples/GanttExample.vue'
+import GanttExampleSrc from './examples/GanttExample.vue?raw'
 
-import Seg from '@/controls/vue/Seg.vue'
-import Chip from '@/controls/vue/Chip.vue'
-import Tool from '@/controls/vue/Tool.vue'
-import FilterRail from '@/controls/vue/FilterRail.vue'
-import SearchField from '@/controls/vue/SearchField.vue'
-import Transport from '@/controls/vue/Transport.vue'
-import ChatPanel from '@/controls/vue/ChatPanel.vue'
-import PropertyEditor from '@/property-editor/vue/PropertyEditor.vue'
-import Graph2D from '@/viz/vue/Graph2D.vue'
-import Gantt from '@/viz/vue/Gantt.vue'
 
-import { ForceLayout } from '@/viz/core'
-import { computePPD } from '@/viz/core/gantt'
-import type { GNode, GEdge } from '@/viz/core'
-import type { GanttItem, GanttLane } from '@/viz/core/gantt'
-import type { ChatMessage } from '@/controls/core'
-import type { SegOption, ChipOption, FilterGroup } from '@/controls/core/types'
-import type { FieldDescriptor, FieldValues as PEValues } from '@/property-editor/core/types'
 
 /* ── page theme — the kit's token contract, demonstrated rather than described ── */
 const THEME_KEY = 'aether-theme'
 const theme = ref<'paper' | 'timber'>('paper')
-const themeOpts: SegOption[] = [
-  { value: 'paper', label: 'Light' },
-  { value: 'timber', label: 'Dark' },
-]
 function applyTheme(t: 'paper' | 'timber') {
   theme.value = t
   document.documentElement.setAttribute('data-theme', t)
@@ -67,365 +71,6 @@ const stats = computed(() => ({
   props: COMPONENTS.reduce((n, c) => n + c.props.length, 0),
 }))
 
-/* ── Chip ── */
-const active = ref<Set<string>>(new Set(['fact', 'risk']))
-const chipOpts: ChipOption[] = [
-  { value: 'fact', label: 'Facts', count: 6, dotColor: 'var(--aether-cool-soft)' },
-  { value: 'idea', label: 'Ideas', count: 3 },
-  { value: 'risk', label: 'Risks', count: 2, dotColor: 'var(--aether-warm)' },
-  { value: 'link', label: 'Links', count: 0, muted: true },
-  { value: 'lane', label: 'Colour-accented', count: 4, color: 'var(--aether-warm)' },
-  // a swatch carries the encoding of the thing being filtered, so the chips ARE the legend
-  { value: 'planned', label: 'Planned', count: 5, swatch: 'border:1.5px dashed var(--aether-warm)' },
-  { value: 'shipped', label: 'Shipped', count: 9, swatch: 'background:var(--aether-cool);opacity:.45' },
-]
-function toggleChip(v: string) {
-  const next = new Set(active.value)
-  if (next.has(v)) next.delete(v)
-  else next.add(v)
-  active.value = next
-}
-
-/* ── Tool ── */
-const pressed = ref(0)
-
-/* ── FilterRail ── */
-const railGroups = ref<FilterGroup[]>([
-  {
-    key: 'type',
-    label: 'Type',
-    selected: new Set<string>(),
-    options: [
-      { value: 'fact', label: 'Fact', count: 6, dotColor: 'var(--aether-cool)' },
-      { value: 'idea', label: 'Idea', count: 3, dotColor: 'var(--aether-warm)' },
-      { value: 'risk', label: 'Risk', count: 2 },
-    ],
-  },
-  {
-    key: 'status',
-    label: 'Status',
-    selected: new Set<string>(),
-    options: [
-      { value: 'open', label: 'Open', count: 4 },
-      { value: 'done', label: 'Done', count: 7 },
-    ],
-  },
-])
-const railHidden = ref(0)
-function onRailToggle(groupKey: string, value: string) {
-  const g = railGroups.value.find((x) => x.key === groupKey)
-  if (!g) return
-  const next = new Set(g.selected)
-  if (next.has(value)) next.delete(value)
-  else next.add(value)
-  g.selected = next
-  railHidden.value = railGroups.value.reduce((n, gg) => n + gg.selected.size, 0)
-}
-function onRailClear() {
-  railGroups.value.forEach((g) => (g.selected = new Set()))
-  railHidden.value = 0
-}
-
-/* ── SearchField ── */
-const query = ref('')
-const cleared = ref(0)
-
-/* ── Transport — the demo owns the clock; Transport renders + emits ── */
-const tCur = ref(0)
-const tDur = ref(6)
-const tPlaying = ref(false)
-const tSpeed = ref(1)
-let tRaf = 0
-let tLast = 0
-function tStep(ts: number) {
-  if (!tPlaying.value) return
-  const dt = (ts - tLast) / 1000
-  tLast = ts
-  tCur.value += dt * tSpeed.value
-  if (tCur.value >= tDur.value) {
-    tCur.value = tDur.value
-    tPlaying.value = false
-    return
-  }
-  tRaf = requestAnimationFrame(tStep)
-}
-function tToggle() {
-  if (tPlaying.value) {
-    tPlaying.value = false
-    return
-  }
-  if (tCur.value >= tDur.value) tCur.value = 0
-  tPlaying.value = true
-  tLast = performance.now()
-  if (tRaf) cancelAnimationFrame(tRaf)
-  tRaf = requestAnimationFrame(tStep)
-}
-function tSeek(t: number) {
-  tCur.value = Math.max(0, Math.min(t, tDur.value))
-}
-let tWasPlaying = false
-function tScrubStart() {
-  tWasPlaying = tPlaying.value
-  tPlaying.value = false
-}
-function tScrubEnd() {
-  if (tWasPlaying) tToggle()
-}
-
-/* ── PropertyEditor ── */
-const peFields: FieldDescriptor[] = [
-  { key: 'title', label: 'Title', type: 'text', placeholder: 'Untitled' },
-  { key: 'body', label: 'Body', type: 'textarea', placeholder: 'Write…' },
-  {
-    key: 'kind',
-    label: 'Kind',
-    type: 'enum',
-    variant: 'buttons',
-    options: [
-      { value: 'fact', label: 'Fact' },
-      { value: 'idea', label: 'Idea' },
-      { value: 'risk', label: 'Risk' },
-    ],
-  },
-  { key: 'live', label: 'Live', type: 'boolean' },
-]
-const peValues: PEValues = { title: '', body: '', kind: 'fact', live: true }
-const peOut = ref<PEValues>({ ...peValues })
-
-/* ── Graph2D ──
- * Deliberately run CONTROLLED (:running="false"), the way a host that owns its own node
- * positions does: the caller owns nodes[].pos and drives the force sim with the exported
- * ForceLayout. That is the whole thesis made visible — the layout core is framework-free
- * and usable without the component, and the component only renders + emits. It is also the
- * only mode where dragging a node can work, because in running mode the component's
- * internal layout owns the positions and a caller's write is ignored. */
-const palette = ['var(--aether-cool)', 'var(--aether-warm)', 'var(--aether-cool-soft)']
-const GRAPH_W = 560
-const GRAPH_H = 360
-/* Positions are VIEWPORT coordinates and the sim is clamped to the stage, so the graph is
- * drawn 1:1: nothing can wander off the canvas and a dragged node sits exactly under the
- * cursor. Refitting the cloud every frame instead made the scale drift as nodes moved, and a
- * drag tracked at about a third of the pointer. */
-const GRAPH_BOUNDS: [number, number, number, number] = [30, 24, GRAPH_W - 30, GRAPH_H - 20]
-const gNodes = ref<GNode[]>(
-  Array.from({ length: 18 }, (_, i) => ({
-    id: 'n' + i,
-    pos: [GRAPH_W / 2 + (Math.random() - 0.5) * 220, GRAPH_H / 2 + (Math.random() - 0.5) * 180, 0],
-    label: i % 5 === 0 ? 'hub' + i : undefined,
-    color: palette[i % 3],
-    r: i % 5 === 0 ? 10 : 5,
-  })),
-)
-const gEdges: GEdge[] = []
-for (let i = 1; i < gNodes.value.length; i++) {
-  const target = i % 5 === 0 ? i : Math.floor(i / 5) * 5
-  gEdges.push({ a: 'n' + target, b: 'n' + i, w: 1 })
-}
-const gClicked = ref<string>('—')
-const gSelected = ref<string | null>(null)
-const gDragged = ref<string>('—')
-
-// The gallery drives the kit's exported ForceLayout itself — the clearest possible proof
-// that the layout core is framework-free and usable without the component. The sim owns its
-// own node copies and we publish a fresh array each frame; replacing the objects (rather
-// than mutating pos in place) is what actually makes Vue re-render.
-const gLayout = new ForceLayout(
-  gNodes.value.map((n) => ({ ...n, pos: [...n.pos] })),
-  gEdges,
-  { dims: 3, bounds: GRAPH_BOUNDS },
-)
-const publish = () => {
-  gNodes.value = gLayout.nodes.map((n) => ({ ...n, pos: [...n.pos] }))
-}
-const gRunning = ref(true)
-let gRaf = 0
-function gLoop() {
-  gLayout.step()
-  publish()
-  // the sim decides when it is done -- alpha decays every step and a drag re-heats it
-  if (!gLayout.running) {
-    gRunning.value = false
-    return
-  }
-  gRaf = requestAnimationFrame(gLoop)
-}
-function ensureRunning() {
-  if (gRunning.value) return
-  gRunning.value = true
-  gRaf = requestAnimationFrame(gLoop)
-}
-function gRerun() {
-  gLayout.reheat(1)
-  ensureRunning()
-}
-// neighbours of the selection, to show the `neighbors` emphasis prop doing something
-const gNeighbors = computed<Set<string> | null>(() => {
-  if (!gSelected.value) return null
-  const s = new Set<string>([gSelected.value])
-  for (const e of gEdges) {
-    if (e.a === gSelected.value) s.add(e.b)
-    if (e.b === gSelected.value) s.add(e.a)
-  }
-  return s
-})
-function onGraphNodeClick(id: string) {
-  gClicked.value = id
-  gSelected.value = gSelected.value === id ? null : id
-}
-
-/* Zoom is driven through the component's exposed methods rather than a prop, because the
- * host owns the chrome: the kit ships the behaviour, you ship the buttons.
- *
- * Bound with a FUNCTION ref, not `ref="gGraph"`. Every section here is rendered inside a
- * v-for, and a string ref under a v-for collects into an ARRAY -- so `gGraph.zoomIn` was
- * undefined and `gGraph?.zoomIn()` swallowed it silently: all three buttons dead, no error.
- * Same reason the Gantt host below uses a function ref. */
-type GraphApi = { zoomIn: () => void; zoomOut: () => void; zoomFit: (pad?: number) => void }
-const gGraph = ref<GraphApi | null>(null)
-const gZoom = ref(1)
-
-/* The hover card is the host's, not the kit's — Graph2D emits which node and where the
- * pointer is, and only the host knows what a node means. */
-const gHover = ref<{ id: string; x: number; y: number } | null>(null)
-function onGraphHover(id: string, x: number, y: number) {
-  gHover.value = { id, x: x + 14, y: y + 14 }
-}
-const gHoverNode = computed(() =>
-  gHover.value ? gNodes.value.find((n) => n.id === gHover.value!.id) : null,
-)
-const gHoverDegree = computed(() =>
-  gHover.value ? gEdges.filter((e) => e.a === gHover.value!.id || e.b === gHover.value!.id).length : 0,
-)
-function onGraphDrag(id: string, x: number, y: number) {
-  // `drag` reports viewport coords, and with mapping="direct" those ARE the coordinates the
-  // layout works in — no inverse transform, and no scale to get wrong. Pin so the node tracks
-  // the cursor, re-heat so its neighbours relax around it.
-  gLayout.pin(id, [x, y, 0])
-  // Publish straight away rather than waiting for the next animation frame. The frame is not
-  // guaranteed — requestAnimationFrame is paused whenever the tab is not visible — and a node
-  // that only follows the cursor while the sim happens to be ticking is a node that stutters.
-  publish()
-  gLayout.reheat(0.5)
-  ensureRunning()
-  gDragged.value = id
-}
-function onGraphDragEnd(id: string) {
-  gLayout.unpin(id)
-  gLayout.reheat(0.3) // let the neighbourhood settle back after release
-  ensureRunning()
-}
-onMounted(() => {
-  gRaf = requestAnimationFrame(gLoop)
-})
-onBeforeUnmount(() => cancelAnimationFrame(gRaf))
-
-/* ── Gantt ── */
-const gItems = ref<GanttItem[]>([
-  { id: 'a1', start: 2, end: 9, type: 'design', status: 'done', title: 'Concept' },
-  { id: 'a2', start: 10, end: 20, type: 'design', status: 'open', title: 'Schematics' },
-  // several one-day items, some sharing a date: this is what the density row exists for
-  { id: 'b1', start: 12, type: 'fabricate', status: 'open', title: 'Cut members' },
-  { id: 'b3', start: 12, type: 'fabricate', status: 'done', title: 'Order plate' },
-  { id: 'b4', start: 12, type: 'fabricate', status: 'open', title: 'Mark holes' },
-  { id: 'b5', start: 34, type: 'fabricate', status: 'open', title: 'Ship batch' },
-  { id: 'b2', start: 21, end: 30, type: 'fabricate', status: 'open', title: 'Weld frame' },
-  { id: 'c1', start: 31, end: 45, type: 'erect', status: 'open', title: 'Site assembly' },
-  { id: 'x1', start: 0, type: 'design', anchor: true, status: 'done', title: 'Day-0 kickoff' },
-  { id: 'x2', start: 24, type: 'erect', anchor: true, status: 'open', title: 'Steel milestone' },
-])
-const gLanes: GanttLane[] = [
-  { type: 'design', name: 'Design', color: 'var(--aether-cool-soft)', wash: 'var(--aether-cool-wash)' },
-  { type: 'fabricate', name: 'Fabricate', color: 'var(--aether-warm)', wash: 'rgba(230,160,60,0.16)' },
-  { type: 'erect', name: 'Erect', color: 'var(--aether-ink-soft)', wash: 'rgba(120,120,140,0.16)' },
-]
-const gSel = ref<string | null>(null)
-const gExpanded = ref<string>('—')
-
-/* Zoom to fit. The chart was pinned at 26px/day, so 60 days always came to 1560px and always
- * scrolled, even on a wide desktop with room to spare. computePPD divides the width we
- * actually have by the days we actually show, with a floor so a phone still gets a legible
- * chart behind a scroller rather than an illegible one that fits. */
-const GANTT_DAYS = 60
-// a fixed day index, not a real date: the component works in day indices, and a demo whose
-// marker wanders with the calendar would be a demo nobody can screenshot
-const GANTT_TODAY = 18
-/* Week furniture. The component knows only day indices, so the CALLER decides which days are
- * weekends and where weeks begin -- that is what keeps Gantt usable on a schedule that is not
- * a calendar at all. Day 0 is treated as a Monday here. */
-const gWeekends = Array.from({ length: GANTT_DAYS }, (_, i) => i).filter((i) => i % 7 === 5)
-const gWeekdays = Array.from({ length: GANTT_DAYS }, (_, i) => i).filter((i) => i > 0 && i % 7 === 0)
-const gWeekLabels = gWeekdays.map((d) => ({ day: d, label: 'W' + (d / 7 + 1) }))
-const gantHost = ref<HTMLElement | null>(null)
-const gPpd = ref(26)
-let gRO: ResizeObserver | null = null
-function measureGantt() {
-  // NOTE: a plain `ref="..."` here would be collected into an ARRAY, because this sits
-  // inside the v-for over components — clientWidth came back undefined and the chart
-  // silently kept its default zoom. Hence the function ref.
-  // Measure the SCROLLER, not the host: the chart also renders a lane-label gutter, so the
-  // days get roughly 130px less than the section is wide. Sizing off the host overshot and
-  // the chart still scrolled. clientWidth here is unaffected by ppd (only scrollWidth is),
-  // so this cannot feed back into itself.
-  const host = gantHost.value
-  if (!host) return
-  const scroller = host.querySelector('.ag-scroll') as HTMLElement | null
-  const w = scroller?.clientWidth || host.clientWidth
-  if (w > 0) gPpd.value = computePPD('all', w, GANTT_DAYS)
-}
-onMounted(() => {
-  measureGantt()
-  if (typeof ResizeObserver !== 'undefined') {
-    gRO = new ResizeObserver(measureGantt)
-    if (gantHost.value) gRO.observe(gantHost.value)
-    // measure again once the chart has laid out and the scroller exists
-    requestAnimationFrame(measureGantt)
-  }
-})
-onBeforeUnmount(() => gRO?.disconnect())
-// Period boundaries, deliberately NOT month names: Gantt works in day indices and never
-// touches dates, so a demo naming real months would contradict the component it documents.
-const gMarkers = [
-  { day: 0, label: 'Month 1' },
-  { day: 31, label: 'Month 2' },
-]
-function onGanttMove(id: string, start: number, end: number | null) {
-  const it = gItems.value.find((x) => x.id === id)
-  if (!it) return
-  it.start = start
-  it.end = end
-}
-function onGanttResize(id: string, edge: 'l' | 'r', value: number) {
-  const it = gItems.value.find((x) => x.id === id)
-  if (!it) return
-  if (edge === 'l') it.start = value
-  else it.end = value
-}
-function onGanttNewAt(day: number, type: string) {
-  gItems.value.push({ id: 'n' + day + type, start: day, type, status: 'open', title: 'New ' + type })
-}
-
-// ── ChatPanel ──
-// A fake round trip: Send marks the queued messages sent, Apply reply hands back a
-// canned agent line. Real hosts export/import an actual file; the gallery mimics the
-// round trip without one so the demo is self-contained.
-const cMessages = ref<ChatMessage[]>([{ role: 'agent', text: 'Ready when you are.' }])
-const cCompose = ref('')
-function cQueue() {
-  const t = cCompose.value.trim()
-  if (!t) return
-  cMessages.value.push({ role: 'you', text: t, queued: true })
-  cCompose.value = ''
-}
-function cSend() {
-  const reqs = cMessages.value.filter((m) => m.role === 'you' && m.queued)
-  if (!reqs.length) return
-  reqs.forEach((m) => (m.queued = false))
-  cMessages.value.push({ role: 'sys', text: 'Sent ' + reqs.length + ' request(s) — exported as request.json.' })
-}
-function cApplyReply() {
-  cMessages.value.push({ role: 'agent', text: 'Done — see the diff.' })
-}
-
 /* The component rail. Open state only matters below the dock breakpoint, where it is a
    sheet; above it the rail is permanently docked and this flag is inert. */
 const railOpen = ref(false)
@@ -449,21 +94,24 @@ const groupAnchor = (g: Group) => g.toLowerCase()
   <nav class="g-nav">
     <div class="g-nav__in">
       <a class="g-nav__brand" href="#top">@aether/ui-kit</a>
-      <button
-        class="g-nav__trigger"
-        type="button"
+      <Tool
+        class="g-nav__railtoggle"
+        :label="railOpen ? 'Close' : 'Components'"
         :aria-expanded="railOpen"
         aria-controls="g-rail"
         @click="railOpen = !railOpen"
-      >
-        {{ railOpen ? 'Close' : 'Components' }}
-      </button>
+      />
       <span class="g-nav__spacer" />
-      <Seg
-        :options="themeOpts"
-        :model-value="theme"
-        aria-label="Theme"
-        @change="applyTheme($event as 'paper' | 'timber')"
+      <!-- One button, not a two-option Seg. A theme switch has exactly one thing to say, and it
+           is not "which of these two are you" -- it is "press this to change". The label names the
+           theme you will GET, so the button is its own affordance.
+           Both nav buttons are the kit's Tool, so they are the same height on every pointer type
+           by construction -- including the 44px coarse floor -- rather than by two numbers someone
+           has to keep equal. -->
+      <Tool
+        :label="theme === 'timber' ? 'Light' : 'Dark'"
+        :title="theme === 'timber' ? 'Switch to the light theme' : 'Switch to the dark theme'"
+        @click="applyTheme(theme === 'timber' ? 'paper' : 'timber')"
       />
     </div>
   </nav>
@@ -539,202 +187,46 @@ const groupAnchor = (g: Group) => g.toLowerCase()
           <SegExample />
         </GSection>
 
-        <GSection v-else-if="c.id === 'chip'" :meta="c">
-          <Chip :options="chipOpts" :model-value="active" aria-label="Filters" @toggle="toggleChip" />
-          <template #state>active = [{{ [...active].join(', ') || '∅' }}]</template>
+        <GSection v-else-if="c.id === 'chip'" :meta="c" :source="ChipExampleSrc">
+          <ChipExample />
         </GSection>
 
-        <GSection v-else-if="c.id === 'tool'" :meta="c">
-          <Tool label="New card" hot @click="pressed++" />
-          <Tool label="Plain" @click="pressed++" />
-          <Tool label="Delete" danger @click="pressed++" />
-          <Tool label="Disabled" disabled @click="pressed++" />
-          <template #state>clicks = {{ pressed }}</template>
+        <GSection v-else-if="c.id === 'tool'" :meta="c" :source="ToolExampleSrc">
+          <ToolExample />
         </GSection>
 
-        <GSection v-else-if="c.id === 'filter-rail'" :meta="c">
-          <div class="g-rails">
-            <div>
-              <span class="g-variant">orientation="vertical" — a filter sidebar</span>
-              <FilterRail
-                :groups="railGroups"
-                :hidden-count="railHidden"
-                @toggle="onRailToggle"
-                @clear="onRailClear"
-              />
-            </div>
-            <div>
-              <span class="g-variant">orientation="horizontal" — the same rail as a header bar</span>
-              <FilterRail
-                :groups="railGroups"
-                :hidden-count="railHidden"
-                orientation="horizontal"
-                @toggle="onRailToggle"
-                @clear="onRailClear"
-              />
-            </div>
-          </div>
-          <template #state
-            >active = {{ railGroups.flatMap((g2) => [...g2.selected]).join(', ') || '∅' }}</template
-          >
+        <GSection v-else-if="c.id === 'filter-rail'" :meta="c" :source="FilterRailExampleSrc">
+          <FilterRailExample />
         </GSection>
 
-        <GSection v-else-if="c.id === 'search-field'" :meta="c">
-          <SearchField
-            v-model="query"
-            placeholder="Search titles, paths, tags…"
-            @clear="cleared++"
-          />
-          <template #state
-            >query = {{ query ? '"' + query + '"' : '∅' }} · cleared {{ cleared }}×</template
-          >
+        <GSection v-else-if="c.id === 'search-field'" :meta="c" :source="SearchFieldExampleSrc">
+          <SearchFieldExample />
         </GSection>
 
-        <GSection v-else-if="c.id === 'transport'" :meta="c">
-          <Transport
-            :current="tCur"
-            :duration="tDur"
-            :playing="tPlaying"
-            :speed="tSpeed"
-            @toggle="tToggle"
-            @seek="tSeek"
-            @set-speed="tSpeed = $event"
-            @scrub-start="tScrubStart"
-            @scrub-end="tScrubEnd"
-            @stop="tCur = 0"
-          />
-          <!-- speed-mode="presets": the other real consumer shape, and the one that most needs a
-               touch floor — a ladder of five adjacent targets instead of one cycling button.
-               Bound to the SAME state as the bar above, so they read as two views of one
-               transport and the speed ladder tracks the cycling button. -->
-          <Transport
-            :current="tCur"
-            :duration="tDur"
-            :playing="tPlaying"
-            :speed="tSpeed"
-            :speeds="[0.2, 0.5, 1, 2, 5]"
-            speed-mode="presets"
-            @toggle="tToggle"
-            @seek="tSeek"
-            @set-speed="tSpeed = $event"
-            @scrub-start="tScrubStart"
-            @scrub-end="tScrubEnd"
-          />
-          <template #state
-            >cur = {{ tCur.toFixed(2) }}s · playing = {{ tPlaying }} · speed = {{ tSpeed }}×</template
-          >
+        <GSection v-else-if="c.id === 'transport'" :meta="c" :source="TransportExampleSrc">
+          <TransportExample />
         </GSection>
 
         <!-- Forms -->
-        <GSection v-else-if="c.id === 'property-editor'" :meta="c">
-          <div class="g-pe">
-            <PropertyEditor
-              :fields="peFields"
-              :model-value="peValues"
-              @update:model-value="peOut = $event"
-            />
-          </div>
-          <template #state>values = {{ JSON.stringify(peOut) }}</template>
+        <GSection v-else-if="c.id === 'property-editor'" :meta="c" :source="PropertyEditorExampleSrc">
+          <PropertyEditorExample />
         </GSection>
 
         <!-- Visualization -->
-        <GSection v-else-if="c.id === 'graph2d'" :meta="c">
-          <p class="g-hint">
-            Drag a node — its neighbours follow. Click one to light its neighbourhood. Wheel or
-            pinch to zoom, drag the background to pan; hover a node for the card.
-            <button class="g-mini" type="button" @click="gRerun()">Re-run layout</button>
-            <button class="g-mini" type="button" @click="gGraph?.zoomOut()">−</button>
-            <button class="g-mini" type="button" @click="gGraph?.zoomIn()">+</button>
-            <button class="g-mini" type="button" @click="gGraph?.zoomFit()">Fit</button>
-          </p>
-          <Graph2D
-            :ref="(el) => (gGraph = el as unknown as GraphApi | null)"
-            :nodes="gNodes"
-            :edges="gEdges"
-            :width="GRAPH_W"
-            :height="GRAPH_H"
-            mapping="direct"
-            :running="false"
-            :selection="gSelected"
-            :neighbors="gNeighbors"
-            zoomable
-            @node-click="onGraphNodeClick"
-            @drag="onGraphDrag"
-            @drag-end="onGraphDragEnd"
-            @zoom="gZoom = $event"
-            @node-hover="onGraphHover"
-            @node-leave="gHover = null"
-          />
-          <!-- the card lives in the host, positioned from the client coords the kit hands over -->
-          <div
-            v-if="gHover && gHoverNode"
-            class="g-hovcard"
-            :style="{ left: gHover.x + 'px', top: gHover.y + 'px' }"
-          >
-            <b>{{ gHoverNode.label || gHoverNode.id }}</b>
-            <span>{{ gHoverDegree }} edge{{ gHoverDegree === 1 ? '' : 's' }} · r {{ gHoverNode.r }}</span>
-          </div>
-          <template #state
-            >selected = {{ gSelected || '∅' }} · last drag = {{ gDragged }} · layout =
-            {{ gRunning ? 'running' : 'settled' }} · nodes = {{ gNodes.length }} · zoom =
-            {{ Math.round(gZoom * 100) }}%</template
-          >
+        <GSection v-else-if="c.id === 'graph2d'" :meta="c" :source="Graph2DExampleSrc">
+          <Graph2DExample />
         </GSection>
 
-        <GSection v-else-if="c.id === 'gantt'" :meta="c">
-          <p class="g-hint">
-            Drag a bar to move it, its edges to resize. Double-click empty lane space to
-            create. Undo checkpoints come from drag-start / drag-end, not every pixel.
-            The strip under each lane is the one-day row — three items share day 12, so they
-            are stacked into one block rather than overlapping. Click it to expand them.
-          </p>
-          <div :ref="(el) => (gantHost = el as HTMLElement | null)" class="g-fill">
-            <Gantt
-              :items="gItems"
-              :lanes="gLanes"
-              :ppd="gPpd"
-              :ndays="GANTT_DAYS"
-              :current-day="GANTT_TODAY"
-              :weekends="gWeekends"
-              :weekdays="gWeekdays"
-              :week-labels="gWeekLabels"
-              :selection="gSel"
-              :markers="gMarkers"
-              @select="gSel = $event"
-              @move="onGanttMove"
-              @resize="onGanttResize"
-              @new-at="onGanttNewAt"
-              @expand-day="gExpanded = $event ? $event.t + ' day ' + $event.i : '—'"
-            />
-          </div>
-          <template #state
-            >selected = {{ gSel || '∅' }} · expanded = {{ gExpanded }} · zoom =
-            {{ gPpd }}px/day · items = {{ gItems.length }}</template
-          >
+        <GSection v-else-if="c.id === 'gantt'" :meta="c" :source="GanttExampleSrc">
+          <GanttExample />
         </GSection>
 
-        <GSection v-else-if="c.id === 'chat-panel'" :meta="c">
-          <p class="g-hint">
-            Type a line, hit Queue, then Send — the count on the button clears and a system
-            note lands in the log. Apply reply hands back a canned response, the way a real
-            host would after importing a reply file.
-          </p>
-          <div class="g-chat">
-            <ChatPanel
-              :messages="cMessages"
-              v-model="cCompose"
-              placeholder="Ask the agent…"
-              @queue="cQueue"
-              @send="cSend"
-              @apply-reply="cApplyReply"
-            >
-              <template #empty>Queue a message, then Send to export a request file.</template>
-            </ChatPanel>
-          </div>
-          <template #state
-            >messages = {{ cMessages.length }} · queued =
-            {{ cMessages.filter((m) => m.role === 'you' && m.queued).length }}</template
-          >
+        <GSection v-else-if="c.id === 'chat-panel'" :meta="c" :source="ChatPanelExampleSrc">
+          <ChatPanelExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'toast'" :meta="c" :source="ToastExampleSrc">
+          <ToastExample />
         </GSection>
       </template>
     </template>
@@ -878,26 +370,6 @@ body {
 }
 .g-nav__spacer {
   flex: 1 1 auto;
-}
-.g-nav__trigger {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid var(--aether-line-strong);
-  border-radius: var(--aether-radius);
-  background: transparent;
-  color: var(--aether-ink-soft);
-  font-family: var(--g-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-.g-nav__trigger:hover {
-  color: var(--aether-ink);
-  border-color: var(--aether-ink-soft);
 }
 
 /* ── component rail ──
@@ -1231,7 +703,11 @@ body {
    this loses at equal specificity and the content renders underneath the rail -- which is
    exactly what it did when it sat next to the other rail rules. */
 @media (min-width: 1180px) {
-  .g-nav__trigger {
+  /* Above this the rail is permanently docked, so the toggle has nothing to toggle. Targets
+     .g-nav__railtoggle, a class passed THROUGH Tool -- when this button stopped being a
+     hand-rolled <button class="g-nav__trigger"> the old selector silently stopped matching and
+     the button reappeared on desktop. */
+  .g-nav__railtoggle {
     display: none;
   }
   .g-rail {

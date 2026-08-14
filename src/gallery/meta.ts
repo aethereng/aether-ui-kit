@@ -732,6 +732,28 @@ function applyReply() {
   messages.value.push({ role: 'agent', text: 'Done — see the diff.' })
 }`,
   },
+  {
+    id: 'toast',
+    name: 'Toast',
+    subpath: '@aether/ui-kit/controls/toast',
+    group: 'Controls',
+    blurb: 'Transient status pill that fades itself out.',
+    detail:
+      'Controlled, like the rest of the kit: the caller owns the message, and the component clears it by emitting an update rather than holding its own visibility, so a host can dismiss early by setting the model to an empty string. Not a queue and not a notification centre: a second message while one is up replaces it and restarts the timer, which is what all three original hosts already did and what you want for "Copied", "Queued", "Saved". Extracted after those three shipped it byte-identically; the tell was that they had already merged their CSS into one shared rule keyed off three different ids, leaving only the four lines of timer logic copied per host.',
+    props: [
+      { name: 'modelValue', type: 'string', note: 'the message; empty string = hidden' },
+      { name: 'duration', type: 'number?', note: 'ms before it clears itself; default 1700' },
+    ],
+    emits: [
+      {
+        name: 'update:modelValue',
+        type: '[value: string]',
+        note: "emits '' when the timer expires, so the caller's state stays authoritative",
+      },
+    ],
+    template: '',
+    script: '',
+  },
 ]
 
 export const GROUPS: Group[] = ['Controls', 'Forms', 'Visualization']

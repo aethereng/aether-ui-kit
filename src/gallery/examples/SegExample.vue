@@ -41,7 +41,7 @@ const only: SegOption<'a'>[] = [{ value: 'a', label: 'Only option' }]
 <template>
   <div class="g-ex">
     <span class="g-variant">default — a toolbar control</span>
-    <Seg :options="viewOptions" v-model="view" aria-label="View" />
+    <Seg v-model="view" :options="viewOptions" aria-label="View" />
   </div>
 
   <div class="g-ex">
@@ -49,8 +49,8 @@ const only: SegOption<'a'>[] = [{ value: 'a', label: 'Only option' }]
          variant and without a caption it just reads as two segs coloured differently. -->
     <span class="g-variant">variant="pill" — two capsules sharing one header</span>
     <div class="g-ex-row">
-      <Seg variant="pill" :options="shapeOptions" v-model="shape" aria-label="Shape" />
-      <Seg variant="pill" :options="layoutOptions" v-model="layout" aria-label="Layout" />
+      <Seg v-model="shape" variant="pill" :options="shapeOptions" aria-label="Shape" />
+      <Seg v-model="layout" variant="pill" :options="layoutOptions" aria-label="Layout" />
     </div>
   </div>
 

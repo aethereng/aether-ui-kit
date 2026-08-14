@@ -53,6 +53,7 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'options', type: 'SegOption<V>[]', note: '{ value, label, disabled? }' },
       { name: 'modelValue', type: 'V', note: 'the active value' },
       { name: 'ariaLabel', type: 'string?', note: 'labels the group for screen readers' },
+      { name: 'variant', type: "'default' | 'pill'?", note: 'toolbar control vs mono capsule header' },
     ],
     emits: [
       { name: 'update:modelValue', type: '[value: V]', note: 'v-model' },

@@ -70,6 +70,25 @@ const segOpts: SegOption[] = [
   { value: 'graph', label: 'Graph' },
 ]
 
+/* ── Seg: pill variant ── */
+/* Demoed as the TWO-capsule header it was extracted from — a view switch beside a layout
+   switch — because the pairing is the point. The pill's mono uppercase and accent wash are what
+   let two independent selectors share one header without reading as a single six-option control;
+   a lone pill shows the styling but not the reason for it. Both are live, and #state prints both
+   values, so it is visible that they select independently. */
+const pillView = ref<'graph' | 'list' | 'tree'>('graph')
+const pillViewOpts: SegOption[] = [
+  { value: 'graph', label: 'Graph' },
+  { value: 'list', label: 'List' },
+  { value: 'tree', label: 'Tree' },
+]
+const pillLayout = ref<'force' | 'folders' | 'hubs'>('force')
+const pillLayoutOpts: SegOption[] = [
+  { value: 'force', label: 'Force' },
+  { value: 'folders', label: 'Folders' },
+  { value: 'hubs', label: 'Hubs' },
+]
+
 /* ── Chip ── */
 const active = ref<Set<string>>(new Set(['fact', 'risk']))
 const chipOpts: ChipOption[] = [
@@ -546,7 +565,25 @@ const groupAnchor = (g: Group) => g.toLowerCase()
             @change="view = $event as 'cards' | 'graph'"
           />
           <Seg :options="[{ value: 'a', label: 'Only option' }]" :model-value="'a'" aria-label="Single" />
-          <template #state>view = "{{ view }}"</template>
+          <!-- variant="pill": the two adjacent capsules are the pattern this variant exists
+               for, not decoration. Keep them next to each other. -->
+          <Seg
+            variant="pill"
+            :options="pillViewOpts"
+            :model-value="pillView"
+            aria-label="Graph view"
+            @change="pillView = $event as 'graph' | 'list' | 'tree'"
+          />
+          <Seg
+            variant="pill"
+            :options="pillLayoutOpts"
+            :model-value="pillLayout"
+            aria-label="Graph layout"
+            @change="pillLayout = $event as 'force' | 'folders' | 'hubs'"
+          />
+          <template #state>
+            view = "{{ view }}" · pill: {{ pillView }} / {{ pillLayout }}
+          </template>
         </GSection>
 
         <GSection v-else-if="c.id === 'chip'" :meta="c">

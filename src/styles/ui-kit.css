@@ -41,16 +41,14 @@
      afterthought. A host wanting the enhanced figure throughout can set both to 44px. */
   --aether-touch: 44px;
   --aether-touch-dense: 32px;
-  /* Which way the host's palette runs, for the NATIVE widgets the kit cannot draw itself: the date
-     picker's popup, spinner arrows, scrollbars inside a field. Only the host knows this -- it
-     cannot be inferred from the colour tokens, since a host may define a dark palette in any terms
-     it likes.
-     Defaults to `inherit`, NOT `light`, and the difference matters: `color-scheme` is an inherited
-     property, so a host that already declares it on html/body is already correct and the kit must
-     not override that. Defaulting to `light` would have forced a dark-themed host's calendar back
-     to a bright white panel -- which is exactly what it did on the first attempt here. A host that
-     declares nothing can set this token instead. */
-  --aether-color-scheme: inherit;
+  /* NOTE: there is deliberately no --aether-color-scheme token. `color-scheme` decides how the
+     native widgets the kit cannot draw -- the date picker popup, spinner arrows, in-field
+     scrollbars -- are rendered, and it is an INHERITED property, so a host that declares it on
+     html/body is already correct and the kit must not restate it. Two attempts at tokenising it
+     both failed: `light` as a default forced a dark host's calendar back to white, and `inherit`
+     is a CSS-wide keyword that on a custom property means "inherit the property from my parent" --
+     on :root that resolves to nothing, so the token read as empty and did nothing at all.
+     A themed host must declare `color-scheme: light` / `dark` alongside its palette. */
   /* The monospace face. A host with a brand mono points
      this at it; the default keeps the kit dependency-free. */
   --aether-font-mono: ui-monospace, monospace;
@@ -655,28 +653,57 @@
   user-select: none;
 }
 
-/* Native date/number widgets: without these the browser draws its OWN chrome -- a blue selected
-   day, and a calendar popup in the UA's default light scheme even when the host is themed dark.
-   `color-scheme` is a token because only the HOST knows which way its palette runs; the kit
-   cannot infer it from the colour tokens. `accent-color` tints the picker's selection, the
-   checkbox and the range thumb from one declaration. */
+/* `accent-color` is the one declaration that tints everything the UA draws inside a control from
+   the kit's palette instead of its own blue: the date picker's selected day, the checkbox tick,
+   a range thumb. */
 .aether-property-editor__field input[type='date'],
 .aether-property-editor__field input[type='number'],
 .aether-property-editor__field input[type='text'],
 .aether-property-editor__field textarea,
 .aether-property-editor__field select {
-  color-scheme: var(--aether-color-scheme);
   accent-color: var(--aether-cool);
 }
-/* The calendar glyph is UA-drawn and cannot take `color`. Tinting it to match --aether-ink-soft is
-   only possible through a filter, so this leans on color-scheme having already flipped it to the
-   right base: light scheme = dark glyph to soften, dark scheme = light glyph to leave alone. */
+
+/* A date input is not one text box -- it is a row of UA-drawn sub-fields, and they do NOT inherit
+   the input's `color`. Left alone, an empty date field shows grey `mm/dd/yyyy` segments and a
+   near-black separator against the kit's ink, which is what makes a themed form suddenly look
+   unstyled at exactly one field. Each part is addressable, so each part gets a token. */
+.aether-property-editor__field input[type='date']::-webkit-datetime-edit,
+.aether-property-editor__field input[type='date']::-webkit-datetime-edit-day-field,
+.aether-property-editor__field input[type='date']::-webkit-datetime-edit-month-field,
+.aether-property-editor__field input[type='date']::-webkit-datetime-edit-year-field {
+  color: var(--aether-ink);
+}
+.aether-property-editor__field input[type='date']::-webkit-datetime-edit-text {
+  color: var(--aether-faint);
+  padding: 0 1px;
+}
+/* An unfilled segment reads as a placeholder, so it takes the placeholder token rather than ink. */
+.aether-property-editor__field input[type='date']::-webkit-datetime-edit-day-field:empty,
+.aether-property-editor__field input[type='date']::-webkit-datetime-edit-month-field:empty,
+.aether-property-editor__field input[type='date']::-webkit-datetime-edit-year-field:empty {
+  color: var(--aether-faint);
+}
+/* The selected segment while typing: accent-color does not reach this, it needs a real background. */
+.aether-property-editor__field
+  input[type='date']::-webkit-datetime-edit-day-field:focus,
+.aether-property-editor__field
+  input[type='date']::-webkit-datetime-edit-month-field:focus,
+.aether-property-editor__field
+  input[type='date']::-webkit-datetime-edit-year-field:focus {
+  background: var(--aether-cool-wash);
+  color: var(--aether-cool);
+  outline: none;
+}
+/* The calendar glyph is UA-drawn and cannot take `color`; opacity is the only honest lever, and it
+   at least stops a hard black icon sitting next to softened ink. */
 .aether-property-editor__field input[type='date']::-webkit-calendar-picker-indicator {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: pointer;
 }
-.aether-property-editor__field input[type='date']:hover::-webkit-calendar-picker-indicator {
-  opacity: 0.9;
+.aether-property-editor__field input[type='date']:hover::-webkit-calendar-picker-indicator,
+.aether-property-editor__field input[type='date']:focus::-webkit-calendar-picker-indicator {
+  opacity: 0.85;
 }
 .aether-property-editor__field input:focus,
 .aether-property-editor__field textarea:focus,

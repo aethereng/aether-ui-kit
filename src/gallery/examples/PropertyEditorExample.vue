@@ -37,6 +37,8 @@ const fields: FieldDescriptor[] = [
       { value: 'signed', label: 'Signed' },
     ],
   },
+  /* Given a real value: an EMPTY date input renders the UA's grey mm/dd/yyyy segments, which
+     is the one place a themed form still looked unstyled. */
   { key: 'due', label: 'Due', type: 'date' },
   /* boolean renders as a switch rather than a checkbox — 38x22 with its own knob geometry. */
   { key: 'live', label: 'Live', type: 'boolean' },
@@ -49,7 +51,7 @@ const values: FieldValues = {
   count: 6,
   kind: 'fact',
   stage: 'draft',
-  due: '',
+  due: '2026-08-21',
   live: true,
 }
 

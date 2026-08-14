@@ -277,6 +277,10 @@ import Seg from '@aether/ui-kit/controls/seg'</code></pre>
   --aether-transport-bg: rgba(251, 248, 242, 0.82);
   --aether-transport-backdrop: blur(8px) saturate(1.1);
   --aether-transport-radius: 10px;
+  /* Declared explicitly, not left to the UA: `color-scheme` is what themes the native widgets
+     the kit cannot draw -- the date picker popup, spinner arrows. The kit reads no token for it,
+     because it is an inherited property and only the host knows which way its palette runs. */
+  color-scheme: light;
   --aether-transport-shadow: 0 4px 20px rgba(27, 30, 35, 0.14);
 
   /* gallery-own chrome — deliberately NOT --aether-*, so it is obvious which tokens

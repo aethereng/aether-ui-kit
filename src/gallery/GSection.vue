@@ -107,9 +107,27 @@ const tabs = computed<SegOption<Tab>[]>(() => {
 
     <code v-if="$slots.state" class="g-state"><slot name="state" /></code>
 
-    <!-- Source + API. A bordered panel with real tabs, because the old version was a
-         borderless text toggle that read as a caption and nobody would think to click. -->
-    <div class="g-panel">
+    <!-- Source + API, COLLAPSED by default. Eleven sections each holding an always-open code
+         panel is why the gallery could not be surveyed without scrolling past every example's
+         source to reach the next component. The detail is one click away, and the trigger states
+         what is inside so collapsing does not hide that it exists.
+
+         A native <details>/<summary> rather than a hand-rolled toggle: it is open/closed without
+         any state of ours, it is keyboard- and screen-reader-correct for free, and Ctrl+F still
+         finds text inside a closed one in Chrome. `open` is not bound to a ref, so each section
+         remembers its own state without this component tracking eleven booleans. -->
+    <details class="g-panel">
+      <summary class="g-panel__summary">
+        <span class="g-panel__summary-label">Source &amp; API</span>
+        <span class="g-panel__summary-meta">
+          template · script · {{ meta.props.length }} props · {{ meta.emits.length }} emits<span
+            v-if="meta.exposed?.length"
+          >
+            · {{ meta.exposed.length }} exposed</span
+          >
+        </span>
+      </summary>
+
       <div class="g-panel__bar">
         <Seg :options="tabs" :model-value="tab" aria-label="Source and API" @change="tab = $event" />
         <button
@@ -168,7 +186,7 @@ const tabs = computed<SegOption<Tab>[]>(() => {
         Framework-free core: <code>{{ meta.core }}</code> — plain TypeScript, no Vue import. The
         component above is a thin wrapper over it.
       </p>
-    </div>
+    </details>
   </section>
 </template>
 
@@ -281,6 +299,63 @@ const tabs = computed<SegOption<Tab>[]>(() => {
   border: 1px solid var(--aether-line-strong);
   border-radius: 10px;
   overflow: hidden;
+}
+/* The collapsed trigger. It has to read as a control, since the whole point is that a reader
+   realises there is more here -- the version of this that was a borderless caption went unclicked. */
+.g-panel__summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 11px 12px;
+  background: var(--g-code);
+  cursor: pointer;
+  user-select: none;
+  /* the default triangle is replaced below with one that follows the palette */
+  list-style: none;
+}
+.g-panel__summary::-webkit-details-marker {
+  display: none;
+}
+/* Our own marker, so it takes a token instead of the UA's black triangle -- the same reason the
+   date field needed its segments styled. Rotates when open. */
+.g-panel__summary::before {
+  content: '';
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 5px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  color: var(--aether-ink-soft);
+  transition: transform 0.15s;
+}
+.g-panel[open] > .g-panel__summary::before {
+  transform: rotate(90deg);
+}
+.g-panel__summary:hover {
+  color: var(--aether-ink);
+}
+.g-panel__summary:focus-visible {
+  outline: 2px solid var(--aether-cool);
+  outline-offset: -2px;
+}
+.g-panel__summary-label {
+  font-family: var(--g-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--aether-ink-soft);
+}
+/* Names what is inside, so collapsing hides the detail without hiding that it exists. */
+.g-panel__summary-meta {
+  font-family: var(--g-mono);
+  font-size: 11px;
+  color: var(--aether-faint);
+}
+/* The tab bar keeps its own top border once it is no longer the panel's first child. */
+.g-panel[open] > .g-panel__bar {
+  border-top: 1px solid var(--aether-line);
 }
 .g-panel__bar {
   display: flex;

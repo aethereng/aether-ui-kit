@@ -41,6 +41,16 @@
      afterthought. A host wanting the enhanced figure throughout can set both to 44px. */
   --aether-touch: 44px;
   --aether-touch-dense: 32px;
+  /* Which way the host's palette runs, for the NATIVE widgets the kit cannot draw itself: the date
+     picker's popup, spinner arrows, scrollbars inside a field. Only the host knows this -- it
+     cannot be inferred from the colour tokens, since a host may define a dark palette in any terms
+     it likes.
+     Defaults to `inherit`, NOT `light`, and the difference matters: `color-scheme` is an inherited
+     property, so a host that already declares it on html/body is already correct and the kit must
+     not override that. Defaulting to `light` would have forced a dark-themed host's calendar back
+     to a bright white panel -- which is exactly what it did on the first attempt here. A host that
+     declares nothing can set this token instead. */
+  --aether-color-scheme: inherit;
   /* The monospace face. A host with a brand mono points
      this at it; the default keeps the kit dependency-free. */
   --aether-font-mono: ui-monospace, monospace;
@@ -600,25 +610,73 @@
   border-radius: 7px;
   padding: 7px 9px;
 }
-/* The suffix wrapper. Higher SPECIFICITY, not source order, is what makes the input give up its
-   100% width above -- two classes here vs one there -- because getting order right in this file
-   has already cost two regressions, so a choice between the two prefers specificity. */
+/* The number field is a WRAPPER that looks like the input, with a borderless input inside it, so
+   the unit sits INSIDE the box rather than floating beside it. Doing it the other way -- a bordered
+   input with a sibling span -- reads as two controls and makes the unit look like a caption.
+   Higher SPECIFICITY, not source order, is what strips the inner input's own border/padding/width
+   below: getting order right in this file has already cost two regressions, so where either would
+   work, prefer specificity. */
 .aether-property-editor__number {
   display: flex;
   align-items: center;
   gap: 6px;
   width: 100%;
+  box-sizing: border-box;
+  /* same box the other fields declare, moved out here */
+  background: var(--aether-surface);
+  border: 1px solid var(--aether-line-strong);
+  border-radius: 7px;
+  padding: 7px 9px;
+}
+/* Focus lives on the wrapper now, since the thing with the border is the wrapper. Without this the
+   field gives no focus feedback at all -- the input's own :focus rule is styling an element that
+   no longer has a visible edge. */
+.aether-property-editor__number:focus-within {
+  border-color: var(--aether-ink-soft);
 }
 .aether-property-editor__field .aether-property-editor__number input[type='number'] {
-  width: auto;
   flex: 1 1 auto;
   min-width: 0;
+  width: auto;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+.aether-property-editor__field .aether-property-editor__number input[type='number']:focus {
+  outline: none;
 }
 .aether-property-editor__suffix {
   flex: none;
   font-size: 12px;
   color: var(--aether-ink-soft);
   white-space: nowrap;
+  /* the unit is not a value: never let it be selected instead of the number */
+  user-select: none;
+}
+
+/* Native date/number widgets: without these the browser draws its OWN chrome -- a blue selected
+   day, and a calendar popup in the UA's default light scheme even when the host is themed dark.
+   `color-scheme` is a token because only the HOST knows which way its palette runs; the kit
+   cannot infer it from the colour tokens. `accent-color` tints the picker's selection, the
+   checkbox and the range thumb from one declaration. */
+.aether-property-editor__field input[type='date'],
+.aether-property-editor__field input[type='number'],
+.aether-property-editor__field input[type='text'],
+.aether-property-editor__field textarea,
+.aether-property-editor__field select {
+  color-scheme: var(--aether-color-scheme);
+  accent-color: var(--aether-cool);
+}
+/* The calendar glyph is UA-drawn and cannot take `color`. Tinting it to match --aether-ink-soft is
+   only possible through a filter, so this leans on color-scheme having already flipped it to the
+   right base: light scheme = dark glyph to soften, dark scheme = light glyph to leave alone. */
+.aether-property-editor__field input[type='date']::-webkit-calendar-picker-indicator {
+  opacity: 0.55;
+  cursor: pointer;
+}
+.aether-property-editor__field input[type='date']:hover::-webkit-calendar-picker-indicator {
+  opacity: 0.9;
 }
 .aether-property-editor__field input:focus,
 .aether-property-editor__field textarea:focus,
@@ -693,6 +751,33 @@
 }
 .aether-property-editor__field input[type='checkbox']:checked::after {
   transform: translateX(16px);
+}
+
+/* ---- Focus ring ----
+   One ring for every control the kit ships. Until this existed the kit defined focus styling for
+   text inputs only, so keyboard focus on a Seg, Chip, Tool or enum button fell through to the
+   USER AGENT's own ring -- which Chrome draws blue, off-palette in every theme the kit supports
+   and the same class of leak as an unthemed date picker.
+
+   `:focus-visible`, not `:focus`: a mouse click on a button should not leave a ring behind, and
+   `:focus` does exactly that.
+
+   Two offsets, not one, and the difference is load-bearing. `.aether-seg` sets `overflow: hidden`
+   to clip its children's corners, so a ring drawn OUTSIDE a segment is clipped away to nothing --
+   it must be inset. Standalone controls have nothing clipping them and read better with the ring
+   just outside their edge. Same rule for `.aether-chip--row`, which sits in a rail that scrolls. */
+.aether-tool:focus-visible,
+.aether-chip:focus-visible,
+.aether-property-editor__buttons button:focus-visible,
+.aether-search__clear:focus-visible {
+  outline: 2px solid var(--aether-cool);
+  outline-offset: 2px;
+}
+.aether-seg button:focus-visible,
+.aether-seg--pill button:focus-visible,
+.aether-chip--row:focus-visible {
+  outline: 2px solid var(--aether-cool);
+  outline-offset: -2px;
 }
 
 /* ==========================================================================================

@@ -645,6 +645,12 @@ body {
   flex-direction: column;
   align-items: flex-start;
 }
+/* Full-width, so a caption cannot be misread as belonging to the block beside it. .g-demo is a
+   wrapping flex row, so by default several labelled examples sit shoulder to shoulder and the
+   labels stop being attributable -- which is exactly how the Seg section became unreadable. */
+.g-ex--full {
+  flex-basis: 100%;
+}
 /* siblings that belong side by side rather than stacked -- e.g. two pill capsules that share a
    header in real use, where stacking them would misrepresent the pattern */
 .g-ex-row {
@@ -654,6 +660,17 @@ body {
   align-items: center;
 }
 /* the live state readout, when it belongs to the example rather than the section shell */
+/* a read-out, not a field: monospace so digits do not reflow, and visibly not editable */
+.g-ex-readout {
+  font-family: var(--g-mono);
+  font-size: 12.5px;
+  color: var(--aether-ink);
+  background: var(--aether-panel);
+  border-radius: 6px;
+  padding: 4px 8px;
+  min-width: 56px;
+  text-align: right;
+}
 .g-ex-state {
   flex-basis: 100%;
   font-family: var(--g-mono);

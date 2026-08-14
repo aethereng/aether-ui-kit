@@ -6,78 +6,76 @@
  * copy-pasteable AND makes it a live check that the package's own exports map resolves. */
 import { computed, ref } from 'vue'
 import Seg from '@aether/ui-kit/controls/seg'
+import Tool from '@aether/ui-kit/controls/tool'
 import type { SegOption } from '@aether/ui-kit/controls/core'
 
-/* Default variant: a toolbar control. Square corners, panel-grey active segment. */
-const view = ref<'cards' | 'graph'>('cards')
-const viewOptions: SegOption<'cards' | 'graph'>[] = [
-  { value: 'cards', label: 'Cards' },
-  { value: 'graph', label: 'Graph' },
+/* ONE option set, rendered in both variants, because that is the only way to show what `variant`
+ * actually changes. An earlier version of this example used a different vocabulary per block --
+ * Cards/Graph, then Graph/List/Tree, then Force/Folders/Hubs -- so a reader had to decode new
+ * labels in every block instead of seeing the one difference, and "Graph" meant two unrelated
+ * things in two adjacent controls. Same options, one variable. */
+type Grain = 'day' | 'week' | 'month'
+const grainOptions: SegOption<Grain>[] = [
+  { value: 'day', label: 'Day' },
+  { value: 'week', label: 'Week' },
+  { value: 'month', label: 'Month' },
 ]
 
-/* Pill variant: a fully rounded capsule of uppercase mono labels with an accent-wash active
- * segment. Shown as TWO adjacent capsules because that pairing is the reason the variant exists —
- * it lets two independent selectors share one header without reading as a single six-option
- * control. A lone pill would show the styling and hide the point. */
-const shape = ref<'graph' | 'list' | 'tree'>('graph')
-const shapeOptions: SegOption<'graph' | 'list' | 'tree'>[] = [
-  { value: 'graph', label: 'Graph' },
-  { value: 'list', label: 'List' },
-  { value: 'tree', label: 'Tree' },
+const grain = ref<Grain>('week')
+const grainPill = ref<Grain>('week')
+
+/* `disabled` on an option: documented, styled and honoured by the component, but nothing on the
+ * page rendered it until now — an option nobody can see is an option nobody trusts. Clicking it
+ * emits nothing. */
+const rangeOptions: SegOption<Grain>[] = [
+  { value: 'day', label: 'Day' },
+  { value: 'week', label: 'Week' },
+  { value: 'month', label: 'Month', disabled: true },
 ]
+const range = ref<Grain>('day')
 
-const layout = ref<'force' | 'folders' | 'hubs'>('force')
-const layoutOptions: SegOption<'force' | 'folders' | 'hubs'>[] = [
-  { value: 'force', label: 'Force' },
-  { value: 'folders', label: 'Folders' },
-  { value: 'hubs', label: 'Hubs' },
-]
-
-/* Edge case worth seeing: a single option is still a valid Seg, and clicking the already-active
- * option emits nothing. */
-const only: SegOption<'a'>[] = [{ value: 'a', label: 'Only option' }]
-
-/* modelValue accepts null, for a preset selector over continuous state: when the real value
- * matches no preset, NOTHING is active. The alternative — a synthetic "Custom" option — lies
- * about the option set and becomes selectable, so it needs its own guard. Type a width to see it
- * fall out of, and back into, the presets. */
+/* modelValue accepts null, for a preset selector over CONTINUOUS state: when the real value matches
+ * no preset, nothing is active. The alternative — a synthetic "Custom" option — lies about the
+ * option set and becomes selectable, so it needs its own guard against being chosen.
+ *
+ * The width is a READ-OUT, not a field: it stands for state the rest of an app owns (a dragged
+ * handle, a solver result). Nudge walks it off a preset, so the null state is reachable both ways
+ * without implying Seg needs an input beside it. */
 const width = ref(137)
-const presets: SegOption<'sm' | 'md' | 'lg'>[] = [
+const PRESET_PX = { sm: 120, md: 240, lg: 360 } as const
+type Preset = keyof typeof PRESET_PX
+const presets: SegOption<Preset>[] = [
   { value: 'sm', label: '120' },
   { value: 'md', label: '240' },
   { value: 'lg', label: '360' },
 ]
-const PRESET_PX = { sm: 120, md: 240, lg: 360 } as const
-const matched = computed<'sm' | 'md' | 'lg' | null> (() => {
-  const hit = (Object.keys(PRESET_PX) as Array<keyof typeof PRESET_PX>)
-    .find((k) => PRESET_PX[k] === width.value)
-  return hit ?? null
+const matched = computed<Preset | null>(() => {
+  const keys = Object.keys(PRESET_PX) as Preset[]
+  return keys.find((k) => PRESET_PX[k] === width.value) ?? null
 })
 </script>
 
 <template>
-  <div class="g-ex">
-    <span class="g-variant">default — a toolbar control</span>
-    <Seg v-model="view" :options="viewOptions" aria-label="View" />
+  <div class="g-ex g-ex--full">
+    <span class="g-variant">default — square corners, panel-grey active segment</span>
+    <Seg v-model="grain" :options="grainOptions" aria-label="Granularity" />
   </div>
 
-  <div class="g-ex">
-    <!-- Labelled, because the accent wash on the active segment is a deliberate part of the
-         variant and without a caption it just reads as two segs coloured differently. -->
-    <span class="g-variant">variant="pill" — two capsules sharing one header</span>
-    <div class="g-ex-row">
-      <Seg v-model="shape" variant="pill" :options="shapeOptions" aria-label="Shape" />
-      <Seg v-model="layout" variant="pill" :options="layoutOptions" aria-label="Layout" />
-    </div>
+  <div class="g-ex g-ex--full">
+    <!-- Deliberately the SAME options as above: the only thing that differs is `variant`. -->
+    <span class="g-variant">
+      variant="pill" — the same options as a rounded capsule, uppercase mono, accent-wash active
+    </span>
+    <Seg v-model="grainPill" variant="pill" :options="grainOptions" aria-label="Granularity, pill" />
   </div>
 
-  <div class="g-ex">
-    <span class="g-variant">a single option is still valid</span>
-    <Seg :options="only" :model-value="'a'" aria-label="Single" />
+  <div class="g-ex g-ex--full">
+    <span class="g-variant">a disabled option — dimmed, and clicking it emits nothing</span>
+    <Seg v-model="range" :options="rangeOptions" aria-label="Range" />
   </div>
 
-  <div class="g-ex">
-    <span class="g-variant">modelValue = null — nothing matches, so nothing is active</span>
+  <div class="g-ex g-ex--full">
+    <span class="g-variant">modelValue = null — the value matches no preset, so nothing is active</span>
     <div class="g-ex-row">
       <Seg
         :options="presets"
@@ -85,12 +83,13 @@ const matched = computed<'sm' | 'md' | 'lg' | null> (() => {
         aria-label="Width preset"
         @change="width = PRESET_PX[$event]"
       />
-      <input v-model.number="width" type="number" step="1" aria-label="Width in px" />
+      <output class="g-ex-readout">{{ width }}px</output>
+      <Tool label="Nudge +1" @click="width += 1" />
     </div>
   </div>
 
   <code class="g-ex-state">
-    view = "{{ view }}" · shape = "{{ shape }}" · layout = "{{ layout }}" · width = {{ width }} →
-    preset {{ matched ?? 'null (none)' }}
+    grain = "{{ grain }}" · pill = "{{ grainPill }}" · range = "{{ range }}" · width =
+    {{ width }}px → preset {{ matched ?? 'null (none)' }}
   </code>
 </template>

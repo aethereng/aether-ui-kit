@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { PropertyEditorEngine } from '../PropertyEditorEngine'
+import { coerceNumberInput, numberStep, PropertyEditorEngine } from '../PropertyEditorEngine'
 import type { FieldDescriptor } from '../types'
 
 /* A static field set of the shape a timeline drawer really uses (title, type, status,
@@ -111,5 +111,86 @@ describe('PropertyEditorEngine — schema-derived field list (IFC entity-panel s
     expect(engine.getField('ObjectPlacement')?.type).toBe('placement')
     expect(engine.getField('ContainedInStructure')?.type).toBe('reference')
     expect(engine.getValue('GlobalId')).toBe('2N1SPbb6r4CvTLh$Fdz8xY')
+  })
+})
+
+describe('coerceNumberInput', () => {
+  it('commits a complete integer or decimal, including a trailing zero', () => {
+    expect(coerceNumberInput('5')).toEqual({ commit: true, value: 5 })
+    expect(coerceNumberInput('-12.5')).toEqual({ commit: true, value: -12.5 })
+    // "1.50" IS a complete number per the grammar (trailing zero is a real digit) -- only
+    // the FIRST keystroke that produced "1." along the way was incomplete, not this one.
+    expect(coerceNumberInput('1.50')).toEqual({ commit: true, value: 1.5 })
+  })
+
+  it('commits undefined for an emptied field -- cleared, not intermediate', () => {
+    expect(coerceNumberInput('')).toEqual({ commit: true, value: undefined })
+    expect(coerceNumberInput('   ')).toEqual({ commit: true, value: undefined })
+  })
+
+  /* The case that makes badInput necessary rather than nice-to-have. A <input type="number">
+     returns '' from .value for ANY text it cannot parse, so "12." mid-decimal and a cleared field
+     look identical from `raw` -- while the user still sees "12." on screen. Committing undefined
+     there would blank the bound value under their cursor. */
+  it('does NOT commit an empty raw value when badInput says text is present but unparseable', () => {
+    expect(coerceNumberInput('', true)).toEqual({ commit: false })
+  })
+
+  it('still commits undefined for an empty raw value when badInput is false -- truly cleared', () => {
+    expect(coerceNumberInput('', false)).toEqual({ commit: true, value: undefined })
+  })
+
+  it('does NOT commit an in-progress keystroke, so the caller leaves the input alone', () => {
+    // real states a native <input type="number"> reports mid-typing "-5.2e3"
+    expect(coerceNumberInput('-')).toEqual({ commit: false })
+    expect(coerceNumberInput('1.')).toEqual({ commit: false })
+    expect(coerceNumberInput('1e')).toEqual({ commit: false })
+  })
+
+  it('does NOT commit a string Number() would silently accept but the number grammar would not', () => {
+    // Number()'s leniency is exactly what made "1." above look "finite" and wrongly commit --
+    // these are the same class of mistake, caught by matching the real grammar instead.
+    expect(coerceNumberInput('01')).toEqual({ commit: false }) // leading zero
+    expect(coerceNumberInput('0x10')).toEqual({ commit: false }) // hex
+    expect(coerceNumberInput('Infinity')).toEqual({ commit: false })
+    expect(coerceNumberInput('5 ')).toEqual({ commit: false }) // trailing space inside the field
+  })
+})
+
+describe('numberStep', () => {
+  it('an explicit step always wins', () => {
+    expect(numberStep({ step: 5, precision: 2 })).toBe(5)
+  })
+
+  it('derives a step from precision when step is absent', () => {
+    expect(numberStep({ precision: 2 })).toBe(0.01)
+    expect(numberStep({ precision: 0 })).toBe(1)
+  })
+
+  it('is undefined when neither is given, so the browser default (1) applies', () => {
+    expect(numberStep({})).toBeUndefined()
+  })
+})
+
+describe('PropertyEditorEngine — number fields', () => {
+  const doseFields: FieldDescriptor[] = [
+    { key: 'load', type: 'number', label: 'Design load', min: 0, max: 500, suffix: 'kN' },
+  ]
+
+  it('range-checks a number field the same way enum membership is checked', () => {
+    const engine = new PropertyEditorEngine(doseFields, { load: 800 })
+    expect(engine.validate().some((e) => e.key === 'load')).toBe(true)
+    engine.setValue('load', 120)
+    expect(engine.isValid()).toBe(true)
+  })
+
+  it('an empty number field is not itself a range violation', () => {
+    const engine = new PropertyEditorEngine(doseFields, {})
+    expect(engine.validate().some((e) => e.key === 'load')).toBe(false)
+  })
+
+  it('a non-finite stored value is not range-checked -- it is not this engine\'s job to repair it', () => {
+    const engine = new PropertyEditorEngine(doseFields, { load: NaN })
+    expect(engine.validate().some((e) => e.key === 'load')).toBe(false)
   })
 })

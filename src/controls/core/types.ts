@@ -11,7 +11,11 @@ export type SegOption<V extends string = string> = {
 
 export interface SegProps<V extends string = string> {
   options: SegOption<V>[]
-  modelValue: V
+  /** `null` means NO option is selected, which any preset selector over continuous or derived
+   *  state needs: "the current value matches none of these". The alternative -- a synthetic
+   *  "Custom" option standing in for nothing-selected -- lies about the option set AND becomes
+   *  selectable, so it needs its own guard against being chosen. This does not. */
+  modelValue: V | null
   ariaLabel?: string
   /** 'default' — square-cornered, panel-grey active segment.
    *  'pill'    — fully rounded, uppercase mono, accent-wash active segment. A second real look
@@ -42,6 +46,14 @@ export type ChipOption<V extends string = string> = {
    *  `disabled`, which removes the interaction entirely. */
   muted?: boolean
   disabled?: boolean
+  /** Per-option explanatory text, rendered as the native `title` attribute.
+   *
+   *  KNOWN TRADEOFF, not an oversight: native `title` has no touch equivalent. On a phone or
+   *  tablet this text is simply unreachable, and nothing errors -- it fails silently. Fine for a
+   *  label restatement or a hint; NOT fine if the text is load-bearing content a user needs to
+   *  make the choice. A chip carrying real explanatory content needs a different affordance
+   *  (visible helper text, or a disclosure), not a tooltip. */
+  title?: string
 }
 
 export interface ChipProps<V extends string = string> {

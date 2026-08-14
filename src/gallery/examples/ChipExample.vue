@@ -22,6 +22,15 @@ const chipOptions: ChipOption[] = [
   { value: 'shipped', label: 'Shipped', count: 9, swatch: 'background:var(--aether-cool);opacity:.45' },
   /* disabled: unavailable, not merely empty. Click is a no-op. */
   { value: 'archived', label: 'Archived', count: 0, disabled: true },
+  /* title: per-option explanatory text as the native tooltip. Known tradeoff — native `title`
+     has no touch equivalent, so this text is unreachable on a phone and nothing errors. Fine
+     for a hint; if the text is load-bearing, it needs a visible affordance instead. */
+  {
+    value: 'derived',
+    label: 'Derived',
+    count: 3,
+    title: 'Computed from other fields — not editable directly',
+  },
 ]
 
 function toggle(v: string) {

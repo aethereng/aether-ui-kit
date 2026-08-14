@@ -9,6 +9,11 @@ import type { FieldDescriptor, FieldValues } from '@aether/ui-kit/property-edito
 const fields: FieldDescriptor[] = [
   { key: 'title', label: 'Title', type: 'text', placeholder: 'Untitled' },
   { key: 'body', label: 'Body', type: 'textarea', placeholder: 'Write…' },
+  /* number: step/min/max/precision map straight to the native input's attributes. `suffix` is
+     rendered after the field with NO meaning attached — the kit renders a unit, it never knows
+     one, so conversion and unit systems stay with the caller. Out of range fails validation. */
+  { key: 'load', label: 'Design load', type: 'number', min: 0, max: 500, precision: 1, suffix: 'kN' },
+  { key: 'count', label: 'Bays', type: 'number', min: 1, max: 40, step: 1 },
   {
     key: 'kind',
     label: 'Kind',
@@ -37,7 +42,16 @@ const fields: FieldDescriptor[] = [
   { key: 'live', label: 'Live', type: 'boolean' },
 ]
 
-const values: FieldValues = { title: '', body: '', kind: 'fact', stage: 'draft', due: '', live: true }
+const values: FieldValues = {
+  title: '',
+  body: '',
+  load: 120.5,
+  count: 6,
+  kind: 'fact',
+  stage: 'draft',
+  due: '',
+  live: true,
+}
 
 /* Controlled: the editor never mutates what it is given, it emits a whole new value object. */
 const out = ref<FieldValues>({ ...values })

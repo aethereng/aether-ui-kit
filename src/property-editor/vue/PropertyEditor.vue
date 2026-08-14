@@ -4,7 +4,7 @@
  * has never heard of Vue. This component's only job is: instantiate the engine, react to its
  * change events, and render one widget per field type. */
 import { computed, onScopeDispose, reactive, watch } from 'vue'
-import { PropertyEditorEngine } from '../core/PropertyEditorEngine'
+import { coerceNumberInput, numberStep, PropertyEditorEngine } from '../core/PropertyEditorEngine'
 import type { FieldDescriptor, FieldValues } from '../core/types'
 
 const props = defineProps<{
@@ -65,6 +65,14 @@ function onFieldInput(key: string, value: unknown) {
   engine.setValue(key, value)
 }
 
+/* Commits only on a COMPLETE number, or on a genuinely emptied field. An in-progress keystroke is
+   left alone rather than written back -- see coerceNumberInput for why `validity.badInput` is the
+   only way to tell "mid-decimal" from "cleared" on a number input. */
+function onNumberInput(key: string, el: HTMLInputElement) {
+  const result = coerceNumberInput(el.value, el.validity.badInput)
+  if (result.commit) onFieldInput(key, result.value)
+}
+
 const hasErrors = computed(() => Object.keys(errors).length > 0)
 defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValues() })
 </script>
@@ -82,6 +90,22 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
         :value="view[field.key] as string"
         @input="onFieldInput(field.key, ($event.target as HTMLInputElement).value)"
       />
+
+      <!-- Wrapped even with no suffix, so the row is always the same width -- see
+           .aether-property-editor__number in ui-kit.css for why the input gives up its usual
+           100% width only inside this wrapper. -->
+      <div v-else-if="field.type === 'number'" class="aether-property-editor__number">
+        <input
+          :id="`pe-${field.key}`"
+          type="number"
+          :step="numberStep(field)"
+          :min="field.min"
+          :max="field.max"
+          :value="view[field.key] as number"
+          @input="onNumberInput(field.key, $event.target as HTMLInputElement)"
+        />
+        <span v-if="field.suffix" class="aether-property-editor__suffix">{{ field.suffix }}</span>
+      </div>
 
       <textarea
         v-else-if="field.type === 'textarea'"

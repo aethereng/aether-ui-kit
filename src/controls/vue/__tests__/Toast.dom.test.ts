@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { nextTick } from 'vue'
 import Toast from '../Toast.vue'
 
 /* Toast owns exactly two things: a timer, and the two-frame dance that makes the CSS

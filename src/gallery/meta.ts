@@ -5,9 +5,11 @@
  * If a signature changes and this file does not, the gallery is lying — so treat this as part
  * of the component contract, not documentation about it.
  *
- * `template` and `script` are the COMPLETE example, including the data. A snippet that omits
- * where `items` came from is the snippet everyone has to reverse-engineer, so these are
- * written to be copied and run rather than only read.
+ * This file holds NO example code. Each section's Template and Script tabs are sliced at runtime
+ * out of the example file that renders its demo (src/gallery/examples/), so what is on screen is
+ * always the code that ran. There used to be `template` and `script` strings here as a second
+ * copy, and they had drifted in 8 of 10 sections before being deleted -- a hand-maintained twin
+ * of a live demo is a stale twin. Do not reintroduce them.
  *
  * `core` names the framework-free module a component sits on, when it has one. That split is
  * the kit's whole architecture: mechanics in a plain-TS core, a thin wrapper per framework.
@@ -36,10 +38,6 @@ export interface CompMeta {
   emits: ApiRow[]
   /** Methods and refs reachable through a template ref, for the components that expose any. */
   exposed?: ApiRow[]
-  /** The example's markup. */
-  template: string
-  /** The example's script, including its data — a snippet you can actually run. */
-  script: string
 }
 
 export const COMPONENTS: CompMeta[] = [
@@ -51,30 +49,18 @@ export const COMPONENTS: CompMeta[] = [
     blurb: 'One-active segmented selector.',
     props: [
       { name: 'options', type: 'SegOption<V>[]', note: '{ value, label, disabled? }' },
-      { name: 'modelValue', type: 'V', note: 'the active value' },
+      { name: 'modelValue', type: 'V | null', note: 'null = nothing matches; no option is active' },
       { name: 'ariaLabel', type: 'string?', note: 'labels the group for screen readers' },
       { name: 'variant', type: "'default' | 'pill'?", note: 'toolbar control vs mono capsule header' },
     ],
     emits: [
       { name: 'update:modelValue', type: '[value: V]', note: 'v-model' },
-      { name: 'change', type: '[value: V]', note: 'same value, for non-v-model callers' },
+      {
+        name: 'change',
+        type: '[value: V]',
+        note: 'same value, for non-v-model callers. BOTH events fire on every selection, update:modelValue first — so v-model + @change together is redundant, and the @change handler runs after the model is already written',
+      },
     ],
-    template: `<Seg
-  :options="viewOptions"
-  :model-value="view"
-  aria-label="View"
-  @change="view = $event"
-/>`,
-    script: `import { ref } from 'vue'
-import Seg from '@aether/ui-kit/controls/seg'
-import type { SegOption } from '@aether/ui-kit/controls/core'
-
-const view = ref<'cards' | 'graph'>('cards')
-
-const viewOptions: SegOption[] = [
-  { value: 'cards', label: 'Cards' },
-  { value: 'graph', label: 'Graph' },
-]`,
   },
   {
     id: 'chip',
@@ -89,40 +75,13 @@ const viewOptions: SegOption[] = [
       {
         name: 'options',
         type: 'ChipOption<V>[]',
-        note: '{ value, label, count?, dotColor?, swatch?, color?, muted?, disabled? }',
+        note: '{ value, label, count?, dotColor?, swatch?, color?, muted?, disabled?, title? }',
       },
       { name: 'modelValue', type: 'V | Set<V>', note: 'single value or a Set for multi-select' },
       { name: 'variant', type: "'pill' | 'row'?", note: 'inline filter chip vs sidebar list row' },
       { name: 'ariaLabel', type: 'string?' },
     ],
     emits: [{ name: 'toggle', type: '[value: V]', note: 'caller owns the Set; chip only reports' }],
-    template: `<Chip
-  :options="chipOptions"
-  :model-value="active"
-  aria-label="Filter by kind"
-  @toggle="toggle"
-/>`,
-    script: `import { ref } from 'vue'
-import Chip from '@aether/ui-kit/controls/chip'
-import type { ChipOption } from '@aether/ui-kit/controls/core'
-
-// multi-select: the caller owns the Set, the chip only reports a toggle
-const active = ref<Set<string>>(new Set(['fact', 'risk']))
-
-const chipOptions: ChipOption[] = [
-  { value: 'fact', label: 'Facts', count: 6, dotColor: 'var(--aether-cool-soft)' },
-  { value: 'idea', label: 'Ideas', count: 3 },
-  { value: 'risk', label: 'Risks', count: 2, dotColor: 'var(--aether-warm)' },
-  { value: 'link', label: 'Links', count: 0, muted: true },
-  { value: 'lane', label: 'Colour-accented', count: 4, color: 'var(--aether-warm)' },
-]
-
-function toggle(v: string) {
-  const next = new Set(active.value)
-  if (next.has(v)) next.delete(v)
-  else next.add(v)
-  active.value = next
-}`,
   },
   {
     id: 'tool',
@@ -131,28 +90,16 @@ function toggle(v: string) {
     group: 'Controls',
     blurb: 'Header action button, in three variants: neutral, primary, destructive.',
     detail:
-      'A closed variant set rather than an open style hook. If both hot and danger are passed, danger wins — mislabelling a destructive action as primary is the worse failure.',
+      'A closed variant set rather than an open style hook. If both hot and danger are passed, danger wins — mislabelling a destructive action as primary is the worse failure. There is deliberately no active/pressed state: Tool is a stateless command, which is the line between it and Seg. A control where several things can be on at once is Chip\'s contract, not this one.',
     props: [
-      { name: 'label', type: 'string' },
+      { name: 'label', type: 'string', note: 'also the accessible name when the label is hidden' },
       { name: 'hot', type: 'boolean?', note: 'the primary action on a surface' },
       { name: 'danger', type: 'boolean?', note: 'destructive — delete, discard' },
       { name: 'disabled', type: 'boolean?' },
       { name: 'title', type: 'string?', note: 'native tooltip' },
+      { name: 'labelHidden', type: 'boolean?', note: 'icon only; ignored without an #icon slot' },
     ],
     emits: [{ name: 'click', type: '[]' }],
-    template: `<Tool label="New card" hot @click="create()" />
-<Tool label="Plain" @click="noop()" />
-<Tool label="Delete" danger @click="remove()" />
-<Tool label="Disabled" disabled />`,
-    script: `import Tool from '@aether/ui-kit/controls/tool'
-
-function create() {
-  /* … */
-}
-function remove() {
-  /* … */
-}
-function noop() {}`,
   },
   {
     id: 'filter-rail',
@@ -176,54 +123,6 @@ function noop() {}`,
       { name: 'toggle', type: '[groupKey: string, value: V]' },
       { name: 'clear', type: '[]' },
     ],
-    template: `<FilterRail
-  :groups="groups"
-  :hidden-count="hidden"
-  orientation="vertical"
-  @toggle="onToggle"
-  @clear="onClear"
-/>`,
-    script: `import { ref } from 'vue'
-import FilterRail from '@aether/ui-kit/controls/filter-rail'
-import type { FilterGroup } from '@aether/ui-kit/controls/core'
-
-const groups = ref<FilterGroup[]>([
-  {
-    key: 'type',
-    label: 'Type',
-    selected: new Set<string>(),
-    options: [
-      { value: 'fact', label: 'Fact', count: 6, dotColor: 'var(--aether-cool)' },
-      { value: 'idea', label: 'Idea', count: 3, dotColor: 'var(--aether-warm)' },
-      { value: 'risk', label: 'Risk', count: 2 },
-    ],
-  },
-  {
-    key: 'status',
-    label: 'Status',
-    selected: new Set<string>(),
-    options: [
-      { value: 'open', label: 'Open', count: 4 },
-      { value: 'done', label: 'Done', count: 7 },
-    ],
-  },
-])
-const hidden = ref(0)
-
-function onToggle(groupKey: string, value: string) {
-  const g = groups.value.find((x) => x.key === groupKey)
-  if (!g) return
-  const next = new Set(g.selected)
-  if (next.has(value)) next.delete(value)
-  else next.add(value)
-  g.selected = next
-  hidden.value = groups.value.reduce((n, gg) => n + gg.selected.size, 0)
-}
-
-function onClear() {
-  groups.value.forEach((g) => (g.selected = new Set()))
-  hidden.value = 0
-}`,
   },
   {
     id: 'search-field',
@@ -243,21 +142,6 @@ function onClear() {
       { name: 'update:modelValue', type: '[value: string]', note: 'v-model' },
       { name: 'clear', type: '[]', note: 'fires alongside the empty update, for callers that reset more than the query' },
     ],
-    template: `<SearchField
-  v-model="q"
-  placeholder="Search titles, paths, tags…"
-  @clear="onClear"
-/>`,
-    script: `import { ref } from 'vue'
-import SearchField from '@aether/ui-kit/controls/search-field'
-
-const q = ref('')
-
-// the clear event is for anything BEYOND emptying the query — resetting a
-// page, collapsing a result tree — since v-model already handles the string
-function onClear() {
-  /* … */
-}`,
   },
   {
     id: 'transport',
@@ -295,62 +179,6 @@ function onClear() {
       { name: 'scrub-start', type: '[]' },
       { name: 'scrub-end', type: '[]' },
     ],
-    template: `<Transport
-  :current="t"
-  :duration="dur"
-  :playing="playing"
-  :speed="speed"
-  @toggle="togglePlay"
-  @seek="t = $event"
-  @set-speed="speed = $event"
-  @scrub-start="onScrubStart"
-  @scrub-end="onScrubEnd"
-/>`,
-    script: `import { ref } from 'vue'
-import Transport from '@aether/ui-kit/controls/transport'
-import { beginScrub, endScrub, type ScrubHandle } from '@aether/ui-kit/controls/core'
-
-// The CALLER owns the clock — Transport only renders it and emits intent.
-const t = ref(0)
-const dur = ref(6)
-const playing = ref(false)
-const speed = ref(1)
-
-let raf = 0
-let last = 0
-function step(ts: number) {
-  if (!playing.value) return
-  t.value += ((ts - last) / 1000) * speed.value
-  last = ts
-  if (t.value >= dur.value) {
-    t.value = dur.value
-    playing.value = false
-    return
-  }
-  raf = requestAnimationFrame(step)
-}
-
-function togglePlay() {
-  if (playing.value) {
-    playing.value = false
-    return
-  }
-  if (t.value >= dur.value) t.value = 0
-  playing.value = true
-  last = performance.now()
-  raf = requestAnimationFrame(step)
-}
-
-// Scrubbing while playing would put two writers on one playhead, so the drag pauses
-// playback and hands it back on release. That rule lives in the core, unit-tested.
-let scrub: ScrubHandle = beginScrub(false)
-function onScrubStart() {
-  scrub = beginScrub(playing.value)
-  playing.value = false
-}
-function onScrubEnd() {
-  if (endScrub(scrub, playing.value)) togglePlay()
-}`,
   },
   {
     id: 'property-editor',
@@ -360,7 +188,7 @@ function onScrubEnd() {
     core: '@aether/ui-kit/property-editor/core',
     blurb: 'Schema-driven form: bind a FieldDescriptor[], get an editor.',
     detail:
-      'Text, textarea, date, boolean, and enum (button-group or dropdown) fields. The core is plain TypeScript with unit tests and no DOM; the Vue file is a thin wrapper. It stays ignorant of what the object being edited actually is.',
+      'Text, textarea, number, date, boolean, and enum (button-group or dropdown) fields. The core is plain TypeScript with unit tests and no DOM; the Vue file is a thin wrapper. It stays ignorant of what the object being edited actually is. A number field takes step/min/max/precision and a `suffix` rendered after the input — the kit renders a unit, it never knows one, so conversion and unit systems stay with the caller. `reference` and `placement` render through a named slot instead: only the caller knows how to pick an entity or edit a 3D placement.',
     props: [
       { name: 'fields', type: 'FieldDescriptor[]', note: '{ key, label, type, options?, … }' },
       { name: 'modelValue', type: 'FieldValues', note: 'a plain record' },
@@ -369,38 +197,6 @@ function onScrubEnd() {
       { name: 'update:modelValue', type: '[values: FieldValues]' },
       { name: 'change', type: '[key: string, value: unknown]', note: 'per-field, for undo hooks' },
     ],
-    template: `<PropertyEditor
-  :fields="fields"
-  :model-value="values"
-  @change="onChange"
-/>`,
-    script: `import { ref } from 'vue'
-import PropertyEditor from '@aether/ui-kit/property-editor'
-import type { FieldDescriptor, FieldValues } from '@aether/ui-kit/property-editor/core'
-
-const fields: FieldDescriptor[] = [
-  { key: 'title', label: 'Title', type: 'text', placeholder: 'Untitled' },
-  { key: 'body', label: 'Body', type: 'textarea', placeholder: 'Write…' },
-  {
-    key: 'kind',
-    label: 'Kind',
-    type: 'enum',
-    variant: 'buttons',
-    options: [
-      { value: 'fact', label: 'Fact' },
-      { value: 'idea', label: 'Idea' },
-      { value: 'risk', label: 'Risk' },
-    ],
-  },
-  { key: 'live', label: 'Live', type: 'boolean' },
-]
-
-const values = ref<FieldValues>({ title: '', body: '', kind: 'fact', live: true })
-
-// per-field change is the hook an undo stack wants — one entry per edit
-function onChange(key: string, value: unknown) {
-  values.value = { ...values.value, [key]: value }
-}`,
   },
   {
     id: 'graph2d',
@@ -457,99 +253,6 @@ function onChange(key: string, value: unknown) {
       { name: 'zoomAt(x, y, factor)', type: '(x, y, factor) => void', note: 'zoom about a point in viewBox coords' },
       { name: 'zoom', type: 'Ref<number>', note: 'the current scale' },
     ],
-    template: `<Graph2D
-  ref="graph"
-  :nodes="nodes"
-  :edges="edges"
-  :width="560"
-  :height="360"
-  :running="false"
-  :selection="selected"
-  :neighbors="neighbors"
-  zoomable
-  @node-click="onNodeClick"
-  @drag="onDrag"
-  @node-hover="onHover"
-  @node-leave="hover = null"
-/>
-
-<!-- the chrome is yours: the kit ships the behaviour, you ship the buttons -->
-<button @click="graph?.zoomOut()">−</button>
-<button @click="graph?.zoomIn()">+</button>
-<button @click="graph?.zoomFit()">Fit</button>`,
-    script: `import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
-import Graph2D from '@aether/ui-kit/viz/graph'
-import { ForceLayout } from '@aether/ui-kit/viz/core'
-import type { GNode, GEdge } from '@aether/ui-kit/viz/core'
-
-const nodes = ref<GNode[]>(
-  Array.from({ length: 18 }, (_, i) => ({
-    id: 'n' + i,
-    pos: [(Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200, 0],
-    label: i % 5 === 0 ? 'hub' + i : undefined,
-    r: i % 5 === 0 ? 10 : 5,
-  })),
-)
-
-const edges: GEdge[] = []
-for (let i = 1; i < nodes.value.length; i++) {
-  edges.push({ a: 'n' + (i % 5 === 0 ? i : Math.floor(i / 5) * 5), b: 'n' + i, w: 1 })
-}
-
-// Drive the framework-free layout core yourself — this is the controlled mode.
-// Publish NEW node objects each frame; mutating pos in place will not re-render.
-const layout = new ForceLayout(
-  nodes.value.map((n) => ({ ...n, pos: [...n.pos] })),
-  edges,
-  { dims: 3 },
-)
-const publish = () => {
-  nodes.value = layout.nodes.map((n) => ({ ...n, pos: [...n.pos] }))
-}
-
-let raf = 0
-let steps = 0
-function loop() {
-  layout.step()
-  publish()
-  steps += 1
-  if (steps >= 220) return // converged — stop burning frames
-  raf = requestAnimationFrame(loop)
-}
-onMounted(() => (raf = requestAnimationFrame(loop)))
-onBeforeUnmount(() => cancelAnimationFrame(raf))
-
-const selected = ref<string | null>(null)
-const neighbors = computed(() => {
-  if (!selected.value) return null
-  const s = new Set([selected.value])
-  for (const e of edges) {
-    if (e.a === selected.value) s.add(e.b)
-    if (e.b === selected.value) s.add(e.a)
-  }
-  return s
-})
-
-function onNodeClick(id: string) {
-  selected.value = selected.value === id ? null : id
-}
-
-function onDrag(id: string, x: number, y: number) {
-  const n = layout.nodes.find((v) => v.id === id)
-  if (!n) return
-  n.pos = [x - 280, y - 180, n.pos[2] ?? 0] // viewport -> world; the caller decides
-  publish()
-}
-
-// Zoom controls come from the component's exposed methods, through a template ref.
-const graph = ref<{ zoomIn(): void; zoomOut(): void; zoomFit(pad?: number): void } | null>(null)
-
-// The hover card is yours. Graph2D says WHICH node and WHERE the pointer is; what a node
-// means — a file, a part, a person — is knowledge the kit does not have.
-const hover = ref<{ id: string; x: number; y: number } | null>(null)
-function onHover(id: string, clientX: number, clientY: number) {
-  hover.value = { id, x: clientX + 14, y: clientY + 14 }
-}`,
   },
   {
     id: 'gantt',
@@ -597,75 +300,6 @@ function onHover(id: string, clientX: number, clientY: number) {
         note: 'many one-day items on the same date; null closes the expansion',
       },
     ],
-    template: `<Gantt
-  :items="items"
-  :lanes="lanes"
-  :ppd="26"
-  :ndays="60"
-  :selection="selected"
-  :markers="markers"
-  @select="selected = $event"
-  @drag-start="snapshotForUndo"
-  @move="onMove"
-  @resize="onResize"
-  @drag-end="persist"
-  @new-at="onNewAt"
-/>`,
-    script: `import { ref } from 'vue'
-import Gantt from '@aether/ui-kit/viz/gantt'
-import type { GanttItem, GanttLane } from '@aether/ui-kit/viz/core/gantt'
-
-// Day indices, not dates — the caller maps them to a calendar.
-const items = ref<GanttItem[]>([
-  { id: 'a1', start: 2, end: 9, type: 'design', status: 'done', title: 'Concept' },
-  { id: 'a2', start: 10, end: 20, type: 'design', status: 'open', title: 'Schematics' },
-  { id: 'b1', start: 12, type: 'fabricate', status: 'open', title: 'Cut members' },
-  { id: 'c1', start: 31, end: 45, type: 'erect', status: 'open', title: 'Site assembly' },
-  { id: 'x2', start: 24, type: 'erect', anchor: true, status: 'open', title: 'Steel milestone' },
-])
-
-const lanes: GanttLane[] = [
-  {
-    type: 'design',
-    name: 'Design',
-    color: 'var(--aether-cool-soft)',
-    wash: 'var(--aether-cool-wash)',
-  },
-  { type: 'fabricate', name: 'Fabricate', color: 'var(--aether-warm)', wash: 'rgba(230,160,60,0.16)' },
-  { type: 'erect', name: 'Erect', color: 'var(--aether-ink-soft)', wash: 'rgba(120,120,140,0.16)' },
-]
-
-const markers = [
-  { day: 0, label: 'Month 1' },
-  { day: 31, label: 'Month 2' },
-]
-const selected = ref<string | null>(null)
-
-// dragStart/dragEnd fire ONCE per gesture — one undo entry per drag, not one per pixel
-function snapshotForUndo() {
-  /* push items onto an undo stack */
-}
-function persist() {
-  /* save */
-}
-
-function onMove(id: string, start: number, end: number | null) {
-  const it = items.value.find((x) => x.id === id)
-  if (!it) return
-  it.start = start
-  it.end = end ?? undefined
-}
-
-function onResize(id: string, edge: 'l' | 'r', value: number) {
-  const it = items.value.find((x) => x.id === id)
-  if (!it) return
-  if (edge === 'l') it.start = value
-  else it.end = value
-}
-
-function onNewAt(day: number, type: string) {
-  items.value.push({ id: 'n' + day + type, start: day, type, status: 'open', title: 'New ' + type })
-}`,
   },
   {
     id: 'chat-panel',
@@ -692,45 +326,6 @@ function onNewAt(day: number, type: string) {
       { name: 'apply-reply', type: '[]' },
     ],
     exposed: [{ name: 'focus()', type: '() => void', note: 'for an "ask about this" shortcut that prefills modelValue and jumps to the box' }],
-    template: `<ChatPanel
-  ref="panel"
-  :messages="messages"
-  v-model="compose"
-  placeholder="Ask the agent…"
-  @queue="queue"
-  @send="send"
-  @apply-reply="applyReply"
->
-  <template #empty>Queue a message, then Send to export a request file.</template>
-</ChatPanel>`,
-    script: `import { ref } from 'vue'
-import ChatPanel from '@aether/ui-kit/controls/chat-panel'
-import type { ChatMessage } from '@aether/ui-kit/controls/core'
-
-const messages = ref<ChatMessage[]>([
-  { role: 'agent', text: 'Ready when you are.' },
-])
-const compose = ref('')
-const panel = ref<{ focus(): void } | null>(null)
-
-function queue() {
-  const t = compose.value.trim()
-  if (!t) return
-  messages.value.push({ role: 'you', text: t, queued: true })
-  compose.value = ''
-}
-
-function send() {
-  const reqs = messages.value.filter((m) => m.role === 'you' && m.queued)
-  if (!reqs.length) return
-  reqs.forEach((m) => (m.queued = false))
-  messages.value.push({ role: 'sys', text: 'Sent ' + reqs.length + ' request(s) — exported as request.json.' })
-}
-
-function applyReply() {
-  // a real host reads a dropped reply file here; the gallery fakes the round trip
-  messages.value.push({ role: 'agent', text: 'Done — see the diff.' })
-}`,
   },
   {
     id: 'toast',
@@ -751,8 +346,6 @@ function applyReply() {
         note: "emits '' when the timer expires, so the caller's state stays authoritative",
       },
     ],
-    template: '',
-    script: '',
   },
 ]
 

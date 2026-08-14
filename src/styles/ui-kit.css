@@ -530,6 +530,31 @@
   border-color: var(--aether-ink-soft);
   color: var(--aether-ink);
 }
+/* Only applied when a #icon slot is actually supplied, so a plain Tool keeps its existing box
+   model untouched -- inline-flex on every Tool would have changed the layout of every existing
+   consumer for the benefit of the ones using an icon. */
+.aether-tool--icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.aether-tool__icon {
+  display: inline-flex;
+  flex: none;
+  /* Sizes the caller's SVG without dictating its markup: an <svg> with width/height of its own
+     keeps them, one without inherits a sane square. */
+  line-height: 0;
+}
+.aether-tool__icon > svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+/* Icon-only: square it up so a lone glyph is not sitting in a label-shaped box. */
+.aether-tool--icon-only {
+  padding: 6px;
+  justify-content: center;
+}
 .aether-tool.hot {
   background: var(--aether-warm);
   border-color: var(--aether-warm);
@@ -563,6 +588,7 @@
 }
 .aether-property-editor__field input[type='text'],
 .aether-property-editor__field input[type='date'],
+.aether-property-editor__field input[type='number'],
 .aether-property-editor__field textarea,
 .aether-property-editor__field select {
   width: 100%;
@@ -573,6 +599,26 @@
   border: 1px solid var(--aether-line-strong);
   border-radius: 7px;
   padding: 7px 9px;
+}
+/* The suffix wrapper. Higher SPECIFICITY, not source order, is what makes the input give up its
+   100% width above -- two classes here vs one there -- because getting order right in this file
+   has already cost two regressions, so a choice between the two prefers specificity. */
+.aether-property-editor__number {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+.aether-property-editor__field .aether-property-editor__number input[type='number'] {
+  width: auto;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.aether-property-editor__suffix {
+  flex: none;
+  font-size: 12px;
+  color: var(--aether-ink-soft);
+  white-space: nowrap;
 }
 .aether-property-editor__field input:focus,
 .aether-property-editor__field textarea:focus,

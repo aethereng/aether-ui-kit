@@ -36,6 +36,7 @@ function click(opt: ChipOption<V>) {
       :key="opt.value"
       type="button"
       :disabled="opt.disabled"
+      :title="opt.title"
       :class="[
         'aether-chip',
         'aether-chip--' + variant,

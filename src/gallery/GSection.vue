@@ -12,14 +12,18 @@ import type { CompMeta } from './meta'
 
 const props = defineProps<{
   meta: CompMeta
-  /* The example's own source, handed in via Vite's `?raw`. When present, the Template and Script
-   * tabs are SLICED OUT OF IT rather than read from meta — so the code on screen is literally the
-   * file that rendered the demo above it, and the two cannot drift.
+  /* The example's own source, handed in via Vite's `?raw`. The Template and Script tabs are SLICED
+   * OUT OF IT, so the code on screen is literally the file that rendered the demo above it and
+   * the two cannot drift.
    *
    * They did drift, which is why this exists: Seg's demo grew two pill instances and Transport's a
    * second bar while both Templates still showed one, and Chip's Script listed five options while
-   * the demo rendered seven. Any pair of hand-maintained twins ends up here eventually. */
-  source?: string
+   * the demo rendered seven. Any pair of hand-maintained twins ends up here eventually.
+   *
+   * REQUIRED, with no meta fallback: the fallback was the last place a stale copy could hide, and
+   * `meta` no longer carries example code at all. A new section without a source is now a
+   * type error rather than a section whose code panel silently renders nothing. */
+  source: string
 }>()
 
 const importLine = `import ${props.meta.name} from '${props.meta.subpath}'`
@@ -40,12 +44,11 @@ function sliceBlock(src: string, tag: 'script' | 'template'): string | null {
     .replace(/^ {2}/gm, '') // examples are indented inside their block; unindent for display
 }
 
-const shownScript = computed(
-  () => (props.source && sliceBlock(props.source, 'script')) || props.meta.script,
-)
-const shownTemplate = computed(
-  () => (props.source && sliceBlock(props.source, 'template')) || props.meta.template,
-)
+/* If a slice ever returns null the markers moved, and saying so beats rendering an empty panel
+ * that looks like a component with no example. */
+const MISSING = '/* could not read this block out of the example file */'
+const shownScript = computed(() => sliceBlock(props.source, 'script') ?? MISSING)
+const shownTemplate = computed(() => sliceBlock(props.source, 'template') ?? MISSING)
 
 /* one copy handler for every code block on the section, keyed by which block was copied,
  * so two buttons can't both claim success */

@@ -2,6 +2,7 @@ import type { FieldDescriptor, FieldValues } from '../core/types';
 type __VLS_Props = {
     fields: FieldDescriptor[];
     modelValue: FieldValues;
+    labelPlacement?: 'above' | 'inside';
 };
 declare var __VLS_8: {
     field: FieldDescriptor;

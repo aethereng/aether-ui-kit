@@ -91,6 +91,104 @@ describe('the kit palette clears WCAG AA', () => {
   })
 })
 
+/* Badge paints its OWN ground, so its three semantic tones are read against `--aether-warm-ink`
+ * rather than against the page. That is the whole reason it is filled: measured tone-on-page,
+ * `--aether-warm` lands at 3.83 on `--aether-panel` and cannot be made to pass by tinting, because
+ * a wash pulls the background toward the text. Filled removes the page from the calculation, which
+ * is also what makes one badge safe in two host palettes with different surfaces.
+ *
+ * 11px at weight 650 is NORMAL text under WCAG — "large" starts at 18.66px bold — so the floor here
+ * is 4.5, not 3.0. */
+const FILLED_TONES = ['--aether-ok', '--aether-warm', '--aether-rose'] as const
+
+describe('Badge tones clear WCAG AA', () => {
+  for (const tone of FILLED_TONES)
+    it(`${tone} against --aether-warm-ink`, () => {
+      const r = ratio(t('--aether-warm-ink'), t(tone))
+      expect(
+        r,
+        `Badge text on ${tone} (${t(tone)}) measures ${r.toFixed(2)}, under the 4.5 floor. The ` +
+          `badge is filled precisely so this pairing is the only one that matters — if it fails, ` +
+          `the tone itself is wrong, not the treatment.`,
+      ).toBeGreaterThanOrEqual(4.5)
+    })
+
+  it('neutral stays readable without being filled', () => {
+    // The quiet tone is the one that appears six-in-a-row, so it paints panel rather than a colour.
+    expect(ratio(t('--aether-ink-soft'), t('--aether-panel'))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('success is NOT the selection accent', () => {
+    /* --aether-selected resolves to --aether-cool. A success badge in that colour would make
+     * "this passed" and "this is selected" the same pixels — the failure that made Transport stop
+     * distinguishing two host apps, one level worse because these sit side by side in a row. */
+    expect(t('--aether-ok')).not.toBe(t('--aether-cool'))
+    expect(tokens['--aether-ok']).not.toContain('cool')
+  })
+
+  it('reports the tone headroom too', () => {
+    const rows = FILLED_TONES.map((x) => `${x}: ${ratio(t('--aether-warm-ink'), t(x)).toFixed(2)}`)
+    console.log('  badge tones — ' + rows.join(' · '))
+    expect(rows).toHaveLength(3)
+  })
+})
+
+/* The blocks above read ui-kit.css, which ships LIGHT tokens only — every dark theme lives in a
+ * host. That gap is not theoretical: `--aether-ok` was added to the kit and the gallery's dark
+ * theme did not get it, so a filled success badge rendered dark-green on dark ink at 2.84 while
+ * every other tone still looked correct. Nothing in the kit could see it, because nothing in the
+ * kit knows the theme exists.
+ *
+ * The gallery is the kit's own host, so its themes are testable here and stand in for the check
+ * every other host owns for itself. A new tone token that a theme forgets now fails a test instead
+ * of shipping. */
+function themeTokens(selector: RegExp, from: string): Record<string, string> {
+  /* All matches, not the first. App.vue contains TWO `:root` blocks — one is the documentation
+     snippet showing a host how to remap tokens (`--aether-surface: var(--my-surface)`), and it is
+     not CSS that runs. Taking the first match silently read the example and reported every token
+     as missing. Real theme blocks are the ones declaring literal colours. */
+  const blocks = [...from.matchAll(selector)]
+    .map((m) => m[1]!)
+    .filter((body) => /:\s*#[0-9a-f]{3,8}/i.test(body))
+  if (!blocks.length) throw new Error(`contrast: no literal-valued block matching ${selector}`)
+  const out: Record<string, string> = {}
+  for (const body of blocks)
+    for (const m of body.matchAll(/(--aether-[a-z0-9-]+)\s*:\s*([^;]+);/g)) out[m[1]!] = m[2]!.trim()
+  return out
+}
+
+const galleryCss = readFileSync(resolve(__dirname, '../gallery/App.vue'), 'utf8')
+const THEMES = {
+  'gallery light': themeTokens(/\n:root\s*\{([\s\S]*?)\n\}/g, galleryCss),
+  'gallery dark (timber)': themeTokens(/html\[data-theme='timber'\]\s*\{([\s\S]*?)\n\}/g, galleryCss),
+}
+
+describe('every host theme carries the tone tokens it overrides', () => {
+  for (const [name, theme] of Object.entries(THEMES)) {
+    /* Tokens resolve kit :root -> host :root -> theme block, so a theme only has to restate what
+       it changes — but a theme that inverts ANY tone must invert all of them, or the one it
+       forgot keeps a light-theme value against a dark ground. */
+    const resolved = { ...tokens, ...THEMES['gallery light'], ...theme }
+    const ink = resolved['--aether-warm-ink']!
+
+    it(`${name} defines --aether-ok`, () => {
+      expect(
+        theme['--aether-ok'] ?? THEMES['gallery light']['--aether-ok'],
+        `${name} never sets --aether-ok, so it inherits the kit's light-theme green.`,
+      ).toBeDefined()
+    })
+
+    for (const tone of FILLED_TONES)
+      it(`${name}: ${tone} still clears AA`, () => {
+        const r = ratio(ink, resolved[tone]!)
+        expect(
+          r,
+          `In ${name}, badge text (${ink}) on ${tone} (${resolved[tone]}) measures ${r.toFixed(2)}.`,
+        ).toBeGreaterThanOrEqual(4.5)
+      })
+  }
+})
+
 describe('the tokens a host is expected to remap', () => {
   /* These default to another token rather than to a literal. That is what makes them free to
    * ignore — a host that never sets them sees exactly the previous appearance — so the defaults

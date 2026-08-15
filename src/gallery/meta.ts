@@ -35,7 +35,8 @@ export interface CompMeta {
   /** Framework-free core module, when the component has one. */
   core?: string
   props: ApiRow[]
-  emits: ApiRow[]
+  /** Optional: a purely presentational component (Badge) reports nothing back. */
+  emits?: ApiRow[]
   /* Slots were the gap: four components take one and the API tables documented none of them, so a
      reader could see every prop a component accepts and still not know it could hold an icon. */
   slots?: ApiRow[]
@@ -85,6 +86,23 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'ariaLabel', type: 'string?' },
     ],
     emits: [{ name: 'toggle', type: '[value: V]', note: 'caller owns the Set; chip only reports' }],
+  },
+  {
+    id: 'badge',
+    name: 'Badge',
+    subpath: '@aether/ui-kit/controls/badge',
+    group: 'Controls',
+    blurb: 'Static status marker in four tones. A span, not a control.',
+    detail:
+      'The line between this and Chip is interactivity, not appearance: Chip is a button with click, disabled and an emit, and a marker exposed as a button lands in the tab order doing nothing. Badge is a span. The kit maps tone to pixels and never maps a domain state to a tone — a caller with `singular` or `verified` resolves those itself, the same boundary that lets the kit render a `suffix` without knowing a unit. The three semantic tones are filled rather than tinted, and that is a contrast decision: measured tone-on-page, `--aether-warm` is 3.83 on `--aether-panel`, and a wash only pulls the background toward the text. Painting its own ground makes the ratio independent of whatever surface the badge sits on, which is also what lets one badge ship into two host palettes. Neutral stays unfilled because it is the tone that appears six-in-a-row. No icon, no count, no close, no size axis, and no group component — a row of badges has no shared state to model.',
+    props: [
+      {
+        name: 'tone',
+        type: "'neutral' | 'success' | 'warning' | 'danger'?",
+        note: "default 'neutral'; host maps domain → tone",
+      },
+    ],
+    slots: [{ name: 'default', type: 'string', note: 'the badge text; caller-supplied' }],
   },
   {
     id: 'tool',

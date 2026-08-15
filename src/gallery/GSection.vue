@@ -36,7 +36,9 @@ const summaryMeta = computed(() =>
     'template',
     'script',
     plural(props.meta.props.length, 'prop'),
-    plural(props.meta.emits.length, 'emit'),
+    /* Optional like slots and exposed. Every component emitted something until Badge, which is a
+       static span and emits nothing — an unguarded `.length` here took the whole gallery down. */
+    ...(props.meta.emits?.length ? [plural(props.meta.emits.length, 'emit')] : []),
     ...(props.meta.slots?.length ? [plural(props.meta.slots.length, 'slot')] : []),
     ...(props.meta.exposed?.length ? [`${props.meta.exposed.length} exposed`] : []),
   ].join(' · '),
@@ -87,9 +89,11 @@ const tabs = computed<SegOption<Tab>[]>(() => {
     { value: 'template', label: 'Template' },
     { value: 'script', label: 'Script' },
     { value: 'props', label: `Props ${props.meta.props.length}` },
-    { value: 'emits', label: `Emits ${props.meta.emits.length}` },
   ]
   // only the components that expose anything get the tab
+  if (props.meta.emits?.length) {
+    t.push({ value: 'emits', label: `Emits ${props.meta.emits.length}` })
+  }
   if (props.meta.slots?.length) {
     t.push({ value: 'slots', label: `Slots ${props.meta.slots.length}` })
   }

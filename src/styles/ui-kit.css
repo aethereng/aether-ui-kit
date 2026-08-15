@@ -28,6 +28,12 @@
   --aether-warm-ink: #fbf8f2;
   --aether-rose: #a33b52;
   --aether-rose-wash: rgba(163, 59, 82, 0.12);
+  /* The affirmative tone, and the only one the palette was missing: warm, rose and cool cover
+     caution, failure and accent, and nothing said "passed". Deliberately NOT --aether-cool, which
+     is what --aether-selected resolves to — a success marker rendered in the selection colour makes
+     "this passed" and "this is selected" the same pixels, which is the bug that made Transport
+     stop telling two host apps apart. */
+  --aether-ok: #3f6b3a;
   --aether-cool: #2f6f6b;
   --aether-cool-soft: #5fa4a0;
   --aether-cool-wash: rgba(95, 164, 160, 0.15);

@@ -19,6 +19,8 @@ import SegExample from './examples/SegExample.vue'
 import SegExampleSrc from './examples/SegExample.vue?raw'
 import ChipExample from './examples/ChipExample.vue'
 import ChipExampleSrc from './examples/ChipExample.vue?raw'
+import BadgeExample from './examples/BadgeExample.vue'
+import BadgeExampleSrc from './examples/BadgeExample.vue?raw'
 import ToolExample from './examples/ToolExample.vue'
 import ToolExampleSrc from './examples/ToolExample.vue?raw'
 import TreeExample from './examples/TreeExample.vue'
@@ -201,6 +203,10 @@ const groupAnchor = (g: Group) => g.toLowerCase()
           <ChipExample />
         </GSection>
 
+        <GSection v-else-if="c.id === 'badge'" :meta="c" :source="BadgeExampleSrc">
+          <BadgeExample />
+        </GSection>
+
         <GSection v-else-if="c.id === 'tool'" :meta="c" :source="ToolExampleSrc">
           <ToolExample />
         </GSection>
@@ -279,6 +285,7 @@ import Seg from '@aether/ui-kit/controls/seg'</code></pre>
   --aether-line-strong: rgba(27, 30, 35, 0.26);
   --aether-warm: #a9591b;
   --aether-rose: #a33b52;
+  --aether-ok: #3f6b3a;
   --aether-cool: #2f6f6b;
   --aether-cool-soft: #5fa4a0;
   --aether-cool-wash: rgba(95, 164, 160, 0.15);
@@ -319,6 +326,10 @@ html[data-theme='timber'] {
   --aether-line-strong: #2f4641;
   --aether-warm: #e5a45f;
   --aether-rose: #e08fa4;
+  /* Inverted with the rest of the tone family. Left at the kit's dark default green, a filled
+     success badge is dark-green-on-dark-ink at 2.84 — the failure is silent, because every other
+     tone still looks right. */
+  --aether-ok: #8fbf84;
   --aether-cool: #8fc6c2;
   --aether-cool-soft: #a8d8d4;
   --aether-cool-wash: rgba(143, 198, 194, 0.16);

@@ -61,7 +61,7 @@ Not on a public registry. Depend on it by git ref, pinned to a tag:
 ```json
 {
   "dependencies": {
-    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.10.0"
+    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.11.0"
   }
 }
 ```
@@ -141,6 +141,7 @@ focus ring — which every component needs and no component owns.
 | **Tree** | `controls/tree` | A keyboard-complete tree: roving focus, typeahead, and both asymmetric arrows — Right expands a closed node but steps into an open one, Left closes an open one but steps out of a closed one. Flat-rendered with aria-level/setsize/posinset. |
 | **Disclosure** | `controls/disclosure` | A collapsible panel whose header row can hold its own controls — a link or badge stays reachable while the panel is shut. Brings its own picker-free chrome; not a <details>, because a <summary> hides everything after it when closed. |
 | **FilterRail** | `controls/filter-rail` | Groups of toggle chips with clear-all and a hidden-count readout. Vertical sidebar or horizontal bar. |
+| **Badge** | `controls/badge` | Static status marker in four tones. A `<span>` — if it is clickable it is a `Chip`. |
 | **SearchField** | `controls/search-field` | Search input whose clear button appears only once there is something to clear. |
 | **ChatPanel** | `controls/chat-panel` | Message log + compose box for the queue → send → apply-reply agent pattern. Owns the log; you own what Send *does*. |
 | **Toast** | `controls/toast` | Transient status pill that fades itself out. Controlled: you own the message. |

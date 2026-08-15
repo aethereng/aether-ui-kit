@@ -61,10 +61,15 @@ Not on a public registry. Depend on it by git ref, pinned to a tag:
 ```json
 {
   "dependencies": {
-    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.9.0"
+    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.9.1"
   }
 }
 ```
+
+Tags are immutable. A published tag is never re-pointed at a different commit — if a release turns
+out to be wrong, the next patch tag supersedes it. That is the guarantee your lockfile rests on:
+the commit it resolved keeps meaning what it meant. (v0.9.0 was moved once, on 2026-08-15, before
+this was written down. v0.9.1 is the same tree under a name that has not moved.)
 
 The package ships raw `.vue` and `.ts` — your bundler compiles it, same as any source dependency. With Vite, keep it out of the pre-bundler so the Vue plugin sees it:
 

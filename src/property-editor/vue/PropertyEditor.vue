@@ -11,6 +11,13 @@ import DateField from './DateField.vue'
 const props = defineProps<{
   fields: FieldDescriptor[]
   modelValue: FieldValues
+  /* Where the field labels sit. 'above' (the default) is a property SHEET: labels align down the
+     left, values down the right, and a long list scans well. 'inside' puts a small permanent label
+     in the control's own box for FORM surfaces -- a dialog that already scrolls, where each field
+     should read as one object and two lines per field is a real cost.
+     Whole-component on purpose, not per field: a form should be internally consistent. Only the
+     five boxed types can carry it; see ui-kit.css for which and why. */
+  labelPlacement?: 'above' | 'inside'
 }>()
 
 const emit = defineEmits<{
@@ -79,7 +86,10 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
 </script>
 
 <template>
-  <div class="aether-property-editor">
+  <div
+    class="aether-property-editor"
+    :class="{ 'aether-property-editor--inside': labelPlacement === 'inside' }"
+  >
     <div v-for="field in fields" :key="field.key" class="aether-property-editor__field">
       <!-- The swatch is aria-hidden and carries no text: it repeats the encoding of the thing the
            field controls, so a screen reader that also announced it would read the label twice in

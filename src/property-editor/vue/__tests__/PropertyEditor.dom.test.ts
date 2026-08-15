@@ -7,9 +7,13 @@ import type { FieldDescriptor, FieldValues } from '../../core/types'
  * component: a swatch beside a label, and a range field. The range's no-rounding behaviour is the
  * one worth pinning — it is the exact way the library this replaces gets it wrong. */
 
-function mountEditor(fields: FieldDescriptor[], values: FieldValues) {
+function mountEditor(
+  fields: FieldDescriptor[],
+  values: FieldValues,
+  extra: Record<string, unknown> = {},
+) {
   return mount(PropertyEditor, {
-    props: { fields, modelValue: values },
+    props: { fields, modelValue: values, ...extra },
     attachTo: document.body,
   })
 }
@@ -37,6 +41,56 @@ describe('PropertyEditor — label swatch', () => {
     expect(sw.attributes('aria-hidden')).toBe('true')
     expect(sw.text()).toBe('')
     expect(w.get('label').text()).toBe('Supports')
+    w.unmount()
+  })
+})
+
+describe('PropertyEditor — labelPlacement', () => {
+  /* The whole placement is CSS driven off one root class, so these assert the class contract
+   * rather than computed styles: jsdom never loads ui-kit.css, and a test that "checked" the
+   * padding here would be checking nothing. */
+  const fields: FieldDescriptor[] = [
+    { key: 'title', type: 'text', label: 'Title' },
+    { key: 'load', type: 'number', label: 'Design load', suffix: 'kN' },
+    { key: 'opacity', type: 'range', label: 'Opacity', min: 0, max: 1, step: 0.05 },
+    { key: 'live', type: 'boolean', label: 'Live' },
+  ]
+  const values: FieldValues = { title: 'Beam', load: 12, opacity: 0.5, live: true }
+
+  it('defaults to above — an existing consumer sees no new class', () => {
+    const w = mountEditor(fields, values)
+    expect(w.get('.aether-property-editor').classes()).not.toContain(
+      'aether-property-editor--inside',
+    )
+    w.unmount()
+  })
+
+  it('adds the modifier only when asked', () => {
+    const w = mountEditor(fields, values, { labelPlacement: 'inside' })
+    expect(w.get('.aether-property-editor').classes()).toContain('aether-property-editor--inside')
+    w.unmount()
+  })
+
+  it('changes NOTHING else in the DOM', () => {
+    /* THE test, and the reason the label is positioned rather than wrapped in a new element: a
+     * host writing overrides against this structure — and one does — must not have them stop
+     * matching because a form asked for a different label position. If this ever fails, the
+     * placement has grown a structural cost it is not supposed to have. */
+    const above = mountEditor(fields, values)
+    const inside = mountEditor(fields, values, { labelPlacement: 'inside' })
+    expect(inside.get('.aether-property-editor').element.innerHTML).toBe(
+      above.get('.aether-property-editor').element.innerHTML,
+    )
+    above.unmount()
+    inside.unmount()
+  })
+
+  it('keeps the label bound to its control, since it now sits over it', () => {
+    // Absolute positioning removes it from flow, not from the accessibility tree.
+    const w = mountEditor(fields, values, { labelPlacement: 'inside' })
+    const label = w.findAll('label').find((l) => l.text() === 'Title')!
+    expect(label.attributes('for')).toBe('pe-title')
+    expect(w.get('#pe-title').attributes('type')).toBe('text')
     w.unmount()
   })
 })

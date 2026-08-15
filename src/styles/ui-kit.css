@@ -829,6 +829,82 @@
   user-select: none;
 }
 
+/* ---- PropertyEditor: labelPlacement="inside" ----
+   The label moves INTO the control's box instead of sitting above it. Two things about how.
+
+   It is absolutely positioned, so the DOM is byte-identical in both modes. The alternative was
+   wrapping every boxed control in a new element to carry the border, which would have changed the
+   structure consumers already write overrides against -- and one of them does exactly that.
+
+   It is permanently floated, never animated. `placeholder` is a real FieldDescriptor field and the
+   CSS-only floating trick needs `placeholder=" "`, so a caller setting a real placeholder would
+   break it; and a property sheet's fields are nearly always FILLED, so the animation would almost
+   never fire for the machinery it costs. This is Vuetify's `persistent-placeholder`, not a
+   departure from it.
+
+   Only the five BOXED types get it. range (a track and a read-out), boolean (a pill switch),
+   enum/buttons (a button group) and the two slot types have no border to sit inside, and they keep
+   the label above. That split is stated in the README, because one component rendering ten types
+   from one descriptor array has to write the rule down where eight separately-designed components
+   would just absorb it. */
+.aether-property-editor--inside
+  .aether-property-editor__field:is(
+    :has(> input[type='text']),
+    :has(> textarea),
+    :has(> select),
+    :has(> .aether-property-editor__number),
+    :has(> .aether-datefield)
+  ) {
+  position: relative;
+}
+.aether-property-editor--inside
+  .aether-property-editor__field:is(
+    :has(> input[type='text']),
+    :has(> textarea),
+    :has(> select),
+    :has(> .aether-property-editor__number),
+    :has(> .aether-datefield)
+  )
+  > label {
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  z-index: 1;
+  font-size: 9.5px;
+  line-height: 1;
+  /* The label now sits OVER the control. `for=` would focus the input on click anyway, but the
+     caret would land wherever the browser decided rather than where the user aimed -- letting the
+     click through puts it under the pointer. */
+  pointer-events: none;
+}
+/* 17px top / 4px bottom against the 7px/7px of `above` mode: same 16px line box, so the control
+   lands at ~39px with the label inside it, against 50px for a 32px control with a 14px label and a
+   4px gap stacked above. Shorter AND labelled. */
+.aether-property-editor--inside .aether-property-editor__field > input[type='text'],
+.aether-property-editor--inside .aether-property-editor__field > textarea,
+.aether-property-editor--inside .aether-property-editor__field > select,
+.aether-property-editor--inside .aether-property-editor__field > .aether-property-editor__number,
+/* Three classes rather than two: `.aether-datefield` is a SCOPED rule, so it compiles to
+   `.aether-datefield[data-v-x]` and would TIE with a two-class selector here, leaving source order
+   -- which is not ours to control for an injected style block -- to decide. Same lesson as the
+   inner input above. */
+.aether-property-editor--inside .aether-property-editor__field .aether-datefield {
+  padding-top: 17px;
+  padding-bottom: 4px;
+}
+/* The date field's 26px trigger is taller than the input beside it, so left alone it sets the row's
+   floor and a date lands 10px below every text field in the same form -- visible, and exactly the
+   unevenness `inside` exists to remove. Shrunk to the input's own height it comes to ~41px against
+   ~39px for the rest, which is not.
+   Behind (pointer: fine) because on a touch screen the tap target matters more than a 2px row
+   difference nobody is measuring with their finger. */
+@media (pointer: fine) {
+  .aether-property-editor--inside .aether-property-editor__field .aether-datefield__trigger {
+    width: 18px;
+    height: 18px;
+  }
+}
+
 /* `accent-color` is the one declaration that tints everything the UA draws inside a control from
    the kit's palette instead of its own blue: the date picker's selected day, the checkbox tick,
    a range thumb. */

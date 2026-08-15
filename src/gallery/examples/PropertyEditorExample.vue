@@ -73,9 +73,45 @@ const out = ref<FieldValues>({ ...values })
 </script>
 
 <template>
-  <div class="g-pe">
-    <PropertyEditor :fields="fields" :model-value="values" @update:model-value="out = $event" />
+  <!-- The SAME descriptor list, rendered both ways. `labelPlacement` is whole-component rather
+       than per field, because a form should be internally consistent — and it changes no markup,
+       only where the label sits, so a host's overrides keep matching either way.
+
+       Note which fields do NOT move: the range, the button group and the three switches have no
+       border to sit inside, so they keep their label above in both columns. That is the rule, not
+       an omission. -->
+  <div class="g-pe-pair">
+    <div>
+      <p class="g-pe-cap"><code>labelPlacement="above"</code> — the default. A property sheet.</p>
+      <div class="g-pe">
+        <PropertyEditor :fields="fields" :model-value="values" @update:model-value="out = $event" />
+      </div>
+    </div>
+    <div>
+      <p class="g-pe-cap"><code>labelPlacement="inside"</code> — for form surfaces.</p>
+      <div class="g-pe">
+        <PropertyEditor
+          label-placement="inside"
+          :fields="fields"
+          :model-value="values"
+          @update:model-value="out = $event"
+        />
+      </div>
+    </div>
   </div>
 
   <code class="g-ex-state">values = {{ JSON.stringify(out) }}</code>
 </template>
+
+<style scoped>
+.g-pe-pair {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+.g-pe-cap {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--aether-ink-soft);
+}
+</style>

@@ -267,6 +267,11 @@ export const COMPONENTS: CompMeta[] = [
     props: [
       { name: 'fields', type: 'FieldDescriptor[]', note: '{ key, label, type, options?, … }' },
       { name: 'modelValue', type: 'FieldValues', note: 'a plain record' },
+      {
+        name: 'labelPlacement',
+        type: "'above' | 'inside'",
+        note: "default 'above'; 'inside' only moves the five boxed types",
+      },
     ],
     emits: [
       { name: 'update:modelValue', type: '[values: FieldValues]' },

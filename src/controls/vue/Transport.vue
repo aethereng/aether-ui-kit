@@ -61,6 +61,16 @@ const emit = defineEmits<{
   'scrub-end': []
 }>()
 
+/* Optional icon slots. Every glyph below is a TEXT character by default -- the kit ships no icon
+ * set and never will -- but a host with one should not have to accept `❯` next to its own
+ * iconography. Each slot falls back to the character it replaces, so an existing consumer that
+ * passes nothing is byte-identical to before.
+ * Scoped so the play slot can render the right glyph for the state without the host tracking it. */
+defineSlots<{
+  play?: (props: { playing: boolean; atEnd: boolean }) => unknown
+  stop?: () => unknown
+}>()
+
 const atEnd = computed(() => isAtEnd(props.current, props.duration))
 const pct = computed(() => Math.round(props.precomputePct))
 // A zero-length timeline would make step 0, which browsers reject — fall back to a
@@ -117,7 +127,7 @@ onBeforeUnmount(() => {
         aria-label="Stop"
         @click="emit('stop')"
       >
-        ✕
+        <slot name="stop">✕</slot>
       </button>
     </template>
 
@@ -127,7 +137,9 @@ onBeforeUnmount(() => {
         :aria-label="atEnd ? 'Replay' : playing ? 'Pause' : 'Play'"
         @click="onToggle"
       >
-        {{ atEnd ? '⟲' : playing ? '❚❚' : '▶' }}
+        <slot name="play" :playing="playing" :at-end="atEnd">{{
+          atEnd ? '⟲' : playing ? '❚❚' : '▶'
+        }}</slot>
       </button>
 
       <input
@@ -169,7 +181,7 @@ onBeforeUnmount(() => {
         aria-label="Stop"
         @click="emit('stop')"
       >
-        ✕
+        <slot name="stop">✕</slot>
       </button>
     </template>
   </div>

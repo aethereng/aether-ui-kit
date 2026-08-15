@@ -69,7 +69,10 @@ const regionId = useId()
          the string through the property path risks it coercing to a plain boolean and collapsing
          back to a bare `hidden` -- which still hides, but loses findability without erroring.
          Browsers that do not know `until-found` treat the unknown value as plain hidden, so the
-         degradation is the old behaviour rather than a broken panel. -->
+         degradation is the old behaviour rather than a broken panel.
+         This choice does NOT cost the reveal animation, which was the open question when the first
+         consumer adopted it — see the transition block in the styles below for how the two coexist
+         and what the trade is. -->
     <div
       :id="regionId"
       class="aether-disclosure__region"
@@ -163,7 +166,38 @@ const regionId = useId()
   color: var(--aether-faint);
   font-size: 12px;
 }
+/* ---- the reveal ---- */
+/* `until-found` and an animated reveal DO coexist, which was not obvious and is worth recording:
+   the region is hidden by an ATTRIBUTE that resolves to `content-visibility: hidden`, and
+   content-visibility is a discrete property, so a plain height transition has nothing to animate.
+   `transition-behavior: allow-discrete` is what makes a discrete property participate — the value
+   flips at the START of an entry transition, so the content is rendered for the whole reveal instead
+   of appearing at the end of it. Verified in Chromium 148: with the attribute removed and the open
+   class added, the browser creates and runs BOTH transitions (content-visibility 300ms and
+   grid-template-rows 300ms), rather than dropping the discrete one.
+   `0fr → 1fr` on a grid row is how the height animates to `auto` without measuring anything in JS.
+   Its cost is the `overflow: hidden` below, which is required for the 0fr row to clip: content that
+   deliberately escapes the panel — a popover, a menu — will be clipped by it. That is the trade, and
+   it is why the rule sits on the body rather than on the region.
+   Behind `prefers-reduced-motion` because the setting is live for real users here, and because the
+   Vuetify transition this replaces was gated the same way. With motion reduced the panel snaps,
+   which is exactly the previous behaviour rather than a degradation. */
+.aether-disclosure__region {
+  display: grid;
+  grid-template-rows: 0fr;
+}
+.aether-disclosure--open .aether-disclosure__region {
+  grid-template-rows: 1fr;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .aether-disclosure__region {
+    transition:
+      grid-template-rows 0.22s ease,
+      content-visibility 0.22s allow-discrete;
+  }
+}
 .aether-disclosure__body {
+  overflow: hidden;
   border-top: 1px solid var(--aether-line);
   padding: 12px 14px;
 }

@@ -28,6 +28,20 @@ const props = defineProps<{
 
 const importLine = `import ${props.meta.name} from '${props.meta.subpath}'`
 
+/* The panel's one-line contents summary. `emit` and `slot` are irregular only in that they need an
+   -s when there is more than one; spelling that out beats hand-writing four v-ifs in the template. */
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+const summaryMeta = computed(() =>
+  [
+    'template',
+    'script',
+    plural(props.meta.props.length, 'prop'),
+    plural(props.meta.emits.length, 'emit'),
+    ...(props.meta.slots?.length ? [plural(props.meta.slots.length, 'slot')] : []),
+    ...(props.meta.exposed?.length ? [`${props.meta.exposed.length} exposed`] : []),
+  ].join(' · '),
+)
+
 /* Slice an SFC into its two blocks. Deliberately dumb string work rather than a parser: the input
  * is our own example files, and a regex that silently half-matches is worse than one that returns
  * nothing, so each slice falls back to the meta value if the markers are not found. */
@@ -66,7 +80,7 @@ async function copy(key: string, text: string) {
   copyT = setTimeout(() => (copiedKey.value = null), 1400)
 }
 
-type Tab = 'template' | 'script' | 'props' | 'emits' | 'exposed'
+type Tab = 'template' | 'script' | 'props' | 'emits' | 'slots' | 'exposed'
 const tab = ref<Tab>('template')
 const tabs = computed<SegOption<Tab>[]>(() => {
   const t: SegOption<Tab>[] = [
@@ -76,6 +90,9 @@ const tabs = computed<SegOption<Tab>[]>(() => {
     { value: 'emits', label: `Emits ${props.meta.emits.length}` },
   ]
   // only the components that expose anything get the tab
+  if (props.meta.slots?.length) {
+    t.push({ value: 'slots', label: `Slots ${props.meta.slots.length}` })
+  }
   if (props.meta.exposed?.length) {
     t.push({ value: 'exposed', label: `Exposed ${props.meta.exposed.length}` })
   }
@@ -119,13 +136,9 @@ const tabs = computed<SegOption<Tab>[]>(() => {
     <details class="g-panel">
       <summary class="g-panel__summary">
         <span class="g-panel__summary-label">Source &amp; API</span>
-        <span class="g-panel__summary-meta">
-          template · script · {{ meta.props.length }} props · {{ meta.emits.length }} emits<span
-            v-if="meta.exposed?.length"
-          >
-            · {{ meta.exposed.length }} exposed</span
-          >
-        </span>
+        <!-- Counted and pluralised, because "1 emits · 1 slots" is the kind of thing that makes a
+             reference page look unmaintained even when every number in it is right. -->
+        <span class="g-panel__summary-meta">{{ summaryMeta }}</span>
       </summary>
 
       <div class="g-panel__bar">
@@ -165,6 +178,19 @@ const tabs = computed<SegOption<Tab>[]>(() => {
             <td><code>{{ e.name }}</code></td>
             <td><code class="g-type">{{ e.type }}</code></td>
             <td>{{ e.note || '' }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table v-else-if="tab === 'slots'" class="g-table">
+        <thead>
+          <tr><th>Slot</th><th>Scope</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="sl in meta.slots" :key="sl.name">
+            <td><code>{{ sl.name }}</code></td>
+            <td><code class="g-type">{{ sl.type }}</code></td>
+            <td>{{ sl.note || '' }}</td>
           </tr>
         </tbody>
       </table>

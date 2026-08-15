@@ -131,6 +131,18 @@
 /* ---- Seg (controls) ---- */
 .aether-seg {
   display: flex;
+  /* A segmented control is as wide as its segments. Without this it is a BLOCK-level flex container,
+     so it stretches to fill whatever contains it: in a narrow drawer column it painted a bordered
+     box with ~100px of empty space to the right of the last segment, which is what blocked adoption
+     in one consumer.
+     `fit-content` rather than `inline-flex`, deliberately — inline-flex would also let the control
+     share a line with adjacent inline content, which is a second behavioural change nobody asked
+     for. This constrains the width and nothing else.
+     Inside a flex row — how both consumers place it today — this changes NOTHING, because a flex
+     item is already sized by its content. It only bites in a block container, which is exactly the
+     case that was broken. A caller that genuinely wants a full-width control sets `width: 100%` at
+     the call site: opting into stretching is much rarer than opting out of it. */
+  width: fit-content;
   border: 1px solid var(--aether-line-strong);
   border-radius: var(--aether-radius);
   overflow: hidden;
@@ -559,12 +571,24 @@
   /* Sizes the caller's SVG without dictating its markup: an <svg> with width/height of its own
      keeps them, one without inherits a sane square. */
   line-height: 0;
+  /* The button's own size, so anything in the slot that INHERITS its size lands at the right scale
+     rather than at a library default. */
+  font-size: 1em;
 }
-.aether-tool__icon > svg {
+/* Any <svg>, at ANY depth — the descendant combinator is load-bearing. This was `> svg`, which
+   matched only the bare inline <svg> the gallery example passes, and that was the only thing ever
+   tried. An icon COMPONENT renders a wrapper element (Vuetify's <v-icon> is an <i>), so its svg is a
+   grandchild and the rule missed it completely, leaving every icon at the library's default 24px
+   inside a ~28px button. The gallery demo passing was not evidence the contract worked. */
+.aether-tool__icon svg {
   width: 1em;
   height: 1em;
   display: block;
 }
+/* FONT icons are the case this cannot reach. A component that sets its own `font-size` rather than
+   inheriting (Vuetify's <v-icon> does) wins over the inherited 1em above, and overriding it would
+   mean naming that library's classes here — which this kit deliberately does not know. Size those at
+   the call site instead: `<v-icon size="16">`. Documented rather than fought. */
 /* Icon-only: square it up so a lone glyph is not sitting in a label-shaped box. */
 .aether-tool--icon-only {
   padding: 6px;

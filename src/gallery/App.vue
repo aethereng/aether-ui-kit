@@ -21,6 +21,8 @@ import ChipExample from './examples/ChipExample.vue'
 import ChipExampleSrc from './examples/ChipExample.vue?raw'
 import ToolExample from './examples/ToolExample.vue'
 import ToolExampleSrc from './examples/ToolExample.vue?raw'
+import TreeExample from './examples/TreeExample.vue'
+import TreeExampleSrc from './examples/TreeExample.vue?raw'
 import DisclosureExample from './examples/DisclosureExample.vue'
 import DisclosureExampleSrc from './examples/DisclosureExample.vue?raw'
 import SearchFieldExample from './examples/SearchFieldExample.vue'
@@ -201,6 +203,10 @@ const groupAnchor = (g: Group) => g.toLowerCase()
 
         <GSection v-else-if="c.id === 'tool'" :meta="c" :source="ToolExampleSrc">
           <ToolExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'tree'" :meta="c" :source="TreeExampleSrc">
+          <TreeExample />
         </GSection>
 
         <GSection v-else-if="c.id === 'disclosure'" :meta="c" :source="DisclosureExampleSrc">

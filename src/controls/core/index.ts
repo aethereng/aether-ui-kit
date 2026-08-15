@@ -44,3 +44,8 @@ export function isChipActive<V extends string>(value: V, active: V | Set<V>): bo
 // needed it wrote its own copy, which is the duplication this package exists to end.
 export { DEFAULT_SPEEDS, cycleSpeed, isAtEnd, beginScrub, endScrub } from './transport'
 export type { ScrubHandle } from './transport'
+
+// The Tree core: the row model and the whole keyboard contract, framework-free. Public because a
+// caller types its own node data against TreeNode<T> and may drive the same key handling itself.
+export { visibleRows, treeKey, typeahead, ancestorIds, isExpandable } from './tree'
+export type { TreeNode, TreeRow, TreeKeyResult } from './tree'

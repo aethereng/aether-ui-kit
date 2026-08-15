@@ -36,6 +36,9 @@ export interface CompMeta {
   core?: string
   props: ApiRow[]
   emits: ApiRow[]
+  /* Slots were the gap: four components take one and the API tables documented none of them, so a
+     reader could see every prop a component accepts and still not know it could hold an icon. */
+  slots?: ApiRow[]
   /** Methods and refs reachable through a template ref, for the components that expose any. */
   exposed?: ApiRow[]
 }
@@ -99,7 +102,42 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'title', type: 'string?', note: 'native tooltip' },
       { name: 'labelHidden', type: 'boolean?', note: 'icon only; ignored without an #icon slot' },
     ],
+    slots: [
+      {
+        name: 'icon',
+        type: '—',
+        note: 'leading icon; the caller brings its own SVG. A slot rather than an `icon` prop because a prop implies an icon vocabulary and the kit ships none — @mdi/js path strings drop straight in',
+      },
+    ],
     emits: [{ name: 'click', type: '[]' }],
+  },
+  {
+    id: 'tree',
+    name: 'Tree',
+    subpath: '@aether/ui-kit/controls/tree',
+    group: 'Controls',
+    core: '@aether/ui-kit/controls/core',
+    blurb: 'A keyboard-complete tree: roving focus, both asymmetric arrows, typeahead.',
+    detail:
+      'Controlled — the caller owns `expanded` and `selected`, both plain data, so a host can persist or restore them. Rendered flat rather than as nested lists: ARIA allows it once each row carries aria-level/setsize/posinset, and flat keeps the roving tabindex to one list and leaves room for virtualisation later. The whole keyboard model lives in the framework-free core (`treeKey`), because it is the part that gets written wrong: Right expands a closed node but steps INTO an open one, and Left closes an open node but steps OUT of a closed one — implementations routinely ship only one half of each. Moving is not selecting: arrowing never fires `select`, so walking a file tree does not open a file per keypress.',
+    props: [
+      { name: 'nodes', type: 'TreeNode<T>[]', note: 'id, label, optional children and free-form data' },
+      { name: 'expanded', type: 'string[]?', note: 'open node ids; the caller owns them' },
+      { name: 'selected', type: 'string | null?' },
+      { name: 'ariaLabel', type: 'string?', note: 'names the tree for a screen reader' },
+      { name: 'indent', type: 'number?', note: 'px per level, default 14' },
+    ],
+    emits: [
+      { name: 'update:expanded', type: '[string[]]' },
+      { name: 'select', type: '[id: string, node: TreeNode<T>]', note: 'click, Enter or Space' },
+    ],
+    slots: [
+      {
+        name: 'row',
+        type: '{ row: TreeRow<T> }',
+        note: 'replace a row’s content — badges, counts, icons. Anything focusable in here breaks the roving tabindex, so controls belong outside the tree',
+      },
+    ],
   },
   {
     id: 'disclosure',
@@ -116,6 +154,14 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'disabled', type: 'boolean?', note: 'the toggle emits nothing' },
     ],
     emits: [{ name: 'update:open', type: '[boolean]', note: 'also fired by find-in-page reveal' }],
+    slots: [
+      { name: 'default', type: '—', note: 'the collapsible region' },
+      {
+        name: 'aside',
+        type: '—',
+        note: 'header controls that stay reachable while COLLAPSED — a link, a menu, a badge. Rendered as a sibling of the toggle, never inside it, so each is its own tab stop',
+      },
+    ],
   },
   {
     id: 'filter-rail',
@@ -194,6 +240,14 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'stop', type: '[]' },
       { name: 'scrub-start', type: '[]' },
       { name: 'scrub-end', type: '[]' },
+    ],
+    slots: [
+      {
+        name: 'play',
+        type: '{ playing: boolean; atEnd: boolean }',
+        note: 'replaces the ▶/❚❚/⟲ glyph. Scoped, so the caller renders the right icon for the state without tracking it',
+      },
+      { name: 'stop', type: '—', note: 'replaces the ✕ glyph' },
     ],
   },
   {

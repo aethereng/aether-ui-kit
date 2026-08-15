@@ -2,6 +2,11 @@
 /* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import Tool from '@aether/ui-kit/controls/tool'
+/* Material Design Icons as PATH STRINGS, not a font and not a component library. `@mdi/js` is
+   tree-shaken, so only the icons named here are bundled, and each one drops straight into the
+   #icon slot as an inline <svg>. That is how you keep a familiar icon set without the kit gaining
+   an icon dependency -- the kit never learns what mdi is. */
+import { mdiContentSave, mdiDelete } from '@mdi/js'
 
 const clicks = ref(0)
 
@@ -42,7 +47,7 @@ const clicks = ref(0)
   <div class="g-ex">
     <!-- #icon is a SLOT, not an `icon` prop: a prop would imply an icon vocabulary, and zero
          runtime dependencies is load-bearing for this kit. Bring your own SVG. -->
-    <span class="g-variant">#icon slot, with a label</span>
+    <span class="g-variant">#icon slot, with a label — a hand-written SVG</span>
     <Tool label="Fit view" @click="clicks++">
       <template #icon>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -50,6 +55,25 @@ const clicks = ref(0)
         </svg>
       </template>
     </Tool>
+  </div>
+
+  <div class="g-ex">
+    <!-- The same slot, fed from @mdi/js. mdi paths are drawn on a 24x24 grid, so the viewBox is
+         "0 0 24 24" and `fill="currentColor"` makes the glyph inherit the button's colour -- both
+         the hot and danger variants included, without the icon knowing which it is in. -->
+    <span class="g-variant">#icon slot, fed from @mdi/js — path strings, tree-shaken, no font</span>
+    <div class="g-ex-row">
+      <Tool label="Save" hot @click="clicks++">
+        <template #icon>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path :d="mdiContentSave" /></svg>
+        </template>
+      </Tool>
+      <Tool label="Delete" danger @click="clicks++">
+        <template #icon>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path :d="mdiDelete" /></svg>
+        </template>
+      </Tool>
+    </div>
   </div>
 
   <div class="g-ex">

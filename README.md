@@ -61,7 +61,7 @@ Not on a public registry. Depend on it by git ref, pinned to a tag:
 ```json
 {
   "dependencies": {
-    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.8.0"
+    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.9.0"
   }
 }
 ```
@@ -102,6 +102,22 @@ That is the whole theming story. There is no theme provider, no runtime, no buil
 
 ---
 
+## Where a component's CSS lives
+
+New components ship their CSS in the component's own `<style scoped>`. `src/styles/ui-kit.css` is for
+the token palette and the older global-class components only.
+
+This is a size rule, not a taste one. `ui-kit.css` is imported **wholesale** by every consumer — it
+is one file behind a single `@aether/ui-kit/styles` entry, so it cannot be tree-shaken. A consumer
+importing one component today pays for every rule in it, including components it will never render.
+Scoped CSS travels with the component and disappears when the component is not imported.
+
+Transport, Disclosure, DateField and Tree follow this. Seg, Chip, Tool and PropertyEditor predate it
+and still live in the global sheet; they are not worth moving, but nothing new should join them.
+
+The exception is genuinely shared machinery — the tokens themselves, the coarse-pointer floor, the
+focus ring — which every component needs and no component owns.
+
 ## Components
 
 | | Import | What it is |
@@ -109,6 +125,7 @@ That is the whole theming story. There is no theme provider, no runtime, no buil
 | **Seg** | `controls/seg` | One-active segmented selector. `variant="pill"` for the rounded, uppercase form. |
 | **Chip** | `controls/chip` | Toggle chips with counts and colour dots. Multi-select via a `Set`. |
 | **Tool** | `controls/tool` | Header action button: neutral, primary, destructive. A closed variant set, not a style hook. |
+| **Tree** | `controls/tree` | A keyboard-complete tree: roving focus, typeahead, and both asymmetric arrows — Right expands a closed node but steps into an open one, Left closes an open one but steps out of a closed one. Flat-rendered with aria-level/setsize/posinset. |
 | **Disclosure** | `controls/disclosure` | A collapsible panel whose header row can hold its own controls — a link or badge stays reachable while the panel is shut. Brings its own picker-free chrome; not a <details>, because a <summary> hides everything after it when closed. |
 | **FilterRail** | `controls/filter-rail` | Groups of toggle chips with clear-all and a hidden-count readout. Vertical sidebar or horizontal bar. |
 | **SearchField** | `controls/search-field` | Search input whose clear button appears only once there is something to clear. |

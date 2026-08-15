@@ -1,6 +1,6 @@
 {
   "name": "@aether/ui-kit",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Framework-free component cores with thin Vue wrappers, for engineering interfaces.",
   "license": "Apache-2.0",
   "type": "module",
@@ -41,6 +41,10 @@
     "./controls/tool": {
       "types": "./src/controls/vue/Tool.vue.d.ts",
       "import": "./src/controls/vue/Tool.vue"
+    },
+    "./controls/tree": {
+      "types": "./src/controls/vue/Tree.vue.d.ts",
+      "import": "./src/controls/vue/Tree.vue"
     },
     "./controls/disclosure": {
       "types": "./src/controls/vue/Disclosure.vue.d.ts",
@@ -109,6 +113,7 @@
     "@fontsource/fraunces": "^5.3.0",
     "@fontsource/inter": "^5.3.0",
     "@fontsource/spline-sans-mono": "^5.3.0",
+    "@mdi/js": "^7.4.47",
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/test-utils": "^2.4.11",
     "@vue/tsconfig": "^0.7.0",

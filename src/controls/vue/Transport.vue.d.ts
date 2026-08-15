@@ -19,7 +19,14 @@ type __VLS_Props = {
     /** Text shown beside the progress bar during `phase: 'precompute'`. */
     computeLabel?: string;
 };
-declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+type __VLS_Slots = {
+    play?: (props: {
+        playing: boolean;
+        atEnd: boolean;
+    }) => unknown;
+    stop?: () => unknown;
+};
+declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     stop: () => any;
     toggle: () => any;
     seek: (t: number) => any;
@@ -44,4 +51,10 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     stoppable: boolean;
     computeLabel: string;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;
+type __VLS_WithSlots<T, S> = T & {
+    new (): {
+        $slots: S;
+    };
+};

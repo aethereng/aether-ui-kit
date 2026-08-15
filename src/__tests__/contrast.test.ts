@@ -90,3 +90,24 @@ describe('the kit palette clears WCAG AA', () => {
     expect(rows).toHaveLength(6)
   })
 })
+
+describe('the tokens a host is expected to remap', () => {
+  /* These default to another token rather than to a literal. That is what makes them free to
+   * ignore — a host that never sets them sees exactly the previous appearance — so the defaults
+   * are part of the contract and worth pinning. */
+  it('--aether-selected defaults to the cool accent', () => {
+    expect(tokens['--aether-selected']).toBe('var(--aether-cool)')
+    expect(tokens['--aether-selected-wash']).toBe('var(--aether-cool-wash)')
+  })
+
+  it('--aether-control-font-size keeps the size controls shipped with', () => {
+    expect(tokens['--aether-control-font-size']).toBe('12.5px')
+  })
+
+  it('text on a filled destructive button uses the inverting token, not a literal', () => {
+    // A hardcoded white here is unreadable the moment a host inverts --aether-rose for a dark theme.
+    expect(css).toContain('.aether-tool--fill.danger')
+    const block = css.slice(css.indexOf('.aether-tool--fill.danger'))
+    expect(block.slice(0, 200)).toContain('var(--aether-warm-ink)')
+  })
+})

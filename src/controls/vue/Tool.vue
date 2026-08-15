@@ -32,8 +32,14 @@ withDefaults(
     /** Render only the `#icon` slot, keeping `label` as the accessible name. Without an icon
      *  slot this would produce an empty button, so it is ignored unless one is supplied. */
     labelHidden?: boolean
+    /** FILLED rather than outline. Only meaningful with `danger`, and deliberately not a general
+     *  "make it solid" switch: the kit's destructive button is outline by default because a filled
+     *  red button repeated across a dense toolbar stops reading as a warning. Raise this for the
+     *  destructive action whose consequence is genuinely worse than its neighbours' — deleting model
+     *  geometry rather than clearing a filter. If everything on a surface is filled, nothing is. */
+    fill?: boolean
   }>(),
-  { title: undefined, labelHidden: false },
+  { title: undefined, labelHidden: false, fill: false },
 )
 
 const emit = defineEmits<{
@@ -53,6 +59,7 @@ const slots = defineSlots<{
       'aether-tool': true,
       hot: !!hot && !danger,
       danger: !!danger,
+      'aether-tool--fill': !!fill && !!danger,
       'aether-tool--icon': !!slots.icon,
       'aether-tool--icon-only': !!slots.icon && labelHidden,
     }"

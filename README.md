@@ -102,6 +102,14 @@ That is the whole theming story. There is no theme provider, no runtime, no buil
 
 ---
 
+Three tokens exist so a host can express something the kit could not otherwise say:
+
+| token | default | why it exists |
+|---|---|---|
+| `--aether-selected` | `var(--aether-cool)` | the SELECTED state, split from the accent. One token used to drive both a component's accent and the active state of Seg/Chip, so a host wanting those on different brand colours could not express it. Defaults to the accent, so ignoring it changes nothing. |
+| `--aether-selected-wash` | `var(--aether-cool-wash)` | the tinted form of the above |
+| `--aether-control-font-size` | `12.5px` | control typography. Hardcoded until a host on a 14px type scale found its kit controls sitting visibly smaller beside its own lists, fixable only by overriding the class. |
+
 ## Where a component's CSS lives
 
 New components ship their CSS in the component's own `<style scoped>`. `src/styles/ui-kit.css` is for

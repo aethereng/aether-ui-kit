@@ -8,6 +8,11 @@ export type FieldType =
   | 'text'
   | 'textarea'
   | 'number'
+  /* A number the user drags rather than types. NOT a `variant` of 'number', unlike enum's two
+     display forms: it is a different control with a different interaction, and the value it is
+     good for is one where the SCALE matters more than the digits -- an opacity, a cutting plane.
+     Reuses min/max/step/suffix, so nothing about the data changes. */
+  | 'range'
   | 'boolean'
   | 'enum'
   | 'date'
@@ -40,11 +45,17 @@ export interface FieldDescriptor {
   type: FieldType
   label: string
   required?: boolean
+  /** A raw CSS declaration list for a swatch rendered beside the label, e.g. 'background:#c33'
+   *  or 'border:1.5px dashed #c33'. Deliberately the SAME shape as ChipOption.swatch rather than
+   *  a new one -- and for the same reason: a control that toggles a coloured layer should carry
+   *  the encoding of the thing it controls, so the panel reads as its own legend instead of
+   *  needing one beside it. The kit renders the declaration; it never parses or interprets it. */
+  swatch?: string
   options?: EnumOption[] // required when type === 'enum'
   variant?: EnumVariant // enum display; default 'dropdown'
   refType?: string // type === 'reference': what kind of thing this points at (caller-defined string)
   placeholder?: string
-  /** type === 'number' only. All four map straight to the native <input type="number">'s own
+  /** type === 'number' and 'range'. All four map straight to the native input's own
    *  attributes -- no semantics added. If `step` is omitted, `precision` derives a default
    *  (2 -> 0.01) so the spinner increments by a sane amount for the expected decimal count; it
    *  does NOT round the stored or displayed value, so a caller mid-typing "1.500" never has
@@ -53,7 +64,7 @@ export interface FieldDescriptor {
   min?: number
   max?: number
   precision?: number
-  /** type === 'number' only. Rendered after the input, unconditionally, with no meaning
+  /** type === 'number' and 'range'. Rendered after the input, unconditionally, with no meaning
    *  attached -- '%', 'px' and 'N·m' are the same feature to this component. The kit renders a
    *  unit; it does not know one. Dimensional analysis -- conversion, mm<->in, knowing N·m and
    *  lbf·ft are the same dimension -- is the caller's, on the caller's side of this boundary. */

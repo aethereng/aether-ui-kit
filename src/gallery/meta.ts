@@ -101,6 +101,11 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'disabled', type: 'boolean?' },
       { name: 'title', type: 'string?', note: 'native tooltip' },
       { name: 'labelHidden', type: 'boolean?', note: 'icon only; ignored without an #icon slot' },
+      {
+        name: 'fill',
+        type: 'boolean?',
+        note: 'filled rather than outline; only meaningful with `danger`. Outline is the default because a filled red button repeated across a toolbar stops reading as a warning — raise it for the destructive action whose consequence is genuinely worse than its neighbours’',
+      },
     ],
     slots: [
       {
@@ -258,7 +263,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/property-editor/core',
     blurb: 'Schema-driven form: bind a FieldDescriptor[], get an editor.',
     detail:
-      'Text, textarea, number, date, boolean, and enum (button-group or dropdown) fields. The core is plain TypeScript with unit tests and no DOM; the Vue file is a thin wrapper. It stays ignorant of what the object being edited actually is. A number field takes step/min/max/precision and a `suffix` rendered after the input — the kit renders a unit, it never knows one, so conversion and unit systems stay with the caller. `reference` and `placement` render through a named slot instead: only the caller knows how to pick an entity or edit a 3D placement.',
+      'Text, textarea, number, range, date, boolean, and enum (button-group or dropdown) fields. The core is plain TypeScript with unit tests and no DOM; the Vue file is a thin wrapper. It stays ignorant of what the object being edited actually is. A number field takes step/min/max/precision and a `suffix` rendered after the input — the kit renders a unit, it never knows one, so conversion and unit systems stay with the caller. `reference` and `placement` render through a named slot instead: only the caller knows how to pick an entity or edit a 3D placement.',
     props: [
       { name: 'fields', type: 'FieldDescriptor[]', note: '{ key, label, type, options?, … }' },
       { name: 'modelValue', type: 'FieldValues', note: 'a plain record' },

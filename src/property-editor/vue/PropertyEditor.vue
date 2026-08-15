@@ -81,7 +81,17 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
 <template>
   <div class="aether-property-editor">
     <div v-for="field in fields" :key="field.key" class="aether-property-editor__field">
-      <label :for="`pe-${field.key}`">{{ field.label }}</label>
+      <!-- The swatch is aria-hidden and carries no text: it repeats the encoding of the thing the
+           field controls, so a screen reader that also announced it would read the label twice in
+           two vocabularies. The label alone remains the accessible name. -->
+      <label :for="`pe-${field.key}`">
+        <span
+          v-if="field.swatch"
+          class="aether-property-editor__swatch"
+          :style="field.swatch"
+          aria-hidden="true"
+        ></span>{{ field.label }}
+      </label>
 
       <input
         v-if="field.type === 'text'"
@@ -106,6 +116,27 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
           @input="onNumberInput(field.key, $event.target as HTMLInputElement)"
         />
         <span v-if="field.suffix" class="aether-property-editor__suffix">{{ field.suffix }}</span>
+      </div>
+
+      <!-- A range does NOT write a corrected value back on mount, and that is the contract worth
+           stating: a native range snaps its THUMB to the nearest step, and a component that read
+           `.value` back on render would silently rewrite 0.37 to 0.35 in the caller's data for a
+           field the user never touched. Controlled binding plus emit-on-input only means the stored
+           value survives until the user actually drags. The readout shows the STORED number, not
+           the thumb position, so the two never disagree silently. -->
+      <div v-else-if="field.type === 'range'" class="aether-property-editor__range">
+        <input
+          :id="`pe-${field.key}`"
+          type="range"
+          :step="numberStep(field)"
+          :min="field.min"
+          :max="field.max"
+          :value="view[field.key] as number"
+          @input="onNumberInput(field.key, $event.target as HTMLInputElement)"
+        />
+        <output class="aether-property-editor__readout" :for="`pe-${field.key}`">
+          {{ view[field.key] }}<span v-if="field.suffix"> {{ field.suffix }}</span>
+        </output>
       </div>
 
       <textarea

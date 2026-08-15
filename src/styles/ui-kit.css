@@ -31,6 +31,19 @@
   --aether-cool: #2f6f6b;
   --aether-cool-soft: #5fa4a0;
   --aether-cool-wash: rgba(95, 164, 160, 0.15);
+  /* The SELECTED state, split out from --aether-cool.
+     One token used to drive both a component's accent (Transport's scrub and focus ring) and the
+     active state of Seg/Chip. A host that wants those to differ — an accent on one brand colour and
+     selection on another — could not express it, because setting the accent moved the selection with
+     it. These default to the cool accent, so a host that does not care sees no change at all; a host
+     that does maps them separately. */
+  --aether-selected: var(--aether-cool);
+  --aether-selected-wash: var(--aether-cool-wash);
+
+  /* Control typography. Hardcoded 12.5px until now, which a host on a different type scale could
+     only fight with an override — kit controls sat visibly smaller beside a 14px list. */
+  --aether-control-font-size: 12.5px;
+
   --aether-shadow: 0 1px 2px rgba(27, 30, 35, 0.06);
   /* lift on hover, and the faint stripe that separates alternating chart lanes */
   --aether-shadow-hover: 0 2px 6px rgba(27, 30, 35, 0.14);
@@ -123,6 +136,41 @@
   color: var(--aether-cool);
   border-color: var(--aether-cool-soft);
 }
+/* The label's swatch. Same construction as Chip's, so the two read as one encoding across the kit:
+   a caller-supplied declaration list on a small block, and the kit interprets none of it. */
+.aether-property-editor__swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 3px;
+  vertical-align: -1px;
+}
+.aether-property-editor__field label {
+  display: flex;
+  align-items: center;
+}
+/* Range: the track takes the room, the read-out is a fixed, tabular column so the track does not
+   resize as digits change under it. */
+.aether-property-editor__range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.aether-property-editor__range input[type='range'] {
+  flex: 1 1 auto;
+  min-width: 0;
+  accent-color: var(--aether-selected);
+}
+.aether-property-editor__readout {
+  flex: none;
+  min-width: 4.5ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--aether-ink-soft);
+}
+
 .aether-property-editor__error {
   color: var(--aether-warm);
   font-size: 12px;
@@ -153,7 +201,7 @@
   background: var(--aether-surface);
   color: var(--aether-ink-soft);
   padding: 6px 11px;
-  font-size: 12.5px;
+  font-size: var(--aether-control-font-size);
   cursor: pointer;
   font-family: inherit;
   border-right: 1px solid var(--aether-line);
@@ -271,8 +319,8 @@
   cursor: default;
 }
 .aether-chip.on {
-  background: var(--aether-cool-wash);
-  color: var(--aether-cool);
+  background: var(--aether-selected-wash);
+  color: var(--aether-selected);
   /* currentColor, not a fixed accent: when an option carries its own `color`, the active
      border follows that colour rather than fighting it. With no option colour this
      resolves to the cool accent above, so the default is unchanged. */
@@ -313,7 +361,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  font-size: 12.4px;
+  font-size: var(--aether-control-font-size);
   text-align: left;
   transition: background 0.18s;
 }
@@ -325,6 +373,14 @@
   background: var(--aether-panel);
   color: var(--aether-ink);
   border-color: transparent;
+}
+/* An on row hovered. Without this it had NONE: `.on` and `:hover` both resolved to --aether-panel,
+   so pointing at an already-selected filter changed nothing and the row read as dead. Not a taste
+   question -- a control that does not answer the pointer looks broken. The accent wash is the
+   answer rather than a darker panel, because it also says WHICH state is being hovered. */
+.aether-chip--row.on:hover:not(:disabled) {
+  background: var(--aether-selected-wash);
+  color: var(--aether-selected);
 }
 /* the count sits in its own right-hand column, which is what makes a rail scannable */
 .aether-chip--row .n {
@@ -547,7 +603,7 @@
   color: var(--aether-ink-soft);
   border-radius: var(--aether-radius);
   padding: 6px 11px;
-  font-size: 12.5px;
+  font-size: var(--aether-control-font-size);
   cursor: pointer;
   text-decoration: none;
   box-shadow: var(--aether-shadow);
@@ -612,6 +668,20 @@
   background: var(--aether-rose-wash);
   color: var(--aether-rose);
   border-color: var(--aether-rose);
+}
+/* The filled destructive variant. Off by default -- see Tool's `fill` prop for why outline is the
+   default and when to override it. --aether-warm-ink is the token for "text on a saturated fill";
+   it already exists for the hot variant and inverts correctly in a dark theme, which a hardcoded
+   white would not. */
+.aether-tool--fill.danger {
+  background: var(--aether-rose);
+  border-color: var(--aether-rose);
+  color: var(--aether-warm-ink);
+}
+.aether-tool--fill.danger:hover:not(:disabled) {
+  background: var(--aether-rose);
+  border-color: var(--aether-ink-soft);
+  color: var(--aether-warm-ink);
 }
 .aether-tool:disabled {
   opacity: 0.5;

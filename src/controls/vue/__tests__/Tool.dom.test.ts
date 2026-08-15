@@ -147,3 +147,34 @@ describe('Tool — the layout hook is a class, not a prop', () => {
     w.unmount()
   })
 })
+
+describe('Tool — the filled destructive variant', () => {
+  it('fills only when danger is also set', () => {
+    /* `fill` is not a general "make it solid" switch. On its own it must do nothing, or it becomes
+     * the open style hook the variant set exists to avoid. */
+    const solo = mount(Tool, { props: { label: 'Save', fill: true } })
+    expect(solo.classes()).not.toContain('aether-tool--fill')
+    solo.unmount()
+
+    const both = mount(Tool, { props: { label: 'Delete', danger: true, fill: true } })
+    expect(both.classes()).toContain('aether-tool--fill')
+    expect(both.classes()).toContain('danger')
+    both.unmount()
+  })
+
+  it('is outline by default, so a filled destructive button stays a deliberate choice', () => {
+    const w = mount(Tool, { props: { label: 'Delete', danger: true } })
+    expect(w.classes()).not.toContain('aether-tool--fill')
+    w.unmount()
+  })
+
+  it('still loses to danger when hot is passed as well', () => {
+    // The precedence rule is unchanged by fill: mislabelling a destructive action stays the worse
+    // failure, and a filled one would be louder about the wrong thing.
+    const w = mount(Tool, { props: { label: 'Discard', hot: true, danger: true, fill: true } })
+    expect(w.classes()).toContain('danger')
+    expect(w.classes()).not.toContain('hot')
+    expect(w.classes()).toContain('aether-tool--fill')
+    w.unmount()
+  })
+})

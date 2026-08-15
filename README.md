@@ -155,40 +155,27 @@ There is also one plain CSS class, `.aether-button-group`, for a joined row of `
 
 ### PropertyEditor: where the labels sit
 
-`labelPlacement` is `'above'` (default) or `'inside'`, set on the component rather than per field —
-a form should be internally consistent.
+`labelPlacement` is `'above'` (default) or `'inside'`, set on the component rather than per field.
 
 `'above'` is a property **sheet**: labels align down the left, values down the right, and a long
 list scans well. `'inside'` puts a small permanent label in the control's own box, for **form**
-surfaces — a dialog that already scrolls, where each field should read as one object. Measured on
-the gallery's eleven-field example, `'inside'` takes a text field from 50px to 39px and the whole
-form from 616px to 541px.
+surfaces — a dialog that already scrolls, where each field should read as one object. On the
+gallery's eleven-field example, `'inside'` takes a text field from 50px to 39px and the whole form
+from 616px to 541px.
 
-Two things about it that are deliberate:
+`'inside'` moves the label on the five field types that have a box of their own. The other five
+have no border to sit inside, and their labels stay exactly where `'above'` puts them:
 
-**It is never animated.** The label does not sit in the value's place when empty and rise on focus.
-`placeholder` is a real `FieldDescriptor` field, and the CSS-only version of that behaviour requires
-`placeholder=" "` — so a caller setting a real placeholder would break it. A property sheet's fields
-are also nearly always filled, so the animation would almost never fire for the machinery it costs.
-
-**There is no notched variant, and there cannot be one.** This is the first thing people ask for and
-it is worth being exact about why the answer is no. Five of the ten field types have no border to
-notch into:
-
-| takes the label inside | keeps it beside |
+| label moves inside | unchanged |
 |---|---|
-| `text` · `textarea` · `number` · `date` · `select` | `range` (a track and a read-out) · `boolean` (a pill switch) · `enum` with `variant: 'buttons'` (a button group) · `reference` and `placement` (**you** supply the widget through a slot, so the kit does not own the box) |
+| `text` · `textarea` · `number` · `date` · `select` | `range` (a track and a read-out) · `boolean` (a pill switch) · `enum` with `variant: 'buttons'` (a button group) · `reference` and `placement` (**you** supply the widget through a slot) |
 
-A notched variant would style the left column and fall back for the right one, reintroducing exactly
-the inconsistency a placement axis exists to remove.
+The label is permanent, not animated: it does not rest in the value's place and rise on focus.
+`placeholder` is a real `FieldDescriptor` field, and the CSS-only floating behaviour needs
+`placeholder=" "` — which would break any caller that sets a real one.
 
-That split looks arbitrary and is not. Vuetify has no single rule either — `v-slider` labels before,
-`v-switch` after, `v-btn-toggle` has none. It gets coherence from being eight components each
-designed once. `PropertyEditor` is **one** component rendering ten types from one descriptor array,
-so the rule has to be written down where eight separately-designed components would just absorb it.
-
-`'inside'` changes no markup — the label is positioned, not re-parented — so overrides you have
-written against the field structure keep matching in both modes.
+`'inside'` changes no markup. The label is positioned, not re-parented, so overrides written against
+the field structure keep matching in both modes.
 
 ### A component, in full
 

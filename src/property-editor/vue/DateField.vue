@@ -238,6 +238,27 @@ function stepMonth(delta: number) {
 .aether-datefield:focus-within {
   border-color: var(--aether-ink-soft);
 }
+/* The inner input, styled HERE since 0.13.0 rather than by the form's stylesheet. The wrapper is
+   the thing with the border, so the input gives up its own box entirely — and it has to state its
+   font and colour itself, because the shared `.aether-property-editor__field input` rule that used
+   to supply them has gone with the other controls. Without this the date reads at the host's
+   default size and colour inside a kit-sized box. */
+.aether-datefield__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--aether-ink);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  accent-color: var(--aether-cool);
+}
+.aether-datefield__input:focus {
+  outline: none;
+}
 /* The native indicator is hidden rather than merely restyled, because clicking it opens the popup
    that cannot be themed. With it gone there is no route to the browser's picker on a fine pointer,
    which is the point: one picker, ours. `appearance: none` alone does not remove it. */

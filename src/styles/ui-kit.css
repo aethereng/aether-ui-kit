@@ -108,20 +108,9 @@
   text-transform: uppercase;
   color: var(--aether-ink-soft);
 }
-/* :not([type='checkbox']) because the boolean field is a custom switch with its own
-   dimensions -- inheriting the text-input padding and border made it 60x36 instead of a
-   38x22 pill for any consumer without a box-sizing reset of their own. */
-.aether-property-editor__field input:not([type='checkbox']),
-.aether-property-editor__field textarea,
-.aether-property-editor__field select {
-  border: 1px solid var(--aether-line-strong);
-  border-radius: var(--aether-radius);
-  background: var(--aether-surface);
-  color: var(--aether-ink);
-  padding: 6px 10px;
-  font: inherit;
-  font-size: 13px;
-}
+/* The shared box that used to be declared here (and again, differently, further down — the later
+   one won on source order) now lives in each control. Removing it is what makes the controls
+   portable: a box keyed to `.aether-property-editor__field` is a box that only exists in a form. */
 .aether-property-editor__buttons {
   display: flex;
   flex-wrap: wrap;
@@ -158,24 +147,12 @@
 }
 /* Range: the track takes the room, the read-out is a fixed, tabular column so the track does not
    resize as digits change under it. */
-.aether-property-editor__range {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.aether-property-editor__range input[type='range'] {
-  flex: 1 1 auto;
-  min-width: 0;
-  accent-color: var(--aether-selected);
-}
-.aether-property-editor__readout {
-  flex: none;
-  min-width: 4.5ch;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  font-size: 12px;
-  color: var(--aether-ink-soft);
-}
+/* The range and its read-out moved to Slider.vue in 0.13.0, along with the number field's box and
+   suffix (NumberField.vue), the text box (TextField.vue), the select and its base-select theming
+   (Select.vue) and the boolean pill (Switch.vue). What remains in this file is FORM LAYOUT — the
+   field container, the label, the error line — because that is all that was ever specific to a
+   form. The controls were only here because there was nowhere else to put them, which meant they
+   did not exist outside a `FieldDescriptor[]`. */
 
 .aether-property-editor__error {
   color: var(--aether-warm);
@@ -701,20 +678,8 @@
   text-transform: uppercase;
   color: var(--aether-ink-soft);
 }
-.aether-property-editor__field input[type='text'],
-.aether-property-editor__field input[type='date'],
-.aether-property-editor__field input[type='number'],
-.aether-property-editor__field textarea,
-.aether-property-editor__field select {
-  width: 100%;
-  font: inherit;
-  font-size: 13.5px;
-  color: var(--aether-ink);
-  background: var(--aether-surface);
-  border: 1px solid var(--aether-line-strong);
-  border-radius: 7px;
-  padding: 7px 9px;
-}
+/* The shared control box moved into the components in 0.13.0, and DateField styles its own inner
+   input, so nothing in this file dresses a control any more. */
 /* The number field is a WRAPPER that looks like the input, with a borderless input inside it, so
    the unit sits INSIDE the box rather than floating beside it. Doing it the other way -- a bordered
    input with a sibling span -- reads as two controls and makes the unit look like a caption.
@@ -730,52 +695,7 @@
    Behind @supports on purpose: where it is unsupported the native control is left completely alone,
    because base-select strips the native appearance wholesale and a browser that ignores the opt-in
    while applying the option styling below would render a half-built dropdown. */
-@supports (appearance: base-select) {
-  .aether-property-editor__field select {
-    appearance: base-select;
-  }
-  /* The disclosure arrow the base appearance draws for us. */
-  .aether-property-editor__field select::picker-icon {
-    color: var(--aether-ink-soft);
-    transition: rotate 0.15s ease;
-  }
-  .aether-property-editor__field select:open::picker-icon {
-    rotate: 180deg;
-  }
-  .aether-property-editor__field select::picker(select) {
-    appearance: base-select;
-    margin-top: 4px;
-    padding: 4px;
-    border: 1px solid var(--aether-line-strong);
-    border-radius: 9px;
-    background: var(--aether-surface);
-    box-shadow: var(--aether-shadow);
-  }
-  .aether-property-editor__field select option {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 9px;
-    border-radius: 5px;
-    background: transparent;
-    color: var(--aether-ink);
-    font-size: 13.5px;
-  }
-  /* The blue, replaced. `:hover` is the pointer highlight and `:focus` the keyboard one — both are
-     needed, or arrowing through the list leaves the system colour in place for keyboard users. */
-  .aether-property-editor__field select option:hover,
-  .aether-property-editor__field select option:focus {
-    background: var(--aether-cool-wash);
-    color: var(--aether-cool);
-  }
-  .aether-property-editor__field select option:checked {
-    font-weight: 650;
-  }
-  /* The tick beside the selected row, which base-select adds and the native control never had. */
-  .aether-property-editor__field select option::checkmark {
-    color: var(--aether-cool);
-  }
-}
+/* base-select theming moved to Select.vue with the control it themes. */
 
 /* The date field is the same construction, so its inner input needs the same treatment: the box is
    the wrapper (.aether-datefield, styled in DateField.vue) and the input inside it must give up its
@@ -783,57 +703,9 @@
    scoped rule compiles to `.aether-datefield__input[data-v-x]` — two classes — and would LOSE to
    `.aether-property-editor__field input[type='date']` above, which is two classes plus an element.
    Same lesson as the number field: where either order or specificity would work, use specificity. */
-.aether-property-editor__field .aether-datefield input[type='date'] {
-  flex: 1 1 auto;
-  min-width: 0;
-  width: auto;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
-}
-.aether-property-editor__field .aether-datefield input[type='date']:focus {
-  outline: none;
-}
+/* DateField styles its own inner input now. */
 
-.aether-property-editor__number {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  box-sizing: border-box;
-  /* same box the other fields declare, moved out here */
-  background: var(--aether-surface);
-  border: 1px solid var(--aether-line-strong);
-  border-radius: 7px;
-  padding: 7px 9px;
-}
-/* Focus lives on the wrapper now, since the thing with the border is the wrapper. Without this the
-   field gives no focus feedback at all -- the input's own :focus rule is styling an element that
-   no longer has a visible edge. */
-.aether-property-editor__number:focus-within {
-  border-color: var(--aether-ink-soft);
-}
-.aether-property-editor__field .aether-property-editor__number input[type='number'] {
-  flex: 1 1 auto;
-  min-width: 0;
-  width: auto;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
-}
-.aether-property-editor__field .aether-property-editor__number input[type='number']:focus {
-  outline: none;
-}
-.aether-property-editor__suffix {
-  flex: none;
-  font-size: 12px;
-  color: var(--aether-ink-soft);
-  white-space: nowrap;
-  /* the unit is not a value: never let it be selected instead of the number */
-  user-select: none;
-}
+/* The number box and its suffix moved to NumberField.vue. */
 
 /* ---- PropertyEditor: labelPlacement="inside" ----
    The label moves INTO the control's box instead of sitting above it. Two things about how.
@@ -855,20 +727,18 @@
    would just absorb it. */
 .aether-property-editor--inside
   .aether-property-editor__field:is(
-    :has(> input[type='text']),
-    :has(> textarea),
-    :has(> select),
-    :has(> .aether-property-editor__number),
+    :has(> .aether-textfield),
+    :has(> .aether-select),
+    :has(> .aether-numberfield),
     :has(> .aether-datefield)
   ) {
   position: relative;
 }
 .aether-property-editor--inside
   .aether-property-editor__field:is(
-    :has(> input[type='text']),
-    :has(> textarea),
-    :has(> select),
-    :has(> .aether-property-editor__number),
+    :has(> .aether-textfield),
+    :has(> .aether-select),
+    :has(> .aether-numberfield),
     :has(> .aether-datefield)
   )
   > label {
@@ -886,14 +756,14 @@
 /* 17px top / 4px bottom against the 7px/7px of `above` mode: same 16px line box, so the control
    lands at ~39px with the label inside it, against 50px for a 32px control with a 14px label and a
    4px gap stacked above. Shorter AND labelled. */
-.aether-property-editor--inside .aether-property-editor__field > input[type='text'],
-.aether-property-editor--inside .aether-property-editor__field > textarea,
-.aether-property-editor--inside .aether-property-editor__field > select,
-.aether-property-editor--inside .aether-property-editor__field > .aether-property-editor__number,
-/* Three classes rather than two: `.aether-datefield` is a SCOPED rule, so it compiles to
-   `.aether-datefield[data-v-x]` and would TIE with a two-class selector here, leaving source order
-   -- which is not ours to control for an injected style block -- to decide. Same lesson as the
-   inner input above. */
+/* THREE classes on every one of these, deliberately. Each control is a scoped component now, so its
+   own rule compiles to `.aether-textfield[data-v-x]` — two classes' worth of specificity. A
+   two-class selector here would TIE with it and leave source order to decide, and the order of an
+   injected component style block is not ours to control. This used to matter only for DateField;
+   since the controls moved out it matters for all of them. */
+.aether-property-editor--inside .aether-property-editor__field .aether-textfield,
+.aether-property-editor--inside .aether-property-editor__field .aether-select,
+.aether-property-editor--inside .aether-property-editor__field .aether-numberfield,
 .aether-property-editor--inside .aether-property-editor__field .aether-datefield {
   padding-top: 17px;
   padding-bottom: 4px;
@@ -1009,42 +879,12 @@
   color: var(--aether-ink);
   font-weight: 500;
 }
+/* The pill itself moved to Switch.vue in 0.13.0 — it is a control, and living here meant the
+   appearance existed only inside a form. What stays is the FORM LAYOUT above (the row direction,
+   the sentence-case label) plus `order`, which positions the input relative to that label and is
+   meaningless outside this container. */
 .aether-property-editor__field input[type='checkbox'] {
   order: 1;
-  /* The kit deliberately ships no global reset -- it must not impose one on a host -- so
-     every component that sets an explicit width states its own box model. */
-  box-sizing: border-box;
-  padding: 0;
-  border: 0;
-  appearance: none;
-  -webkit-appearance: none;
-  width: 38px;
-  height: 22px;
-  border-radius: 11px;
-  background: var(--aether-line-strong);
-  position: relative;
-  cursor: pointer;
-  flex: none;
-  transition: background 0.15s;
-  margin: 0;
-}
-.aether-property-editor__field input[type='checkbox']::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--aether-surface);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  transition: transform 0.15s;
-}
-.aether-property-editor__field input[type='checkbox']:checked {
-  background: var(--aether-cool);
-}
-.aether-property-editor__field input[type='checkbox']:checked::after {
-  transform: translateX(16px);
 }
 
 /* ---- Focus ring ----

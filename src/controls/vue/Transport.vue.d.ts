@@ -41,11 +41,11 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     "onScrub-start"?: (() => any) | undefined;
     "onScrub-end"?: (() => any) | undefined;
 }>, {
+    format: (t: number) => string;
     speed: number;
     speeds: number[];
     phase: "play" | "precompute";
     precomputePct: number;
-    format: (t: number) => string;
     speedMode: "cycle" | "presets";
     speedLabel: (s: number) => string;
     stoppable: boolean;

@@ -21,6 +21,10 @@ import ChipExample from './examples/ChipExample.vue'
 import ChipExampleSrc from './examples/ChipExample.vue?raw'
 import BadgeExample from './examples/BadgeExample.vue'
 import BadgeExampleSrc from './examples/BadgeExample.vue?raw'
+import FieldsExample from './examples/FieldsExample.vue'
+import FieldsExampleSrc from './examples/FieldsExample.vue?raw'
+import SwitchExample from './examples/SwitchExample.vue'
+import SwitchExampleSrc from './examples/SwitchExample.vue?raw'
 import TooltipExample from './examples/TooltipExample.vue'
 import TooltipExampleSrc from './examples/TooltipExample.vue?raw'
 import MenuExample from './examples/MenuExample.vue'
@@ -211,6 +215,14 @@ const groupAnchor = (g: Group) => g.toLowerCase()
 
         <GSection v-else-if="c.id === 'badge'" :meta="c" :source="BadgeExampleSrc">
           <BadgeExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'switch'" :meta="c" :source="SwitchExampleSrc">
+          <SwitchExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'fields'" :meta="c" :source="FieldsExampleSrc">
+          <FieldsExample />
         </GSection>
 
         <GSection v-else-if="c.id === 'tooltip'" :meta="c" :source="TooltipExampleSrc">

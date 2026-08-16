@@ -18,6 +18,8 @@ export type {
   ToolProps,
   DisclosureProps,
   ChatMessage,
+  SelectOption,
+  SelectGroup,
 } from './types'
 
 /* Menu's keyboard model, exported for the same reason Tree's is: a caller building its own menu

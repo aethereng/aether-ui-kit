@@ -68,6 +68,16 @@ export interface DisclosureProps {
     /** Disable the toggle. The region stays in whatever state `open` says. */
     disabled?: boolean;
 }
+export interface SelectOption {
+    value: string;
+    label: string;
+    subtitle?: string;
+    disabled?: boolean;
+}
+export interface SelectGroup {
+    label: string;
+    options: SelectOption[];
+}
 export interface FilterGroup<V extends string = string> {
     key: string;
     label: string;

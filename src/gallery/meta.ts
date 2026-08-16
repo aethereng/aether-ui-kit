@@ -88,6 +88,40 @@ export const COMPONENTS: CompMeta[] = [
     emits: [{ name: 'toggle', type: '[value: V]', note: 'caller owns the Set; chip only reports' }],
   },
   {
+    id: 'switch',
+    name: 'Switch',
+    subpath: '@aether/ui-kit/controls/switch',
+    group: 'Forms',
+    blurb: 'Boolean toggle as a pill switch. One bare input; you own the label.',
+    detail:
+      'This existed before it was a component — but only under `.aether-property-editor__field input[type=checkbox]`, so the appearance lived inside a form and a consumer with one standalone toggle had no way to reach it. That is a packaging failure rather than a missing feature, and PropertyEditor now renders this instead of a raw input. It is deliberately one `<input>` with no wrapper and no label of its own: a self-labelling wrapper would nest a `<label>` inside the form\'s own `<label for>`, which is invalid, and would change the DOM a consumer\'s overrides are written against. Extraction also gave it the kit\'s focus ring, which it had never had — ui-kit.css declares one ring "for every control the kit ships" and lists Tool, Chip, Seg and the enum buttons; the switch was missed, so keyboard focus fell through to the browser\'s own blue. There is still no coarse-pointer floor, and that is carried over deliberately: the 18px knob is tuned to a 22px track, so a min-height rule rewrites the track and leaves the knob behind.',
+    props: [
+      { name: 'modelValue', type: 'boolean', note: 'controlled; v-model' },
+      { name: 'disabled', type: 'boolean?' },
+    ],
+    emits: [{ name: 'update:modelValue', type: '[value: boolean]' }],
+  },
+  {
+    id: 'fields',
+    name: 'TextField · NumberField · Select · Slider',
+    subpath: '@aether/ui-kit/controls/text-field · /number-field · /select · /slider',
+    group: 'Forms',
+    core: '@aether/ui-kit/controls/core',
+    blurb: 'The four field controls, standalone. PropertyEditor composes these.',
+    detail:
+      'All four existed before they were components — but only under `.aether-property-editor__field`, so the appearance lived inside a form and a panel with one or two controls had no way to reach them. That is why a consumer kept a framework for a single dropdown. NumberField is separate from TextField rather than a `type` on it, and the reason is commit semantics: a text field commits every keystroke, and a number field that did would rewrite the model to 1 the moment you type "1." and never let you reach 1.5 — `coerceNumberInput` uses `validity.badInput` to tell mid-typing from cleared, which is the only signal that distinguishes them. Its border also lives on a wrapper so the unit sits inside the box rather than reading as a caption beside it. `textarea` by contrast is a `multiline` PROP, not a component: it types identically to an input and only its shape differs. Different interaction means a different component; different shape means a prop. Select supports `groups`, because a picker listing load cases and ULS combinations flattened into one list loses the distinction between two kinds of thing. Slider takes a `format` function, because a stored value and a displayed one are not always the same quantity — a 0-100 slider position driving a non-linear deform factor has no business printing its own number.',
+    props: [
+      { name: 'modelValue', type: 'string | number | boolean', note: 'controlled; v-model' },
+      { name: 'multiline / rows', type: 'boolean? / number?', note: 'TextField only' },
+      { name: 'min / max / step / precision', type: 'number?', note: 'NumberField, Slider' },
+      { name: 'suffix', type: 'string?', note: 'a unit the kit renders and never interprets' },
+      { name: 'format', type: '(v: number) => string?', note: 'Slider read-out; defaults to the value' },
+      { name: 'options / groups', type: 'SelectOption[] / SelectGroup[]', note: 'Select' },
+      { name: 'disabled', type: 'boolean?' },
+    ],
+    emits: [{ name: 'update:modelValue', type: '[value]' }],
+  },
+  {
     id: 'badge',
     name: 'Badge',
     subpath: '@aether/ui-kit/controls/badge',

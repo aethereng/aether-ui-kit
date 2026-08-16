@@ -1,6 +1,6 @@
 {
   "name": "@aether/ui-kit",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Framework-free component cores with thin Vue wrappers, for engineering interfaces.",
   "license": "Apache-2.0",
   "type": "module",
@@ -29,6 +29,26 @@
     "./controls/chip": {
       "types": "./src/controls/vue/Chip.vue.d.ts",
       "import": "./src/controls/vue/Chip.vue"
+    },
+    "./controls/switch": {
+      "types": "./src/controls/vue/Switch.vue.d.ts",
+      "import": "./src/controls/vue/Switch.vue"
+    },
+    "./controls/slider": {
+      "types": "./src/controls/vue/Slider.vue.d.ts",
+      "import": "./src/controls/vue/Slider.vue"
+    },
+    "./controls/select": {
+      "types": "./src/controls/vue/Select.vue.d.ts",
+      "import": "./src/controls/vue/Select.vue"
+    },
+    "./controls/number-field": {
+      "types": "./src/controls/vue/NumberField.vue.d.ts",
+      "import": "./src/controls/vue/NumberField.vue"
+    },
+    "./controls/text-field": {
+      "types": "./src/controls/vue/TextField.vue.d.ts",
+      "import": "./src/controls/vue/TextField.vue"
     },
     "./controls/badge": {
       "types": "./src/controls/vue/Badge.vue.d.ts",

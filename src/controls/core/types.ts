@@ -97,6 +97,24 @@ export interface DisclosureProps {
   disabled?: boolean
 }
 
+/* One row in a Select. `subtitle` is a quieter second line — a consumer's ULS combination carries
+   its factored formula there ("1.35·G + 1.5·Q"), which is what makes two similarly-named rows
+   distinguishable rather than decorative. */
+export interface SelectOption {
+  value: string
+  label: string
+  subtitle?: string
+  disabled?: boolean
+}
+
+/* A labelled group of Select rows, rendered as an <optgroup>. Grouping is structure, not styling:
+   a picker listing load cases AND combinations flattened into one list loses the distinction
+   between two kinds of thing, which in a structural model is a correctness problem. */
+export interface SelectGroup {
+  label: string
+  options: SelectOption[]
+}
+
 // A named group of toggles inside a FilterRail. `options` are ChipOption rows;
 // `selected` is the active Set for this group. Grouping + selection are data —
 // the rail renders one Chip row per group and wires toggle/clear mechanically.

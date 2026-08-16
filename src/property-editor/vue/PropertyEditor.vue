@@ -4,9 +4,19 @@
  * has never heard of Vue. This component's only job is: instantiate the engine, react to its
  * change events, and render one widget per field type. */
 import { computed, onScopeDispose, reactive, watch } from 'vue'
-import { coerceNumberInput, numberStep, PropertyEditorEngine } from '../core/PropertyEditorEngine'
+import { numberStep, PropertyEditorEngine } from '../core/PropertyEditorEngine'
 import type { FieldDescriptor, FieldValues } from '../core/types'
 import DateField from './DateField.vue'
+/* This component composes the kit's standalone controls rather than hand-rolling raw inputs. It
+   used to render `<input>`/`<select>`/`<textarea>` directly with the styling keyed to
+   `.aether-property-editor__field`, which meant the controls existed only inside a form — a
+   consumer with one standalone toggle could not reach them. The engine below is what this
+   component is actually for; the widgets are now shared. */
+import Switch from '../../controls/vue/Switch.vue'
+import Slider from '../../controls/vue/Slider.vue'
+import Select from '../../controls/vue/Select.vue'
+import NumberField from '../../controls/vue/NumberField.vue'
+import TextField from '../../controls/vue/TextField.vue'
 
 const props = defineProps<{
   fields: FieldDescriptor[]
@@ -73,13 +83,9 @@ function onFieldInput(key: string, value: unknown) {
   engine.setValue(key, value)
 }
 
-/* Commits only on a COMPLETE number, or on a genuinely emptied field. An in-progress keystroke is
-   left alone rather than written back -- see coerceNumberInput for why `validity.badInput` is the
-   only way to tell "mid-decimal" from "cleared" on a number input. */
-function onNumberInput(key: string, el: HTMLInputElement) {
-  const result = coerceNumberInput(el.value, el.validity.badInput)
-  if (result.commit) onFieldInput(key, result.value)
-}
+/* The number field's commit rule -- leave an in-progress keystroke alone, using `validity.badInput`
+   to tell "mid-decimal" from "cleared" -- moved into NumberField with the control itself. It was
+   never form logic; it is what typing a number means. */
 
 const hasErrors = computed(() => Object.keys(errors).length > 0)
 defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValues() })
@@ -103,30 +109,28 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
         ></span>{{ field.label }}
       </label>
 
-      <input
+      <TextField
         v-if="field.type === 'text'"
         :id="`pe-${field.key}`"
-        type="text"
         :placeholder="field.placeholder"
-        :value="view[field.key] as string"
-        @input="onFieldInput(field.key, ($event.target as HTMLInputElement).value)"
+        :model-value="view[field.key] as string"
+        @update:model-value="onFieldInput(field.key, $event)"
       />
 
       <!-- Wrapped even with no suffix, so the row is always the same width -- see
            .aether-property-editor__number in ui-kit.css for why the input gives up its usual
            100% width only inside this wrapper. -->
-      <div v-else-if="field.type === 'number'" class="aether-property-editor__number">
-        <input
-          :id="`pe-${field.key}`"
-          type="number"
-          :step="numberStep(field)"
-          :min="field.min"
-          :max="field.max"
-          :value="view[field.key] as number"
-          @input="onNumberInput(field.key, $event.target as HTMLInputElement)"
-        />
-        <span v-if="field.suffix" class="aether-property-editor__suffix">{{ field.suffix }}</span>
-      </div>
+      <NumberField
+        v-else-if="field.type === 'number'"
+        :id="`pe-${field.key}`"
+        :model-value="view[field.key] as number"
+        :min="field.min"
+        :max="field.max"
+        :step="field.step"
+        :precision="field.precision"
+        :suffix="field.suffix"
+        @update:model-value="onFieldInput(field.key, $event)"
+      />
 
       <!-- A range does NOT write a corrected value back on mount, and that is the contract worth
            stating: a native range snaps its THUMB to the nearest step, and a component that read
@@ -134,27 +138,24 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
            field the user never touched. Controlled binding plus emit-on-input only means the stored
            value survives until the user actually drags. The readout shows the STORED number, not
            the thumb position, so the two never disagree silently. -->
-      <div v-else-if="field.type === 'range'" class="aether-property-editor__range">
-        <input
-          :id="`pe-${field.key}`"
-          type="range"
-          :step="numberStep(field)"
-          :min="field.min"
-          :max="field.max"
-          :value="view[field.key] as number"
-          @input="onNumberInput(field.key, $event.target as HTMLInputElement)"
-        />
-        <output class="aether-property-editor__readout" :for="`pe-${field.key}`">
-          {{ view[field.key] }}<span v-if="field.suffix"> {{ field.suffix }}</span>
-        </output>
-      </div>
+      <Slider
+        v-else-if="field.type === 'range'"
+        :id="`pe-${field.key}`"
+        :model-value="view[field.key] as number"
+        :min="field.min ?? 0"
+        :max="field.max ?? 100"
+        :step="numberStep(field)"
+        :suffix="field.suffix"
+        @update:model-value="onFieldInput(field.key, $event)"
+      />
 
-      <textarea
+      <TextField
         v-else-if="field.type === 'textarea'"
         :id="`pe-${field.key}`"
+        multiline
         :placeholder="field.placeholder"
-        :value="view[field.key] as string"
-        @input="onFieldInput(field.key, ($event.target as HTMLTextAreaElement).value)"
+        :model-value="view[field.key] as string"
+        @update:model-value="onFieldInput(field.key, $event)"
       />
 
       <!-- Not a bare <input type="date">: the browser's own picker popup cannot be styled, so this
@@ -166,12 +167,15 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
         @update:model-value="onFieldInput(field.key, $event)"
       />
 
-      <input
+      <!-- The switch is a standalone component now rather than a raw input styled by this form's
+           class. Same element underneath -- `input[type=checkbox]`, one extra class -- so a host
+           override written against `.aether-property-editor__field input[type='checkbox']` still
+           matches. That is pinned by a test. -->
+      <Switch
         v-else-if="field.type === 'boolean'"
         :id="`pe-${field.key}`"
-        type="checkbox"
-        :checked="view[field.key] as boolean"
-        @change="onFieldInput(field.key, ($event.target as HTMLInputElement).checked)"
+        :model-value="view[field.key] as boolean"
+        @update:model-value="onFieldInput(field.key, $event)"
       />
 
       <!-- enum: two variants of the SAME underlying value, per Decision 4's field-type table --
@@ -190,16 +194,13 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
           {{ opt.label }}
         </button>
       </div>
-      <select
+      <Select
         v-else-if="field.type === 'enum'"
         :id="`pe-${field.key}`"
-        :value="view[field.key] as string"
-        @change="onFieldInput(field.key, ($event.target as HTMLSelectElement).value)"
-      >
-        <option v-for="opt in field.options" :key="opt.value" :value="opt.value">
-          {{ opt.label }}
-        </option>
-      </select>
+        :options="field.options ?? []"
+        :model-value="view[field.key] as string"
+        @update:model-value="onFieldInput(field.key, $event)"
+      />
 
       <!-- reference / placement: the widget a real consumer supplies via a slot, since only the
            caller knows how to pick a referenced entity or edit a 3D placement -- this component

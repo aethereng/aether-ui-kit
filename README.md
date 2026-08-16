@@ -61,7 +61,7 @@ Not on a public registry. Depend on it by git ref, pinned to a tag:
 ```json
 {
   "dependencies": {
-    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.12.0"
+    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.13.0"
   }
 }
 ```
@@ -184,7 +184,12 @@ focus ring — which every component needs and no component owns.
 | **ChatPanel** | `controls/chat-panel` | Message log + compose box for the queue → send → apply-reply agent pattern. Owns the log; you own what Send *does*. |
 | **Toast** | `controls/toast` | Transient status pill that fades itself out. Controlled: you own the message. |
 | **Transport** | `controls/transport` | Playback transport: play/pause/replay, scrub, speed, precompute progress. Unit-agnostic — drives simulation seconds or calendar days. |
-| **PropertyEditor** | `property-editor` | Schema-driven form. Bind a `FieldDescriptor[]`, get an editor. |
+| **Switch** | `controls/switch` | Boolean toggle as a pill switch. One bare input; you own the label. |
+| **TextField** | `controls/text-field` | Free text, single- or multi-line via `multiline`. |
+| **NumberField** | `controls/number-field` | A typed number with its unit inside the box. Never rewrites a value you are still typing. |
+| **Select** | `controls/select` | Native single-choice dropdown, themed via `appearance: base-select`. Supports `groups`. |
+| **Slider** | `controls/slider` | A dragged number with a read-out. `format` maps the stored value to what is shown. |
+| **PropertyEditor** | `property-editor` | Schema-driven form. Bind a `FieldDescriptor[]`, get an editor. Composes the standalone controls. |
 | **Graph2D** | `viz/graph` | Force-directed graph over SVG. Opt-in zoom/pan/pinch, hover reporting, edge-pan while dragging. Positions are `number[]`, so the core is dimension-agnostic. |
 | **Gantt** | `viz/gantt` | Lanes, spans, points and anchors in day-index space. Drag to move, edges to resize. |
 

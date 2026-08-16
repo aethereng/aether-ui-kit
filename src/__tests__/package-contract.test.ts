@@ -109,10 +109,13 @@ describe('components that set their own dimensions state their own box model', (
   })
 
   it('the boolean switch pins box-sizing, padding and border', () => {
-    const rule = shared.slice(
-      shared.indexOf("__field input[type='checkbox'] {"),
-      shared.indexOf('}', shared.indexOf("__field input[type='checkbox'] {")),
-    )
+    /* Reads Switch.vue rather than the shared sheet since 0.13.0: the pill moved out of
+     * `.aether-property-editor__field input[type='checkbox']` and into its own component, because
+     * the appearance existed only inside a form and a standalone toggle could not reach it. The
+     * ASSERTION is unchanged and still load-bearing — the kit ships no global reset, so a control
+     * declaring an explicit 38x22 must state its own box model or inherit a host's. */
+    const sw = readFileSync(resolve(root, 'src/controls/vue/Switch.vue'), 'utf8')
+    const rule = sw.slice(sw.indexOf('.aether-switch {'), sw.indexOf('}', sw.indexOf('.aether-switch {')))
     expect(rule, 'switch rule not found').toBeTruthy()
     for (const decl of ['box-sizing', 'padding', 'border']) {
       expect(rule.includes(decl), `switch must declare ${decl}`).toBe(true)

@@ -107,13 +107,27 @@ That is the whole theming story. There is no theme provider, no runtime, no buil
 
 ---
 
-Three tokens exist so a host can express something the kit could not otherwise say:
+These tokens exist so a host can express something the kit could not otherwise say:
 
 | token | default | why it exists |
 |---|---|---|
 | `--aether-selected` | `var(--aether-cool)` | the SELECTED state, split from the accent. One token used to drive both a component's accent and the active state of Seg/Chip, so a host wanting those on different brand colours could not express it. Defaults to the accent, so ignoring it changes nothing. |
 | `--aether-selected-wash` | `var(--aether-cool-wash)` | the tinted form of the above |
 | `--aether-control-font-size` | `12.5px` | control typography. Hardcoded until a host on a 14px type scale found its kit controls sitting visibly smaller beside its own lists, fixable only by overriding the class. |
+| `--aether-ok` | `#3f6b3a` | the affirmative tone. Not `--aether-cool`, which is what `--aether-selected` derives from — a success marker in the selection colour makes "this passed" and "this is selected" the same pixels. |
+
+### Two tokens that need a value per theme
+
+`--aether-warm`, `--aether-rose` and `--aether-ok` are the filled Badge tones, and
+`--aether-warm-ink` is the text painted on them. Both sides have to move together per theme.
+
+**Set `--aether-warm-ink` explicitly for each theme. Do not wire it to a framework's automatic
+"on-primary" colour.** Those are derived from the *light* accent and typically resolve to `#fff`
+everywhere, which is correct on a dark accent and wrong on a luminous one — measured on a real
+consumer, a dark theme that way gave 2.91, 2.74 and 3.50 against a 4.5 floor.
+
+**A theme that inverts any tone must invert all of them.** A tone left at its light-theme value
+fails silently: the other three still look right, so nothing on screen says which one is wrong.
 
 ## Where a component's CSS lives
 

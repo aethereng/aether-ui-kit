@@ -78,6 +78,10 @@ export interface SelectGroup {
     label: string;
     options: SelectOption[];
 }
+export interface SliderTick {
+    value: number;
+    label?: string;
+}
 export interface FilterGroup<V extends string = string> {
     key: string;
     label: string;

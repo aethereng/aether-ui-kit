@@ -1,4 +1,4 @@
-export type { SegOption, ChipOption, FilterGroup, SegProps, ChipProps, ToolProps, DisclosureProps, ChatMessage, SelectOption, SelectGroup, } from './types';
+export type { SegOption, ChipOption, FilterGroup, SegProps, ChipProps, ToolProps, DisclosureProps, ChatMessage, SelectOption, SelectGroup, SliderTick, } from './types';
 export type { MenuItem, MenuKeyResult } from './menu';
 export { focusableItems, firstItem, lastItem, menuKey, isTypeaheadKey } from './menu';
 export declare function isChipActive<V extends string>(value: V, active: V | Set<V>): boolean;

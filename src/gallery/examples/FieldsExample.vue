@@ -5,7 +5,7 @@ import Slider from '@aether/ui-kit/controls/slider'
 import Select from '@aether/ui-kit/controls/select'
 import NumberField from '@aether/ui-kit/controls/number-field'
 import TextField from '@aether/ui-kit/controls/text-field'
-import type { SelectGroup } from '@aether/ui-kit/controls/core'
+import type { SelectGroup, SliderTick } from '@aether/ui-kit/controls/core'
 
 const tolerance = ref(3)
 const note = ref('')
@@ -22,6 +22,10 @@ const deformLabel = (pos: number) => {
   const f = scale(pos)
   return f < 1 ? `×${f.toFixed(2)}` : f < 10 ? `×${f.toFixed(1)}` : `×${Math.round(f)}`
 }
+/* ×1 is at position 43 of 100 on this curve — not the middle, and nothing about the track says so.
+   That is the whole case for `ticks`: on a non-linear scale the meaningful value lands somewhere
+   arbitrary, and a mark is the only thing that puts it back on the control. */
+const deformTicks: SliderTick[] = [{ value: 43, label: '×1' }]
 
 const grades = [
   { value: 's235', label: 'S235' },
@@ -68,7 +72,14 @@ const caseGroups: SelectGroup[] = [
     </label>
 
     <label class="g-f-row"><span>Deform scale</span>
-      <Slider v-model="deform" :min="0" :max="100" :step="1" :format="deformLabel" />
+      <Slider
+        v-model="deform"
+        :min="0"
+        :max="100"
+        :step="1"
+        :format="deformLabel"
+        :ticks="deformTicks"
+      />
     </label>
 
     <label class="g-f-row"><span>Note</span>

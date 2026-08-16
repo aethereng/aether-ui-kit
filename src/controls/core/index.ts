@@ -20,6 +20,7 @@ export type {
   ChatMessage,
   SelectOption,
   SelectGroup,
+  SliderTick,
 } from './types'
 
 /* Menu's keyboard model, exported for the same reason Tree's is: a caller building its own menu

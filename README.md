@@ -188,7 +188,7 @@ focus ring — which every component needs and no component owns.
 | **TextField** | `controls/text-field` | Free text, single- or multi-line via `multiline`. |
 | **NumberField** | `controls/number-field` | A typed number with its unit inside the box. Never rewrites a value you are still typing. |
 | **Select** | `controls/select` | Native single-choice dropdown, themed via `appearance: base-select`. Supports `groups`. |
-| **Slider** | `controls/slider` | A dragged number with a read-out. `format` maps the stored value to what is shown. |
+| **Slider** | `controls/slider` | A dragged number with a read-out. `format` maps the stored value to what is shown, and feeds `aria-valuetext`. `ticks` marks values the scale does not make obvious; the kit draws the track and thumb so the marks land exactly. |
 | **PropertyEditor** | `property-editor` | Schema-driven form. Bind a `FieldDescriptor[]`, get an editor. Composes the standalone controls. |
 | **Graph2D** | `viz/graph` | Force-directed graph over SVG. Opt-in zoom/pan/pinch, hover reporting, edge-pan while dragging. Positions are `number[]`, so the core is dimension-agnostic. |
 | **Gantt** | `viz/gantt` | Lanes, spans, points and anchors in day-index space. Drag to move, edges to resize. |

@@ -115,6 +115,21 @@ export interface SelectGroup {
   options: SelectOption[]
 }
 
+/* One mark on a Slider's track, at a value the scale itself does not make obvious.
+ *
+ * NOT decoration, and the case that asked for it says why: a consumer's deform scale is ×1 at
+ * position 25 of 100 — deliberately LEFT of centre, because exaggerating a deflection is the
+ * common need and shrinking it is rare — and a drag that lands near 25 SNAPS onto it. Without a
+ * mark, neither fact is visible: the neutral point is somewhere unmarked in the left quarter, and
+ * the snap reads as the control jumping on its own.
+ *
+ * `label` is optional because a mark can be a plain notch on a scale, but it is the reason the
+ * type exists. An unlabelled tick says "something is here"; "×1" says what. */
+export interface SliderTick {
+  value: number
+  label?: string
+}
+
 // A named group of toggles inside a FilterRail. `options` are ChipOption rows;
 // `selected` is the active Set for this group. Grouping + selection are data —
 // the rail renders one Chip row per group and wires toggle/clear mechanically.

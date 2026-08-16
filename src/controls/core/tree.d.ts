@@ -46,7 +46,10 @@ export type TreeKeyResult = {
     kind: 'none';
 };
 export declare function treeKey(key: string, rows: TreeRow[], cursorId: string): TreeKeyResult;
-export declare function typeahead(rows: TreeRow[], query: string, cursorId: string): string | null;
+export declare function typeahead(rows: readonly {
+    id: string;
+    label: string;
+}[], query: string, cursorId: string): string | null;
 /** Every ancestor id of a node, so revealing a deep node can open the whole path to it. Walks the
  *  source tree rather than the visible rows, because the ancestors are by definition not visible. */
 export declare function ancestorIds<T>(nodes: TreeNode<T>[], targetId: string): string[];

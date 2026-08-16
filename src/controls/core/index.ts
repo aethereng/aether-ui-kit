@@ -20,6 +20,12 @@ export type {
   ChatMessage,
 } from './types'
 
+/* Menu's keyboard model, exported for the same reason Tree's is: a caller building its own menu
+   surface should be able to reuse the model rather than re-derive which keys wrap and which items
+   are skipped. `typeahead` lives in ./tree and is shared by both. */
+export type { MenuItem, MenuKeyResult } from './menu'
+export { focusableItems, firstItem, lastItem, menuKey, isTypeaheadKey } from './menu'
+
 /* Chip supports a single active value OR a Set of them (multi-select filters), and choosing
  * between those two shapes is the only real decision in this file — which is why this is the only
  * predicate left. Chip.vue calls it; a caller reproducing Chip's active-state logic should too.

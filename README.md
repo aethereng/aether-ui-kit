@@ -61,7 +61,7 @@ Not on a public registry. Depend on it by git ref, pinned to a tag:
 ```json
 {
   "dependencies": {
-    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.11.0"
+    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.12.0"
   }
 }
 ```
@@ -129,6 +129,27 @@ consumer, a dark theme that way gave 2.91, 2.74 and 3.50 against a 4.5 floor.
 **A theme that inverts any tone must invert all of them.** A tone left at its light-theme value
 fails silently: the other three still look right, so nothing on screen says which one is wrong.
 
+## Overlays: there is no portal
+
+`Tooltip`, `Menu` and `Dialog` all need to escape whatever is clipping them — a panel with
+`overflow: hidden`, a transformed ancestor, a stacking context. None of them uses a portal, a
+Teleport, or an overlay container.
+
+They use the browser's **top layer**: `popover` for Tooltip and Menu, `showModal()` for Dialog.
+The top layer sits outside every ancestor's `overflow`, `clip`, `transform` and stacking context.
+Measured inside this kit's own `Disclosure`, whose body clips by design: a 260px surface positioned
+the old way showed **0 of 260px**; the same surface in the top layer showed **260 of 260px**.
+
+Placement is CSS anchor positioning — `anchor-name` on the trigger, `position-anchor` and
+`position-try-fallbacks` on the surface — so the browser tracks the anchor through scroll and
+resize itself and flips it when there is no room. There is no measuring loop and no resize listener
+to leak.
+
+Where the platform is missing, the components degrade rather than throw: no `popover` means the
+surface falls back to a class for visibility, no anchor positioning means a one-shot rect
+calculation, and no `showModal` means a non-modal dialog. All three paths are covered by tests,
+because that is the path a consumer's own test suite takes — jsdom has none of these APIs.
+
 ## Where a component's CSS lives
 
 New components ship their CSS in the component's own `<style scoped>`. `src/styles/ui-kit.css` is for
@@ -156,6 +177,9 @@ focus ring — which every component needs and no component owns.
 | **Disclosure** | `controls/disclosure` | A collapsible panel whose header row can hold its own controls — a link or badge stays reachable while the panel is shut. Brings its own picker-free chrome; not a <details>, because a <summary> hides everything after it when closed. |
 | **FilterRail** | `controls/filter-rail` | Groups of toggle chips with clear-all and a hidden-count readout. Vertical sidebar or horizontal bar. |
 | **Badge** | `controls/badge` | Static status marker in four tones. A `<span>` — if it is clickable it is a `Chip`. |
+| **Tooltip** | `controls/tooltip` | Hover/focus tooltip that escapes any ancestor clipping it, via the top layer. |
+| **Menu** | `controls/menu` | Dropdown menu with the full APG keyboard model. |
+| **Dialog** | `controls/dialog` | Modal dialog over the native `<dialog>` element. |
 | **SearchField** | `controls/search-field` | Search input whose clear button appears only once there is something to clear. |
 | **ChatPanel** | `controls/chat-panel` | Message log + compose box for the queue → send → apply-reply agent pattern. Owns the log; you own what Send *does*. |
 | **Toast** | `controls/toast` | Transient status pill that fades itself out. Controlled: you own the message. |

@@ -120,7 +120,14 @@ export function treeKey(key: string, rows: TreeRow[], cursorId: string): TreeKey
 /* Typeahead: jump to the next row whose label starts with what has been typed, wrapping past the
  * end. Searching from the row AFTER the cursor is what makes repeatedly pressing the same letter
  * cycle through matches instead of sticking on the first one. */
-export function typeahead(rows: TreeRow[], query: string, cursorId: string): string | null {
+export function typeahead(
+  /* Widened from TreeRow[] to what the function actually reads. A TreeRow still satisfies it, so no
+     existing caller changes — but Menu needs the same behaviour over items that are not tree rows,
+     and cycling-on-repeat-keypress is the exact detail worth having in one place rather than two. */
+  rows: readonly { id: string; label: string }[],
+  query: string,
+  cursorId: string,
+): string | null {
   if (!query) return null
   const q = query.toLowerCase()
   const start = rows.findIndex((r) => r.id === cursorId)

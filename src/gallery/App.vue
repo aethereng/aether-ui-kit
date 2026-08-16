@@ -21,6 +21,12 @@ import ChipExample from './examples/ChipExample.vue'
 import ChipExampleSrc from './examples/ChipExample.vue?raw'
 import BadgeExample from './examples/BadgeExample.vue'
 import BadgeExampleSrc from './examples/BadgeExample.vue?raw'
+import TooltipExample from './examples/TooltipExample.vue'
+import TooltipExampleSrc from './examples/TooltipExample.vue?raw'
+import MenuExample from './examples/MenuExample.vue'
+import MenuExampleSrc from './examples/MenuExample.vue?raw'
+import DialogExample from './examples/DialogExample.vue'
+import DialogExampleSrc from './examples/DialogExample.vue?raw'
 import ToolExample from './examples/ToolExample.vue'
 import ToolExampleSrc from './examples/ToolExample.vue?raw'
 import TreeExample from './examples/TreeExample.vue'
@@ -205,6 +211,18 @@ const groupAnchor = (g: Group) => g.toLowerCase()
 
         <GSection v-else-if="c.id === 'badge'" :meta="c" :source="BadgeExampleSrc">
           <BadgeExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'tooltip'" :meta="c" :source="TooltipExampleSrc">
+          <TooltipExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'menu'" :meta="c" :source="MenuExampleSrc">
+          <MenuExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'dialog'" :meta="c" :source="DialogExampleSrc">
+          <DialogExample />
         </GSection>
 
         <GSection v-else-if="c.id === 'tool'" :meta="c" :source="ToolExampleSrc">

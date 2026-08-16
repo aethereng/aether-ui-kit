@@ -11,8 +11,8 @@ declare const __VLS_component: import("vue").DefineComponent<DisclosureProps, {}
 }, string, import("vue").PublicProps, Readonly<DisclosureProps> & Readonly<{
     "onUpdate:open"?: ((args_0: boolean) => any) | undefined;
 }>, {
-    meta: string;
     disabled: boolean;
+    meta: string;
     open: boolean;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;

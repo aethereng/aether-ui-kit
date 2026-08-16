@@ -1,6 +1,6 @@
 {
   "name": "@aether/ui-kit",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Framework-free component cores with thin Vue wrappers, for engineering interfaces.",
   "license": "Apache-2.0",
   "type": "module",
@@ -33,6 +33,18 @@
     "./controls/badge": {
       "types": "./src/controls/vue/Badge.vue.d.ts",
       "import": "./src/controls/vue/Badge.vue"
+    },
+    "./controls/dialog": {
+      "types": "./src/controls/vue/Dialog.vue.d.ts",
+      "import": "./src/controls/vue/Dialog.vue"
+    },
+    "./controls/tooltip": {
+      "types": "./src/controls/vue/Tooltip.vue.d.ts",
+      "import": "./src/controls/vue/Tooltip.vue"
+    },
+    "./controls/menu": {
+      "types": "./src/controls/vue/Menu.vue.d.ts",
+      "import": "./src/controls/vue/Menu.vue"
     },
     "./controls/filter-rail": {
       "types": "./src/controls/vue/FilterRail.vue.d.ts",

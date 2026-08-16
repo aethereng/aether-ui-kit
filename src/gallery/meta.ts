@@ -15,7 +15,7 @@
  * the kit's whole architecture: mechanics in a plain-TS core, a thin wrapper per framework.
  */
 
-export type Group = 'Controls' | 'Forms' | 'Visualization'
+export type Group = 'Controls' | 'Overlays' | 'Forms' | 'Visualization'
 
 export interface ApiRow {
   name: string
@@ -103,6 +103,64 @@ export const COMPONENTS: CompMeta[] = [
       },
     ],
     slots: [{ name: 'default', type: 'string', note: 'the badge text; caller-supplied' }],
+  },
+  {
+    id: 'tooltip',
+    name: 'Tooltip',
+    subpath: '@aether/ui-kit/controls/tooltip',
+    group: 'Overlays',
+    blurb: 'Hover/focus tooltip that escapes any ancestor clipping it.',
+    detail:
+      'The reason this is a component rather than a CSS sibling is clipping. Anything positioned inside a container with `overflow: hidden` — Disclosure\'s body, for one, which clips by design so its reveal can animate — is cut off at the edge: measured, a 260px surface showed 0 of 260px. The `popover` attribute puts the surface in the browser\'s TOP LAYER, outside every ancestor\'s overflow, clip, transform and stacking context, and the same surface then showed 260 of 260. There is no Teleport here and none is needed. Position comes from CSS anchor positioning, so the browser tracks the anchor through scroll and resize itself and `position-try-fallbacks` flips it when there is no room — no listeners, no measuring loop. `aria-describedby` is wired onto the trigger only when the text says something the accessible name does not, because half of real tooltips restate the label of an icon button and a description there makes a screen reader read the same words twice.',
+    props: [
+      { name: 'text', type: 'string', note: 'plain text; rich content is unreachable by touch' },
+      { name: 'placement', type: "'top' | 'bottom' | 'left' | 'right'?", note: "default 'bottom'" },
+      { name: 'delay', type: 'number?', note: 'hover dwell in ms, default 400; focus is immediate' },
+      { name: 'disabled', type: 'boolean?' },
+    ],
+    slots: [{ name: 'default', type: '—', note: 'the trigger element' }],
+  },
+  {
+    id: 'menu',
+    name: 'Menu',
+    subpath: '@aether/ui-kit/controls/menu',
+    group: 'Overlays',
+    core: '@aether/ui-kit/controls/core',
+    blurb: 'Dropdown menu with the full APG keyboard model.',
+    detail:
+      '`popover="auto"` carries the top layer AND light-dismiss, so a click outside closes it with no document listener that has to be added, removed, and taught not to fire on the opening click. The keyboard model is in controls/core/menu.ts as pure functions over plain data, for the same reason the tree\'s is: arrows wrap, disabled items and separators are skipped rather than landed on and ignored, Home/End are not optional, typing jumps by label and repeating a letter cycles through matches, Escape closes and returns focus to the trigger, and Tab closes rather than walking into the surface. Focus moves for real rather than through aria-activedescendant, which is what the APG pattern specifies and what makes Enter and Space work with no extra wiring.',
+    props: [
+      { name: 'items', type: 'MenuItem[]', note: '{ id, label, disabled?, separator?, data? }' },
+      { name: 'label', type: 'string?', note: 'trigger text; #trigger replaces the button' },
+      { name: 'placement', type: "'bottom' | 'top'?" },
+      { name: 'align', type: "'start' | 'end'?", note: "which trigger edge the surface aligns to" },
+    ],
+    emits: [{ name: 'select', type: '[id: string]', note: 'never fires for a disabled item' }],
+    slots: [
+      { name: 'trigger', type: '{ open, toggle }', note: 'replaces the default button' },
+      { name: 'item', type: '{ item: MenuItem }', note: 'per-row content, e.g. an icon' },
+    ],
+  },
+  {
+    id: 'dialog',
+    name: 'Dialog',
+    subpath: '@aether/ui-kit/controls/dialog',
+    group: 'Overlays',
+    blurb: 'Modal dialog over the native <dialog> element.',
+    detail:
+      'Thin on purpose. `showModal()` already gives the top layer, a real focus trap, `inert` on everything behind, Escape-to-close, `::backdrop`, and focus returned to whatever opened it — none of which is reimplemented here. What the component adds is the two things the platform leaves out: a page scroll lock that restores whatever the host had set before, and a backdrop click. That click needs a rect test rather than a target check, because a click on the backdrop lands on the <dialog> ELEMENT itself — the backdrop is its pseudo-element and has no separate hit target — so without comparing coordinates against the content box, a click on the dialog\'s own padding would read as a click outside it.',
+    props: [
+      { name: 'open', type: 'boolean', note: 'controlled; v-model:open' },
+      { name: 'title', type: 'string?', note: 'accessible name, and the default heading' },
+      { name: 'maxWidth', type: 'string?', note: "default '720px'" },
+      { name: 'dismissible', type: 'boolean?', note: 'Escape + backdrop + close button; default true' },
+    ],
+    emits: [{ name: 'update:open', type: '[value: boolean]' }],
+    slots: [
+      { name: 'default', type: '—', note: 'dialog body' },
+      { name: 'title', type: '—', note: 'replaces the heading' },
+      { name: 'footer', type: '—', note: 'action row; omitted entirely when not supplied' },
+    ],
   },
   {
     id: 'tool',
@@ -447,7 +505,7 @@ export const COMPONENTS: CompMeta[] = [
   },
 ]
 
-export const GROUPS: Group[] = ['Controls', 'Forms', 'Visualization']
+export const GROUPS: Group[] = ['Controls', 'Overlays', 'Forms', 'Visualization']
 
 export const byGroup = (g: Group) => COMPONENTS.filter((c) => c.group === g)
 export const metaOf = (id: string) => COMPONENTS.find((c) => c.id === id)!

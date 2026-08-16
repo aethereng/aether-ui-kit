@@ -1,0 +1,26 @@
+# Normalise line endings in the repository regardless of the committer's core.autocrlf.
+#
+# Every tracked file here is text -- ts, vue, css, json, yml, mjs, md -- and every committed blob
+# is already LF. The working tree is what drifts: with core.autocrlf=true on Windows, git checks
+# these out as CRLF, so the same file is two different byte streams on two machines while the
+# repository holds one. A consumer comparing files across sibling repos then sees a difference
+# that exists in neither of them.
+#
+# Same rule the sibling repos already carry, so `* text=auto eol=lf` is the convention rather than
+# a third answer. Reported by a consumer who hit exactly this on LICENSE.
+* text=auto eol=lf
+
+# Binary: never touch, never diff as text. Nothing binary is committed today -- this is the safety
+# net for the first font, icon or screenshot that arrives, since the rule above would otherwise
+# treat a file git guessed wrong about as text and corrupt it on checkout.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary

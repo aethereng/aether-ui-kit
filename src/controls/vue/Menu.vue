@@ -262,7 +262,7 @@ watch(() => props.items, () => {
   color: var(--aether-ink);
   background: var(--aether-surface);
   border: 1px solid var(--aether-line-strong);
-  border-radius: var(--aether-radius, 7px);
+  border-radius: var(--aether-radius);
   padding: 5px 10px;
   cursor: pointer;
 }

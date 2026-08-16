@@ -163,13 +163,23 @@ const THEMES = {
   'gallery dark (timber)': themeTokens(/html\[data-theme='timber'\]\s*\{([\s\S]*?)\n\}/g, galleryCss),
 }
 
+/* Tokens resolve kit :root -> host :root -> theme block, so a theme only has to restate what it
+   changes. Extracted as a pure function over a resolved map so the SAME logic can be run against
+   deliberately broken maps below — a check nobody has ever seen fail is a check nobody knows works. */
+function resolveTheme(theme: Record<string, string>): Record<string, string> {
+  return { ...tokens, ...THEMES['gallery light'], ...theme }
+}
+function toneFailures(resolved: Record<string, string>): string[] {
+  const ink = resolved['--aether-warm-ink']!
+  return FILLED_TONES.filter((tone) => ratio(ink, resolved[tone]!) < 4.5)
+}
+function textFailures(resolved: Record<string, string>): string[] {
+  return TEXT.filter((fg) => GROUNDS.some((bg) => ratio(resolved[fg]!, resolved[bg]!) < 4.5))
+}
+
 describe('every host theme carries the tone tokens it overrides', () => {
   for (const [name, theme] of Object.entries(THEMES)) {
-    /* Tokens resolve kit :root -> host :root -> theme block, so a theme only has to restate what
-       it changes — but a theme that inverts ANY tone must invert all of them, or the one it
-       forgot keeps a light-theme value against a dark ground. */
-    const resolved = { ...tokens, ...THEMES['gallery light'], ...theme }
-    const ink = resolved['--aether-warm-ink']!
+    const resolved = resolveTheme(theme)
 
     it(`${name} defines --aether-ok`, () => {
       expect(
@@ -178,15 +188,70 @@ describe('every host theme carries the tone tokens it overrides', () => {
       ).toBeDefined()
     })
 
-    for (const tone of FILLED_TONES)
-      it(`${name}: ${tone} still clears AA`, () => {
-        const r = ratio(ink, resolved[tone]!)
-        expect(
-          r,
-          `In ${name}, badge text (${ink}) on ${tone} (${resolved[tone]}) measures ${r.toFixed(2)}.`,
-        ).toBeGreaterThanOrEqual(4.5)
-      })
+    it(`${name}: every filled tone clears AA`, () => {
+      const bad = toneFailures(resolved)
+      expect(
+        bad,
+        `In ${name}, ${bad.map((x) => `${x} (${resolved[x]}) = ${ratio(resolved['--aether-warm-ink']!, resolved[x]!).toFixed(2)}`).join(', ')} ` +
+          `against ink ${resolved['--aether-warm-ink']}.`,
+      ).toEqual([])
+    })
   }
+})
+
+/* MUTATION FIXTURES — tests of the tests.
+ *
+ * Everything above is green, which proves the palette is currently fine and proves NOTHING about
+ * whether the checks would notice if it stopped being fine. A loosened threshold, a regex that
+ * quietly stops matching, a merge order that makes a lookup always find a default — each leaves the
+ * whole file passing while guarding nothing. That is not hypothetical: the theme parser here DID
+ * silently read App.vue's documentation snippet instead of its real `:root`, and reported every
+ * token as missing rather than failing.
+ *
+ * So each fixture below takes the real inputs, breaks ONE thing the way it has actually broken in
+ * this repo, and asserts the corresponding check fires. If a fixture ever goes green, the check it
+ * names has stopped working. */
+describe('the checks above have teeth', () => {
+  it('the theme parser reads real CSS, not the documentation snippet', () => {
+    /* App.vue contains two `:root` blocks. The first is the example showing a host how to remap
+     * tokens — `--aether-surface: var(--my-surface)` — and reading it made every token look absent.
+     * A value that is a `var(--my-…)` here means the parser has drifted back onto the prose. */
+    const light = THEMES['gallery light']
+    expect(light['--aether-surface']).toMatch(/^#[0-9a-f]{6}$/i)
+    expect(Object.values(light).join(' ')).not.toContain('var(--my-')
+  })
+
+  it('fires when a dark theme forgets --aether-warm-ink', () => {
+    /* The failure a consumer actually shipped: their ink resolved through a framework's automatic
+     * on-primary, which derives from the LIGHT accent and gives near-white in every theme. Our own
+     * timber theme is one deleted line from the same thing — measured, all three tones collapse to
+     * roughly 2.0, which is worse than the consumer's 2.91/2.74/3.50. */
+    const timber = { ...THEMES['gallery dark (timber)'] }
+    delete timber['--aether-warm-ink']
+    const bad = toneFailures(resolveTheme(timber))
+    expect(bad).toEqual([...FILLED_TONES]) // all three, not just one
+  })
+
+  it('fires when a dark theme forgets to invert --aether-ok, and names only that tone', () => {
+    /* The exact bug that shipped into the gallery: --aether-ok was added to the kit, timber never
+     * got it, and a filled success badge rendered dark-green on dark ink at 2.84 while warm and
+     * rose still looked correct. Asserting the OTHER two still pass is the point — a check that
+     * failed everything here would pass this test while being useless. */
+    const timber = { ...THEMES['gallery dark (timber)'], '--aether-ok': '#3f6b3a' }
+    expect(toneFailures(resolveTheme(timber))).toEqual(['--aether-ok'])
+  })
+
+  it('fires when a grey is nudged back below the floor', () => {
+    /* --aether-faint shipped at #8A857A before it was raised: 3.47 on surface and 2.77 on panel.
+     * The tripwire above exists for exactly this edit, so it is worth proving it still catches it. */
+    expect(textFailures({ ...tokens, '--aether-faint': '#8A857A' })).toEqual(['--aether-faint'])
+  })
+
+  it('does NOT fire on the real palette — the fixtures are detecting the break, not everything', () => {
+    // Without this, all four above would pass even if the checks returned "broken" unconditionally.
+    expect(toneFailures(resolveTheme(THEMES['gallery dark (timber)']))).toEqual([])
+    expect(textFailures(tokens)).toEqual([])
+  })
 })
 
 describe('the tokens a host is expected to remap', () => {

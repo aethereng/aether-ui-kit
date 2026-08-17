@@ -19,32 +19,32 @@ const clicks = ref(0)
 </script>
 
 <template>
-  <div class="g-ex">
+  <div class="g-ex g-ex--tile">
     <span class="g-variant">hot — the primary action on a surface</span>
     <Tool label="New card" hot @click="clicks++" />
   </div>
 
-  <div class="g-ex">
+  <div class="g-ex g-ex--tile">
     <span class="g-variant">default — neutral</span>
     <Tool label="Plain" @click="clicks++" />
   </div>
 
-  <div class="g-ex">
+  <div class="g-ex g-ex--tile">
     <span class="g-variant">danger — destructive</span>
     <Tool label="Delete" danger @click="clicks++" />
   </div>
 
-  <div class="g-ex">
+  <div class="g-ex g-ex--tile">
     <span class="g-variant">disabled — emits nothing</span>
     <Tool label="Disabled" disabled @click="clicks++" />
   </div>
 
-  <div class="g-ex">
+  <div class="g-ex g-ex--tile">
     <span class="g-variant">both hot and danger — danger wins</span>
     <Tool label="Discard all" hot danger title="danger takes precedence" @click="clicks++" />
   </div>
 
-  <div class="g-ex">
+  <div class="g-ex g-ex--tile">
     <!-- #icon is a SLOT, not an `icon` prop: a prop would imply an icon vocabulary, and zero
          runtime dependencies is load-bearing for this kit. Bring your own SVG. -->
     <span class="g-variant">#icon slot, with a label — a hand-written SVG</span>
@@ -57,7 +57,9 @@ const clicks = ref(0)
     </Tool>
   </div>
 
-  <div class="g-ex">
+  <!-- Two tiles wide: the two buttons below are a .g-ex-row and must stay side by side, which a
+       single-column tile is too narrow to allow. -->
+  <div class="g-ex g-ex--tile-wide">
     <!-- The same slot, fed from @mdi/js. mdi paths are drawn on a 24x24 grid, so the viewBox is
          "0 0 24 24" and `fill="currentColor"` makes the glyph inherit the button's colour -- both
          the hot and danger variants included, without the icon knowing which it is in. -->
@@ -76,7 +78,7 @@ const clicks = ref(0)
     </div>
   </div>
 
-  <div class="g-ex">
+  <div class="g-ex g-ex--tile">
     <!-- labelHidden keeps `label` as the ACCESSIBLE NAME via aria-label, so an icon-only button
          is never unlabelled to a screen reader. -->
     <span class="g-variant">labelHidden — icon only, still named for screen readers</span>

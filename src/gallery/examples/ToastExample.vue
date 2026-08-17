@@ -17,17 +17,17 @@ function say(msg: string) {
 </script>
 
 <template>
-  <div class="g-ex">
+  <div class="g-ex g-ex--tile">
     <span class="g-variant">default duration (1700ms)</span>
     <Tool label="Copied" @click="say('Copied to clipboard')" />
   </div>
 
-  <div class="g-ex">
+  <div class="g-ex g-ex--tile">
     <span class="g-variant">a second message replaces the first and restarts the timer</span>
     <Tool label="Saved" @click="say('Saved')" />
   </div>
 
-  <div class="g-ex">
+  <div class="g-ex g-ex--tile">
     <span class="g-variant">dismiss early by setting the model to ''</span>
     <Tool label="Dismiss now" danger :disabled="!toast" @click="toast = ''" />
   </div>

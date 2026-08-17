@@ -12,6 +12,8 @@ import GSection from './GSection.vue'
  * show up on the page that documents Tool. It also makes the two the same height on every
  * pointer type by construction, including the 44px coarse floor. */
 import Tool from '@aether/ui-kit/controls/tool'
+/* Same rule as Tool above: the rail's groups are the kit's Disclosure, not a hand-rolled panel. */
+import Disclosure from '@aether/ui-kit/controls/disclosure'
 import { COMPONENTS, GROUPS, byGroup, type Group } from './meta'
 /* Examples live in their own files so the gallery can RENDER one and DISPLAY its source from the
  * same bytes -- see GSection's `source` prop. `?raw` is Vite giving us the file as a string. */
@@ -136,6 +138,38 @@ onMounted(() => window.addEventListener('keydown', onRailKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onRailKey))
 
 const groupAnchor = (g: Group) => g.toLowerCase()
+
+/* ── the rail's groups ──
+   The rail listed every component flat: 26 rows plus 4 headings in a 260px column, which is past
+   the fold on a laptop, so finding a component meant scrolling a list to find a list. The groups
+   collapse now and the rail is four rows until asked for more.
+
+   Built from the kit's own Disclosure, for the same reason the nav's buttons are Tools: chrome this
+   page hand-rolls is chrome that cannot fail when the component it imitates regresses. It also puts
+   Disclosure under a shape its own demo does not — four controlled instances sharing one state, and
+   the `aside` slot carrying a real control rather than an illustrative one. */
+const openGroups = ref(new Set<Group>())
+
+/** The group holding whatever the URL points at — a component id (#slider) or a group anchor
+ *  (#forms), because both are real targets on this page. */
+function groupFromHash(hash: string): Group | undefined {
+  const id = hash.replace(/^#/, '')
+  if (!id) return undefined
+  return COMPONENTS.find((c) => c.id === id)?.group ?? GROUPS.find((g) => groupAnchor(g) === id)
+}
+
+/* Exactly one group open on arrival: the one you were sent to, or the first. Opening none leaves
+   four dead rows on first paint; opening all restores the wall this replaces. Set at setup rather
+   than onMounted so the rail paints in its final state — the same first-paint rule the theme
+   above follows, and for the same reason. */
+openGroups.value.add(groupFromHash(location.hash) ?? GROUPS[0]!)
+
+/* Independent, not an accordion. Collapsing a group the reader opened, because they opened another
+   one, is the kind of tidiness that costs a comparison they were in the middle of. */
+function setGroup(g: Group, open: boolean) {
+  if (open) openGroups.value.add(g)
+  else openGroups.value.delete(g)
+}
 </script>
 
 <template>
@@ -171,20 +205,41 @@ const groupAnchor = (g: Group) => g.toLowerCase()
     </div>
   </nav>
 
-  <!-- Docked beside the content on a wide screen, a dismissible sheet below that. One list,
-       one source of truth, and it scrolls itself -- so it holds 25 components as happily as
-       10, which the old strip could not. -->
+  <!-- Docked beside the content on a wide screen, a dismissible sheet below that. One source of
+       truth for the order -- `byGroup` also drives the sections below, so the rail cannot list
+       them in an order the page does not use. -->
   <aside id="g-rail" class="g-rail" :class="{ open: railOpen }" aria-label="Components">
-    <template v-for="g in GROUPS" :key="g">
-      <a class="g-rail__group" :href="'#' + groupAnchor(g)" @click="railOpen = false">{{ g }}</a>
+    <Disclosure
+      v-for="g in GROUPS"
+      :key="g"
+      :label="g"
+      :meta="`${byGroup(g).length} components`"
+      :open="openGroups.has(g)"
+      @update:open="setGroup(g, $event)"
+    >
+      <!-- The group heading is still somewhere you can go, and the toggle no longer takes you
+           there. `aside` is Disclosure's slot for precisely this: a control that stays reachable
+           while the panel is COLLAPSED, rendered as a sibling of the toggle so it is its own tab
+           stop rather than a link nested inside a button. -->
+      <template #aside>
+        <a
+          class="g-rail__jump"
+          :href="'#' + groupAnchor(g)"
+          :aria-label="`Jump to ${g}`"
+          :title="`Jump to ${g}`"
+          @click="railOpen = false"
+          >→</a
+        >
+      </template>
       <a
         v-for="c in byGroup(g)"
         :key="c.id"
         class="g-rail__item"
         :href="'#' + c.id"
         @click="railOpen = false"
-      >{{ c.name }}</a>
-    </template>
+        >{{ c.name }}</a
+      >
+    </Disclosure>
   </aside>
   <!-- A scrim is a mouse convenience, and it cannot carry the keyboard path the rule asks for: it
        is not focusable, so a keydown bound here would never fire. The keyboard equivalent already
@@ -409,22 +464,35 @@ import Seg from '@aether/ui-kit/controls/seg'</code></pre>
      belong to the kit's contract and which are this page's own furniture */
   --g-page: #f4f0e8;
   --g-code: #efe9dd;
-  /* Syntax palette — warm against the paper ground, so a code block reads as part of the page
-     rather than a screenshot of an editor dropped onto it.
-     Ratios are WCAG against --g-code, computed on the rendered page rather than estimated: the
-     first pass here was eyeballed and three of the ten sat under 4.5 while the comments beside
+  /* Syntax palette.
+     Ratios are WCAG against --g-code, computed on the rendered page rather than estimated: an
+     early pass here was eyeballed and three of the ten sat under 4.5 while the comments beside
      them claimed otherwise. Comment and punct were the worst, and they are the two that carry the
-     most characters — quiet is a colour choice, unreadable is not. */
-  --g-tok-comment: #645e51; /* 5.3 */
-  --g-tok-string: #6d5e1b; /* 5.3 */
-  --g-tok-keyword: #9a4a1a; /* 5.2 */
-  --g-tok-number: #7a5230; /* 5.6 */
-  --g-tok-fn: #4a5f8f; /* 5.2 */
-  --g-tok-tag: #1f6b62; /* 5.2 */
-  --g-tok-directive: #8a3a6a; /* 6.0 — loudest, and bolded */
-  --g-tok-attr: #6a6250; /* 5.0 */
-  --g-tok-interp: #2f6b3a; /* 5.3 */
-  --g-tok-punct: #676352; /* 5.0 */
+     most characters — quiet is a colour choice, unreadable is not.
+
+     REBALANCED — this set used to be "warm against the paper ground, so a code block reads as part
+     of the page rather than a screenshot of an editor dropped onto it". That intent was right and
+     was taken too far: six of the ten landed in a 23-49° hue band and comment, attr and punct sat
+     at 10-15% saturation, which is grey. Since comments are most of the characters in these files,
+     the whole block read brown-on-cream — monochrome, accurately. Mean saturation was 38%.
+
+     The rule now is by ROLE rather than uniformly warm. The quiet tokens that carry bulk text
+     (attr, punct) stay warm-neutral so the block still belongs to the page; the tokens that
+     actually distinguish one thing from another (keyword, string, tag, fn, directive, interp) get
+     real chroma; and comment moves to sage, off the warm axis entirely, so the most common token is
+     no longer a slightly different brown from its neighbours. That also makes the two themes agree
+     on meaning — timber's comment is already sage, its tag teal, its fn blue.
+     Mean saturation 57%, hues spread from six-in-a-band to 16/28/45/49/57/135/145/173/216/326. */
+  --g-tok-comment: #5a6b61; /* 4.68 — sage, off the warm axis so bulk comment text separates */
+  --g-tok-string: #7a5e0c; /* 5.06 */
+  --g-tok-keyword: #b03d12; /* 4.93 */
+  --g-tok-number: #8a4d16; /* 5.51 */
+  --g-tok-fn: #2a5da8; /* 5.38 */
+  --g-tok-tag: #0a6f64; /* 5.00 */
+  --g-tok-directive: #a81f6d; /* 5.64 — loudest, and bolded */
+  --g-tok-attr: #6d6337; /* 4.98 — deliberately quiet: it carries bulk text */
+  --g-tok-interp: #19702f; /* 5.11 */
+  --g-tok-punct: #64634f; /* 5.05 — quietest, and the most frequent glyph on the page */
   --g-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
   --g-mono: 'Spline Sans Mono', ui-monospace, 'SF Mono', Consolas, monospace;
   --g-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -553,7 +621,8 @@ body {
   width: min(260px, 82vw);
   display: none;
   flex-direction: column;
-  gap: 1px;
+  /* No gap: each group carries its own hairline now, and a gap on top of it separates twice. */
+  gap: 0;
   padding: 14px 12px 24px;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -569,24 +638,89 @@ body {
   inset: 0;
   z-index: 25;
 }
-.g-rail__group {
-  font-family: var(--g-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-  color: var(--aether-ink-soft);
-  opacity: 0.65;
-  text-decoration: none;
-  margin: 14px 0 4px;
-  padding: 0 10px;
+/* Disclosure arrives dressed as a CARD -- 1px border, surface fill, 8px radius, 10/14 padding --
+   which is right in a content column and too heavy four-deep in a 260px nav. These strip it back to
+   navigation: no fill, no border but a hairline between groups, and header padding pulled in to sit
+   over the items it reveals.
+   ID SELECTORS, deliberately. The rules being overridden are Disclosure's own scoped ones, so they
+   carry its scope attribute: `.aether-disclosure[data-v-x]` is (0,2,0). THIS style block is not
+   scoped, so a plain `.g-rail .aether-disclosure` is also (0,2,0) and the winner would be decided
+   by bundle order -- which is not something to hang a layout on. `#g-rail` makes it (1,1,0) and
+   settles it. `:deep()` is not the answer here either: it is only transformed inside a `scoped`
+   block, and in a global one it survives as a literal selector the browser cannot parse, so the
+   whole rule is dropped without a warning. (It was written that way first, and every override
+   silently did nothing.) */
+#g-rail .aether-disclosure {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  /* Disclosure clips its own corners so the 0fr reveal can animate. Kept -- nothing in the rail
+     escapes its panel -- but with the radius gone it is now doing only the clipping. */
+  border-bottom: 1px solid var(--aether-line);
 }
-.g-rail__group:first-child {
-  margin-top: 0;
+#g-rail .aether-disclosure:last-child {
+  border-bottom: 0;
+}
+#g-rail .aether-disclosure__head {
+  padding: 7px 10px;
+  border-radius: 7px;
+}
+/* The whole head lights up, not just the label: at this size the toggle and its jump link read as
+   one row, and hovering half a row is a worse signal than hovering none. */
+#g-rail .aether-disclosure__head:hover {
+  background: var(--aether-panel);
+}
+#g-rail .aether-disclosure__label {
+  font-family: var(--g-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+#g-rail .aether-disclosure__meta {
+  font-size: 11px;
+}
+/* The body holds a link list, so it wants no padding beyond a small inset, and no top border --
+   the hairline between GROUPS is the separator here, and a second one under every open header
+   would double it. */
+#g-rail .aether-disclosure__body {
+  border-top: 0;
+  padding: 0 0 6px 8px;
+}
+/* Quiet by default, and never the thing the eye lands on first -- it sits beside a group name and
+   is worth exactly one glance. Sized to the coarse-pointer floor so it is tappable on the sheet,
+   where the rail actually gets used with a thumb. */
+.g-rail__jump {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--aether-faint);
+  font-size: 13px;
+  line-height: 1;
+  text-decoration: none;
+}
+.g-rail__jump:hover {
+  color: var(--aether-cool);
+  background: var(--aether-surface);
+}
+.g-rail__jump:focus-visible {
+  outline: 2px solid var(--aether-cool);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .g-rail__jump {
+    width: var(--aether-touch-dense);
+    height: var(--aether-touch-dense);
+  }
 }
 .g-rail__item {
   display: flex;
   align-items: center;
-  min-height: 36px;
+  min-height: 32px;
   padding: 0 10px;
   border-radius: 7px;
   font-size: 13px;
@@ -820,6 +954,39 @@ body {
 .g-ex--full {
   flex-basis: 100%;
 }
+/* Variants whose CONTROL is far narrower than its caption. Tool's buttons measure 27-88px under
+   captions of 129-493px, so the caption set the block width and consecutive buttons ended up
+   separated by the length of the previous label -- read as gaps in a row of buttons, which is
+   exactly what it was. A tile gives every block the same width, wraps the caption inside it, and
+   lets the controls pack left on a grid instead of drifting with the prose.
+   `align-self: stretch` overrides .g-demo's `align-items: center` for these only, so a tile fills
+   its row's height and the caption below can take the slack. */
+.g-ex--tile,
+.g-ex--tile-wide {
+  /* 146px, measured rather than picked: the narrowest width that still keeps every caption in these
+     two sections to TWO lines. 158/172px leave the tile exactly as tall and simply waste width (the
+     gap between adjacent buttons grows from 77-106px to 103-132px); 134px fits six per row but tips
+     the longest captions onto a third line, buying horizontal space the caption then spends anyway. */
+  --g-tile: 146px;
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+.g-ex--tile {
+  width: var(--g-tile);
+}
+/* Two columns and the gap between them, so it still lands on the same grid. For a variant whose
+   demo is a .g-ex-row: that class exists to keep siblings SIDE BY SIDE, and a one-column tile
+   stacks them without saying so -- which is the exact misrepresentation .g-ex-row was added to
+   prevent. Derived from --g-tile rather than written as 304px, so the two cannot drift. */
+.g-ex--tile-wide {
+  width: calc(var(--g-tile) * 2 + 12px);
+}
+/* The caption absorbs the leftover height, which puts every control on a common line at the bottom
+   of the row regardless of whether its label wrapped to one line or three. */
+.g-ex--tile .g-variant,
+.g-ex--tile-wide .g-variant {
+  flex: 1 1 auto;
+}
 /* siblings that belong side by side rather than stacked -- e.g. two pill capsules that share a
    header in real use, where stacking them would misrepresent the pattern */
 .g-ex-row {
@@ -854,6 +1021,24 @@ body {
   font-size: 11.5px;
   letter-spacing: 0.06em;
   color: var(--aether-ink-soft);
+}
+
+/* Prose inside a demo. Nothing styled a bare <p> here, so it fell all the way to the UA default --
+   16px with `line-height: normal` and 1em margins -- on a page whose largest body text is 14px. The
+   unset line-height is what made it read as a different TYPEFACE rather than merely a larger one.
+   `:not([class])` deliberately: `.g-hint` is also a <p> inside .g-demo and sets its own smaller
+   size, and a bare `.g-demo p` would be (0,1,1) and quietly outrank it. A scoped example's
+   `data-v-*` is an attribute, not a class, so scoped prose still matches.
+   Selecting the element rather than a class an example must add keeps example files
+   copy-pasteable, and makes any future demo with prose right without touching it. */
+.g-demo p:not([class]) {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  max-width: 68ch;
+}
+.g-demo p:not([class]):last-child {
+  margin-bottom: 0;
 }
 
 /* ── footer ── */

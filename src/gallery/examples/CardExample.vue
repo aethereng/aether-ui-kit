@@ -1,11 +1,10 @@
 <script setup lang="ts">
 /* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
 import Card from '@aether/ui-kit/controls/card'
-import Spinner from '@aether/ui-kit/controls/spinner'
 import Badge from '@aether/ui-kit/controls/badge'
 
-/* Both real consumers stack these in one column beside a Disclosure, which is why Card's padding
-   and radius are Disclosure's rather than its own invention. */
+/* A consumer stacks these in one column beside a Disclosure, which is why Card's padding and
+   radius are Disclosure's rather than its own invention. */
 const layers = 3
 </script>
 
@@ -18,22 +17,18 @@ const layers = 3
 
     <Card>
       <div class="g-card-cap">Verification</div>
-      <!-- No label: the text beside it already says what is happening, and naming the spinner too
-           would have a screen reader read the same state twice. -->
       <div class="g-card-row">
-        <Spinner :size="14" />
-        <span>verifying 1564 members…</span>
+        <Badge tone="success">142 verified</Badge>
+        <Badge tone="warning">6 to review</Badge>
       </div>
     </Card>
 
+    <!-- Static, deliberately. A consumer also ships a selectable list card — hover lift, selected
+         ring, colour-coded left border — and that is a different component by the kit's own rule,
+         because it differs in INTERACTION and not only in shape. -->
     <Card>
-      <div class="g-card-cap">Connections</div>
-      <!-- Labelled: nothing beside it says anything, so unnamed it would be invisible to a screen
-           reader and the panel would read as idle. -->
-      <div class="g-card-row">
-        <Spinner :size="16" label="Deriving connections" />
-        <Badge tone="neutral">deriving</Badge>
-      </div>
+      <div class="g-card-cap">Loads &amp; supports</div>
+      <div>8 supports · 166 loads · 4 supported edges</div>
     </Card>
   </div>
 </template>

@@ -26,11 +26,13 @@ export interface ApiRow {
 export interface CompMeta {
   id: string
   name: string
+  /* ONE component per section, so this is always a real import specifier. There used to be an
+     `imports` list here for sections documenting several at once — because those emitted
+     `import A · B from 'x · y'`, which is not code, into a block with a copy button. The list
+     fixed the symptom; one section per component removes the cause, and a reader looking for
+     Select now finds a section called Select rather than a batch named after the commit that
+     happened to extract four controls together. */
   subpath: string
-  /* Only for a section documenting SEVERAL components. The import block is copyable, so it has to
-     be real code, and `import A · B from 'x · y'` is not — a middot is not an import list. One
-     entry per component; omit this and the block is derived from `name` + `subpath` as before. */
-  imports?: { name: string; subpath: string }[]
   group: Group
   /** One line: what it is. Shown under the heading. */
   blurb: string
@@ -138,47 +140,99 @@ export const COMPONENTS: CompMeta[] = [
     emits: [{ name: 'update:modelValue', type: '[value: boolean]' }],
   },
   {
-    id: 'fields',
-    name: 'TextField · NumberField · Select · Slider',
-    subpath: '@aether/ui-kit/controls/text-field · /number-field · /select · /slider',
-    imports: [
-      { name: 'TextField', subpath: '@aether/ui-kit/controls/text-field' },
-      { name: 'NumberField', subpath: '@aether/ui-kit/controls/number-field' },
-      { name: 'Select', subpath: '@aether/ui-kit/controls/select' },
-      { name: 'Slider', subpath: '@aether/ui-kit/controls/slider' },
-    ],
+    id: 'text-field',
+    name: 'TextField',
+    subpath: '@aether/ui-kit/controls/text-field',
     group: 'Forms',
-    core: '@aether/ui-kit/controls/core',
-    blurb: 'The four field controls, standalone. PropertyEditor composes these.',
+    blurb: 'Free text, single- or multi-line.',
     detail:
-      'All four existed before they were components — but only under `.aether-property-editor__field`, so the appearance lived inside a form and a panel with one or two controls had no way to reach them. That is why a consumer kept a framework for a single dropdown. NumberField is separate from TextField rather than a `type` on it, and the reason is commit semantics: a text field commits every keystroke, and a number field that did would rewrite the model to 1 the moment you type "1." and never let you reach 1.5 — `coerceNumberInput` uses `validity.badInput` to tell mid-typing from cleared, which is the only signal that distinguishes them. Its border also lives on a wrapper so the unit sits inside the box rather than reading as a caption beside it. `textarea` by contrast is a `multiline` PROP, not a component: it types identically to an input and only its shape differs. Different interaction means a different component; different shape means a prop. Select supports `groups`, because a picker listing load cases and ULS combinations flattened into one list loses the distinction between two kinds of thing. Slider takes a `format` function, because a stored value and a displayed one are not always the same quantity — a 0-100 slider position driving a non-linear deform factor has no business printing its own number. It also draws its own track and thumb, which is not a styling preference: `ticks` have to land exactly under the values they mark, the thumb centre travels from thumb/2 to width−thumb/2, and a thumb rule is silently ignored unless the input is `appearance: none` — which takes the native track with it. `format` feeds `aria-valuetext` too, so the announced value is "×1.0" and not "25".',
+      'It commits every keystroke, which is the line between it and NumberField: a number field that did the same would rewrite the model to 1 the moment you typed "1." and never let you reach 1.5. `multiline` is a PROP rather than a second component, and that is the kit\'s rule applied consistently — a textarea types exactly like an input, with the same data, the same commit-per-keystroke and the same bordered box, so only its SHAPE differs. Different interaction means a different component; different shape means a prop. The multiline form resizes vertically only: one that could be dragged wider escapes whatever column it sits in, and in a form that column is the layout.',
     props: [
-      { name: 'modelValue', type: 'string | number | boolean', note: 'controlled; v-model' },
-      { name: 'multiline / rows', type: 'boolean? / number?', note: 'TextField only' },
-      { name: 'min / max / step / precision', type: 'number?', note: 'NumberField, Slider' },
-      { name: 'suffix', type: 'string?', note: 'a unit the kit renders and never interprets' },
-      { name: 'format', type: '(v: number) => string?', note: 'Slider read-out; defaults to the value' },
-      { name: 'ticks', type: 'SliderTick[]?', note: 'Slider marks; {value, label?}' },
-      { name: 'options / groups', type: 'SelectOption[] / SelectGroup[]', note: 'Select' },
+      { name: 'modelValue', type: 'string', note: 'controlled; v-model' },
+      { name: 'multiline', type: 'boolean?', note: 'render a textarea instead' },
+      { name: 'rows', type: 'number?', note: 'visible rows when multiline; ignored otherwise' },
+      { name: 'placeholder', type: 'string?' },
       { name: 'disabled', type: 'boolean?' },
     ],
-    emits: [{ name: 'update:modelValue', type: '[value]' }],
+    emits: [{ name: 'update:modelValue', type: '[value: string]' }],
+  },
+  {
+    id: 'number-field',
+    name: 'NumberField',
+    subpath: '@aether/ui-kit/controls/number-field',
+    group: 'Forms',
+    core: '@aether/ui-kit/property-editor/core',
+    blurb: 'A number, with its unit inside the box. Not a `type` on TextField.',
+    detail:
+      'Its own component for two structural reasons. COMMIT SEMANTICS: a text field commits every keystroke, and a number field that did would rewrite the model to 1 the moment you type "1.", making 1.5 unreachable. `coerceNumberInput` tells mid-typing from genuinely cleared using `validity.badInput`, which is the only signal that distinguishes them — an unparseable number input reports an EMPTY value, so without it "1." and "" are the same thing. DOM: the border lives on a WRAPPER with a borderless input inside, so the unit sits inside the box; a bordered input with a sibling span reads as two controls and makes the unit look like a caption. `precision` derives `step` when none is given (2 → 0.01) so the spinner increments sanely, without rounding what is stored or displayed.',
+    props: [
+      { name: 'modelValue', type: 'number | undefined', note: 'undefined = empty, not zero' },
+      { name: 'min / max / step', type: 'number?', note: 'straight to the native input' },
+      { name: 'precision', type: 'number?', note: 'decimal places; derives step when step is absent' },
+      { name: 'suffix', type: 'string?', note: 'a unit the kit renders and never interprets' },
+      { name: 'placeholder', type: 'string?' },
+      { name: 'disabled', type: 'boolean?' },
+    ],
+    emits: [{ name: 'update:modelValue', type: '[value: number | undefined]' }],
+  },
+  {
+    id: 'select',
+    name: 'Select',
+    subpath: '@aether/ui-kit/controls/select',
+    group: 'Forms',
+    core: '@aether/ui-kit/controls/core',
+    blurb: 'A single-choice dropdown over a native <select>.',
+    detail:
+      'Native on purpose: it is the one control where the platform\'s own popup beats anything the kit could build — it renders above everything without a portal, it works on touch, and on mobile it becomes the OS picker. What native did NOT allow was theming its options, which is why `appearance: base-select` matters: it opts the control into the customizable-select rendering and the popup and its rows become ordinary styleable boxes. Behind `@supports`, so a browser without it keeps the fully native control rather than a half-built one. GROUPS ARE STRUCTURE, not decoration: a picker listing load cases AND ULS combinations flattened into one list loses the distinction between two kinds of thing, which in a structural model is a correctness problem — and `subtitle` is what lets two similarly-named rows tell themselves apart, a combination carrying its factored formula.',
+    props: [
+      { name: 'modelValue', type: 'string', note: 'controlled; v-model' },
+      { name: 'options', type: 'SelectOption[]?', note: '{ value, label, subtitle?, disabled? }' },
+      { name: 'groups', type: 'SelectGroup[]?', note: 'rendered as <optgroup>; combine with options' },
+      { name: 'disabled', type: 'boolean?' },
+    ],
+    emits: [{ name: 'update:modelValue', type: '[value: string]' }],
+  },
+  {
+    id: 'slider',
+    name: 'Slider',
+    subpath: '@aether/ui-kit/controls/slider',
+    group: 'Forms',
+    core: '@aether/ui-kit/controls/core',
+    blurb: 'A number you drag rather than type, with a read-out beside it.',
+    detail:
+      'NOT a variant of NumberField: a slider is a different INTERACTION for a value whose scale matters more than its digits — an opacity, a cutting plane. IT NEVER WRITES A CORRECTED VALUE BACK, which is the contract worth stating: a native range snaps its THUMB to the nearest step, so a component that read `.value` back on render would silently rewrite a stored 0.37 to 0.35 for a field nobody touched. `format` exists because a stored value and a displayed one are not always the same quantity — a 0-100 position driving a non-linear deform factor has no business printing its own number — and it feeds `aria-valuetext` too, so the announced value is "×1.0" and not "25". It draws its own track and thumb, which is not a styling preference: a tick has to land exactly under the value it marks, the thumb centre travels from thumb/2 to width−thumb/2, and a thumb rule is silently ignored unless the input is `appearance: none`, which takes the native track with it.',
+    props: [
+      { name: 'modelValue', type: 'number', note: 'controlled; v-model' },
+      { name: 'min / max / step', type: 'number?', note: 'straight to the native input' },
+      { name: 'format', type: '(v: number) => string?', note: 'the read-out, and aria-valuetext' },
+      { name: 'ticks', type: 'SliderTick[]?', note: 'marks on the track; { value, label? }' },
+      { name: 'suffix', type: 'string?', note: 'a unit the kit renders and never interprets' },
+      { name: 'disabled', type: 'boolean?' },
+    ],
+    emits: [{ name: 'update:modelValue', type: '[value: number]' }],
   },
   {
     id: 'card',
-    name: 'Card · Spinner',
-    subpath: '@aether/ui-kit/controls/card · /spinner',
-    imports: [
-      { name: 'Card', subpath: '@aether/ui-kit/controls/card' },
-      { name: 'Spinner', subpath: '@aether/ui-kit/controls/spinner' },
-    ],
+    name: 'Card',
+    subpath: '@aether/ui-kit/controls/card',
     group: 'Controls',
-    blurb: 'A panel surface, and an indeterminate busy indicator.',
+    blurb: 'A panel surface: bordered, padded, holds content and does nothing.',
     detail:
-      'Card is a bordered, padded box that holds content and does nothing. Its padding and radius are Disclosure\'s own (12px 14px, 8px) rather than new numbers, because consumers stack the two in a single column and mismatched insets show up as content edges that do not line up — the radius is deliberately NOT `--aether-radius`, which is the control radius for chips and fields, and a surface is not a control. Deliberately static: a consumer also ships a selectable list card with a hover lift, a selected ring and a colour-coded left border, and that is a different component by the kit\'s own rule — different interaction means a different component, different shape means a prop. Padding is therefore not a prop either; a caller wanting a denser or roomier box sets it at the call site, exactly as Seg leaves stretching to the host. Spinner is indeterminate only, because a determinate ring carries a value and answers a different question. Its `label` is the accessibility contract and is optional for a measured reason: one real call site sits beside its own status text, where naming the spinner would make a screen reader say the same thing twice, and the other sits alone in a panel header, where staying unnamed makes the panel read as idle. No label means aria-hidden; a label means role="status". The stroke is derived as size/8 rather than a prop, which reproduces the 2px both call sites use at 14px and 16px.',
+      'Its padding and radius are Disclosure\'s own — 12px 14px, and `--aether-radius-surface` — rather than new numbers, because consumers stack the two in a single column and mismatched insets show up as content edges that do not line up. The radius is deliberately NOT `--aether-radius`, which is the CONTROL radius for chips and fields: a host retuning its controls should not silently reshape its panels. DELIBERATELY STATIC, and that is the line rather than an omission — a consumer also ships a selectable list card with a hover lift, a selected ring and a colour-coded left border, and that is a different component by the kit\'s own rule, since it differs in INTERACTION and not only in shape. A clickable card would drag click, disabled, selected and a whole keyboard contract in behind it. Padding is not a prop for the same reason it is not a token: one consumer wants dense and another roomy, which is a call-site override, the way Seg leaves stretching to the host.',
+    props: [],
+    emits: [],
+  },
+  {
+    id: 'spinner',
+    name: 'Spinner',
+    subpath: '@aether/ui-kit/controls/spinner',
+    group: 'Controls',
+    blurb: 'An indeterminate busy indicator. Something is happening, for an unknown while.',
+    detail:
+      'INDETERMINATE ONLY. A determinate progress ring is a different control — it carries a value, a max and an `aria-valuenow`, and answers "how far" rather than "is it working". NOT a `loading` prop on Card either, and that was checked against the real call sites rather than assumed: one sits in a Disclosure\'s header slot, which is not a Card at all, and the other sits inline beside its own status text inside a card body — "this line is working", not "this card is busy". A card-level loading state serves neither, and would make a static surface own a state it has no other reason to know. `label` IS the accessibility contract and is optional for that same measured reason: beside visible status text, naming the spinner would make a screen reader say the same thing twice in two vocabularies; alone in a panel header, staying unnamed makes the panel read as idle. No label means `aria-hidden`; a label means `role="status"`. The stroke is derived from the size and ROUNDED to a whole pixel — unrounded, size/8 gives 1.75px at size 14 and a browser floors a sub-pixel border, so one ring drew visibly thinner than its neighbour. Motion is slowed under `prefers-reduced-motion`, not stopped: a frozen spinner reads as a hung process, which is the one thing it exists to disprove.',
     props: [
-      { name: 'size', type: 'number?', note: 'Spinner diameter in px; default 16' },
-      { name: 'label', type: 'string?', note: 'Spinner accessible name; omit when text beside it speaks' },
+      { name: 'size', type: 'number?', note: 'outer diameter in px; default 16' },
+      { name: 'label', type: 'string?', note: 'accessible name; omit when text beside it speaks' },
     ],
     emits: [],
   },

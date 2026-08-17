@@ -26,19 +26,14 @@ const props = defineProps<{
   source: string
 }>()
 
-/* ONE LINE PER COMPONENT, because this block has a copy button and therefore has to be real code.
- * It was `import ${name} from '${subpath}'` over the raw fields, which is valid for the sections
- * that document one component and nonsense for the ones that document several: the Fields section
- * emitted
+/* This block has a copy button, so what it shows has to be real code. It briefly was not: sections
+ * documenting several components at once emitted
  *     import TextField · NumberField · Select · Slider from '@aether/ui-kit/controls/text-field · …'
  * — a middot is not an import list, and there is no single specifier for four paths. Someone copied
- * it, which is the whole point of the button. Sections carrying several components now list their
- * own imports; the rest keep deriving one from name + subpath. */
-const importLine = computed(() =>
-  (props.meta.imports ?? [{ name: props.meta.name, subpath: props.meta.subpath }])
-    .map((i) => `import ${i.name} from '${i.subpath}'`)
-    .join('\n'),
-)
+ * it, which is what the button is for. Every section documents ONE component now, so this is a
+ * plain specifier again; a test holds every line to being well-formed and to naming a subpath the
+ * exports map declares. */
+const importLine = computed(() => `import ${props.meta.name} from '${props.meta.subpath}'`)
 
 /* The panel's one-line contents summary. `emit` and `slot` are irregular only in that they need an
    -s when there is more than one; spelling that out beats hand-writing four v-ifs in the template. */

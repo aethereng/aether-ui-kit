@@ -27,8 +27,16 @@ import DateFieldExample from './examples/DateFieldExample.vue'
 import DateFieldExampleSrc from './examples/DateFieldExample.vue?raw'
 import RadioGroupExample from './examples/RadioGroupExample.vue'
 import RadioGroupExampleSrc from './examples/RadioGroupExample.vue?raw'
-import FieldsExample from './examples/FieldsExample.vue'
-import FieldsExampleSrc from './examples/FieldsExample.vue?raw'
+import TextFieldExample from './examples/TextFieldExample.vue'
+import TextFieldExampleSrc from './examples/TextFieldExample.vue?raw'
+import NumberFieldExample from './examples/NumberFieldExample.vue'
+import NumberFieldExampleSrc from './examples/NumberFieldExample.vue?raw'
+import SelectExample from './examples/SelectExample.vue'
+import SelectExampleSrc from './examples/SelectExample.vue?raw'
+import SliderExample from './examples/SliderExample.vue'
+import SliderExampleSrc from './examples/SliderExample.vue?raw'
+import SpinnerExample from './examples/SpinnerExample.vue'
+import SpinnerExampleSrc from './examples/SpinnerExample.vue?raw'
 import SwitchExample from './examples/SwitchExample.vue'
 import SwitchExampleSrc from './examples/SwitchExample.vue?raw'
 import TooltipExample from './examples/TooltipExample.vue'
@@ -239,8 +247,24 @@ const groupAnchor = (g: Group) => g.toLowerCase()
           <SwitchExample />
         </GSection>
 
-        <GSection v-else-if="c.id === 'fields'" :meta="c" :source="FieldsExampleSrc">
-          <FieldsExample />
+        <GSection v-else-if="c.id === 'text-field'" :meta="c" :source="TextFieldExampleSrc">
+          <TextFieldExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'number-field'" :meta="c" :source="NumberFieldExampleSrc">
+          <NumberFieldExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'select'" :meta="c" :source="SelectExampleSrc">
+          <SelectExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'slider'" :meta="c" :source="SliderExampleSrc">
+          <SliderExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'spinner'" :meta="c" :source="SpinnerExampleSrc">
+          <SpinnerExample />
         </GSection>
 
         <GSection v-else-if="c.id === 'tooltip'" :meta="c" :source="TooltipExampleSrc">

@@ -57,6 +57,8 @@ export const COMPONENTS: CompMeta[] = [
     subpath: '@aether/ui-kit/controls/seg',
     group: 'Controls',
     blurb: 'One-active segmented selector.',
+    detail:
+      'A row of segments where exactly one is active. `modelValue` may be null for "nothing matches", which a preset picker over continuous state needs. `variant: \'pill\'` is a rounder, uppercase form. It announces as a tablist, so reach for it where choosing switches a view.',
     props: [
       { name: 'options', type: 'SegOption<V>[]', note: '{ value, label, disabled? }' },
       { name: 'modelValue', type: 'V | null', note: 'null = nothing matches; no option is active' },
@@ -77,9 +79,9 @@ export const COMPONENTS: CompMeta[] = [
     name: 'DateField',
     subpath: '@aether/ui-kit/controls/date-field',
     group: 'Forms',
-    blurb: 'A date input with the kit\'s own picker, because the browser\'s cannot be styled.',
+    blurb: 'A date input with its own calendar popup.',
     detail:
-      'It keeps a real `input[type="date"]` for typing — locale-ordered segments, real validation, and on a touch device tapping it still opens the OS date wheel, which beats anything drawn here. What it replaces is the DESKTOP popup, which cannot be themed at all: it is browser UI painted outside the page, not page content. Verified rather than assumed — `input.shadowRoot` is null, the only pseudo-elements Chrome exposes are the inline parts, the popup is in none of them, and `base-select` is the only `appearance: base-*` value in Chromium 148, so customizable controls shipped for select and not for date. So the native indicator is hidden and the panel is ours, and there is no popup at all on a coarse pointer where the platform\'s is better. The keyboard cursor is deliberately NOT the selection: arrowing around the calendar moves a focus ring without committing, or exploring next month would rewrite the field on the way. It was the last control reachable only by describing a form — a FieldDescriptor[], a FieldValues object and a (key, value) handler, to render one date input — which is the packaging failure v0.13.0 named for five controls and RadioGroup closed for a sixth. PropertyEditor composes it now.',
+      'A date input with its own calendar popup. The native input stays for typing, and on touch for the OS picker; the popup replaces only the desktop one, which browsers do not let you style. Value is `YYYY-MM-DD`, or empty.',
     props: [
       { name: 'modelValue', type: 'string', note: "`YYYY-MM-DD`, or '' for empty; v-model" },
       { name: 'id', type: 'string?', note: 'reaches the inner input, so `<label for>` works' },
@@ -94,7 +96,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/controls/core',
     blurb: 'One choice out of a few, as buttons. A value — not a tab strip.',
     detail:
-      'The control Seg is mistaken for. Seg is role="tablist" with role="tab" children and belongs where choosing SWAPS A PANEL; this is role="radiogroup" with role="radio" children and belongs where choosing sets a VALUE — a unit, a mode, a grade. Identical pixels, and a screen reader says whichever one you picked, so the choice between them is the only real decision here. It existed before as PropertyEditor\'s `enum` field with `variant: "buttons"`, reachable only by describing a form: a FieldDescriptor[], a FieldValues object and a (key, value) handler, to render two buttons. A consumer wrote exactly that twice in one afternoon for a units picker and an analysis-mode picker, neither of which is a form — the same packaging failure v0.13.0 fixed for the other five controls, left behind because this one had no standalone shape yet. PropertyEditor composes it now. Arrows wrap and SELECT as they move, which is the radio pattern rather than the menu\'s: the focused option is the chosen one, so there is no separate commit. Disabled options are skipped rather than landed on. The group is one tab stop, not one per option, via a roving tabindex on the checked option — or the first, when nothing is checked, since a group you cannot tab into is worse than one that starts at the top.',
+      'One choice out of a few, drawn as buttons. A `radiogroup`: one tab stop, arrows that move and select, disabled options skipped. Use it for a value — if choosing swaps a panel, that is a Seg.',
     props: [
       { name: 'options', type: 'RadioOption<V>[]', note: '{ value, label, disabled? }' },
       { name: 'modelValue', type: 'V', note: 'controlled; v-model' },
@@ -112,7 +114,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/controls/core',
     blurb: 'Toggle chips with an optional count and colour dot. Multi-select via a Set.',
     detail:
-      'The dot colour is a caller concern — the kit never decides what a category means, only how a chip behaves. `color` accents the label itself (an option can carry its encoding without a dot); `muted` dims an option without disabling it, for a filter whose count is zero but which should still be visible and clickable. `swatch` takes a raw CSS declaration list rather than a colour, so a chip can carry the same encoding as the thing it filters — a dashed border for planned, a faded fill for shipped — which is what lets a set of chips replace a legend instead of sitting beside one.',
+      'Toggle buttons, for filtering. `modelValue` takes one value or a `Set` for multi-select. An option can carry a count, a colour dot or a swatch, and `muted` dims one without disabling it, so an empty facet stays visible and still clickable.',
     props: [
       {
         name: 'options',
@@ -132,7 +134,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Forms',
     blurb: 'Boolean toggle as a pill switch. One bare input; you own the label.',
     detail:
-      'This existed before it was a component — but only under `.aether-property-editor__field input[type=checkbox]`, so the appearance lived inside a form and a consumer with one standalone toggle had no way to reach it. That is a packaging failure rather than a missing feature, and PropertyEditor now renders this instead of a raw input. It is deliberately one `<input>` with no wrapper and no label of its own: a self-labelling wrapper would nest a `<label>` inside the form\'s own `<label for>`, which is invalid, and would change the DOM a consumer\'s overrides are written against. Extraction also gave it the kit\'s focus ring, which it had never had — ui-kit.css declares one ring "for every control the kit ships" and lists Tool, Chip, Seg and the enum buttons; the switch was missed, so keyboard focus fell through to the browser\'s own blue. There is still no coarse-pointer floor, and that is carried over deliberately: the 18px knob is tuned to a 22px track, so a min-height rule rewrites the track and leaves the knob behind.',
+      'A boolean, drawn as a pill switch. One bare `input[type=checkbox]` with no wrapper and no label of its own: pair it with a `<label for>` so the label can carry whatever the surface needs — a count, a swatch, a second line.',
     props: [
       { name: 'modelValue', type: 'boolean', note: 'controlled; v-model' },
       { name: 'disabled', type: 'boolean?' },
@@ -146,7 +148,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Forms',
     blurb: 'Free text, single- or multi-line.',
     detail:
-      'It commits every keystroke, which is the line between it and NumberField: a number field that did the same would rewrite the model to 1 the moment you typed "1." and never let you reach 1.5. `multiline` is a PROP rather than a second component, and that is the kit\'s rule applied consistently — a textarea types exactly like an input, with the same data, the same commit-per-keystroke and the same bordered box, so only its SHAPE differs. Different interaction means a different component; different shape means a prop. The multiline form resizes vertically only: one that could be dragged wider escapes whatever column it sits in, and in a form that column is the layout.',
+      'Free text. `multiline` renders a textarea instead, resizable vertically only so it cannot escape its column. Commits on every keystroke.',
     props: [
       { name: 'modelValue', type: 'string', note: 'controlled; v-model' },
       { name: 'multiline', type: 'boolean?', note: 'render a textarea instead' },
@@ -164,7 +166,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/property-editor/core',
     blurb: 'A number, with its unit inside the box. Not a `type` on TextField.',
     detail:
-      'Its own component for two structural reasons. COMMIT SEMANTICS: a text field commits every keystroke, and a number field that did would rewrite the model to 1 the moment you type "1.", making 1.5 unreachable. `coerceNumberInput` tells mid-typing from genuinely cleared using `validity.badInput`, which is the only signal that distinguishes them — an unparseable number input reports an EMPTY value, so without it "1." and "" are the same thing. DOM: the border lives on a WRAPPER with a borderless input inside, so the unit sits inside the box; a bordered input with a sibling span reads as two controls and makes the unit look like a caption. `precision` derives `step` when none is given (2 → 0.01) so the spinner increments sanely, without rounding what is stored or displayed.',
+      'A number, with its unit inside the box. It commits only a complete value, so typing "1." leaves the model alone on the way to 1.5. Clearing emits `undefined`, which is distinct from 0. `precision` derives `step` when `step` is omitted.',
     props: [
       { name: 'modelValue', type: 'number | undefined', note: 'undefined = empty, not zero' },
       { name: 'min / max / step', type: 'number?', note: 'straight to the native input' },
@@ -183,7 +185,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/controls/core',
     blurb: 'A single-choice dropdown over a native <select>.',
     detail:
-      'Native on purpose: it is the one control where the platform\'s own popup beats anything the kit could build — it renders above everything without a portal, it works on touch, and on mobile it becomes the OS picker. What native did NOT allow was theming its options, which is why `appearance: base-select` matters: it opts the control into the customizable-select rendering and the popup and its rows become ordinary styleable boxes. Behind `@supports`, so a browser without it keeps the fully native control rather than a half-built one. GROUPS ARE STRUCTURE, not decoration: a picker listing load cases AND ULS combinations flattened into one list loses the distinction between two kinds of thing, which in a structural model is a correctness problem — and `subtitle` is what lets two similarly-named rows tell themselves apart, a combination carrying its factored formula.',
+      'A single-choice dropdown over a native `<select>` — themed where the browser allows it, and the OS picker on mobile. `options` is a flat list, `groups` renders `<optgroup>`s, and a row can carry a `subtitle` as a quieter second line.',
     props: [
       { name: 'modelValue', type: 'string', note: 'controlled; v-model' },
       { name: 'options', type: 'SelectOption[]?', note: '{ value, label, subtitle?, disabled? }' },
@@ -200,7 +202,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/controls/core',
     blurb: 'A number you drag rather than type, with a read-out beside it.',
     detail:
-      'NOT a variant of NumberField: a slider is a different INTERACTION for a value whose scale matters more than its digits — an opacity, a cutting plane. IT NEVER WRITES A CORRECTED VALUE BACK, which is the contract worth stating: a native range snaps its THUMB to the nearest step, so a component that read `.value` back on render would silently rewrite a stored 0.37 to 0.35 for a field nobody touched. `format` exists because a stored value and a displayed one are not always the same quantity — a 0-100 position driving a non-linear deform factor has no business printing its own number — and it feeds `aria-valuetext` too, so the announced value is "×1.0" and not "25". It draws its own track and thumb, which is not a styling preference: a tick has to land exactly under the value it marks, the thumb centre travels from thumb/2 to width−thumb/2, and a thumb rule is silently ignored unless the input is `appearance: none`, which takes the native track with it.',
+      'A number you drag, with a read-out beside it. `format` maps the stored value to what is shown and to `aria-valuetext`, so a 0–100 position can display as the quantity it means. `ticks` marks values on the track. It never writes a step-corrected value back.',
     props: [
       { name: 'modelValue', type: 'number', note: 'controlled; v-model' },
       { name: 'min / max / step', type: 'number?', note: 'straight to the native input' },
@@ -218,7 +220,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Controls',
     blurb: 'A panel surface: bordered, padded, holds content and does nothing.',
     detail:
-      'Its padding and radius are Disclosure\'s own — 12px 14px, and `--aether-radius-surface` — rather than new numbers, because consumers stack the two in a single column and mismatched insets show up as content edges that do not line up. The radius is deliberately NOT `--aether-radius`, which is the CONTROL radius for chips and fields: a host retuning its controls should not silently reshape its panels. DELIBERATELY STATIC, and that is the line rather than an omission — a consumer also ships a selectable list card with a hover lift, a selected ring and a colour-coded left border, and that is a different component by the kit\'s own rule, since it differs in INTERACTION and not only in shape. A clickable card would drag click, disabled, selected and a whole keyboard contract in behind it. Padding is not a prop for the same reason it is not a token: one consumer wants dense and another roomy, which is a call-site override, the way Seg leaves stretching to the host.',
+      'A bordered, padded surface that holds content and does nothing else. Static by design — no click, no state. Override padding at the call site for a denser or roomier box.',
     props: [],
     emits: [],
   },
@@ -229,7 +231,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Controls',
     blurb: 'An indeterminate busy indicator. Something is happening, for an unknown while.',
     detail:
-      'INDETERMINATE ONLY. A determinate progress ring is a different control — it carries a value, a max and an `aria-valuenow`, and answers "how far" rather than "is it working". NOT a `loading` prop on Card either, and that was checked against the real call sites rather than assumed: one sits in a Disclosure\'s header slot, which is not a Card at all, and the other sits inline beside its own status text inside a card body — "this line is working", not "this card is busy". A card-level loading state serves neither, and would make a static surface own a state it has no other reason to know. `label` IS the accessibility contract and is optional for that same measured reason: beside visible status text, naming the spinner would make a screen reader say the same thing twice in two vocabularies; alone in a panel header, staying unnamed makes the panel read as idle. No label means `aria-hidden`; a label means `role="status"`. The stroke is derived from the size and ROUNDED to a whole pixel — unrounded, size/8 gives 1.75px at size 14 and a browser floors a sub-pixel border, so one ring drew visibly thinner than its neighbour. Motion is slowed under `prefers-reduced-motion`, not stopped: a frozen spinner reads as a hung process, which is the one thing it exists to disprove.',
+      'An indeterminate busy indicator. `size` sets the diameter and the stroke follows it. `label` names it for a screen reader; omit it when text beside it already says what is happening. Motion slows under `prefers-reduced-motion` rather than stopping.',
     props: [
       { name: 'size', type: 'number?', note: 'outer diameter in px; default 16' },
       { name: 'label', type: 'string?', note: 'accessible name; omit when text beside it speaks' },
@@ -243,7 +245,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Controls',
     blurb: 'Static status marker in four tones. A span, not a control.',
     detail:
-      'The line between this and Chip is interactivity, not appearance: Chip is a button with click, disabled and an emit, and a marker exposed as a button lands in the tab order doing nothing. Badge is a span. The kit maps tone to pixels and never maps a domain state to a tone — a caller with `singular` or `verified` resolves those itself, the same boundary that lets the kit render a `suffix` without knowing a unit. The three semantic tones are filled rather than tinted, and that is a contrast decision: measured tone-on-page, `--aether-warm` is 3.83 on `--aether-panel`, and a wash only pulls the background toward the text. Painting its own ground makes the ratio independent of whatever surface the badge sits on, which is also what lets one badge ship into two host palettes. Neutral stays unfilled because it is the tone that appears six-in-a-row. No icon, no count, no close, no size axis, and no group component — a row of badges has no shared state to model.',
+      'A static status marker in four tones. A `<span>`, not a control — if it should be clickable, that is a Chip. The kit maps a tone to pixels; deciding which tone a domain state deserves stays with the caller.',
     props: [
       {
         name: 'tone',
@@ -260,7 +262,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Overlays',
     blurb: 'Hover/focus tooltip that escapes any ancestor clipping it.',
     detail:
-      'The reason this is a component rather than a CSS sibling is clipping. Anything positioned inside a container with `overflow: hidden` — Disclosure\'s body, for one, which clips by design so its reveal can animate — is cut off at the edge: measured, a 260px surface showed 0 of 260px. The `popover` attribute puts the surface in the browser\'s TOP LAYER, outside every ancestor\'s overflow, clip, transform and stacking context, and the same surface then showed 260 of 260. There is no Teleport here and none is needed. Position comes from CSS anchor positioning, so the browser tracks the anchor through scroll and resize itself and `position-try-fallbacks` flips it when there is no room — no listeners, no measuring loop. `aria-describedby` is wired onto the trigger only when the text says something the accessible name does not, because half of real tooltips restate the label of an icon button and a description there makes a screen reader read the same words twice.',
+      'Explanatory text on hover or focus. It uses the platform\'s top layer, so no ancestor\'s `overflow` or transform can clip it and there is nothing to portal. `placement` picks a side, and it flips when there is no room.',
     props: [
       { name: 'text', type: 'string', note: 'plain text; rich content is unreachable by touch' },
       { name: 'placement', type: "'top' | 'bottom' | 'left' | 'right'?", note: "default 'bottom'" },
@@ -277,7 +279,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/controls/core',
     blurb: 'Dropdown menu with the full APG keyboard model.',
     detail:
-      '`popover="auto"` carries the top layer AND light-dismiss, so a click outside closes it with no document listener that has to be added, removed, and taught not to fire on the opening click. The keyboard model is in controls/core/menu.ts as pure functions over plain data, for the same reason the tree\'s is: arrows wrap, disabled items and separators are skipped rather than landed on and ignored, Home/End are not optional, typing jumps by label and repeating a letter cycles through matches, Escape closes and returns focus to the trigger, and Tab closes rather than walking into the surface. Focus moves for real rather than through aria-activedescendant, which is what the APG pattern specifies and what makes Enter and Space work with no extra wiring.',
+      'A popup list of actions. Arrows move, typing jumps, Escape closes and returns focus. Items are data — separators and disabled entries included — and the caller handles what a pick does.',
     props: [
       { name: 'items', type: 'MenuItem[]', note: '{ id, label, disabled?, separator?, data? }' },
       { name: 'label', type: 'string?', note: 'trigger text; #trigger replaces the button' },
@@ -297,7 +299,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Overlays',
     blurb: 'Modal dialog over the native <dialog> element.',
     detail:
-      'Thin on purpose. `showModal()` already gives the top layer, a real focus trap, `inert` on everything behind, Escape-to-close, `::backdrop`, and focus returned to whatever opened it — none of which is reimplemented here. What the component adds is the two things the platform leaves out: a page scroll lock that restores whatever the host had set before, and a backdrop click. That click needs a rect test rather than a target check, because a click on the backdrop lands on the <dialog> ELEMENT itself — the backdrop is its pseudo-element and has no separate hit target — so without comparing coordinates against the content box, a click on the dialog\'s own padding would read as a click outside it.',
+      'A modal over the page. Focus is trapped while it is open, Escape and a backdrop click close it, and focus returns to whatever opened it.',
     props: [
       { name: 'open', type: 'boolean', note: 'controlled; v-model:open' },
       { name: 'title', type: 'string?', note: 'accessible name, and the default heading' },
@@ -318,7 +320,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Controls',
     blurb: 'Header action button, in three variants: neutral, primary, destructive.',
     detail:
-      'A closed variant set rather than an open style hook. If both hot and danger are passed, danger wins — mislabelling a destructive action as primary is the worse failure. There is deliberately no active/pressed state: Tool is a stateless command, which is the line between it and Seg. A control where several things can be on at once is Chip\'s contract, not this one.',
+      'A compact toolbar button. `hot` marks the active one. It reaches the 44px touch floor on a coarse pointer without growing on a mouse.',
     props: [
       { name: 'label', type: 'string', note: 'also the accessible name when the label is hidden' },
       { name: 'hot', type: 'boolean?', note: 'the primary action on a surface' },
@@ -349,7 +351,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/controls/core',
     blurb: 'A keyboard-complete tree: roving focus, both asymmetric arrows, typeahead.',
     detail:
-      'Controlled — the caller owns `expanded` and `selected`, both plain data, so a host can persist or restore them. Rendered flat rather than as nested lists: ARIA allows it once each row carries aria-level/setsize/posinset, and flat keeps the roving tabindex to one list and leaves room for virtualisation later. The whole keyboard model lives in the framework-free core (`treeKey`), because it is the part that gets written wrong: Right expands a closed node but steps INTO an open one, and Left closes an open node but steps OUT of a closed one — implementations routinely ship only one half of each. Moving is not selecting: arrowing never fires `select`, so walking a file tree does not open a file per keypress.',
+      'A hierarchy that expands and collapses. Rows derive from `TreeNode<T>[]` and the caller owns which nodes are open. The whole keyboard model — arrows, Home/End, typeahead — lives in the framework-free core.',
     props: [
       { name: 'nodes', type: 'TreeNode<T>[]', note: 'id, label, optional children and free-form data' },
       { name: 'expanded', type: 'string[]?', note: 'open node ids; the caller owns them' },
@@ -376,7 +378,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Controls',
     blurb: 'A collapsible panel whose header row can hold its own controls.',
     detail:
-      'Controlled: the caller owns `open` and binds `v-model:open`, so open-state can be keyed by row and persisted. Deliberately not a <details>/<summary>, which would have given the keyboard and screen-reader contract for free — but everything after a <summary> is hidden while the panel is closed, so a header control cannot stay reachable there, and nesting it inside the summary flattens it in the accessibility tree. That is what the #aside slot is for, and why this owns its header row. Collapsed content still uses hidden="until-found", so find-in-page reaches it and the resulting beforematch becomes update:open.',
+      'A panel that collapses. It draws its own card, so it is the surface rather than a header inside one. `open` belongs to the caller, and the `#aside` slot holds controls that stay reachable while it is closed. Find-in-page still reaches collapsed text.',
     props: [
       { name: 'label', type: 'string', note: 'header text, and the toggle’s accessible name' },
       { name: 'open', type: 'boolean?', note: 'controlled by the caller; the panel never self-toggles' },
@@ -400,7 +402,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Controls',
     blurb: 'A labelled rail of toggle-chip groups, with clear-all and a hidden-count readout.',
     detail:
-      'Grouping and selection are pure data (FilterGroup[]); the rail renders one Chip row per group and wires toggle/clear mechanically. The one component extracted after a three-surface duplication audit — the other candidates were rejected as look-alikes. Both real consumers ship: one as a vertical sidebar, one as a horizontal header bar.',
+      'A rail of Chip rows, one per facet. The groups and their selections are data, and a toggle reports which group it came from so a host can route it without tracking positions.',
     props: [
       { name: 'groups', type: 'FilterGroup<V>[]', note: '{ key, label, options, selected: Set<V> }' },
       { name: 'hiddenCount', type: 'number?', note: 'shown as "N hidden" when non-zero' },
@@ -423,7 +425,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Controls',
     blurb: 'Search input with a clear button that appears only once there is something to clear.',
     detail:
-      'Extracted after two surfaces shipped it identically — same wrapper, same absolutely positioned circular button, same glyph, down to matching CSS in both source files. An always-visible clear button on an empty field is a control that does nothing, so it stays hidden until the field has text; clearing returns the caret to the input, because clearing is almost always followed by retyping.',
+      'A search input with a clear button that appears once there is something to clear. Clearing returns the caret to the field. `focus()` is exposed so a host shortcut need not reach into the DOM.',
     props: [
       { name: 'modelValue', type: 'string', note: 'the query — the caller owns it' },
       { name: 'placeholder', type: 'string?' },
@@ -444,7 +446,7 @@ export const COMPONENTS: CompMeta[] = [
     blurb:
       'Controlled playback transport: play/pause/replay, scrub, speed presets, position readout.',
     detail:
-      'Pauses on scrub-start and resumes on scrub-end, so a drag and a running clock can never both write the playhead — the release is caught on the window, so a pointer let go outside the slider cannot strand playback paused. Deliberately unit-agnostic: the same component drives simulation seconds and calendar days. It sizes and positions nothing; both real consumers float it over a 3-D canvas at their own width. Shipping in two applications: a 3-D playback player, and a solver diagnostic.',
+      'Playback controls: play and pause, a scrub bar, a speed cycle and a time read-out. Unit-agnostic — the same bar drives simulation seconds or calendar days. Scrubbing pauses and resumes around the drag, so a drag and a running clock never both write the playhead.',
     props: [
       { name: 'current', type: 'number', note: 'playhead position — caller owns the clock' },
       { name: 'duration', type: 'number' },
@@ -488,7 +490,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/property-editor/core',
     blurb: 'Schema-driven form: bind a FieldDescriptor[], get an editor.',
     detail:
-      'Text, textarea, number, range, date, boolean, and enum (button-group or dropdown) fields. The core is plain TypeScript with unit tests and no DOM; the Vue file is a thin wrapper. It stays ignorant of what the object being edited actually is. A number field takes step/min/max/precision and a `suffix` rendered after the input — the kit renders a unit, it never knows one, so conversion and unit systems stay with the caller. `reference` and `placement` render through a named slot instead: only the caller knows how to pick an entity or edit a 3D placement.',
+      'A form rendered from a `FieldDescriptor[]`, which is what makes it worth using: the field set can change at runtime — a different shape, a conditional field — without a template per case. It composes the kit\'s standalone controls for each type, and coercion and validation live in a framework-free engine.',
     props: [
       { name: 'fields', type: 'FieldDescriptor[]', note: '{ key, label, type, options?, … }' },
       { name: 'modelValue', type: 'FieldValues', note: 'a plain record' },
@@ -511,7 +513,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/viz/core',
     blurb: 'Force-directed graph over an SVG renderer.',
     detail:
-      'The core is dimension-agnostic — positions are `number[]`, so axis 3 can be spatial z, axis 4 a construction sequence, axis 5 a discipline. A GL renderer would reuse the same core and change only the draw call. Two modes: running (the component owns the sim, the default) or controlled (running: false, the caller owns nodes[].pos). Dragging needs the controlled mode — in running mode the internal layout owns the positions and a write from the caller is ignored.',
+      'A force-directed node graph: pan, zoom, and drag a node to place it. The layout is a framework-free core, so the maths is usable without the component.',
     props: [
       {
         name: 'mapping',
@@ -567,7 +569,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/viz/core/gantt',
     blurb: 'Controlled timeline: lanes, spans, points and anchors in day-index space.',
     detail:
-      'Drag to move, edge-handles to resize, double-click a lane to create. It emits deltas in day indices and never touches dates — the caller maps day index to calendar, which is what keeps it reusable outside a calendar entirely.',
+      'A timeline of bars in lanes. Drag to move, edge handles to resize, double-click a lane to create. It emits deltas in day indices and never touches dates, so the caller keeps its own calendar.',
     props: [
       {
         name: 'weekLabels',
@@ -614,7 +616,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/controls/core',
     blurb: 'A message log and compose box for the "queue, send, apply the reply" agent pattern.',
     detail:
-      'Extracted after two hosts shipped it identically — a file browser and a card board — with only the export/import logic actually differing between them. The split follows from that: ChatPanel owns the log and the compose box, and emits queue / send / apply-reply; what those three DO — building a request file, importing a reply — stays with the caller entirely. Auto-scrolls to the newest message on its own, so no host has to reach into its DOM for that. Shipping in two applications: a knowledge-graph browser and a decision board.',
+      'A message log with a composer. Messages are data — a role, optional references, a queued state for anything not yet sent. Rendering only; sending is the caller\'s.',
     props: [
       { name: 'messages', type: 'ChatMessage[]', note: "{ role: 'you'|'agent'|'sys', text, queued?, refs? }" },
       { name: 'modelValue', type: 'string', note: 'the compose box — caller owns it' },
@@ -639,7 +641,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Controls',
     blurb: 'Transient status pill that fades itself out.',
     detail:
-      'Controlled, like the rest of the kit: the caller owns the message, and the component clears it by emitting an update rather than holding its own visibility, so a host can dismiss early by setting the model to an empty string. Not a queue and not a notification centre: a second message while one is up replaces it and restarts the timer, which is what all three original hosts already did and what you want for "Copied", "Queued", "Saved". Extracted after those three shipped it byte-identically; the tell was that they had already merged their CSS into one shared rule keyed off three different ids, leaving only the four lines of timer logic copied per host.',
+      'A transient message. It dismisses itself on a timer that pauses while the pointer is over it, and the caller owns the message it shows.',
     props: [
       { name: 'modelValue', type: 'string', note: 'the message; empty string = hidden' },
       { name: 'duration', type: 'number?', note: 'ms before it clears itself; default 1700' },

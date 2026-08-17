@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, existsSync, globSync } from 'node:fs'
 import { dirname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { COMPONENTS } from '../gallery/meta'
 
 /* The package's PUBLIC CONTRACT, tested the way a consumer meets it.
  *
@@ -206,6 +207,40 @@ describe('interactive controls give feedback before they are clicked', () => {
       expect(shared.includes(selector), `${selector} missing`).toBe(true)
     },
   )
+})
+
+describe('the gallery only offers imports that are real', () => {
+  /* The import block has a COPY BUTTON, so what it shows is not documentation — it is code someone
+     pastes. It was built as `import ${name} from '${subpath}'` over the raw meta fields, which is
+     right for a section covering one component and nonsense for one covering several:
+
+         import TextField · NumberField · Select · Slider from '@aether/ui-kit/controls/text-field · …'
+
+     A middot is not an import list and there is no single specifier for four paths. It was copied,
+     which is exactly what the button is for. Sections with several components now carry an
+     `imports` list, and this holds every line to being (a) a well-formed default import and (b) a
+     subpath the exports map actually declares — so a typo or a new multi-component section cannot
+     put an unusable line behind that button again. */
+  const declared = new Set(Object.keys(pkg.exports as Record<string, unknown>))
+  const lines = COMPONENTS.flatMap((c) =>
+    (c.imports ?? [{ name: c.name, subpath: c.subpath }]).map((i) => ({
+      id: c.id,
+      line: `import ${i.name} from '${i.subpath}'`,
+      subpath: i.subpath,
+    })),
+  )
+
+  it('finds import lines to check', () => {
+    expect(lines.length).toBeGreaterThan(15)
+  })
+
+  it.each(lines)('$id: $line', ({ line, subpath }) => {
+    expect(line, 'not a well-formed default import').toMatch(
+      /^import [A-Z][A-Za-z0-9]* from '@aether\/ui-kit\/[a-z0-9/-]+'$/,
+    )
+    const key = subpath.replace('@aether/ui-kit', '.')
+    expect(declared.has(key), `${key} is not in the exports map`).toBe(true)
+  })
 })
 
 describe('every symbol a core module exports is reachable through the exports map', () => {

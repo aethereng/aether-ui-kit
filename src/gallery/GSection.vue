@@ -26,7 +26,19 @@ const props = defineProps<{
   source: string
 }>()
 
-const importLine = `import ${props.meta.name} from '${props.meta.subpath}'`
+/* ONE LINE PER COMPONENT, because this block has a copy button and therefore has to be real code.
+ * It was `import ${name} from '${subpath}'` over the raw fields, which is valid for the sections
+ * that document one component and nonsense for the ones that document several: the Fields section
+ * emitted
+ *     import TextField · NumberField · Select · Slider from '@aether/ui-kit/controls/text-field · …'
+ * — a middot is not an import list, and there is no single specifier for four paths. Someone copied
+ * it, which is the whole point of the button. Sections carrying several components now list their
+ * own imports; the rest keep deriving one from name + subpath. */
+const importLine = computed(() =>
+  (props.meta.imports ?? [{ name: props.meta.name, subpath: props.meta.subpath }])
+    .map((i) => `import ${i.name} from '${i.subpath}'`)
+    .join('\n'),
+)
 
 /* The panel's one-line contents summary. `emit` and `slot` are irregular only in that they need an
    -s when there is more than one; spelling that out beats hand-writing four v-ifs in the template. */
@@ -116,7 +128,9 @@ const tabs = computed<SegOption<Tab>[]>(() => {
     <p v-if="meta.detail" class="g-sec__detail">{{ meta.detail }}</p>
 
     <div class="g-import">
-      <code>{{ importLine }}</code>
+      <!-- pre, not code: a section documenting several components emits several lines, and the
+           newlines have to survive as newlines or the copy button hands over one run-on line. -->
+      <pre class="g-import__code">{{ importLine }}</pre>
       <button class="g-copy" type="button" @click="copy('import', importLine)">
         {{ copiedKey === 'import' ? 'copied' : 'copy' }}
       </button>
@@ -278,7 +292,7 @@ const tabs = computed<SegOption<Tab>[]>(() => {
   gap: 8px;
   margin: 16px 0 0;
 }
-.g-import code {
+.g-import__code {
   font-family: var(--g-mono);
   font-size: 12px;
   background: var(--g-code);
@@ -286,7 +300,14 @@ const tabs = computed<SegOption<Tab>[]>(() => {
   padding: 6px 10px;
   border-radius: 6px;
   overflow-x: auto;
-  white-space: nowrap;
+  /* `pre` so several imports stay several lines. `nowrap` still holds per line — a path should
+     scroll rather than fold — but the block must be free to be taller than one row, so the flex
+     parent stops centring it against a button that is now shorter than it. */
+  white-space: pre;
+  margin: 0;
+}
+.g-import {
+  align-items: flex-start;
 }
 .g-copy {
   font-family: var(--g-mono);

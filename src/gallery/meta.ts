@@ -27,6 +27,10 @@ export interface CompMeta {
   id: string
   name: string
   subpath: string
+  /* Only for a section documenting SEVERAL components. The import block is copyable, so it has to
+     be real code, and `import A · B from 'x · y'` is not — a middot is not an import list. One
+     entry per component; omit this and the block is derived from `name` + `subpath` as before. */
+  imports?: { name: string; subpath: string }[]
   group: Group
   /** One line: what it is. Shown under the heading. */
   blurb: string
@@ -137,6 +141,12 @@ export const COMPONENTS: CompMeta[] = [
     id: 'fields',
     name: 'TextField · NumberField · Select · Slider',
     subpath: '@aether/ui-kit/controls/text-field · /number-field · /select · /slider',
+    imports: [
+      { name: 'TextField', subpath: '@aether/ui-kit/controls/text-field' },
+      { name: 'NumberField', subpath: '@aether/ui-kit/controls/number-field' },
+      { name: 'Select', subpath: '@aether/ui-kit/controls/select' },
+      { name: 'Slider', subpath: '@aether/ui-kit/controls/slider' },
+    ],
     group: 'Forms',
     core: '@aether/ui-kit/controls/core',
     blurb: 'The four field controls, standalone. PropertyEditor composes these.',
@@ -158,6 +168,10 @@ export const COMPONENTS: CompMeta[] = [
     id: 'card',
     name: 'Card · Spinner',
     subpath: '@aether/ui-kit/controls/card · /spinner',
+    imports: [
+      { name: 'Card', subpath: '@aether/ui-kit/controls/card' },
+      { name: 'Spinner', subpath: '@aether/ui-kit/controls/spinner' },
+    ],
     group: 'Controls',
     blurb: 'A panel surface, and an indeterminate busy indicator.',
     detail:

@@ -3,14 +3,14 @@
 import { ref } from 'vue'
 import TextField from '@aether/ui-kit/controls/text-field'
 
-const name = ref('Beam 14')
+const label = ref('Batch A-14')
 const note = ref('')
 </script>
 
 <template>
   <div class="g-tf">
-    <label class="g-tf-row"><span>Name</span>
-      <TextField v-model="name" placeholder="Untitled" />
+    <label class="g-tf-row"><span>Sample label</span>
+      <TextField v-model="label" placeholder="Untitled" />
     </label>
 
     <!-- `multiline` is a PROP, not a second component: a textarea types exactly like an input —
@@ -20,10 +20,10 @@ const note = ref('')
     </label>
 
     <label class="g-tf-row"><span>Disabled</span>
-      <TextField model-value="Locked by the solver" disabled />
+      <TextField model-value="Locked while the run is active" disabled />
     </label>
 
-    <code class="g-ex-state">{{ JSON.stringify({ name, note }) }}</code>
+    <code class="g-ex-state">{{ JSON.stringify({ label, note }) }}</code>
   </div>
 </template>
 

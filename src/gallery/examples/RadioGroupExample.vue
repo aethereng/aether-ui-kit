@@ -7,23 +7,24 @@ import type { RadioOption } from '@aether/ui-kit/controls/core'
 
 /* A VALUE: picking a unit changes what the numbers beside it mean. Nothing appears or disappears,
    so there is no panel to announce — which is what makes this a radiogroup and not a tab strip. */
-const unit = ref('mm')
+const unit = ref('c')
 const units: RadioOption[] = [
-  { value: 'mm', label: 'SI (mm)' },
-  { value: 'in', label: 'US (in)' },
+  { value: 'c', label: '°C' },
+  { value: 'f', label: '°F' },
+  { value: 'k', label: 'K' },
 ]
 
-const mode = ref('analytical')
-const modes: RadioOption[] = [
-  { value: 'analytical', label: 'Analytical' },
-  { value: 'solids', label: 'Solids' },
-  { value: 'shells', label: 'Shells', disabled: true },
+const smoothing = ref('raw')
+const smoothings: RadioOption[] = [
+  { value: 'raw', label: 'Raw' },
+  { value: 'mean', label: 'Rolling mean' },
+  { value: 'savgol', label: 'Savitzky–Golay', disabled: true },
 ]
 
-/* A TAB STRIP, for contrast: choosing swaps the field set below it. Same pixels, different thing
-   to say — and the two are side by side here because that is the only decision worth making when
-   you reach for either. */
-const source = ref<'catalog' | 'custom'>('catalog')
+/* A TAB STRIP, for contrast: choosing swaps the fields below it. Same pixels, different thing to
+   say — and the two sit side by side here because that is the only decision worth making when you
+   reach for either. */
+const source = ref<'sensor' | 'manual'>('sensor')
 </script>
 
 <template>
@@ -34,24 +35,24 @@ const source = ref<'catalog' | 'custom'>('catalog')
     </div>
 
     <div class="g-rg-row">
-      <span class="g-rg-cap">Analysis model — a value, one option disabled</span>
-      <RadioGroup v-model="mode" :options="modes" aria-label="Analysis model" />
+      <span class="g-rg-cap">Smoothing — a value, one option unavailable</span>
+      <RadioGroup v-model="smoothing" :options="smoothings" aria-label="Smoothing" />
     </div>
 
     <div class="g-rg-row">
-      <span class="g-rg-cap">Material source — a tab strip, so Seg</span>
+      <span class="g-rg-cap">Source — a tab strip, so Seg</span>
       <Seg
         v-model="source"
         :options="[
-          { value: 'catalog', label: 'Catalog' },
-          { value: 'custom', label: 'Custom' },
+          { value: 'sensor', label: 'Sensor' },
+          { value: 'manual', label: 'Manual' },
         ]"
-        aria-label="Material source"
+        aria-label="Source"
       />
-      <span class="g-rg-swap">{{ source === 'catalog' ? 'Grade dropdown' : 'fy · fu · E · ν · ρ' }}</span>
+      <span class="g-rg-swap">{{ source === 'sensor' ? 'channel · sample rate' : 'value · recorded at' }}</span>
     </div>
 
-    <code class="g-ex-state">unit = {{ unit }} · mode = {{ mode }} · source = {{ source }}</code>
+    <code class="g-ex-state">unit = {{ unit }} · smoothing = {{ smoothing }} · source = {{ source }}</code>
   </div>
 </template>
 

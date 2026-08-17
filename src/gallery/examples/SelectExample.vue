@@ -4,31 +4,32 @@ import { ref } from 'vue'
 import Select from '@aether/ui-kit/controls/select'
 import type { SelectGroup } from '@aether/ui-kit/controls/core'
 
-const grade = ref('s355')
-const loadCase = ref('lc-2')
+const solvent = ref('etoh')
+const channel = ref('t-2')
 
-const grades = [
-  { value: 's235', label: 'S235' },
-  { value: 's355', label: 'S355' },
-  { value: 's460', label: 'S460', disabled: true },
+const solvents = [
+  { value: 'h2o', label: 'Water' },
+  { value: 'etoh', label: 'Ethanol' },
+  { value: 'meoh', label: 'Methanol' },
+  { value: 'dcm', label: 'Dichloromethane', disabled: true },
 ]
 
-/* Groups are structure, not decoration: flattened into one list, a load case and a combination
-   become indistinguishable, which in a structural model is a correctness problem rather than a
-   cosmetic one. `subtitle` is what makes two similarly-named rows tell themselves apart. */
-const caseGroups: SelectGroup[] = [
+/* Groups are structure, not decoration. Flattened into one list, a channel that is MEASURED and one
+   that is COMPUTED from other channels become indistinguishable — and `subtitle` is what lets two
+   similarly named rows tell themselves apart. */
+const channelGroups: SelectGroup[] = [
   {
-    label: 'Load cases',
+    label: 'Measured',
     options: [
-      { value: 'lc-1', label: 'LC-1 · G' },
-      { value: 'lc-2', label: 'LC-2 · Q' },
+      { value: 't-1', label: 'T-1 · inlet' },
+      { value: 't-2', label: 'T-2 · reactor' },
     ],
   },
   {
-    label: 'ULS combinations',
+    label: 'Derived',
     options: [
-      { value: 'c-1', label: 'ULS-1', subtitle: '1.35·G + 1.5·Q' },
-      { value: 'c-2', label: 'ULS-2', subtitle: '1.35·G + 1.5·Q + 1.5·S' },
+      { value: 'dt', label: 'ΔT', subtitle: 'T-2 − T-1' },
+      { value: 'q', label: 'Heat duty', subtitle: 'ṁ · cp · ΔT' },
     ],
   },
 ]
@@ -36,15 +37,15 @@ const caseGroups: SelectGroup[] = [
 
 <template>
   <div class="g-sel">
-    <label class="g-sel-row"><span>Steel grade — flat options</span>
-      <Select v-model="grade" :options="grades" />
+    <label class="g-sel-row"><span>Solvent — a flat list</span>
+      <Select v-model="solvent" :options="solvents" />
     </label>
 
-    <label class="g-sel-row"><span>Load case — two kinds of thing, so two groups</span>
-      <Select v-model="loadCase" :groups="caseGroups" />
+    <label class="g-sel-row"><span>Channel — two kinds of thing, so two groups</span>
+      <Select v-model="channel" :groups="channelGroups" />
     </label>
 
-    <code class="g-ex-state">grade = {{ grade }} · loadCase = {{ loadCase }}</code>
+    <code class="g-ex-state">solvent = {{ solvent }} · channel = {{ channel }}</code>
   </div>
 </template>
 

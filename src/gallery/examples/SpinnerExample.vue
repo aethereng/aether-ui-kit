@@ -10,14 +10,14 @@ import Badge from '@aether/ui-kit/controls/badge'
          would have a screen reader read the same state twice in two vocabularies. -->
     <div class="g-sp-row">
       <Spinner :size="14" />
-      <span>verifying 1564 members…</span>
+      <span>analysing 1,284 samples…</span>
     </div>
 
     <!-- Labelled: nothing else here says anything, so unnamed it would be invisible to a screen
          reader and the panel would read as idle. -->
     <div class="g-sp-row">
-      <Spinner :size="16" label="Deriving connections" />
-      <Badge tone="neutral">deriving</Badge>
+      <Spinner :size="16" label="Indexing results" />
+      <Badge tone="neutral">indexing</Badge>
     </div>
 
     <!-- The stroke is derived from the size and rounded to a whole pixel: unrounded, size/8 gives

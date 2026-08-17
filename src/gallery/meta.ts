@@ -123,6 +123,20 @@ export const COMPONENTS: CompMeta[] = [
     emits: [{ name: 'update:modelValue', type: '[value]' }],
   },
   {
+    id: 'card',
+    name: 'Card · Spinner',
+    subpath: '@aether/ui-kit/controls/card · /spinner',
+    group: 'Controls',
+    blurb: 'A panel surface, and an indeterminate busy indicator.',
+    detail:
+      'Card is a bordered, padded box that holds content and does nothing. Its padding and radius are Disclosure\'s own (12px 14px, 8px) rather than new numbers, because consumers stack the two in a single column and mismatched insets show up as content edges that do not line up — the radius is deliberately NOT `--aether-radius`, which is the control radius for chips and fields, and a surface is not a control. Deliberately static: a consumer also ships a selectable list card with a hover lift, a selected ring and a colour-coded left border, and that is a different component by the kit\'s own rule — different interaction means a different component, different shape means a prop. Padding is therefore not a prop either; a caller wanting a denser or roomier box sets it at the call site, exactly as Seg leaves stretching to the host. Spinner is indeterminate only, because a determinate ring carries a value and answers a different question. Its `label` is the accessibility contract and is optional for a measured reason: one real call site sits beside its own status text, where naming the spinner would make a screen reader say the same thing twice, and the other sits alone in a panel header, where staying unnamed makes the panel read as idle. No label means aria-hidden; a label means role="status". The stroke is derived as size/8 rather than a prop, which reproduces the 2px both call sites use at 14px and 16px.',
+    props: [
+      { name: 'size', type: 'number?', note: 'Spinner diameter in px; default 16' },
+      { name: 'label', type: 'string?', note: 'Spinner accessible name; omit when text beside it speaks' },
+    ],
+    emits: [],
+  },
+  {
     id: 'badge',
     name: 'Badge',
     subpath: '@aether/ui-kit/controls/badge',

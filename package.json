@@ -54,6 +54,14 @@
       "types": "./src/controls/vue/Badge.vue.d.ts",
       "import": "./src/controls/vue/Badge.vue"
     },
+    "./controls/card": {
+      "types": "./src/controls/vue/Card.vue.d.ts",
+      "import": "./src/controls/vue/Card.vue"
+    },
+    "./controls/spinner": {
+      "types": "./src/controls/vue/Spinner.vue.d.ts",
+      "import": "./src/controls/vue/Spinner.vue"
+    },
     "./controls/dialog": {
       "types": "./src/controls/vue/Dialog.vue.d.ts",
       "import": "./src/controls/vue/Dialog.vue"

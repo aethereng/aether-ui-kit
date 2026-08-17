@@ -21,6 +21,8 @@ import ChipExample from './examples/ChipExample.vue'
 import ChipExampleSrc from './examples/ChipExample.vue?raw'
 import BadgeExample from './examples/BadgeExample.vue'
 import BadgeExampleSrc from './examples/BadgeExample.vue?raw'
+import CardExample from './examples/CardExample.vue'
+import CardExampleSrc from './examples/CardExample.vue?raw'
 import FieldsExample from './examples/FieldsExample.vue'
 import FieldsExampleSrc from './examples/FieldsExample.vue?raw'
 import SwitchExample from './examples/SwitchExample.vue'
@@ -211,6 +213,10 @@ const groupAnchor = (g: Group) => g.toLowerCase()
 
         <GSection v-else-if="c.id === 'chip'" :meta="c" :source="ChipExampleSrc">
           <ChipExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'card'" :meta="c" :source="CardExampleSrc">
+          <CardExample />
         </GSection>
 
         <GSection v-else-if="c.id === 'badge'" :meta="c" :source="BadgeExampleSrc">

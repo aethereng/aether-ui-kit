@@ -177,6 +177,8 @@ focus ring — which every component needs and no component owns.
 | **Disclosure** | `controls/disclosure` | A collapsible panel whose header row can hold its own controls — a link or badge stays reachable while the panel is shut. Brings its own picker-free chrome; not a <details>, because a <summary> hides everything after it when closed. |
 | **FilterRail** | `controls/filter-rail` | Groups of toggle chips with clear-all and a hidden-count readout. Vertical sidebar or horizontal bar. |
 | **Badge** | `controls/badge` | Static status marker in four tones. A `<span>` — if it is clickable it is a `Chip`. |
+| **Card** | `controls/card` | A panel surface: bordered, padded, holds content. Static — a clickable card is a different component. Padding and radius match `Disclosure`, which consumers stack it beside. |
+| **Spinner** | `controls/spinner` | Indeterminate busy indicator. `label` names it for a screen reader; omit it when text beside it already says what is happening. |
 | **Tooltip** | `controls/tooltip` | Hover/focus tooltip that escapes any ancestor clipping it, via the top layer. |
 | **Menu** | `controls/menu` | Dropdown menu with the full APG keyboard model. |
 | **Dialog** | `controls/dialog` | Modal dialog over the native `<dialog>` element. |

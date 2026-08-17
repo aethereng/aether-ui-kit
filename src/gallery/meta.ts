@@ -67,6 +67,24 @@ export const COMPONENTS: CompMeta[] = [
     ],
   },
   {
+    id: 'radio-group',
+    name: 'RadioGroup',
+    subpath: '@aether/ui-kit/controls/radio-group',
+    group: 'Forms',
+    core: '@aether/ui-kit/controls/core',
+    blurb: 'One choice out of a few, as buttons. A value — not a tab strip.',
+    detail:
+      'The control Seg is mistaken for. Seg is role="tablist" with role="tab" children and belongs where choosing SWAPS A PANEL; this is role="radiogroup" with role="radio" children and belongs where choosing sets a VALUE — a unit, a mode, a grade. Identical pixels, and a screen reader says whichever one you picked, so the choice between them is the only real decision here. It existed before as PropertyEditor\'s `enum` field with `variant: "buttons"`, reachable only by describing a form: a FieldDescriptor[], a FieldValues object and a (key, value) handler, to render two buttons. A consumer wrote exactly that twice in one afternoon for a units picker and an analysis-mode picker, neither of which is a form — the same packaging failure v0.13.0 fixed for the other five controls, left behind because this one had no standalone shape yet. PropertyEditor composes it now. Arrows wrap and SELECT as they move, which is the radio pattern rather than the menu\'s: the focused option is the chosen one, so there is no separate commit. Disabled options are skipped rather than landed on. The group is one tab stop, not one per option, via a roving tabindex on the checked option — or the first, when nothing is checked, since a group you cannot tab into is worse than one that starts at the top.',
+    props: [
+      { name: 'options', type: 'RadioOption<V>[]', note: '{ value, label, disabled? }' },
+      { name: 'modelValue', type: 'V', note: 'controlled; v-model' },
+      { name: 'ariaLabel', type: 'string?', note: 'the group\'s accessible name' },
+    ],
+    emits: [
+      { name: 'update:modelValue', type: '[value: V]', note: 'v-model. One emit — deliberately not Seg\'s redundant second `change`' },
+    ],
+  },
+  {
     id: 'chip',
     name: 'Chip',
     subpath: '@aether/ui-kit/controls/chip',

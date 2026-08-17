@@ -17,6 +17,17 @@ export interface SegProps<V extends string = string> {
      *              precedent Chip's `variant` set. */
     variant?: 'default' | 'pill';
 }
+export type RadioOption<V extends string = string> = {
+    value: V;
+    label: string;
+    disabled?: boolean;
+};
+export interface RadioGroupProps<V extends string = string> {
+    options: RadioOption<V>[];
+    modelValue: V;
+    /** The group's accessible name. A radiogroup with no name announces only its options. */
+    ariaLabel?: string;
+}
 export type ChipOption<V extends string = string> = {
     value: V;
     label: string;

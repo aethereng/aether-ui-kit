@@ -111,26 +111,11 @@
 /* The shared box that used to be declared here (and again, differently, further down — the later
    one won on source order) now lives in each control. Removing it is what makes the controls
    portable: a box keyed to `.aether-property-editor__field` is a box that only exists in a form. */
-.aether-property-editor__buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-.aether-property-editor__buttons button {
-  border: 1px solid var(--aether-line-strong);
-  background: var(--aether-surface);
-  color: var(--aether-ink-soft);
-  border-radius: var(--aether-radius);
-  padding: 5px 11px;
-  font-size: 12.5px;
-  cursor: pointer;
-  font-family: inherit;
-}
-.aether-property-editor__buttons button.on {
-  background: var(--aether-cool-wash);
-  color: var(--aether-cool);
-  border-color: var(--aether-cool-soft);
-}
+/* The enum button group's styling left with the control — see RadioGroup.vue. Two unconditional
+   `.aether-property-editor__buttons` blocks lived in this file, here and further down, and the
+   later one won on source order: this block's radius, padding and its entire accent `.on` state
+   had never rendered. Measured on the running consumer before the move, so what the component
+   carries is what shipped, not what this block claimed. */
 /* The label's swatch. Same construction as Chip's, so the two read as one encoding across the kit:
    a caller-supplied declaration list on a small block, and the kit interprets none of it. */
 .aether-property-editor__swatch {
@@ -852,17 +837,6 @@
   min-height: 64px;
   resize: vertical;
 }
-.aether-property-editor__buttons button {
-  border-radius: 12px;
-  padding: 3px 10px;
-  font-size: 12.5px;
-}
-.aether-property-editor__buttons button.on {
-  border-color: var(--aether-ink);
-  background: var(--aether-panel);
-  font-weight: 600;
-  color: var(--aether-ink);
-}
 
 /* boolean field: native checkbox reads as unfinished — give it a clean token-driven switch */
 .aether-property-editor__field:has(input[type='checkbox']) {
@@ -902,7 +876,6 @@
    just outside their edge. Same rule for `.aether-chip--row`, which sits in a rail that scrolls. */
 .aether-tool:focus-visible,
 .aether-chip:focus-visible,
-.aether-property-editor__buttons button:focus-visible,
 .aether-search__clear:focus-visible {
   outline: 2px solid var(--aether-cool);
   outline-offset: 2px;

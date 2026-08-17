@@ -3,7 +3,7 @@
  * All the actual logic (get/set, validation, change events) lives in PropertyEditorEngine, which
  * has never heard of Vue. This component's only job is: instantiate the engine, react to its
  * change events, and render one widget per field type. */
-import { computed, nextTick, onScopeDispose, reactive, watch } from 'vue'
+import { computed, onScopeDispose, reactive, watch } from 'vue'
 import { numberStep, PropertyEditorEngine } from '../core/PropertyEditorEngine'
 import type { FieldDescriptor, FieldValues } from '../core/types'
 import DateField from './DateField.vue'
@@ -17,6 +17,7 @@ import Slider from '../../controls/vue/Slider.vue'
 import Select from '../../controls/vue/Select.vue'
 import NumberField from '../../controls/vue/NumberField.vue'
 import TextField from '../../controls/vue/TextField.vue'
+import RadioGroup from '../../controls/vue/RadioGroup.vue'
 
 const props = defineProps<{
   fields: FieldDescriptor[]
@@ -87,48 +88,9 @@ function onFieldInput(key: string, value: unknown) {
    to tell "mid-decimal" from "cleared" -- moved into NumberField with the control itself. It was
    never form logic; it is what typing a number means. */
 
-/* ---- the enum button group's radiogroup behaviour ----
- *
- * Roving tabindex: exactly ONE button in the group is tabbable, so the group is a single stop in
- * the tab order rather than one stop per option. The tabbable one is the checked option — or the
- * first, when nothing is checked yet, because a group you cannot tab into at all is worse than one
- * that starts at the top. */
-function radioTabIndex(field: FieldDescriptor, value: string): number {
-  const current = view[field.key]
-  if (current === value) return 0
-  const anyChecked = (field.options ?? []).some((o) => o.value === current)
-  return !anyChecked && field.options?.[0]?.value === value ? 0 : -1
-}
-
-/* Arrows wrap, and they SELECT as they move — the radio pattern, where the focused option is the
- * chosen one. Home/End reach the ends. Space and Enter are left to the button's own click.
- * `preventDefault` on the arrows stops the page scrolling underneath the group. */
-function onRadioKey(e: KeyboardEvent, field: FieldDescriptor) {
-  const opts = field.options ?? []
-  if (!opts.length) return
-  const at = opts.findIndex((o) => o.value === view[field.key])
-  let next = -1
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (at + 1 + opts.length) % opts.length
-  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp')
-    next = (at <= 0 ? opts.length : at) - 1
-  else if (e.key === 'Home') next = 0
-  else if (e.key === 'End') next = opts.length - 1
-  else return
-
-  e.preventDefault()
-  const value = opts[next]!.value
-  /* Scoped to THIS group via the event's own element. A document-wide lookup would find the first
-     matching button on the page, so a form with two enum groups would move focus into the wrong
-     one — and only when both happened to share an option value, which is the kind of bug that
-     survives a demo. */
-  const group = e.currentTarget as HTMLElement
-  onFieldInput(field.key, value)
-  /* Focus follows selection, or the roving tabindex points at a button the user is not on.
-     Post-flush, because the tabindex that makes it focusable renders from the value just set. */
-  nextTick(() => {
-    group.querySelector<HTMLElement>(`[data-rv="${CSS.escape(value)}"]`)?.focus()
-  })
-}
+/* The enum button group's roving tabindex and arrow handling moved to RadioGroup.vue with the
+   control itself — this file composes it now, exactly as it composes Switch and Select, and keeps
+   only the descriptor-to-control dispatch that is genuinely form-specific. */
 
 const hasErrors = computed(() => Object.keys(errors).length > 0)
 defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValues() })
@@ -235,27 +197,13 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
 
            Arrows MOVE AND SELECT here, which is the radio pattern and differs from the menu's:
            in a radiogroup the focused option is the chosen one, so there is no separate commit. -->
-      <div
+      <RadioGroup
         v-else-if="field.type === 'enum' && field.variant === 'buttons'"
-        class="aether-property-editor__buttons"
-        role="radiogroup"
+        :options="field.options ?? []"
+        :model-value="String(view[field.key] ?? '')"
         :aria-label="field.label"
-        @keydown="onRadioKey($event, field)"
-      >
-        <button
-          v-for="opt in field.options"
-          :key="opt.value"
-          type="button"
-          role="radio"
-          :aria-checked="view[field.key] === opt.value"
-          :data-rv="opt.value"
-          :tabindex="radioTabIndex(field, opt.value)"
-          :class="{ on: view[field.key] === opt.value }"
-          @click="onFieldInput(field.key, opt.value)"
-        >
-          {{ opt.label }}
-        </button>
-      </div>
+        @update:model-value="(v: string) => onFieldInput(field.key, v)"
+      />
       <Select
         v-else-if="field.type === 'enum'"
         :id="`pe-${field.key}`"

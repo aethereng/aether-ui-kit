@@ -4,19 +4,19 @@ type __VLS_Props = {
     modelValue: FieldValues;
     labelPlacement?: 'above' | 'inside';
 };
-declare var __VLS_50: {
+declare var __VLS_57: {
     field: FieldDescriptor;
     value: unknown;
     set: (v: unknown) => void;
-}, __VLS_52: {
+}, __VLS_59: {
     field: FieldDescriptor;
     value: unknown;
     set: (v: unknown) => void;
 };
 type __VLS_Slots = {} & {
-    reference?: (props: typeof __VLS_50) => any;
+    reference?: (props: typeof __VLS_57) => any;
 } & {
-    placement?: (props: typeof __VLS_52) => any;
+    placement?: (props: typeof __VLS_59) => any;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {
     isValid: () => boolean;

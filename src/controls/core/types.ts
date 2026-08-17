@@ -24,6 +24,22 @@ export interface SegProps<V extends string = string> {
   variant?: 'default' | 'pill'
 }
 
+/* One option in a RadioGroup. Structurally the same row as PropertyEditor's EnumOption, which is
+   what lets a `FieldDescriptor.options` array pass straight through when the form composes this
+   control — the form's type is not re-declared here, and neither is converted at the boundary. */
+export type RadioOption<V extends string = string> = {
+  value: V
+  label: string
+  disabled?: boolean
+}
+
+export interface RadioGroupProps<V extends string = string> {
+  options: RadioOption<V>[]
+  modelValue: V
+  /** The group's accessible name. A radiogroup with no name announces only its options. */
+  ariaLabel?: string
+}
+
 export type ChipOption<V extends string = string> = {
   value: V
   label: string

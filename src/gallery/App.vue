@@ -23,6 +23,8 @@ import BadgeExample from './examples/BadgeExample.vue'
 import BadgeExampleSrc from './examples/BadgeExample.vue?raw'
 import CardExample from './examples/CardExample.vue'
 import CardExampleSrc from './examples/CardExample.vue?raw'
+import RadioGroupExample from './examples/RadioGroupExample.vue'
+import RadioGroupExampleSrc from './examples/RadioGroupExample.vue?raw'
 import FieldsExample from './examples/FieldsExample.vue'
 import FieldsExampleSrc from './examples/FieldsExample.vue?raw'
 import SwitchExample from './examples/SwitchExample.vue'
@@ -213,6 +215,10 @@ const groupAnchor = (g: Group) => g.toLowerCase()
 
         <GSection v-else-if="c.id === 'chip'" :meta="c" :source="ChipExampleSrc">
           <ChipExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'radio-group'" :meta="c" :source="RadioGroupExampleSrc">
+          <RadioGroupExample />
         </GSection>
 
         <GSection v-else-if="c.id === 'card'" :meta="c" :source="CardExampleSrc">

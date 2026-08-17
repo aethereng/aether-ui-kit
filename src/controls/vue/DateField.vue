@@ -1,9 +1,15 @@
 <script setup lang="ts">
 /* The date field, with its own picker.
  *
- * PRIVATE to PropertyEditor — not in the exports map, not documented as a component. It exists
- * because Chrome's date picker popup cannot be styled at all: it is browser UI painted outside the
- * page, not page content. Verified rather than assumed — `input.shadowRoot` is null, the only
+ * IT USED TO BE PRIVATE to PropertyEditor — not in the exports map, not documented — which made it
+ * the last control in the kit reachable only by describing a form: a FieldDescriptor[], a
+ * FieldValues object and a (key, value) handler, to render one date input. That is the packaging
+ * failure v0.13.0 named and fixed for five controls and RadioGroup fixed for a sixth; this is the
+ * last of them. PropertyEditor composes it now, exactly as it composes the rest.
+ *
+ * It exists as its own control, rather than a styled `input[type="date"]`, because Chrome's date
+ * picker popup cannot be styled at all: it is browser UI painted outside the page, not page
+ * content. Verified rather than assumed — `input.shadowRoot` is null, the only
  * pseudo-elements Chrome exposes for a date input are the inline parts (`::-webkit-datetime-edit*`,
  * the three sub-fields, the picker indicator, the spin and clear buttons), the popup is in none of
  * them, and there is no opt-in: `base-select` is the only `appearance: base-*` value in Chromium

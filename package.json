@@ -54,6 +54,10 @@
       "types": "./src/controls/vue/Badge.vue.d.ts",
       "import": "./src/controls/vue/Badge.vue"
     },
+    "./controls/date-field": {
+      "types": "./src/controls/vue/DateField.vue.d.ts",
+      "import": "./src/controls/vue/DateField.vue"
+    },
     "./controls/radio-group": {
       "types": "./src/controls/vue/RadioGroup.vue.d.ts",
       "import": "./src/controls/vue/RadioGroup.vue"

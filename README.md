@@ -177,6 +177,7 @@ focus ring — which every component needs and no component owns.
 | **Disclosure** | `controls/disclosure` | A collapsible panel whose header row can hold its own controls — a link or badge stays reachable while the panel is shut. Brings its own picker-free chrome; not a <details>, because a <summary> hides everything after it when closed. |
 | **FilterRail** | `controls/filter-rail` | Groups of toggle chips with clear-all and a hidden-count readout. Vertical sidebar or horizontal bar. |
 | **Badge** | `controls/badge` | Static status marker in four tones. A `<span>` — if it is clickable it is a `Chip`. |
+| **DateField** | `controls/date-field` | A date input with the kit's own picker. Keeps the native input for typing and the OS wheel on touch; replaces only the desktop popup, which cannot be themed. |
 | **RadioGroup** | `controls/radio-group` | One choice out of a few, as buttons. A `role="radiogroup"` for a VALUE — if choosing swaps a panel it is a `Seg`. Arrows wrap and select; one tab stop. |
 | **Card** | `controls/card` | A panel surface: bordered, padded, holds content. Static — a clickable card is a different component. Padding and radius match `Disclosure`, which consumers stack it beside. |
 | **Spinner** | `controls/spinner` | Indeterminate busy indicator. `label` names it for a screen reader; omit it when text beside it already says what is happening. |

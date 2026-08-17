@@ -6,7 +6,7 @@
 import { computed, onScopeDispose, reactive, watch } from 'vue'
 import { numberStep, PropertyEditorEngine } from '../core/PropertyEditorEngine'
 import type { FieldDescriptor, FieldValues } from '../core/types'
-import DateField from './DateField.vue'
+import DateField from '../../controls/vue/DateField.vue'
 /* This component composes the kit's standalone controls rather than hand-rolling raw inputs. It
    used to render `<input>`/`<select>`/`<textarea>` directly with the styling keyed to
    `.aether-property-editor__field`, which meant the controls existed only inside a form — a

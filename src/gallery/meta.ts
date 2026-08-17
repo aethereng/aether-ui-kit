@@ -67,6 +67,20 @@ export const COMPONENTS: CompMeta[] = [
     ],
   },
   {
+    id: 'date-field',
+    name: 'DateField',
+    subpath: '@aether/ui-kit/controls/date-field',
+    group: 'Forms',
+    blurb: 'A date input with the kit\'s own picker, because the browser\'s cannot be styled.',
+    detail:
+      'It keeps a real `input[type="date"]` for typing — locale-ordered segments, real validation, and on a touch device tapping it still opens the OS date wheel, which beats anything drawn here. What it replaces is the DESKTOP popup, which cannot be themed at all: it is browser UI painted outside the page, not page content. Verified rather than assumed — `input.shadowRoot` is null, the only pseudo-elements Chrome exposes are the inline parts, the popup is in none of them, and `base-select` is the only `appearance: base-*` value in Chromium 148, so customizable controls shipped for select and not for date. So the native indicator is hidden and the panel is ours, and there is no popup at all on a coarse pointer where the platform\'s is better. The keyboard cursor is deliberately NOT the selection: arrowing around the calendar moves a focus ring without committing, or exploring next month would rewrite the field on the way. It was the last control reachable only by describing a form — a FieldDescriptor[], a FieldValues object and a (key, value) handler, to render one date input — which is the packaging failure v0.13.0 named for five controls and RadioGroup closed for a sixth. PropertyEditor composes it now.',
+    props: [
+      { name: 'modelValue', type: 'string', note: "`YYYY-MM-DD`, or '' for empty; v-model" },
+      { name: 'id', type: 'string?', note: 'reaches the inner input, so `<label for>` works' },
+    ],
+    emits: [{ name: 'update:modelValue', type: '[value: string]' }],
+  },
+  {
     id: 'radio-group',
     name: 'RadioGroup',
     subpath: '@aether/ui-kit/controls/radio-group',

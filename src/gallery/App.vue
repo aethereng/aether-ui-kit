@@ -72,25 +72,50 @@ import GanttExampleSrc from './examples/GanttExample.vue?raw'
 
 /* ── page theme — the kit's token contract, demonstrated rather than described ── */
 const THEME_KEY = 'aether-theme'
-const theme = ref<'paper' | 'timber'>('paper')
+
+function saved(): 'paper' | 'timber' {
+  try {
+    return localStorage.getItem(THEME_KEY) === 'timber' ? 'timber' : 'paper'
+  } catch {
+    return 'paper' /* private mode — the switch still works for this session */
+  }
+}
+
+/* APPLIED AT SETUP, NOT onMounted, and that is a bug fix rather than a tidy-up.
+ *
+ * Applied after mount, the page painted once in the light palette and then had the dark one
+ * swapped underneath it — which starts a transition on every element whose background is a token.
+ * Most settle. `.aether-chip--row.on` did not: measured on a clean load in the dark theme, its
+ * background stayed at the light palette's panel colour indefinitely, giving light ink on a light
+ * pill at 1.1:1 while `getAnimations()` reported nothing running. A transition that begins before
+ * the element has settled can commit its start value and never finish.
+ *
+ * Setting the attribute during setup means the first paint is already in the right palette, so
+ * there is no transition to lose. */
+const theme = ref<'paper' | 'timber'>(saved())
+document.documentElement.setAttribute('data-theme', theme.value)
+
+/* A deliberate theme SWITCH is the other half: the palette changes under a rendered page, so the
+ * same transitions fire for real. They are there to make a hover feel responsive, and a hover is
+ * not what happened — suppressed for one frame so the swap is instant and nothing can latch. */
 function applyTheme(t: 'paper' | 'timber') {
+  const root = document.documentElement
+  root.classList.add('g-no-transition')
   theme.value = t
-  document.documentElement.setAttribute('data-theme', t)
+  root.setAttribute('data-theme', t)
+  /* Force the new palette to commit while transitions are off, then restore them — synchronously,
+     in one turn. A requestAnimationFrame pair is the usual way to write this and it is wrong here:
+     rAF is throttled in a background tab, so switching the theme and then leaving the tab would
+     strand the class and disable every transition on the page until it was next foregrounded.
+     Reading offsetHeight forces the reflow with no timer to miss. */
+  void root.offsetHeight
+  root.classList.remove('g-no-transition')
   try {
     localStorage.setItem(THEME_KEY, t)
   } catch {
-    /* private mode — the switch still works for this session */
+    /* private mode */
   }
 }
-onMounted(() => {
-  let saved: string | null = null
-  try {
-    saved = localStorage.getItem(THEME_KEY)
-  } catch {
-    /* ignore */
-  }
-  applyTheme(saved === 'timber' ? 'timber' : 'paper')
-})
 
 const KIT_VERSION = __KIT_VERSION__
 
@@ -450,6 +475,15 @@ html[data-theme='timber'] {
   --g-tok-attr: #b6b39c; /* 7.3 */
   --g-tok-interp: #97ce8b; /* 8.5 */
   --g-tok-punct: #7f9189; /* 4.7 */
+}
+
+/* Kills every transition for the one frame a theme swap takes. Without it the palette change
+   animates: a colour transition meant for a hover fires on every themed element at once, which
+   both looks wrong and can leave a value latched at the outgoing palette. */
+html.g-no-transition *,
+html.g-no-transition *::before,
+html.g-no-transition *::after {
+  transition: none !important;
 }
 
 * {

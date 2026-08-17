@@ -66,7 +66,7 @@ function toggleRow(v: string) {
 
 <template>
   <div class="g-ex">
-    <span class="g-variant">the default form — multi-select via a Set</span>
+    <span class="g-variant">default (pill) — multi-select via a Set</span>
     <Chip :options="chipOptions" :model-value="active" aria-label="Filter by kind" @toggle="toggle" />
   </div>
 

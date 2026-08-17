@@ -275,6 +275,7 @@
   padding: 5px 10px;
   border-radius: var(--aether-radius);
   border: 1px solid var(--aether-line-strong);
+  /* --- see .aether-chip--pill below for the variant that is actually pill-shaped --- */
   background: var(--aether-surface);
   box-shadow: var(--aether-shadow);
   font-size: 11.5px;
@@ -324,6 +325,18 @@
   align-self: center;
   flex: none;
   box-sizing: border-box;
+}
+
+/* THE PILL VARIANT IS NOW ACTUALLY A PILL. It was named `pill` and drew an 8px radius on a 26px
+   control — a rounded rectangle, and the name had been describing an intention rather than the
+   render. Badge is the kit's pill at 999px, and Chip is Badge's clickable twin ("if it is
+   clickable it is a Chip"), so the two should read as one family rather than two shapes.
+   The extra horizontal padding is not decoration: at a full radius the curve eats into the box,
+   and 10px left a label sitting on the bend. */
+.aether-chip--pill {
+  border-radius: 999px;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 /* ---- Chip: row variant (sidebar rail) ---- */

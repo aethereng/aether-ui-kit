@@ -62,10 +62,26 @@ function sliceBlock(src: string, tag: 'script' | 'template'): string | null {
   // last closer, because a template may itself contain <template #slot> children
   const end = src.lastIndexOf(`</${tag}>`)
   if (end < start) return null
-  return src
-    .slice(start, end)
-    .replace(/^\n+|\s+$/g, '')
-    .replace(/^ {2}/gm, '') // examples are indented inside their block; unindent for display
+  return dedent(src.slice(start, end).replace(/^\n+|\s+$/g, ''))
+}
+
+/* Strip the COMMON leading indent, not a fixed two spaces.
+ *
+ * It was `.replace(/^ {2}/gm, '')`, which is right for a <template> — its content is indented two
+ * inside the block — and wrong for a <script setup>, whose content starts at column 0. Applied
+ * there it ate the first two spaces of every line that had any, so a function body rendered flush
+ * with its own `function` line and a nested branch lost a level:
+ *
+ *     function toggle(v: string) {
+ *     const next = new Set(active.value)     <- should be indented
+ *
+ * Measuring the shared indent handles both blocks with one rule: a template dedents by two, a
+ * script by nothing, and neither loses structure. */
+function dedent(text: string): string {
+  const lines = text.split('\n')
+  const indents = lines.filter((l) => l.trim()).map((l) => /^ */.exec(l)![0].length)
+  const common = indents.length ? Math.min(...indents) : 0
+  return common ? lines.map((l) => l.slice(common)).join('\n') : text
 }
 
 /* If a slice ever returns null the markers moved, and saying so beats rendering an empty panel

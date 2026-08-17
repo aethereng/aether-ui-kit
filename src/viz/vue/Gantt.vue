@@ -672,10 +672,38 @@ const anchors = computed(() =>
   border-style: dotted;
   background: transparent !important;
 }
+/* Done recedes, but its label stays readable.
+ *
+ * This was `opacity: 0.45` on the whole bar, which put the label at 2.1:1 on the dark theme and
+ * 1.7 on the light one. Raising the value does not fix it and that was measured rather than
+ * assumed: a group opacity blends the text AND the fill toward the same surface, and a bar's label
+ * is the lane colour sitting on a wash of that same colour, so both sides move together — at 0.8,
+ * still only 3.8 and 2.8. The lever was never the amount of dimming.
+ *
+ * So the veil dims the fill and border, and the label sits above it at full strength. The
+ * line-through already says "done" on its own; the dimming is reinforcement, and reinforcement is
+ * not worth an unreadable label. */
 .ag-ev.st-done {
-  opacity: 0.45;
+  position: relative;
+}
+.ag-ev.st-done::before {
+  content: '';
+  position: absolute;
+  /* covers the 1.5px border too, so the outline recedes with the fill */
+  inset: -1.5px;
+  border-radius: 7px;
+  background: var(--aether-surface);
+  /* 0.8, because the ceiling here is the LANE COLOUR and not the veil: a label is its lane's hue
+     and --aether-warm is only 4.8:1 against the bare surface, so the wash underneath has to be
+     almost entirely covered before the label reaches the floor. 0.55 left it at 3.6 on the light
+     theme; more veil buys very little after this. */
+  opacity: 0.8;
+  pointer-events: none;
 }
 .ag-ev.st-done span {
+  /* above the veil — this is the whole point of the change */
+  position: relative;
+  z-index: 1;
   text-decoration: line-through;
   text-decoration-thickness: 1px;
 }

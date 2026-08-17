@@ -14,8 +14,8 @@
  * is role="radiogroup" with role="radio" children, for a VALUE — a unit, a mode, a grade. Same
  * pixels, different thing to say, and a screen reader says whichever one you picked.
  *
- * ONE EMIT, not two. Seg emits `update:modelValue` AND a redundant `change`, which its own comment
- * calls a mistake it cannot cheaply undo. Not repeating it here: v-model is the contract.
+ * ONE EMIT. v-model is the contract, and nothing else is offered. Seg shipped a second `change`
+ * alongside it for a while and has since dropped it; the whole kit is one emit now.
  *
  * The keyboard model lives in this file rather than controls/core, and that is proportionate
  * rather than inconsistent: menuKey and treeKey are in core because a caller building its own menu

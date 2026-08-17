@@ -170,9 +170,9 @@ describe('RadioGroup is controlled, and emits once', () => {
     w.unmount()
   })
 
-  it('emits ONE event, deliberately unlike Seg', async () => {
-    /* Seg emits `update:modelValue` and a redundant `change`, which its own comment calls a
-     * mistake. Not repeated here — and pinned, so it cannot be "fixed" back in for symmetry. */
+  it('emits ONE event', async () => {
+    /* Pinned so a second, redundant emit cannot be added back for symmetry with something else.
+     * Seg carried one for a while and it was removed; this is the shape the kit settled on. */
     const w = mountGroup()
     await w.trigger('keydown', { key: 'End' })
     expect(w.emitted('update:modelValue')).toHaveLength(1)

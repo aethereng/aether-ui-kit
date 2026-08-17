@@ -12,37 +12,22 @@ const props = withDefaults(defineProps<SegProps<V>>(), {
   variant: 'default',
 })
 
-/* BOTH events fire on every selection, `update:modelValue` FIRST, from one call. `change` carries
- * the same value and exists for callers who are NOT using v-model -- so binding v-model AND
- * @change together is redundant by design, and a @change handler that also writes the model will
- * run after v-model has already written it.
+/* ONE EMIT. `change` is gone: it carried the same value as `update:modelValue` and fired straight
+ * after it, so a caller binding both got the same thing twice and a caller binding only `change`
+ * was writing `@update:model-value` the long way. RadioGroup — the control Seg is most confused
+ * with — always shipped one, and two sibling selectors disagreeing on their event surface is a
+ * difference with nothing at the call site to explain it.
  *
- * `change` IS NOW DEPRECATED, which is the decision this comment used to defer. RadioGroup — the
- * control Seg is most confused with — ships one emit, so the two siblings otherwise disagree on
- * their event surface with nothing at the call site to say why. `update:modelValue` does
- * everything `change` does: every caller using `change` binds `:model-value` + `@change`, which is
- * `@update:model-value` spelled longer.
- *
- * NOT REMOVED, and that is not timidity. Six live call sites bind it — four in one consumer, two
- * in this gallery — and deleting an emit silently does nothing at a call site rather than failing
- * loudly, so a removal lands as a control that quietly stops responding. The gallery's two are
- * migrated here as the worked example; the consumer's four move on its own schedule, and `change`
- * goes in the release after they have.
- *
- * The FIRING ORDER stays pinned by its test either way: both events still fire, so nothing about
- * the deprecation is a behavioural change today. */
-const emit = defineEmits<{
-  'update:modelValue': [value: V]
-  /** @deprecated Use `update:modelValue`. It carries the same value and fires first. */
-  change: [value: V]
-}>()
+ * It was deprecated first rather than deleted outright, because removing an emit does NOT fail at
+ * a call site, it silently stops responding. The six live bindings were migrated to
+ * `@update:model-value` and verified in their running apps before this line changed. */
+const emit = defineEmits<{ 'update:modelValue': [value: V] }>()
 
 /* Selecting always yields a real V -- `null` is an INPUT state (nothing matches), never something
  * this control emits. There is no way to click your way back to no-selection. */
 function select(opt: SegOption<V>) {
   if (opt.disabled || opt.value === props.modelValue) return
   emit('update:modelValue', opt.value)
-  emit('change', opt.value)
 }
 </script>
 

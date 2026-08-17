@@ -52,27 +52,27 @@ describe('Seg — no-selection state', () => {
 })
 
 describe('Seg — emit contract', () => {
-  /* Pinned deliberately. Both events fire on every selection and `update:modelValue` is FIRST;
-     `change` carries the same value for non-v-model callers. Reordering is a silent behavioural
-     change for existing consumers, so this test exists to make that impossible to do by
-     accident -- if it fails, the reorder was intentional and needs its own decision. */
-  it('emits update:modelValue BEFORE change, both with the same value', async () => {
-    const order: string[] = []
+  /* Seg emits ONE event. This used to pin that `change` fired after `update:modelValue`, both
+     carrying the same value — a redundancy the component's own comment called a mistake it could
+     not cheaply undo. It was undone: the emit is gone, and what is pinned now is its absence, so
+     it cannot come back for symmetry with some future control. */
+  it('emits update:modelValue, and nothing else', async () => {
+    const seen: string[] = []
     const w = mount(Seg, {
       props: {
         options: opts,
         modelValue: 'a' as const,
-        'onUpdate:modelValue': () => order.push('update:modelValue'),
-        onChange: () => order.push('change'),
+        'onUpdate:modelValue': () => seen.push('update:modelValue'),
+        onChange: () => seen.push('change'),
       },
     })
     mounted.push(w)
 
     await w.findAll('button')[1]!.trigger('click')
 
-    expect(order).toEqual(['update:modelValue', 'change'])
+    expect(seen).toEqual(['update:modelValue'])
     expect(w.emitted('update:modelValue')).toEqual([['b']])
-    expect(w.emitted('change')).toEqual([['b']])
+    expect(w.emitted('change')).toBeUndefined()
   })
 
   it('emits nothing when the already-active option is clicked', async () => {

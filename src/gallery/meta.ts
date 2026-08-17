@@ -67,11 +67,6 @@ export const COMPONENTS: CompMeta[] = [
     ],
     emits: [
       { name: 'update:modelValue', type: '[value: V]', note: 'v-model' },
-      {
-        name: 'change',
-        type: '[value: V]',
-        note: 'DEPRECATED — use update:modelValue, which carries the same value and fires first. It was added for callers with no v-model, but `:model-value` + `@change` is `@update:model-value` spelled longer, and RadioGroup ships one emit. Still fires: an emit that is removed fails silently at the call site, so it goes once the live bindings have moved',
-      },
     ],
   },
   {
@@ -103,7 +98,7 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'ariaLabel', type: 'string?', note: 'the group\'s accessible name' },
     ],
     emits: [
-      { name: 'update:modelValue', type: '[value: V]', note: 'v-model. One emit — deliberately not Seg\'s redundant second `change`' },
+      { name: 'update:modelValue', type: '[value: V]', note: 'v-model, and the only event it emits' },
     ],
   },
   {

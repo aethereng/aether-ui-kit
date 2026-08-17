@@ -23,12 +23,12 @@ const solids = 4812
 
     <div class="g-sw-row">
       <Switch id="sw-ifc" v-model="edges" />
-      <label for="sw-ifc">IFC solid <span class="g-sw-n">{{ solids }}</span></label>
+      <label for="sw-ifc">Raw samples <span class="g-sw-n">{{ solids }}</span></label>
     </div>
 
     <div class="g-sw-row">
       <Switch id="sw-locked" v-model="locked" disabled />
-      <label for="sw-locked">Locked by the solver</label>
+      <label for="sw-locked">Locked while the run is active</label>
     </div>
 
     <code class="g-ex-state">gravity = {{ gravity }} · edges = {{ edges }}</code>

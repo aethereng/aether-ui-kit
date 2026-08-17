@@ -12,13 +12,13 @@ const locked = ref(false)
 /* labelPlacement="inside" is what a dialog wants: the form is the dialog's content, and two lines
    per field in something that already scrolls is the cost this exists to remove. */
 const fields: FieldDescriptor[] = [
-  { key: 'h', label: 'Height', type: 'number', min: 0, suffix: 'mm' },
-  { key: 'b', label: 'Width', type: 'number', min: 0, suffix: 'mm' },
-  { key: 'tw', label: 'Web thickness', type: 'number', min: 0, step: 0.1, suffix: 'mm' },
+  { key: 'volume', label: 'Volume', type: 'number', min: 0, suffix: 'mL' },
+  { key: 'temp', label: 'Temperature', type: 'number', min: 0, suffix: '°C' },
+  { key: 'rate', label: 'Feed rate', type: 'number', min: 0, step: 0.1, suffix: 'mL/min' },
   { key: 'grade', label: 'Grade', type: 'enum', options: [
-    { value: 's235', label: 'S235' }, { value: 's355', label: 'S355' } ] },
+    { value: 'a', label: 'Grade A' }, { value: 'b', label: 'Grade B' } ] },
 ]
-const values: FieldValues = { h: 400, b: 180, tw: 8.6, grade: 's355' }
+const values: FieldValues = { volume: 400, temp: 65, rate: 8.6, grade: 'a' }
 const out = ref<FieldValues>({ ...values })
 </script>
 

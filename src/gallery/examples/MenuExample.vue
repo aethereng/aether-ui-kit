@@ -16,7 +16,7 @@ const items = ref<MenuItem[]>([
   { id: 'save', label: 'Save' },
   { id: 'saveas', label: 'Save as…', disabled: true },
   { id: 'sep2', label: '', separator: true },
-  { id: 'export', label: 'Export IFC' },
+  { id: 'export', label: 'Export CSV' },
 ])
 
 const last = ref<string | null>(null)

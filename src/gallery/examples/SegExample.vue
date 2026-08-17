@@ -39,7 +39,7 @@ const range = ref<Grain>('day')
  * option set and becomes selectable, so it needs its own guard against being chosen.
  *
  * The width is a READ-OUT, not a field: it stands for state the rest of an app owns (a dragged
- * handle, a solver result). Nudge walks it off a preset, so the null state is reachable both ways
+ * handle, a measured value). Nudge walks it off a preset, so the null state is reachable both ways
  * without implying Seg needs an input beside it. */
 const width = ref(137)
 const PRESET_PX = { sm: 120, md: 240, lg: 360 } as const

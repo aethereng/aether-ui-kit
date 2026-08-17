@@ -4,7 +4,7 @@ import { ref, onBeforeUnmount } from 'vue'
 import Transport from '@aether/ui-kit/controls/transport'
 
 /* The CALLER owns the clock. Transport renders a position and emits intent; it never advances
-   time itself, which is what lets the same bar drive a 3-D playback, a solver progress bar, or
+   time itself, which is what lets the same bar drive an animation, a long computation, or
    a scrubbable diff. */
 const current = ref(0)
 const duration = ref(6)

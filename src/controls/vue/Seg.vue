@@ -17,13 +17,23 @@ const props = withDefaults(defineProps<SegProps<V>>(), {
  * @change together is redundant by design, and a @change handler that also writes the model will
  * run after v-model has already written it.
  *
- * The order is pinned by a test. It is deliberately NOT being changed: both events fire either
- * way, so reordering fixes nothing and is a silent behavioural change for every existing consumer
- * -- including any guard that currently works because of this order. If the redundancy proves to
- * be a real source of bugs, the honest fix is deprecating `change`, which is a breaking change
- * that deserves its own decision rather than being smuggled in as a reorder. */
+ * `change` IS NOW DEPRECATED, which is the decision this comment used to defer. RadioGroup — the
+ * control Seg is most confused with — ships one emit, so the two siblings otherwise disagree on
+ * their event surface with nothing at the call site to say why. `update:modelValue` does
+ * everything `change` does: every caller using `change` binds `:model-value` + `@change`, which is
+ * `@update:model-value` spelled longer.
+ *
+ * NOT REMOVED, and that is not timidity. Six live call sites bind it — four in one consumer, two
+ * in this gallery — and deleting an emit silently does nothing at a call site rather than failing
+ * loudly, so a removal lands as a control that quietly stops responding. The gallery's two are
+ * migrated here as the worked example; the consumer's four move on its own schedule, and `change`
+ * goes in the release after they have.
+ *
+ * The FIRING ORDER stays pinned by its test either way: both events still fire, so nothing about
+ * the deprecation is a behavioural change today. */
 const emit = defineEmits<{
   'update:modelValue': [value: V]
+  /** @deprecated Use `update:modelValue`. It carries the same value and fires first. */
   change: [value: V]
 }>()
 

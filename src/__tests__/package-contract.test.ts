@@ -86,6 +86,65 @@ describe('token contract', () => {
     expect(unused, `defined but never read: ${unused.join(', ')}`).toEqual([])
   })
 
+  /* THE BUG THIS EXISTS FOR, and it shipped: ui-kit.css carried two unconditional
+     `.aether-property-editor__buttons button` blocks, added in the same commit. The later won on
+     source order, so the first block's radius, padding and its whole active state never rendered —
+     and the enum group spent months looking like Seg, the one control it must not be confused
+     with. Nothing caught it: both blocks were valid CSS, both were right there in the file, and
+     every test passed.
+
+     The check is for the same PROPERTY declared twice for the same selector, not merely a repeated
+     selector. Splitting a selector across two blocks is fine and the file does it deliberately
+     (`__field label` sets typography in one place and flex layout in another); what is never fine
+     is two values for one property, because one of them is a lie.
+
+     Top-level rules only. Inside @media or @supports a second value IS the point. */
+  it('never declares one property twice for the same selector', () => {
+    const shared = readFileSync(resolve(root, 'src/styles/ui-kit.css'), 'utf8')
+    // strip comments, then drop any at-rule block wholesale so its overrides are not compared
+    const flat = shared.replace(/\/\*[\s\S]*?\*\//g, '')
+    let depth = 0
+    let topLevel = ''
+    let atRuleDepth = -1
+    for (let i = 0; i < flat.length; i++) {
+      const ch = flat[i]!
+      if (ch === '{') depth++
+      else if (ch === '}') {
+        depth--
+        if (depth === atRuleDepth) atRuleDepth = -1
+      }
+      if (atRuleDepth === -1) {
+        // entering an at-rule at this depth? swallow it until it closes
+        const ahead = flat.slice(i, i + 9)
+        if (ch === '@' && (ahead.startsWith('@media') || ahead.startsWith('@supports'))) {
+          atRuleDepth = depth
+        }
+      }
+      if (atRuleDepth === -1) topLevel += ch
+    }
+
+    const seen = new Map<string, Map<string, string>>()
+    const clashes: string[] = []
+    for (const m of topLevel.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const selector = m[1]!.trim().replace(/\s+/g, ' ')
+      if (!selector || selector.startsWith('@')) continue
+      const props = seen.get(selector) ?? new Map<string, string>()
+      for (const decl of m[2]!.split(';')) {
+        const [rawProp, ...rest] = decl.split(':')
+        const prop = rawProp?.trim()
+        if (!prop || !rest.length) continue
+        const value = rest.join(':').trim()
+        const prior = props.get(prop)
+        if (prior !== undefined && prior !== value) {
+          clashes.push(`${selector} { ${prop}: ${prior} } later overridden by { ${prop}: ${value} }`)
+        }
+        props.set(prop, value)
+      }
+      seen.set(selector, props)
+    }
+    expect(clashes, `silently overridden declarations:\n  ${clashes.join('\n  ')}`).toEqual([])
+  })
+
   it('has no bare hex colours outside the fallback palette block', () => {
     // a hardcoded colour cannot be themed — this is how .aether-tool.hot ended up
     // unreadable on a dark host

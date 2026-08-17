@@ -62,7 +62,7 @@ export const COMPONENTS: CompMeta[] = [
       {
         name: 'change',
         type: '[value: V]',
-        note: 'same value, for non-v-model callers. BOTH events fire on every selection, update:modelValue first — so v-model + @change together is redundant, and the @change handler runs after the model is already written',
+        note: 'DEPRECATED — use update:modelValue, which carries the same value and fires first. It was added for callers with no v-model, but `:model-value` + `@change` is `@update:model-value` spelled longer, and RadioGroup ships one emit. Still fires: an emit that is removed fails silently at the call site, so it goes once the live bindings have moved',
       },
     ],
   },

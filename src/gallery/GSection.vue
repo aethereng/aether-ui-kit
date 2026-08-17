@@ -146,7 +146,12 @@ const tabs = computed<SegOption<Tab>[]>(() => {
       </summary>
 
       <div class="g-panel__bar">
-        <Seg :options="tabs" :model-value="tab" aria-label="Source and API" @change="tab = $event" />
+        <Seg
+          :options="tabs"
+          :model-value="tab"
+          aria-label="Source and API"
+          @update:model-value="tab = $event"
+        />
         <button
           v-if="tab === 'template' || tab === 'script'"
           class="g-copy"

@@ -77,11 +77,14 @@ const matched = computed<Preset | null>(() => {
   <div class="g-ex g-ex--full">
     <span class="g-variant">modelValue = null — the value matches no preset, so nothing is active</span>
     <div class="g-ex-row">
+      <!-- `@update:model-value`, not the deprecated `@change`. This is the case `change` was added
+           for — a caller with no v-model, because the bound value is DERIVED and often null — and
+           it works identically here, which is the whole argument for the deprecation. -->
       <Seg
         :options="presets"
         :model-value="matched"
         aria-label="Width preset"
-        @change="width = PRESET_PX[$event]"
+        @update:model-value="width = PRESET_PX[$event]"
       />
       <output class="g-ex-readout">{{ width }}px</output>
       <Tool label="Nudge +1" @click="width += 1" />

@@ -111,6 +111,7 @@ These tokens exist so a host can express something the kit could not otherwise s
 
 | token | default | why it exists |
 |---|---|---|
+| `--aether-radius-surface` | `8px` | the SURFACE radius — `Card`, `Disclosure`. Split from `--aether-radius`, which is the CONTROL radius for chips, buttons and fields: a host retuning its controls should not silently reshape its panels. Both were a literal `8px` in two components before this existed, so they agreed by luck and neither could be tuned. |
 | `--aether-selected` | `var(--aether-cool)` | the SELECTED state, split from the accent. One token used to drive both a component's accent and the active state of Seg/Chip, so a host wanting those on different brand colours could not express it. Defaults to the accent, so ignoring it changes nothing. |
 | `--aether-selected-wash` | `var(--aether-cool-wash)` | the tinted form of the above |
 | `--aether-control-font-size` | `12.5px` | control typography. Hardcoded until a host on a 14px type scale found its kit controls sitting visibly smaller beside its own lists, fixable only by overriding the class. |

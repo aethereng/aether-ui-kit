@@ -36,7 +36,7 @@
   box-sizing: border-box;
   background: var(--aether-surface);
   border: 1px solid var(--aether-line);
-  border-radius: 8px;
+  border-radius: var(--aether-radius-surface);
   padding: 12px 14px;
 }
 </style>

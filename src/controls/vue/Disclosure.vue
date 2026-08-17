@@ -91,7 +91,10 @@ const regionId = useId()
 <style scoped>
 .aether-disclosure {
   border: 1px solid var(--aether-line);
-  border-radius: 8px;
+  /* The SURFACE radius, not the control one — see the token's note in ui-kit.css. This was a
+     literal 8px here and again in Card, so the two panels a consumer stacks in one column agreed
+     only by coincidence. */
+  border-radius: var(--aether-radius-surface);
   background: var(--aether-surface);
   overflow: hidden;
 }

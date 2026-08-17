@@ -55,6 +55,12 @@
   --aether-shadow-hover: 0 2px 6px rgba(27, 30, 35, 0.14);
   --aether-lane-alt: rgba(27, 30, 35, 0.012);
   --aether-radius: 8px;
+  /* The radius above is the CONTROL radius — chips, buttons, fields. A SURFACE is a different
+     scale of thing and gets its own, because a host retuning its controls should not silently
+     reshape its panels — one consumer sets --aether-radius to 6px, and its cards should not follow.
+     It existed as a literal 8px in Disclosure and again in Card, so the two agreed by luck and
+     a host could tune neither. Same default, so nothing moves by adding it. */
+  --aether-radius-surface: 8px;
   /* Touch-target floors, applied only under `pointer: coarse` (see the block at the end of this
      file). TWO floors, not one, and the split is the whole point.
        --aether-touch       44px, the WCAG 2.1 AAA / Apple HIG figure. For controls that stand

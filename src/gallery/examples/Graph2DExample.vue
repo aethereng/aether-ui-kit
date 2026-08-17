@@ -12,7 +12,16 @@ import Graph2D from '@aether/ui-kit/viz/graph'
 import { ForceLayout } from '@aether/ui-kit/viz/core'
 import type { GNode, GEdge } from '@aether/ui-kit/viz/core'
 
-const palette = ['var(--aether-cool)', 'var(--aether-warm)', 'var(--aether-cool-soft)']
+/* Five hues rather than three, and every one a token so the graph re-themes with the page. Two of
+   the three before were both cool, so a cloud of 18 nodes read as two colours and the categories
+   they stand for were not tellable apart at a glance. */
+const palette = [
+  'var(--aether-cool)',
+  'var(--aether-warm)',
+  'var(--aether-rose)',
+  'var(--aether-ok)',
+  'var(--aether-cool-soft)',
+]
 const W = 560
 const H = 360
 
@@ -27,7 +36,7 @@ const nodes = ref<GNode[]>(
     id: 'n' + i,
     pos: [W / 2 + (Math.random() - 0.5) * 220, H / 2 + (Math.random() - 0.5) * 180, 0],
     label: i % 5 === 0 ? 'hub' + i : undefined,
-    color: palette[i % 3],
+    color: palette[i % palette.length],
     r: i % 5 === 0 ? 10 : 5,
   })),
 )

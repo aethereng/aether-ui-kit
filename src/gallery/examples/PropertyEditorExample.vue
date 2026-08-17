@@ -50,8 +50,8 @@ const fields: FieldDescriptor[] = [
      coloured layer carries that layer's own encoding, so the panel reads as its own legend rather
      than needing one beside it. The kit renders the declaration and interprets none of it. */
   { key: 'live', label: 'Live', type: 'boolean' },
-  { key: 'supports', label: 'Supports', type: 'boolean', swatch: 'background:#a33b52' },
-  { key: 'loads', label: 'Loads', type: 'boolean', swatch: 'border:1.5px dashed #2f6f6b' },
+  { key: 'alarms', label: 'Alarms', type: 'boolean', swatch: 'background:var(--aether-rose)' },
+  { key: 'setpoints', label: 'Setpoints', type: 'boolean', swatch: 'border:1.5px dashed var(--aether-cool)' },
 ]
 
 const values: FieldValues = {

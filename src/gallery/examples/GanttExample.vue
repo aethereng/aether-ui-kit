@@ -6,23 +6,29 @@ import { computePPD } from '@aether/ui-kit/viz/core/gantt'
 import type { GanttItem, GanttLane } from '@aether/ui-kit/viz/core/gantt'
 
 const items = ref<GanttItem[]>([
-  { id: 'a1', start: 2, end: 9, type: 'design', status: 'done', title: 'Concept' },
-  { id: 'a2', start: 10, end: 20, type: 'design', status: 'open', title: 'Schematics' },
+  { id: 'a1', start: 2, end: 9, type: 'prepare', status: 'done', title: 'Protocol' },
+  { id: 'a2', start: 10, end: 20, type: 'prepare', status: 'open', title: 'Calibration' },
   // several one-day items, some sharing a date: this is what the density row exists for
-  { id: 'b1', start: 12, type: 'fabricate', status: 'open', title: 'Cut members' },
-  { id: 'b3', start: 12, type: 'fabricate', status: 'done', title: 'Order plate' },
-  { id: 'b4', start: 12, type: 'fabricate', status: 'open', title: 'Mark holes' },
-  { id: 'b5', start: 34, type: 'fabricate', status: 'open', title: 'Ship batch' },
-  { id: 'b2', start: 21, end: 30, type: 'fabricate', status: 'open', title: 'Weld frame' },
-  { id: 'c1', start: 31, end: 45, type: 'erect', status: 'open', title: 'Site assembly' },
-  { id: 'x1', start: 0, type: 'design', anchor: true, status: 'done', title: 'Day-0 kickoff' },
-  { id: 'x2', start: 24, type: 'erect', anchor: true, status: 'open', title: 'Steel milestone' },
+  { id: 'b1', start: 12, type: 'run', status: 'open', title: 'Batch A' },
+  { id: 'b3', start: 12, type: 'run', status: 'done', title: 'Batch B' },
+  { id: 'b4', start: 12, type: 'run', status: 'open', title: 'Blank' },
+  { id: 'b5', start: 34, type: 'run', status: 'open', title: 'Repeat A' },
+  { id: 'b2', start: 21, end: 30, type: 'run', status: 'open', title: 'Long soak' },
+  { id: 'c1', start: 31, end: 45, type: 'analyse', status: 'open', title: 'Curve fitting' },
+  { id: 'x1', start: 0, type: 'prepare', anchor: true, status: 'done', title: 'Day-0 kickoff' },
+  { id: 'x2', start: 24, type: 'analyse', anchor: true, status: 'open', title: 'Interim review' },
 ])
 
+/* THREE HUES, each a token, and the washes DERIVED from them with color-mix rather than written as
+   literal rgba. The two literals here before could not follow a theme: a wash mixed for a paper
+   ground stays that colour on a dark one, where it wants to be lighter than its surface rather
+   than darker. Mixing against `transparent` keeps a wash at a fixed alpha of whatever the hue
+   currently is, so both themes get it right from one line. */
+const wash = (token: string) => `color-mix(in srgb, var(${token}) 18%, transparent)`
 const lanes: GanttLane[] = [
-  { type: 'design', name: 'Design', color: 'var(--aether-cool-soft)', wash: 'var(--aether-cool-wash)' },
-  { type: 'fabricate', name: 'Fabricate', color: 'var(--aether-warm)', wash: 'rgba(230,160,60,0.16)' },
-  { type: 'erect', name: 'Erect', color: 'var(--aether-ink-soft)', wash: 'rgba(120,120,140,0.16)' },
+  { type: 'prepare', name: 'Prepare', color: 'var(--aether-cool-soft)', wash: wash('--aether-cool') },
+  { type: 'run', name: 'Run', color: 'var(--aether-warm)', wash: wash('--aether-warm') },
+  { type: 'analyse', name: 'Analyse', color: 'var(--aether-rose)', wash: wash('--aether-rose') },
 ]
 
 const DAYS = 60

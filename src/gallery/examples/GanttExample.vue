@@ -25,8 +25,12 @@ const items = ref<GanttItem[]>([
    than darker. Mixing against `transparent` keeps a wash at a fixed alpha of whatever the hue
    currently is, so both themes get it right from one line. */
 const wash = (token: string) => `color-mix(in srgb, var(${token}) 18%, transparent)`
+/* A lane's `color` is TEXT — the lane name and every bar label — so it has to clear a contrast
+   floor, which a soft accent does not. `--aether-cool-soft` measured 2.7:1 on the light surface
+   here against 10.7 on the dark one: a token meant for fills, invisible as type in exactly one of
+   the two themes. `--aether-cool` is 5.5 and 8.8. */
 const lanes: GanttLane[] = [
-  { type: 'prepare', name: 'Prepare', color: 'var(--aether-cool-soft)', wash: wash('--aether-cool') },
+  { type: 'prepare', name: 'Prepare', color: 'var(--aether-cool)', wash: wash('--aether-cool') },
   { type: 'run', name: 'Run', color: 'var(--aether-warm)', wash: wash('--aether-warm') },
   { type: 'analyse', name: 'Analyse', color: 'var(--aether-rose)', wash: wash('--aether-rose') },
 ]

@@ -384,6 +384,22 @@ import Seg from '@aether/ui-kit/controls/seg'</code></pre>
      belong to the kit's contract and which are this page's own furniture */
   --g-page: #f4f0e8;
   --g-code: #efe9dd;
+  /* Syntax palette — warm against the paper ground, so a code block reads as part of the page
+     rather than a screenshot of an editor dropped onto it.
+     Ratios are WCAG against --g-code, computed on the rendered page rather than estimated: the
+     first pass here was eyeballed and three of the ten sat under 4.5 while the comments beside
+     them claimed otherwise. Comment and punct were the worst, and they are the two that carry the
+     most characters — quiet is a colour choice, unreadable is not. */
+  --g-tok-comment: #645e51; /* 5.3 */
+  --g-tok-string: #6d5e1b; /* 5.3 */
+  --g-tok-keyword: #9a4a1a; /* 5.2 */
+  --g-tok-number: #7a5230; /* 5.6 */
+  --g-tok-fn: #4a5f8f; /* 5.2 */
+  --g-tok-tag: #1f6b62; /* 5.2 */
+  --g-tok-directive: #8a3a6a; /* 6.0 — loudest, and bolded */
+  --g-tok-attr: #6a6250; /* 5.0 */
+  --g-tok-interp: #2f6b3a; /* 5.3 */
+  --g-tok-punct: #676352; /* 5.0 */
   --g-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
   --g-mono: 'Spline Sans Mono', ui-monospace, 'SF Mono', Consolas, monospace;
   --g-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -420,6 +436,20 @@ html[data-theme='timber'] {
 
   --g-page: #0e1b1a;
   --g-code: #182726;
+  /* Hand-picked per theme rather than lightened programmatically: on a dark ground a saturated hue
+     reads as MORE saturated, so the light theme's values inverted come out garish while its quiet
+     ones vanish. Pulled toward this theme's own timber-and-sage family.
+     Ratios measured against --g-code on the rendered page, same as above. */
+  --g-tok-comment: #869a91; /* 5.2 — quiet, but it was 3.8 and comments are most of these files */
+  --g-tok-string: #c9b458; /* 7.5 */
+  --g-tok-keyword: #e39a6b; /* 6.7 */
+  --g-tok-number: #d8a97e; /* 7.3 */
+  --g-tok-fn: #8fb8de; /* 7.4 */
+  --g-tok-tag: #6fc7ba; /* 7.8 */
+  --g-tok-directive: #e59ac2; /* 7.2 — loudest here too */
+  --g-tok-attr: #b6b39c; /* 7.3 */
+  --g-tok-interp: #97ce8b; /* 8.5 */
+  --g-tok-punct: #7f9189; /* 4.7 */
 }
 
 * {

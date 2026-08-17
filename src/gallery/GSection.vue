@@ -9,6 +9,7 @@ import { computed, ref } from 'vue'
 import Seg from '@/controls/vue/Seg.vue'
 import type { SegOption } from '@/controls/core/types'
 import type { CompMeta } from './meta'
+import { highlight } from './highlight'
 
 const props = defineProps<{
   meta: CompMeta
@@ -72,6 +73,11 @@ function sliceBlock(src: string, tag: 'script' | 'template'): string | null {
 const MISSING = '/* could not read this block out of the example file */'
 const shownScript = computed(() => sliceBlock(props.source, 'script') ?? MISSING)
 const shownTemplate = computed(() => sliceBlock(props.source, 'template') ?? MISSING)
+
+/* Highlighted for reading; the PLAIN text is what the copy button sends, so what lands in an
+   editor is source rather than markup. */
+const litTemplate = computed(() => highlight(shownTemplate.value, 'template'))
+const litScript = computed(() => highlight(shownScript.value, 'script'))
 
 /* one copy handler for every code block on the section, keyed by which block was copied,
  * so two buttons can't both claim success */
@@ -171,8 +177,10 @@ const tabs = computed<SegOption<Tab>[]>(() => {
         </button>
       </div>
 
-      <pre v-if="tab === 'template'" class="g-code"><code>{{ shownTemplate }}</code></pre>
-      <pre v-else-if="tab === 'script'" class="g-code"><code>{{ shownScript }}</code></pre>
+      <!-- v-html on OUR OWN example files, escaped by the highlighter on the way out — every
+           slice, including the text between tokens. -->
+      <pre v-if="tab === 'template'" class="g-code"><code v-html="litTemplate" /></pre>
+      <pre v-else-if="tab === 'script'" class="g-code"><code v-html="litScript" /></pre>
 
       <table v-else-if="tab === 'props'" class="g-table">
         <thead>
@@ -432,9 +440,48 @@ const tabs = computed<SegOption<Tab>[]>(() => {
 .g-code code {
   font-family: var(--g-mono);
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.7;
   white-space: pre;
   color: var(--aether-ink);
+}
+
+/* Syntax colours. Set per theme rather than derived from the kit's palette: those tokens carry
+   MEANING — cool is selection, rose is danger — and borrowing them for "this is a string" would
+   make a code block argue with the components beside it.
+   Comments are the one deliberately quiet token: these examples are heavily commented, and a
+   comment coloured as loudly as the code turns the panel into stripes. */
+.g-code :deep(.tok-comment) {
+  color: var(--g-tok-comment);
+  font-style: italic;
+}
+.g-code :deep(.tok-string) {
+  color: var(--g-tok-string);
+}
+.g-code :deep(.tok-keyword) {
+  color: var(--g-tok-keyword);
+}
+.g-code :deep(.tok-number) {
+  color: var(--g-tok-number);
+}
+.g-code :deep(.tok-fn) {
+  color: var(--g-tok-fn);
+}
+.g-code :deep(.tok-tag) {
+  color: var(--g-tok-tag);
+}
+/* The directives are where a Vue template's behaviour lives, so they read loudest. */
+.g-code :deep(.tok-directive) {
+  color: var(--g-tok-directive);
+  font-weight: 600;
+}
+.g-code :deep(.tok-attr) {
+  color: var(--g-tok-attr);
+}
+.g-code :deep(.tok-interp) {
+  color: var(--g-tok-interp);
+}
+.g-code :deep(.tok-punct) {
+  color: var(--g-tok-punct);
 }
 .g-table {
   width: 100%;

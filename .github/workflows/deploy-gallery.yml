@@ -1,4 +1,15 @@
-# Builds and publishes the component gallery to GitHub Pages on every push to main.
+# Builds and publishes the component gallery to GitHub Pages when a version tag is pushed.
+# Also runnable by hand: Actions tab -> "Run workflow", or `gh workflow run deploy-gallery.yml`.
+#
+# Tag-triggered rather than push-triggered: what is served should be a version a consumer can
+# actually install, not whatever landed on main ten minutes ago. Between tags the site lags main,
+# and the local gate stands in for CI meanwhile -- the same three commands this workflow runs:
+#
+#     npm run guard:names && npm run types:check && npm run test:unit -- --run
+#
+# The gate runs on the tag too, so a release cannot be published without passing it -- but it runs
+# AFTER the tag exists, so a red run means a bad tag is already public. The fix is the next patch
+# version, never a moved tag (see README).
 #
 # The gallery is also the kit's own proof of the token contract (see README) — it's a
 # real host app, not a mock, so a broken build here means the kit itself is broken.
@@ -11,7 +22,7 @@ name: Deploy gallery to Pages
 
 on:
   push:
-    branches: [main]
+    tags: ['v*']
   workflow_dispatch: {}
 
 permissions:
@@ -19,7 +30,8 @@ permissions:
   pages: write
   id-token: write
 
-# Only one deploy in flight; a push mid-deploy cancels the older run rather than racing it.
+# Only one deploy in flight; a second run started mid-deploy cancels the older one rather than
+# racing it.
 concurrency:
   group: pages
   cancel-in-progress: true

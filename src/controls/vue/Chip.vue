@@ -19,6 +19,14 @@ withDefaults(
   { variant: 'pill', ariaLabel: undefined },
 )
 
+/* `aria-pressed` on each chip, and it is not decoration: the on-state was carried by `class="on"`
+ * alone, so a chip group was visibly a set of toggles and audibly a row of plain buttons -- a
+ * screen reader read the labels and never said which were on. The same defect RadioGroup was fixed
+ * for, where the note reads "class=\"on\" is invisible to assistive tech".
+ *
+ * `pressed` rather than `checked` or `selected` because a chip is a TOGGLE BUTTON: several can be
+ * on at once (`modelValue` is a Set), and each is independently on or off. aria-checked belongs to
+ * radio/checkbox roles, and this group deliberately has neither -- it is buttons. */
 const emit = defineEmits<{
   toggle: [value: V]
 }>()
@@ -37,6 +45,7 @@ function click(opt: ChipOption<V>) {
       type="button"
       :disabled="opt.disabled"
       :title="opt.title"
+      :aria-pressed="isChipActive(opt.value, modelValue)"
       :class="[
         'aether-chip',
         'aether-chip--' + variant,

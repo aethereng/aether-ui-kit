@@ -3,21 +3,13 @@
  * optional count and color dot. Supports single-active or a Set of active
  * values (multi-select filters). Active state + emit are mechanical; the
  * caller supplies labels, counts and dot colors (domain semantics). */
-import type { ChipOption } from '../core/types'
+import type { ChipOption, ChipProps } from '../core/types'
 import { isChipActive } from '../core'
 
-withDefaults(
-  defineProps<{
-    options: ChipOption<V>[]
-    modelValue: V | Set<V>
-    ariaLabel?: string
-    /** 'pill' is the bordered inline chip of a filter bar; 'row' is the borderless full-width
-     *  list row of a sidebar rail, with its count aligned right. Both exist in the surfaces
-     *  this came from, and a rail rendered as wrapping pills reads as the wrong control. */
-    variant?: 'pill' | 'row'
-  }>(),
-  { variant: 'pill', ariaLabel: undefined },
-)
+/* Props come from the EXPORTED ChipProps rather than an inline literal, so the public type and what
+   this accepts cannot diverge. They had: `variant` was declared here and never reached ChipProps,
+   which index.ts points consumers at — the same defect, on the same prop, that Seg was fixed for. */
+withDefaults(defineProps<ChipProps<V>>(), { variant: 'pill', ariaLabel: undefined })
 
 /* `aria-pressed` on each chip, and it is not decoration: the on-state was carried by `class="on"`
  * alone, so a chip group was visibly a set of toggles and audibly a row of plain buttons -- a

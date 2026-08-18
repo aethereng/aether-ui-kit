@@ -76,6 +76,15 @@ export interface ChipProps<V extends string = string> {
   options: ChipOption<V>[]
   modelValue: V | Set<V>
   ariaLabel?: string
+  /** 'pill' is the bordered inline chip of a filter bar; 'row' is the borderless full-width list
+   *  row of a sidebar rail, with its count aligned right. Both exist in the surfaces this came
+   *  from, and a rail rendered as wrapping pills reads as the wrong control.
+   *
+   *  Declared HERE and not only on the component: index.ts tells consumers to type their own state
+   *  against this interface, so a prop the component accepts and the interface omits is a prop they
+   *  cannot pass without an error. Seg shipped exactly this defect, with the same prop name, and
+   *  the fix there was the same — take props from the exported type rather than an inline literal. */
+  variant?: 'pill' | 'row'
 }
 
 export interface ToolProps {

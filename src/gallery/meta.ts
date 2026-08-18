@@ -335,6 +335,11 @@ export const COMPONENTS: CompMeta[] = [
         type: '—',
         note: 'leading icon; the caller brings its own SVG. A slot rather than an `icon` prop because a prop implies an icon vocabulary and the kit ships none — @mdi/js path strings drop straight in',
       },
+      {
+        name: 'trailing',
+        type: '—',
+        note: 'trailing affordance after the label — a dropdown caret, a disclosure chevron. Decorative and aria-hidden, like #icon: the accessible name stays exactly `label`, so a caret can never become the thing a screen reader reads. State a menu trigger needs to announce (aria-expanded) belongs on the button at the call site, since only the caller knows what is open',
+      },
     ],
     emits: [{ name: 'click', type: '[]' }],
   },

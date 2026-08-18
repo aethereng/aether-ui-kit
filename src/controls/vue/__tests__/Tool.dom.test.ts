@@ -178,3 +178,57 @@ describe('Tool — the filled destructive variant', () => {
     w.unmount()
   })
 })
+
+describe('Tool #trailing', () => {
+  /* Added for a menu trigger that needs a caret after its label. The slot is decorative by
+   * contract, and these pin that contract rather than the markup: what must not happen is a
+   * trailing glyph leaking into the button's accessible name. */
+  const T = '<svg data-t viewBox="0 0 16 16"><path d="M4 6 8 10 12 6" /></svg>'
+
+  it('renders after the label, and only when supplied', () => {
+    const bare = mount(Tool, { props: { label: 'Sort' } })
+    expect(bare.find('.aether-tool__trailing').exists()).toBe(false)
+    expect(bare.classes()).not.toContain('aether-tool--trailing')
+    bare.unmount()
+
+    const w = mount(Tool, { props: { label: 'Sort' }, slots: { trailing: T } })
+    expect(w.find('.aether-tool__trailing').exists()).toBe(true)
+    expect(w.classes()).toContain('aether-tool--trailing')
+    // order matters: the affordance follows the word it belongs to
+    const kids = [...w.element.children].map((e) => e.className)
+    expect(kids[kids.length - 1]).toBe('aether-tool__trailing')
+    w.unmount()
+  })
+
+  it('is aria-hidden, so it cannot enter the accessible name', () => {
+    /* THE point of the test. A caret that reaches the name turns "Open" into "Open ▾" for a
+     * screen reader, and worse, a slot could quietly become the label. */
+    const w = mount(Tool, { props: { label: 'File' }, slots: { trailing: T } })
+    expect(w.find('.aether-tool__trailing').attributes('aria-hidden')).toBe('true')
+    expect(w.text()).toBe('File')
+    w.unmount()
+  })
+
+  it('composes with #icon — leading and trailing are independent', () => {
+    const w = mount(Tool, {
+      props: { label: 'File' },
+      slots: { icon: '<svg data-i />', trailing: T },
+    })
+    expect(w.classes()).toContain('aether-tool--icon')
+    expect(w.classes()).toContain('aether-tool--trailing')
+    const kids = [...w.element.children].map((e) => e.className)
+    expect(kids[0]).toBe('aether-tool__icon')
+    expect(kids[kids.length - 1]).toBe('aether-tool__trailing')
+    w.unmount()
+  })
+
+  it('does not make a trailing-only button icon-only', () => {
+    /* `labelHidden` is honoured only alongside #icon. A trailing slot must not satisfy it, or a
+     * caret-only button would render with no visible label and no icon either. */
+    const w = mount(Tool, { props: { label: 'Sort', labelHidden: true }, slots: { trailing: T } })
+    expect(w.classes()).not.toContain('aether-tool--icon-only')
+    expect(w.text()).toBe('Sort')
+    expect(w.attributes('aria-label')).toBeUndefined()
+    w.unmount()
+  })
+})

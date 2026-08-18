@@ -49,6 +49,14 @@ const emit = defineEmits<{
 const slots = defineSlots<{
   /** Leading icon. The caller's own markup -- an inline SVG, a font glyph, anything. */
   icon?: () => unknown
+  /** Trailing affordance, after the label: a dropdown caret, a disclosure chevron.
+   *
+   *  DECORATIVE, and rendered aria-hidden like `#icon`. The button's accessible name stays exactly
+   *  `label`, so a caret cannot leak into it and a trailing slot cannot quietly become the thing a
+   *  screen reader reads. Anything that carries meaning belongs in `label`, or in the aria-* the
+   *  caller puts on the button -- a menu trigger's `aria-expanded` is the caller's to own, because
+   *  only the caller knows what is open. */
+  trailing?: () => unknown
 }>()
 </script>
 
@@ -61,6 +69,7 @@ const slots = defineSlots<{
       danger: !!danger,
       'aether-tool--fill': !!fill && !!danger,
       'aether-tool--icon': !!slots.icon,
+      'aether-tool--trailing': !!slots.trailing,
       'aether-tool--icon-only': !!slots.icon && labelHidden,
     }"
     :disabled="disabled"
@@ -72,5 +81,8 @@ const slots = defineSlots<{
     <!-- labelHidden is honoured only alongside an icon: hiding the label of a button with no
          icon would render an empty control. -->
     <span v-if="!(slots.icon && labelHidden)">{{ label }}</span>
+    <span v-if="slots.trailing" class="aether-tool__trailing" aria-hidden="true"
+      ><slot name="trailing"
+    /></span>
   </button>
 </template>

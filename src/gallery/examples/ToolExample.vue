@@ -57,6 +57,17 @@ const clicks = ref(0)
     </Tool>
   </div>
 
+  <div class="g-ex g-ex--tile">
+    <span class="g-variant">#trailing — an affordance after the label, not a second icon</span>
+    <Tool label="Sort" @click="clicks++">
+      <template #trailing>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M4 6.5 8 10.5 12 6.5" />
+        </svg>
+      </template>
+    </Tool>
+  </div>
+
   <!-- Two tiles wide: the two buttons below are a .g-ex-row and must stay side by side, which a
        single-column tile is too narrow to allow. -->
   <div class="g-ex g-ex--tile-wide">

@@ -603,7 +603,8 @@
 /* Only applied when a #icon slot is actually supplied, so a plain Tool keeps its existing box
    model untouched -- inline-flex on every Tool would have changed the layout of every existing
    consumer for the benefit of the ones using an icon. */
-.aether-tool--icon {
+.aether-tool--icon,
+.aether-tool--trailing {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -623,7 +624,8 @@
    tried. An icon COMPONENT renders a wrapper element (Vuetify's <v-icon> is an <i>), so its svg is a
    grandchild and the rule missed it completely, leaving every icon at the library's default 24px
    inside a ~28px button. The gallery demo passing was not evidence the contract worked. */
-.aether-tool__icon svg {
+.aether-tool__icon svg,
+.aether-tool__trailing svg {
   width: 1em;
   height: 1em;
   display: block;
@@ -632,6 +634,17 @@
    inheriting (Vuetify's <v-icon> does) wins over the inherited 1em above, and overriding it would
    mean naming that library's classes here — which this kit deliberately does not know. Size those at
    the call site instead: `<v-icon size="16">`. Documented rather than fought. */
+/* The trailing slot mirrors __icon, and shares its svg sizing rule below rather than repeating it.
+   Its own inset is tightened: a caret sits closer to the word it belongs to than a leading icon
+   does, and the 11px right padding was drawn for a label ending the button. */
+.aether-tool__trailing {
+  display: inline-flex;
+  flex: none;
+  line-height: 0;
+  font-size: 1em;
+  margin-right: -3px;
+  opacity: 0.75;
+}
 /* Icon-only: square it up so a lone glyph is not sitting in a label-shaped box. */
 .aether-tool--icon-only {
   padding: 6px;

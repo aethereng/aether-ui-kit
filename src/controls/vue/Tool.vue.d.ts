@@ -17,6 +17,14 @@ type __VLS_Props = {
 type __VLS_Slots = {
     /** Leading icon. The caller's own markup -- an inline SVG, a font glyph, anything. */
     icon?: () => unknown;
+    /** Trailing affordance, after the label: a dropdown caret, a disclosure chevron.
+     *
+     *  DECORATIVE, and rendered aria-hidden like `#icon`. The button's accessible name stays exactly
+     *  `label`, so a caret cannot leak into it and a trailing slot cannot quietly become the thing a
+     *  screen reader reads. Anything that carries meaning belongs in `label`, or in the aria-* the
+     *  caller puts on the button -- a menu trigger's `aria-expanded` is the caller's to own, because
+     *  only the caller knows what is open. */
+    trailing?: () => unknown;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     click: () => any;

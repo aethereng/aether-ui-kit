@@ -428,6 +428,14 @@ import Seg from '@aether/ui-kit/controls/seg'</code></pre>
 /* ── the gallery acting as a host app: it owns the --aether-* tokens ──
    Values are a real application's light and dark palettes, so what you see here is what the
    kit looks like in the app it was extracted from — not a gallery-only fiction. */
+/* This is `paper`, the light theme -- named the same as `applyTheme('paper')` and
+   `html[data-theme='timber']` below, and selected the same way, so the two themes are equally
+   real in this file rather than one being an explicit block and the other "whatever :root
+   happens to resolve to when data-theme isn't set to something else". `:root` stays alongside
+   the explicit selector rather than being replaced by it: `data-theme` is set by JS on mount, so
+   there is a brief window before that where nothing has `[data-theme='paper']` yet, and the
+   bare `:root` is what keeps that window themed correctly instead of unstyled. */
+html[data-theme='paper'],
 :root {
   --aether-surface: #fbf8f2;
   --aether-panel: #e5dfd2;
@@ -514,6 +522,12 @@ html[data-theme='timber'] {
   --aether-cool: #8fc6c2;
   --aether-cool-soft: #a8d8d4;
   --aether-cool-wash: rgba(143, 198, 194, 0.16);
+  /* Tried teal (the token's default), then warm amber, then rose -- see git history for that
+     back-and-forth. Currently back on teal, to compare the light theme's own accent carried into
+     timber unchanged against the alternates. --aether-cool resolves to timber's own light-blue
+     value here (#8fc6c2), not paper's dark one -- same token name, theme-appropriate value, which
+     is the whole point of it being a token. */
+  --aether-scrollbar: var(--aether-cool);
   --aether-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   --aether-faint: #8fa39a;
   --aether-warm-soft: #c8742e;
@@ -657,6 +671,17 @@ body {
   /* Disclosure clips its own corners so the 0fr reveal can animate. Kept -- nothing in the rail
      escapes its panel -- but with the radius gone it is now doing only the clipping. */
   border-bottom: 1px solid var(--aether-line);
+  /* Without this, opening a group when the rail is already tight on height did not reveal a
+     scrollbar -- it silently squeezed the panel that just opened down to a few px instead,
+     while every OTHER open group kept its full size. Textbook flexbox: .g-rail is a fixed-
+     height flex COLUMN, .aether-disclosure is an ordinary flex item (flex-shrink: 1 by
+     default), and its own overflow: hidden descendant gives the flex algorithm's automatic
+     minimum size nothing to protect -- so once the column's combined content exceeds what the
+     rail can show, later items get compressed toward zero rather than the CONTAINER scrolling
+     past them, even though #g-rail is `overflow-y: auto` and very much willing to. flex-shrink:
+     0 is what makes each group keep the height its own content asked for, so the rail is what
+     ends up too tall — which is exactly the case overflow-y: auto is already there to handle. */
+  flex-shrink: 0;
 }
 #g-rail .aether-disclosure:last-child {
   border-bottom: 0;

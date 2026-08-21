@@ -73,13 +73,24 @@ describe('TextField', () => {
       w.unmount()
     })
 
+    // jsdom applies none of a Vue SFC's <style> block, scoped or not -- getComputedStyle on any
+    // element here reports jsdom's OWN internal defaults, never this component's actual 1px
+    // border. That default is real (not NaN, not ''), just not this file's to hardcode: doing
+    // so would silently start asserting a jsdom implementation detail instead of the formula
+    // grow() actually runs. Read it back and use it, so the expectation is `scrollHeight +
+    // whatever this environment's border resolves to`, exactly what the component computes.
+    function expectedHeight(el: HTMLTextAreaElement, scrollHeight: number) {
+      const cs = getComputedStyle(el)
+      return `${scrollHeight + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth)}px`
+    }
+
     it('grows to fit content, live, as it is typed', async () => {
       const w = mount(TextField, { props: { modelValue: '', multiline: true, autogrow: true } })
       const el = w.element as HTMLTextAreaElement
       el.value = 'a lot more text than three rows holds'
       await w.get('textarea').trigger('input')
       await nextTick() // past the component's own nextTick(grow) inside its modelValue watcher
-      expect(el.style.height).toBe('480px') // the stubbed scrollHeight
+      expect(el.style.height).toBe(expectedHeight(el, 480)) // 480 is the stubbed scrollHeight
       w.unmount()
     })
 
@@ -90,7 +101,7 @@ describe('TextField', () => {
       const el = w.element as HTMLTextAreaElement
       await w.setProps({ modelValue: 'a completely different, much longer value than before' })
       await nextTick()
-      expect(el.style.height).toBe('480px')
+      expect(el.style.height).toBe(expectedHeight(el, 480))
       w.unmount()
     })
   })

@@ -41,7 +41,12 @@ function grow() {
   // that height back from scrollHeight, never a smaller one, so shrinking on deletion needs
   // the browser to recompute from scratch first.
   el.style.height = 'auto'
-  el.style.height = `${el.scrollHeight}px`
+  // scrollHeight is content + padding, NEVER border -- but .aether-textfield is border-box, so
+  // `height` sets content + padding + border. Setting height straight to scrollHeight is short
+  // by exactly the border width, which reads as the last line's descenders getting clipped.
+  const cs = getComputedStyle(el)
+  const borders = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth)
+  el.style.height = `${el.scrollHeight + borders}px`
 }
 
 if (props.autogrow) {
@@ -50,6 +55,14 @@ if (props.autogrow) {
   // reassigning the value directly re-measures exactly the same way typing does, with no
   // separate DOM 'input' listener needed for either case.
   watch(() => props.modelValue, () => nextTick(grow), { immediate: true })
+  // The mount-time measurement above can still be wrong regardless: it runs against whatever
+  // font is ACTUALLY painted at that instant, and on a first load that's routinely a fallback,
+  // not the real one yet (this component makes no assumption about which font loads it, or
+  // when — that's entirely the host's stylesheet). A narrower fallback wraps fewer lines than
+  // the real font will, so the very first grow() undersizes the box, and nothing re-measures
+  // afterward — until an edit happens to call grow() again, well after the font has settled,
+  // which is why retyping "fixes" it. document.fonts.ready is the actual signal to wait for.
+  if (typeof document !== 'undefined' && document.fonts) document.fonts.ready.then(grow)
 }
 
 function onInput(e: Event) {
@@ -86,6 +99,12 @@ function onInput(e: Event) {
   width: 100%;
   font: inherit;
   font-size: 13.5px;
+  /* `font: inherit` resets line-height along with everything else, and nothing below sets it
+     back — so it falls through to the font's own "normal", whatever that resolves to. Most
+     fonts distribute that leading unevenly above vs. below the glyphs, which is invisible on a
+     single line (padding absorbs it symmetrically either way) but reads as mismatched top/
+     bottom padding once autogrow's height comes from the same box-model math this pins. */
+  line-height: 1.5;
   color: var(--aether-ink);
   background: var(--aether-surface);
   border: 1px solid var(--aether-line-strong);
@@ -108,6 +127,41 @@ function onInput(e: Event) {
      a floor here fought labelPlacement="inside", whose 17px top padding then pushed the field 7px
      past where it had always been. */
   resize: vertical;
+  /* Only reachable without `autogrow` (that variant sets overflow-y: hidden — content never
+     scrolls, it grows instead), so this only ever paints on a fixed-`rows` field whose content
+     outgrew it. Firefox's two-value subset first; Chromium's fuller ::-webkit-scrollbar* below
+     it wins where supported. 8px stays a component-internal scrollbar rather than reading as a
+     page-level one — deliberately thinner than a whole surface would want. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--aether-cool-wash) transparent;
+}
+.aether-textfield--multiline::-webkit-scrollbar {
+  width: 8px;
+}
+.aether-textfield--multiline::-webkit-scrollbar-track {
+  background: transparent;
+}
+.aether-textfield--multiline::-webkit-scrollbar-thumb {
+  background: var(--aether-cool-wash);
+  border-radius: 999px;
+}
+.aether-textfield--multiline::-webkit-scrollbar-thumb:hover {
+  background: var(--aether-cool-soft);
+}
+/* The UA's own corner-triangle glyph, replaced with a plain tinted patch in the kit's own
+   accent rather than the browser's grey diagonal lines. Chromium/WebKit only (Firefox exposes
+   no equivalent, and "best-effort" there already accepts gaps like this one) — but of that
+   pair, only Chromium is a *supported* browser, so this reaches the target, not the floor.
+   Unconditional rather than gated on :hover/:focus on purpose: the datetime-edit rule above
+   is the proof this kit already has that a UA sub-element rarely receives the state selector
+   you would reach for first (:focus there never fires; the sub-field just isn't what focus
+   lands on) — an unconditional background was the one thing proven, in-browser, to paint. */
+.aether-textfield--multiline::-webkit-resizer {
+  /* The resizer's box is a plain square; a flat background-color fills the whole thing rather
+     than reading as a corner grip. A diagonal split (135deg = top-left to bottom-right) leaves
+     the near half transparent and tints only the half actually in the corner, which is what
+     reads as a triangle instead of a block. */
+  background: linear-gradient(135deg, transparent 50%, var(--aether-cool-wash) 50%);
 }
 .aether-textfield--autogrow {
   resize: none;

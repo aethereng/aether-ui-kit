@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { beforeAll, describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import TextField from '../TextField.vue'
 import NumberField from '../NumberField.vue'
 import Select from '../Select.vue'
@@ -45,6 +46,53 @@ describe('TextField', () => {
     expect(w.attributes('id')).toBe('note')
     expect(w.attributes('aria-label')).toBe('Note')
     w.unmount()
+  })
+
+  describe('autogrow', () => {
+    // jsdom never lays out scrollable content -- scrollHeight is always 0 -- so every test
+    // below stubs it to a value that would be visibly wrong if grow() were never called (or
+    // called against stale state). Same technique as ChatPanel.dom.test.ts's auto-scroll test.
+    beforeAll(() => {
+      Object.defineProperty(HTMLElement.prototype, 'scrollHeight', {
+        configurable: true,
+        get() { return 480 },
+      })
+    })
+
+    it('off by default: height is never touched, resize stays the multiline default', () => {
+      const w = mount(TextField, { props: { modelValue: 'x'.repeat(500), multiline: true } })
+      const el = w.element as HTMLTextAreaElement
+      expect(el.style.height).toBe('')
+      expect(w.classes()).not.toContain('aether-textfield--autogrow')
+      w.unmount()
+    })
+
+    it('carries the modifier class, which is what turns resize off and hides the corner glyph', () => {
+      const w = mount(TextField, { props: { modelValue: 'x', multiline: true, autogrow: true } })
+      expect(w.classes()).toContain('aether-textfield--autogrow')
+      w.unmount()
+    })
+
+    it('grows to fit content, live, as it is typed', async () => {
+      const w = mount(TextField, { props: { modelValue: '', multiline: true, autogrow: true } })
+      const el = w.element as HTMLTextAreaElement
+      el.value = 'a lot more text than three rows holds'
+      await w.get('textarea').trigger('input')
+      await nextTick() // past the component's own nextTick(grow) inside its modelValue watcher
+      expect(el.style.height).toBe('480px') // the stubbed scrollHeight
+      w.unmount()
+    })
+
+    it('re-measures when a caller reassigns modelValue directly — the case this exists for, not just typing', async () => {
+      // A caller loading a different record into the same field never fires a DOM 'input'
+      // event; a listener on 'input' alone (the obvious first implementation) would miss it.
+      const w = mount(TextField, { props: { modelValue: 'short', multiline: true, autogrow: true } })
+      const el = w.element as HTMLTextAreaElement
+      await w.setProps({ modelValue: 'a completely different, much longer value than before' })
+      await nextTick()
+      expect(el.style.height).toBe('480px')
+      w.unmount()
+    })
   })
 })
 

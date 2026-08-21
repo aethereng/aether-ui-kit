@@ -69,6 +69,10 @@ export interface FieldDescriptor {
    *  unit; it does not know one. Dimensional analysis -- conversion, mm<->in, knowing N·m and
    *  lbf·ft are the same dimension -- is the caller's, on the caller's side of this boundary. */
   suffix?: string
+  /** type === 'textarea'. Height tracks content instead of a fixed row count — see
+   *  TextField.vue's `autogrow` prop, which this forwards to. Off by default so existing
+   *  fixed-`rows` textareas are unaffected. */
+  autogrow?: boolean
 }
 
 export type FieldValues = Record<string, unknown>

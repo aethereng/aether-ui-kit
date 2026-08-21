@@ -7,19 +7,50 @@
  * — and only its shape differs, which is the `enum` variant case. NumberField is a component for
  * the opposite reason: it cannot commit per keystroke without making "1.5" unreachable. */
 
-withDefaults(
+import { nextTick, ref, watch } from 'vue'
+
+const props = withDefaults(
   defineProps<{
     modelValue: string
     multiline?: boolean
-    /** Visible rows when multiline. Ignored otherwise. */
+    /** Visible rows when multiline. Ignored otherwise, and ignored once `autogrow` takes over —
+     *  kept only as the height the very first paint uses, before JS has measured anything. */
     rows?: number
     placeholder?: string
     disabled?: boolean
+    /** Multiline only. Height tracks content instead of a fixed `rows`, growing and shrinking
+     *  live — both on typing and when `modelValue` changes from OUTSIDE (a caller reassigning
+     *  the field's value, not just the user typing into it). Also switches `resize` off: once
+     *  height is no longer something to drag, the browser's own corner-triangle glyph is
+     *  leftover affordance for a gesture that no longer does anything. No min-height here for
+     *  the same reason the multiline rule above has none — that is the caller's layout to set,
+     *  not this component's to assume. */
+    autogrow?: boolean
   }>(),
-  { multiline: false, rows: 3, placeholder: undefined, disabled: false },
+  { multiline: false, rows: 3, placeholder: undefined, disabled: false, autogrow: false },
 )
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
+
+const textareaEl = ref<HTMLTextAreaElement | null>(null)
+
+function grow() {
+  const el = textareaEl.value
+  if (!el) return
+  // Reset before measuring: a textarea already holding an explicit height only ever reports
+  // that height back from scrollHeight, never a smaller one, so shrinking on deletion needs
+  // the browser to recompute from scratch first.
+  el.style.height = 'auto'
+  el.style.height = `${el.scrollHeight}px`
+}
+
+if (props.autogrow) {
+  // One path covers both triggers: typing emits update:modelValue, the caller's v-model writes
+  // it back into the `modelValue` prop, and that is what this watches — so a caller
+  // reassigning the value directly re-measures exactly the same way typing does, with no
+  // separate DOM 'input' listener needed for either case.
+  watch(() => props.modelValue, () => nextTick(grow), { immediate: true })
+}
 
 function onInput(e: Event) {
   emit('update:modelValue', (e.target as HTMLInputElement | HTMLTextAreaElement).value)
@@ -29,7 +60,9 @@ function onInput(e: Event) {
 <template>
   <textarea
     v-if="multiline"
+    ref="textareaEl"
     class="aether-textfield aether-textfield--multiline"
+    :class="{ 'aether-textfield--autogrow': autogrow }"
     :value="modelValue"
     :rows="rows"
     :placeholder="placeholder"
@@ -75,5 +108,9 @@ function onInput(e: Event) {
      a floor here fought labelPlacement="inside", whose 17px top padding then pushed the field 7px
      past where it had always been. */
   resize: vertical;
+}
+.aether-textfield--autogrow {
+  resize: none;
+  overflow-y: hidden;
 }
 </style>

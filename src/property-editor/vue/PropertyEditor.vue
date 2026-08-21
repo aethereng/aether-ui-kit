@@ -158,6 +158,7 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
         v-else-if="field.type === 'textarea'"
         :id="`pe-${field.key}`"
         multiline
+        :autogrow="field.autogrow"
         :placeholder="field.placeholder"
         :model-value="view[field.key] as string"
         @update:model-value="onFieldInput(field.key, $event)"

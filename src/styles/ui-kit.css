@@ -45,6 +45,11 @@
      that does maps them separately. */
   --aether-selected: var(--aether-cool);
   --aether-selected-wash: var(--aether-cool-wash);
+  /* The scrollbar thumb, split out for the same reason --aether-selected was: it defaults to the
+     cool accent so a host that does not care sees no change, but a host whose UI already reads
+     teal everywhere else (focus rings, selection, Seg's pill-on state) can point this at a second
+     accent instead, so the scrollbar does not blend into "this is also a selection" visually. */
+  --aether-scrollbar: var(--aether-cool);
 
   /* Control typography. Hardcoded 12.5px until now, which a host on a different type scale could
      only fight with an override — kit controls sat visibly smaller beside a 14px list. */
@@ -931,6 +936,77 @@
 .aether-search input::placeholder {
   color: var(--aether-faint);
   opacity: 1;
+}
+
+/* ---- Scrollbars, kit-wide ----
+   Every scrollbar on a page that imports this stylesheet -- not just the multiline text field,
+   which is where this started and where a scoped `.aether-textfield--multiline::-webkit-scrollbar*`
+   block used to live. Moved here and made universal because a rail, a chat log, a disclosure body
+   scrolling internally, or a host's own `overflow: auto` panel all hit the browser default just the
+   same, and nobody was going to remember to opt each one in individually.
+
+   `*` is deliberate, not lazy: WebKit's ::-webkit-scrollbar* pseudo-elements do not inherit, so
+   reaching every scrollable element means selecting all of them. Firefox's scrollbar-width/-color
+   DO inherit, so :root alone covers it there -- listed anyway, for the same reason as the WebKit
+   rule: explicit beats implicit when the point is "everywhere", not "everywhere we remembered".
+
+   32px, after two doublings from an original 8px: that figure was tuned for the inside of a
+   single textarea and read as a hairline anywhere wider. First doubled to 16px so it read as an
+   actual scrollbar rather than a scratch on the panel edge, then doubled again on request to see
+   it at a size nothing could mistake for the browser default.
+
+   No end buttons: the up/down (and left/right) arrows WebKit draws at each end of the track are
+   switched off via `::-webkit-scrollbar-button` below, so what's left is only the track and the
+   thumb -- a plain bar, not a bar with two clickable glyphs bolted to its ends.
+
+   Resting colour is --aether-cool, the full-saturation token -- not --aether-cool-wash (this
+   carried it before the previous pass, and at scrollbar size the alpha read as barely-there in
+   both themes) and not --aether-cool-soft either (tried next: solid, so it cleared contrast on
+   paper, but in the light theme's cream --aether-surface it read as rough rather than clean --
+   soft's mid teal sits close enough to the surface's own hue that the edge between thumb and
+   track loses crispness at 16px, where the same softness read fine at the old 8px). --aether-cool
+   is the darker, more saturated end of the same pair and was already proven in this palette as
+   the thing that reads clean against both --aether-surface and timber's dark surface -- it is the
+   colour every focus ring and every "on" state elsewhere in this file already uses.
+   Referenced through --aether-scrollbar (defined above, defaulting to --aether-cool) rather than
+   --aether-cool directly, so a host can point the scrollbar at a second accent without forking
+   this rule -- see that token's own note for why.
+   Hover darkens further via `filter`, not a fourth token: --aether-cool is already the strongest
+   step this pair has, so there is no stronger solid colour to escalate to, and inventing one just
+   for a hover state nothing else in the kit would use was not worth a new token. */
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: var(--aether-scrollbar) transparent;
+}
+*::-webkit-scrollbar {
+  width: 32px;
+  height: 32px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--aether-scrollbar);
+  border-radius: 999px;
+  /* Insets the visible bar inside the 32px track instead of filling it edge to edge -- at this
+     width a flush thumb reads as a slab, not a scrollbar. The border is transparent and the fill
+     is clipped to the padding-box, so the border ring shows whatever sits behind it (the track,
+     which is itself transparent) rather than needing a background-colour token of its own.
+     Scaled up with the track (was 4px at 16px wide) so the inset stays proportional rather than
+     shrinking to a hairline relative to the new size. */
+  border: 8px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  filter: brightness(0.85);
+}
+/* The clickable step-arrows WebKit draws at each end of the track by default. Removed rather
+   than themed: at 32px wide they would be two large glyphs bookending the bar, and nothing asked
+   for a click-to-step control -- drag-the-thumb and click-the-track already cover scrolling.
+   `display: none` rather than `width/height: 0`: WebKit still reserves layout space for a
+   zero-sized button in some versions, which would leave a dead gap at each end of the track. */
+*::-webkit-scrollbar-button {
+  display: none;
 }
 
 /* ==========================================================================================

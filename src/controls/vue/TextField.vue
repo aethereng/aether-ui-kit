@@ -140,28 +140,12 @@ function onInput(e: Event) {
      in a form that column is the layout.
      NO min-height. One was tried and removed: the height a textarea wants is what `rows` says, and
      a floor here fought labelPlacement="inside", whose 17px top padding then pushed the field 7px
-     past where it had always been. */
+     past where it had always been.
+     No scrollbar rule here any more — a fixed-`rows` field whose content outgrew it gets one from
+     the kit-wide `*::-webkit-scrollbar*` / `:root { scrollbar-* }` rules in ui-kit.css, same as
+     every other scrolling surface the kit draws. This component used to carry its own, narrower
+     copy; keeping one scrollbar treatment in one place is the point of making it global. */
   resize: vertical;
-  /* Only reachable without `autogrow` (that variant sets overflow-y: hidden — content never
-     scrolls, it grows instead), so this only ever paints on a fixed-`rows` field whose content
-     outgrew it. Firefox's two-value subset first; Chromium's fuller ::-webkit-scrollbar* below
-     it wins where supported. 8px stays a component-internal scrollbar rather than reading as a
-     page-level one — deliberately thinner than a whole surface would want. */
-  scrollbar-width: thin;
-  scrollbar-color: var(--aether-cool-wash) transparent;
-}
-.aether-textfield--multiline::-webkit-scrollbar {
-  width: 8px;
-}
-.aether-textfield--multiline::-webkit-scrollbar-track {
-  background: transparent;
-}
-.aether-textfield--multiline::-webkit-scrollbar-thumb {
-  background: var(--aether-cool-wash);
-  border-radius: 999px;
-}
-.aether-textfield--multiline::-webkit-scrollbar-thumb:hover {
-  background: var(--aether-cool-soft);
 }
 /* The UA's own corner-triangle glyph, replaced with a plain tinted patch in the kit's own
    accent rather than the browser's grey diagonal lines. Chromium/WebKit only (Firefox exposes
@@ -175,8 +159,14 @@ function onInput(e: Event) {
   /* The resizer's box is a plain square; a flat background-color fills the whole thing rather
      than reading as a corner grip. A diagonal split (135deg = top-left to bottom-right) leaves
      the near half transparent and tints only the half actually in the corner, which is what
-     reads as a triangle instead of a block. */
-  background: linear-gradient(135deg, transparent 50%, var(--aether-cool-wash) 50%);
+     reads as a triangle instead of a block.
+     --aether-scrollbar, not --aether-cool-wash, --aether-cool-soft or --aether-cool directly:
+     the first two were tried and both read wrong at this size (wash barely-there, soft rough
+     against the light theme's cream surface), and --aether-scrollbar is the token that carries
+     whichever solid colour a host has settled on for scrolling chrome — the resizer is the same
+     kind of chrome as the scrollbar it sits beside, so it takes the same token rather than its
+     own fixed one. See --aether-scrollbar's definition in ui-kit.css. */
+  background: linear-gradient(135deg, transparent 50%, var(--aether-scrollbar) 50%);
 }
 .aether-textfield--autogrow {
   resize: none;

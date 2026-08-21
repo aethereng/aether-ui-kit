@@ -919,6 +919,20 @@
   outline-offset: -2px;
 }
 
+/* No component sets an explicit placeholder colour anywhere in the kit, so every one of these
+   fell back to the browser's own default -- which does not know about --aether-ink flipping
+   light-to-dark under timber, and reads as low-contrast (sometimes barely legible) once the
+   surface goes dark. --aether-faint is the token already proven at the small-text WCAG floor
+   (see its definition above) for exactly this register: quiet, recessed, still readable.
+   `opacity: 1` is load-bearing in Firefox, which applies its own opacity reduction on TOP of
+   whatever colour is set here -- without it, an explicitly-themed placeholder still washes out. */
+.aether-textfield::placeholder,
+.aether-numberfield input::placeholder,
+.aether-search input::placeholder {
+  color: var(--aether-faint);
+  opacity: 1;
+}
+
 /* ==========================================================================================
    TOUCH TARGETS AND INPUT SIZING — the file's only @media block, and it must stay last.
    ==========================================================================================

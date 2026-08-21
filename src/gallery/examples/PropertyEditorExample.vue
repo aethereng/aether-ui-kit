@@ -8,7 +8,10 @@ import type { FieldDescriptor, FieldValues } from '@aether/ui-kit/property-edito
    component — a host that gains a field adds a row here rather than editing a template. */
 const fields: FieldDescriptor[] = [
   { key: 'title', label: 'Title', type: 'text', placeholder: 'Untitled' },
-  { key: 'body', label: 'Body', type: 'textarea', placeholder: 'Write…' },
+  /* autogrow: height tracks content instead of a fixed row count, live — see TextFieldExample
+     for the field on its own. Off by default, so every OTHER textarea in a form stays exactly
+     as it already was; this is the one row in this form that opts in. */
+  { key: 'body', label: 'Body', type: 'textarea', placeholder: 'Write…', autogrow: true },
   /* number: step/min/max/precision map straight to the native input's attributes. `suffix` is
      rendered after the field with NO meaning attached — the kit renders a unit, it never knows
      one, so conversion and unit systems stay with the caller. Out of range fails validation. */

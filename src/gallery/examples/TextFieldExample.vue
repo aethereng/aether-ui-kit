@@ -5,6 +5,9 @@ import TextField from '@aether/ui-kit/controls/text-field'
 
 const label = ref('Batch A-14')
 const note = ref('')
+const longNote = ref(
+  'This field grows with what you put in it.\n\nType past a few lines and watch the box follow — no scrollbar hiding the rest of it, no drag handle to fight with, because there is nothing left for one to do.',
+)
 </script>
 
 <template>
@@ -19,11 +22,18 @@ const note = ref('')
       <TextField v-model="note" multiline :rows="2" placeholder="Anything worth recording…" />
     </label>
 
+    <!-- autogrow: height tracks content instead of the fixed `rows` above, growing and
+         shrinking live as it's typed — and resize switches off, since auto-grow already IS
+         the resize. Try adding or deleting a few lines. -->
+    <label class="g-tf-row"><span>Note — autogrow</span>
+      <TextField v-model="longNote" multiline autogrow placeholder="Grows as you type…" />
+    </label>
+
     <label class="g-tf-row"><span>Disabled</span>
       <TextField model-value="Locked while the run is active" disabled />
     </label>
 
-    <code class="g-ex-state">{{ JSON.stringify({ label, note }) }}</code>
+    <code class="g-ex-state">{{ JSON.stringify({ label, note, longNote }) }}</code>
   </div>
 </template>
 

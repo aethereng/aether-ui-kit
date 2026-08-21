@@ -190,7 +190,7 @@ focus ring — which every component needs and no component owns.
 | **Toast** | `controls/toast` | Transient status pill that fades itself out. Controlled: you own the message. |
 | **Transport** | `controls/transport` | Playback transport: play/pause/replay, scrub, speed, precompute progress. Unit-agnostic — drives simulation seconds or calendar days. |
 | **Switch** | `controls/switch` | Boolean toggle as a pill switch. One bare input; you own the label. |
-| **TextField** | `controls/text-field` | Free text, single- or multi-line via `multiline`. |
+| **TextField** | `controls/text-field` | Free text, single- or multi-line via `multiline`. `autogrow` tracks content instead of a fixed row count, live. |
 | **NumberField** | `controls/number-field` | A typed number with its unit inside the box. Never rewrites a value you are still typing. |
 | **Select** | `controls/select` | Native single-choice dropdown, themed via `appearance: base-select`. Supports `groups`. |
 | **Slider** | `controls/slider` | A dragged number with a read-out. `format` maps the stored value to what is shown, and feeds `aria-valuetext`. `ticks` marks values the scale does not make obvious; the kit draws the track and thumb so the marks land exactly. |

@@ -26,8 +26,14 @@ const props = withDefaults(
      *  the same reason the multiline rule above has none — that is the caller's layout to set,
      *  not this component's to assume. */
     autogrow?: boolean
+    /** autogrow only. The ceiling it grows to before it stops pushing on whatever layout it
+     *  sits in and starts scrolling internally instead — unbounded growth is fine for the field
+     *  but not for the panel around it, which is exactly what held-down Enter demonstrates.
+     *  8 is a working default, not a considered one; there is no natural "right" ceiling, only
+     *  a layout it should stop pushing on. */
+    maxRows?: number
   }>(),
-  { multiline: false, rows: 3, placeholder: undefined, disabled: false, autogrow: false },
+  { multiline: false, rows: 3, placeholder: undefined, disabled: false, autogrow: false, maxRows: 8 },
 )
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
@@ -46,7 +52,16 @@ function grow() {
   // by exactly the border width, which reads as the last line's descenders getting clipped.
   const cs = getComputedStyle(el)
   const borders = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth)
-  el.style.height = `${el.scrollHeight + borders}px`
+  let target = el.scrollHeight + borders
+  if (props.maxRows > 0) {
+    // Same box-model math as the height itself, run as a ceiling instead of a target: line-height
+    // is explicit on .aether-textfield precisely so this (and the height calc above) has a real
+    // number to multiply rather than "normal", which parseFloat can't do anything with.
+    const padding = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
+    const maxPx = parseFloat(cs.lineHeight) * props.maxRows + padding + borders
+    target = Math.min(target, maxPx)
+  }
+  el.style.height = `${target}px`
 }
 
 if (props.autogrow) {
@@ -165,6 +180,11 @@ function onInput(e: Event) {
 }
 .aether-textfield--autogrow {
   resize: none;
-  overflow-y: hidden;
+  /* auto, not hidden: below maxRows there is nothing TO scroll (height already fits scrollHeight
+     exactly), so this paints nothing until content actually hits the ceiling -- at which point
+     it needs to scroll the overflow rather than clip it silently. Also textfield--multiline's
+     own class, so it already carries that variant's ::-webkit-scrollbar theming — no separate
+     rule needed for the capped case specifically. */
+  overflow-y: auto;
 }
 </style>

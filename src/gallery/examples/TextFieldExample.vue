@@ -6,7 +6,7 @@ import TextField from '@aether/ui-kit/controls/text-field'
 const label = ref('Batch A-14')
 const note = ref('')
 const longNote = ref(
-  'This field grows with what you put in it.\n\nType past a few lines and watch the box follow — no scrollbar hiding the rest of it, no drag handle to fight with, because there is nothing left for one to do.',
+  'This field grows with what you put in it.\n\nType past a few lines and watch the box follow — no scrollbar hiding the rest of it, no drag handle to fight with, because there is nothing left for one to do.\n\nThat growth has a ceiling, though: eight rows by default (maxRows). Past that it stops pushing on whatever layout it sits in — this card, in this demo — and scrolls internally instead, the same themed scrollbar a plain multiline field shows when its own fixed rows overflow.\n\nThis paragraph exists to prove it: long enough on its own that the field above is already past its ceiling and scrolling before you have typed a single character.',
 )
 </script>
 
@@ -24,8 +24,10 @@ const longNote = ref(
 
     <!-- autogrow: height tracks content instead of the fixed `rows` above, growing and
          shrinking live as it's typed — and resize switches off, since auto-grow already IS
-         the resize. Try adding or deleting a few lines. -->
-    <label class="g-tf-row"><span>Note — autogrow</span>
+         the resize. Seeded past its 8-row default ceiling on purpose, so the demo shows the
+         capped-and-scrolling state at rest, not just the open-ended growth. Try adding or
+         deleting lines — including past the point where it starts scrolling instead of growing. -->
+    <label class="g-tf-row"><span>Note — autogrow (capped at 8 rows)</span>
       <TextField v-model="longNote" multiline autogrow placeholder="Grows as you type…" />
     </label>
 

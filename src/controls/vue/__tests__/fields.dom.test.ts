@@ -1,4 +1,4 @@
-import { beforeAll, describe, it, expect } from 'vitest'
+import { beforeAll, describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import TextField from '../TextField.vue'
@@ -57,6 +57,25 @@ describe('TextField', () => {
         configurable: true,
         get() { return 480 },
       })
+      // getComputedStyle().lineHeight has the same problem as border-width above (jsdom applies
+      // no SFC style, so this component's real `line-height: 1.5` is invisible here) — but
+      // unlike border-width, the maxRows math NEEDS a real number to multiply: 'normal' isn't
+      // one, and parseFloat('normal') is NaN, which poisons the whole calculation silently
+      // (el.style.height = 'NaNpx' is an invalid CSS value, so the assignment is just dropped,
+      // leaving the 'auto' from grow()'s own reset step sitting there looking like nothing ran).
+      // A CSSStyleDeclaration.prototype getter does not reach this: jsdom's getComputedStyle
+      // returns an object with its OWN lineHeight property, which shadows the prototype rather
+      // than inheriting from it. Wrapping the function itself is what actually reaches every
+      // caller, including grow()'s own internal one, not just this file's later assertions.
+      const realGCS = window.getComputedStyle.bind(window)
+      vi.spyOn(window, 'getComputedStyle').mockImplementation((el, pseudo) => {
+        const real = realGCS(el, pseudo)
+        return new Proxy(real, {
+          get(target, prop, receiver) {
+            return prop === 'lineHeight' ? '20px' : Reflect.get(target, prop, receiver)
+          },
+        })
+      })
     })
 
     it('off by default: height is never touched, resize stays the multiline default', () => {
@@ -85,7 +104,10 @@ describe('TextField', () => {
     }
 
     it('grows to fit content, live, as it is typed', async () => {
-      const w = mount(TextField, { props: { modelValue: '', multiline: true, autogrow: true } })
+      // maxRows: 100 keeps this test testing what it says -- growth tracking -- uninterrupted
+      // by the DEFAULT cap, which is dedicated coverage below and would otherwise clamp this
+      // long before it demonstrates anything about tracking content.
+      const w = mount(TextField, { props: { modelValue: '', multiline: true, autogrow: true, maxRows: 100 } })
       const el = w.element as HTMLTextAreaElement
       el.value = 'a lot more text than three rows holds'
       await w.get('textarea').trigger('input')
@@ -97,11 +119,42 @@ describe('TextField', () => {
     it('re-measures when a caller reassigns modelValue directly — the case this exists for, not just typing', async () => {
       // A caller loading a different record into the same field never fires a DOM 'input'
       // event; a listener on 'input' alone (the obvious first implementation) would miss it.
-      const w = mount(TextField, { props: { modelValue: 'short', multiline: true, autogrow: true } })
+      const w = mount(TextField, { props: { modelValue: 'short', multiline: true, autogrow: true, maxRows: 100 } })
       const el = w.element as HTMLTextAreaElement
       await w.setProps({ modelValue: 'a completely different, much longer value than before' })
       await nextTick()
       expect(el.style.height).toBe(expectedHeight(el, 480))
+      w.unmount()
+    })
+
+    it('caps growth at maxRows instead of pushing on whatever it sits in forever', async () => {
+      // 480 (the stubbed scrollHeight) would demand far more than 2 rows of height -- this is
+      // exactly the held-Enter-key case the cap exists for. Expect the CEILING, not scrollHeight.
+      const w = mount(TextField, { props: { modelValue: '', multiline: true, autogrow: true, maxRows: 2 } })
+      const el = w.element as HTMLTextAreaElement
+      el.value = 'x'
+      await w.get('textarea').trigger('input')
+      await nextTick()
+      const cs = getComputedStyle(el)
+      const ceiling = parseFloat(cs.lineHeight) * 2 + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
+        + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth)
+      expect(el.style.height).toBe(`${ceiling}px`)
+      expect(ceiling).toBeLessThan(480) // otherwise this test could pass for the wrong reason
+      w.unmount()
+    })
+
+    it('defaults maxRows to 8 rather than requiring every caller to opt in', async () => {
+      // Same ceiling formula as above, just leaning on the prop default instead of passing one.
+      // Async, unlike a first draft of this test: mount-time grow() runs via the modelValue
+      // watcher's OWN nextTick(), so a synchronous assertion right after mount reads
+      // el.style.height before that has resolved -- still '', not yet wrong OR right.
+      const w = mount(TextField, { props: { modelValue: 'x', multiline: true, autogrow: true } })
+      await nextTick()
+      const el = w.element as HTMLTextAreaElement
+      const cs = getComputedStyle(el)
+      const borders = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth)
+      const ceiling = parseFloat(cs.lineHeight) * 8 + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + borders
+      expect(el.style.height).toBe(`${Math.min(480 + borders, ceiling)}px`) // 480 + borders: what grow() targets before any cap
       w.unmount()
     })
   })

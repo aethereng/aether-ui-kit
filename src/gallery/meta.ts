@@ -143,13 +143,15 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Forms',
     blurb: 'Free text, single- or multi-line.',
     detail:
-      'Free text. `multiline` renders a textarea instead, resizable vertically only so it cannot escape its column. Commits on every keystroke.',
+      'Free text. `multiline` renders a textarea instead, resizable vertically only so it cannot escape its column. `autogrow` tracks content instead, live, in place of a fixed `rows`. Commits on every keystroke.',
     props: [
       { name: 'modelValue', type: 'string', note: 'controlled; v-model' },
       { name: 'multiline', type: 'boolean?', note: 'render a textarea instead' },
-      { name: 'rows', type: 'number?', note: 'visible rows when multiline; ignored otherwise' },
+      { name: 'rows', type: 'number?', note: 'visible rows when multiline; ignored once autogrow is on' },
       { name: 'placeholder', type: 'string?' },
       { name: 'disabled', type: 'boolean?' },
+      { name: 'autogrow', type: 'boolean?', note: 'multiline only; height tracks content, live' },
+      { name: 'maxRows', type: 'number?', note: 'autogrow only; caps growth, then scrolls internally — default 8' },
     ],
     emits: [{ name: 'update:modelValue', type: '[value: string]' }],
   },

@@ -170,33 +170,48 @@ const regionId = useId()
   font-size: 12px;
 }
 /* ---- the reveal ---- */
-/* `until-found` and an animated reveal DO coexist, which was not obvious and is worth recording:
-   the region is hidden by an ATTRIBUTE that resolves to `content-visibility: hidden`, and
-   content-visibility is a discrete property, so a plain height transition has nothing to animate.
-   `transition-behavior: allow-discrete` is what makes a discrete property participate — the value
-   flips at the START of an entry transition, so the content is rendered for the whole reveal instead
-   of appearing at the end of it. Verified in Chromium 148: with the attribute removed and the open
-   class added, the browser creates and runs BOTH transitions (content-visibility 300ms and
-   grid-template-rows 300ms), rather than dropping the discrete one.
-   `0fr → 1fr` on a grid row is how the height animates to `auto` without measuring anything in JS.
-   Its cost is the `overflow: hidden` below, which is required for the 0fr row to clip: content that
-   deliberately escapes the panel — a popover, a menu — will be clipped by it. That is the trade, and
-   it is why the rule sits on the body rather than on the region.
-   Behind `prefers-reduced-motion` because the setting is live for real users here, and because the
-   Vuetify transition this replaces was gated the same way. With motion reduced the panel snaps,
-   which is exactly the previous behaviour rather than a degradation. */
+/* This used to be a CSS Grid `0fr -> 1fr` row, which is the usual clever way to animate to an
+   unmeasured `auto` height. Replaced after live testing (not spec-reading) turned up two
+   independent ways it silently failed to open at all -- aria-expanded correct, the --open
+   class correct, the `hidden` attribute correctly removed, and the row still measured as a few
+   px, in a fixed reveal-does-not-happen way that survived a full close/reopen cycle:
+
+     1. `transition-behavior: allow-discrete` on content-visibility (the previous version of
+        this comment blamed only this, and it IS real: content-visibility stayed reported as
+        "hidden" long after the attribute driving it was gone) -- but fixing that alone was not
+        enough on its own.
+     2. The grid row's OWN sizing: even with content-visibility genuinely visible and the body's
+        real height measurable (262px in the case that exposed this), the region's
+        grid-template-rows still computed near-zero. `.aether-disclosure__body` carries
+        `overflow: hidden` for the clip this technique needs, and a grid item with overflow set
+        gets an automatic minimum size of 0 -- which is supposed to bound only how far the item
+        may SHRINK, not its preferred size, but is what this row's `1fr` measured against
+        regardless of an explicit `min-height` override on the body.
+
+   Two failure modes in one already-narrow technique is a pattern, not a coincidence -- the
+   grid-row auto-height trick depends on several still-settling engine behaviours agreeing with
+   each other at once (content-visibility timing, grid track sizing against an overflow:hidden
+   item, `until-found`'s own UA-level styling), and "worked when checked once" was never proof
+   the combination is reliable.
+   `max-height` costs a ceiling that has to be a real number rather than true `auto` -- 2000px,
+   comfortably past any content this component holds today -- and animates slightly faster than
+   ideal for a short panel, since the transition covers the fixed distance to that ceiling
+   rather than the content's actual height. Both are the standard, known trade of this
+   technique, and worth it for something that reliably opens: no grid, no discrete-property
+   transition, nothing for `until-found`'s own styling to race.
+   Behind `prefers-reduced-motion` because the setting is live for real users here, and because
+   the Vuetify transition this replaces was gated the same way. With motion reduced the panel
+   snaps, which is exactly the previous behaviour rather than a degradation. */
 .aether-disclosure__region {
-  display: grid;
-  grid-template-rows: 0fr;
+  max-height: 0;
+  overflow: hidden;
 }
 .aether-disclosure--open .aether-disclosure__region {
-  grid-template-rows: 1fr;
+  max-height: 2000px;
 }
 @media (prefers-reduced-motion: no-preference) {
   .aether-disclosure__region {
-    transition:
-      grid-template-rows 0.22s ease,
-      content-visibility 0.22s allow-discrete;
+    transition: max-height 0.22s ease;
   }
 }
 .aether-disclosure__body {

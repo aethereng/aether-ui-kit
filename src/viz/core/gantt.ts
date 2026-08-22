@@ -19,9 +19,14 @@ export const DENS_H = 36
 // still legible, but closer to "fit the container" than "hold a fixed minimum" for the narrower
 // single-month case specifically -- the quarter view keeps its lower floor (11) since it already
 // has far more days to fit and dividing further isn't a legibility win there.
+// A ceiling only matters on the OTHER end: a short month (October's 20 days) on a wide monitor
+// divides out to 35-40+px/day with nothing to stop it growing further -- days that wide read as
+// wasted space, not as a scrollbar risk (the floor above is what forces those; a max never does,
+// since it only ever pulls the computed width DOWN toward the container, never past it). 48 is
+// generous enough to still look intentional at that width without ballooning further.
 export function computePPD(view: string, scrollWidth: number, ndays: number, monthDays = 31): number {
   if (view === 'all') return Math.max(11, Math.floor((scrollWidth - 4) / ndays))
-  return Math.max(16, Math.floor((scrollWidth - 4) / monthDays))
+  return Math.max(16, Math.min(48, Math.floor((scrollWidth - 4) / monthDays)))
 }
 
 export interface GanttItem {

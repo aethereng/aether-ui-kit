@@ -587,17 +587,23 @@ const anchors = computed(() =>
 .ag-canchor.open .dia {
   background: var(--aether-surface);
 }
-/* Label sits ABOVE the diamond and is left-aligned from the day, as the original has it.
-   Absolute so the anchor stays zero-width on its date — a long title must never drag the
-   diamond off the day it marks — and left-aligned is also why an anchor on day 0 needs no
-   special edge handling: the text runs rightwards into the chart. */
+/* Label sits ABOVE the diamond, centred on it and free to wrap. Absolute + a fixed width so the
+   anchor stays zero-width on its date — a long title must never drag the diamond off the day it
+   marks — centred rather than the earlier left/right-aligned split: that needed a `.flip` past
+   the view's midpoint to stop a long single-line title running off the right edge, and even
+   flipped, a title could still run past whichever edge it was left-aligned toward. Centred +
+   wrapped bounds the footprint to WIDTH regardless of which day it sits on, so both edges are
+   handled the same way without a per-anchor side to compute. */
 .ag-canchor .atxt {
   position: absolute;
   bottom: 40px; /* clears the diamond's rotated box, which reaches ~30px */
-  left: -4px;
-  white-space: nowrap;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 96px;
+  text-align: center;
+  white-space: normal;
   font-size: 10.5px;
-  line-height: 1.35;
+  line-height: 1.3;
   color: var(--aether-ink-soft);
 }
 .ag-canchor .atxt .t {
@@ -680,30 +686,16 @@ const anchors = computed(() =>
  * is the lane colour sitting on a wash of that same colour, so both sides move together — at 0.8,
  * still only 3.8 and 2.8. The lever was never the amount of dimming.
  *
- * So the veil dims the fill and border, and the label sits above it at full strength. The
- * line-through already says "done" on its own; the dimming is reinforcement, and reinforcement is
- * not worth an unreadable label. */
+ * A `::before` veil got the contrast right (0.8 opacity floods the wash, label sits above it) but
+ * cost a stacking context of its own (`position: relative` + a z-index bump on the label) for
+ * something st-risk already does with a single declaration: an INSET box-shadow, which the spec
+ * guarantees paints no further out than the border box, full stop — no separate box, nothing that
+ * can ever read as taller than the row it was assigned. color-mix keeps it a one-liner: no extra
+ * --aether-surface-rgb token just to get 80% of it. */
 .ag-ev.st-done {
-  position: relative;
-}
-.ag-ev.st-done::before {
-  content: '';
-  position: absolute;
-  /* covers the 1.5px border too, so the outline recedes with the fill */
-  inset: -1.5px;
-  border-radius: 7px;
-  background: var(--aether-surface);
-  /* 0.8, because the ceiling here is the LANE COLOUR and not the veil: a label is its lane's hue
-     and --aether-warm is only 4.8:1 against the bare surface, so the wash underneath has to be
-     almost entirely covered before the label reaches the floor. 0.55 left it at 3.6 on the light
-     theme; more veil buys very little after this. */
-  opacity: 0.8;
-  pointer-events: none;
+  box-shadow: inset 0 0 0 40px color-mix(in srgb, var(--aether-surface) 80%, transparent);
 }
 .ag-ev.st-done span {
-  /* above the veil — this is the whole point of the change */
-  position: relative;
-  z-index: 1;
   text-decoration: line-through;
   text-decoration-thickness: 1px;
 }

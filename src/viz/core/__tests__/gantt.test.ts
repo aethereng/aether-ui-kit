@@ -100,9 +100,14 @@ describe('computePPD', () => {
     expect(computePPD('all', 40, 60)).toBe(11)
   })
 
-  it('zooms to a fixed ~month window when a single month is selected', () => {
-    // month view ignores ndays: it fits ~33 days, with a 26px/day floor
-    expect(computePPD('8', 40, 60)).toBe(26)
-    expect(computePPD('8', 1324, 60)).toBe(40)
+  it('fits the SELECTED MONTH\'s own day count in month view, not a flat 33', () => {
+    // 1324px of usable width across a real 30-day month -> 44px/day, not 40
+    expect(computePPD('9', 1324, 60, 30)).toBe(44)
+    // a 31-day month over the same width divides differently again
+    expect(computePPD('8', 1324, 60, 31)).toBe(42)
+  })
+
+  it('holds a lower floor in month view than the old fixed one, so a real month is less likely to force a scrollbar', () => {
+    expect(computePPD('8', 40, 60, 31)).toBe(16)
   })
 })

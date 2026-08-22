@@ -10,10 +10,18 @@ export const LANE_PAD = 10
 export const LANE_MIN = 54
 export const DENS_H = 36
 
-// pixels-per-day; recomputed from the scroll container width (computePPD, source 755-760)
-export function computePPD(view: string, scrollWidth: number, ndays: number): number {
+// pixels-per-day; recomputed from the scroll container width (computePPD, source 755-760).
+// A single month used to divide by a flat 33 regardless of how many days it actually has (28-31),
+// AND held a much higher floor (26px) than "all" (11px) -- so a real month, in a container sized
+// for the quarter, would compute a width that needs the floor, and the floor alone was often
+// enough to overflow a narrower container into a scrollbar a single month has no real need for.
+// monthDays is the CURRENT month's actual day count (its own MONTHS[i].n); the floor drops to 16,
+// still legible, but closer to "fit the container" than "hold a fixed minimum" for the narrower
+// single-month case specifically -- the quarter view keeps its lower floor (11) since it already
+// has far more days to fit and dividing further isn't a legibility win there.
+export function computePPD(view: string, scrollWidth: number, ndays: number, monthDays = 31): number {
   if (view === 'all') return Math.max(11, Math.floor((scrollWidth - 4) / ndays))
-  return Math.max(26, Math.floor((scrollWidth - 4) / 33))
+  return Math.max(16, Math.floor((scrollWidth - 4) / monthDays))
 }
 
 export interface GanttItem {

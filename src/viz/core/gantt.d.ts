@@ -3,7 +3,7 @@ export declare const LANE_ROW = 34;
 export declare const LANE_PAD = 10;
 export declare const LANE_MIN = 54;
 export declare const DENS_H = 36;
-export declare function computePPD(view: string, scrollWidth: number, ndays: number): number;
+export declare function computePPD(view: string, scrollWidth: number, ndays: number, monthDays?: number): number;
 export interface GanttItem {
     id: string;
     start: number;

@@ -22,7 +22,9 @@ import SegExampleSrc from './examples/SegExample.vue?raw'
 import ChipExample from './examples/ChipExample.vue'
 import ChipExampleSrc from './examples/ChipExample.vue?raw'
 import BadgeExample from './examples/BadgeExample.vue'
+import CalloutExample from './examples/CalloutExample.vue'
 import BadgeExampleSrc from './examples/BadgeExample.vue?raw'
+import CalloutExampleSrc from './examples/CalloutExample.vue?raw'
 import CardExample from './examples/CardExample.vue'
 import CardExampleSrc from './examples/CardExample.vue?raw'
 import DateFieldExample from './examples/DateFieldExample.vue'
@@ -321,6 +323,10 @@ function setGroup(g: Group, open: boolean) {
 
         <GSection v-else-if="c.id === 'badge'" :meta="c" :source="BadgeExampleSrc">
           <BadgeExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'callout'" :meta="c" :source="CalloutExampleSrc">
+          <CalloutExample />
         </GSection>
 
         <GSection v-else-if="c.id === 'switch'" :meta="c" :source="SwitchExampleSrc">

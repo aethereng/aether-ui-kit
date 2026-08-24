@@ -34,6 +34,35 @@
      "this passed" and "this is selected" the same pixels, which is the bug that made Transport
      stop telling two host apps apart. */
   --aether-ok: #3f6b3a;
+  /* SEMANTIC TONES — what a colour MEANS, as opposed to which colour it is.
+     Everything above is a hue: warm, rose, ok, cool. The kit has shipped those since the start and
+     has never said what any of them stands for, so every consumer needing to render "this failed"
+     picked a hue itself and the library standardised structure while leaving meaning unshared. For
+     a firm whose product is verification verdicts, that is the wrong thing to leave to each app.
+
+     Named to match Badge's EXISTING prop union — success / warning / danger — rather than
+     error/warn/info. Two names for one tone is the condition being fixed, not a detail; a kit that
+     says `danger` in one component and `error` in another has standardised nothing. `info` is the
+     one addition, because nothing in the kit meant "a note" and a callout needs it.
+
+     ALIASES, not new colours. A host that re-themes --aether-rose moves the danger tone with it and
+     needs to know nothing about tones; a host that wants danger to be something other than its rose
+     overrides the tone alone. Both themes come free, because the hues already invert.
+
+     The washes are derived with color-mix rather than written per theme, so a re-themed hue carries
+     its own wash. No static fallback beneath it: the kit's own contract test forbids declaring a
+     property twice for one selector, and that guard is right — a duplicate is far more often a
+     mistake than a deliberate cascade. color-mix has been in every browser this kit supports since
+     2023, so the fallback would buy nothing and cost an exemption. --aether-rose-wash and --aether-cool-wash keep their hand-written values (a host
+     may already set them) and the two hues that never had one get a derived default. */
+  --aether-tone-danger: var(--aether-rose);
+  --aether-tone-danger-wash: var(--aether-rose-wash);
+  --aether-tone-warning: var(--aether-warm);
+  --aether-tone-warning-wash: color-mix(in srgb, var(--aether-warm) 12%, transparent);
+  --aether-tone-info: var(--aether-cool);
+  --aether-tone-info-wash: var(--aether-cool-wash);
+  --aether-tone-success: var(--aether-ok);
+  --aether-tone-success-wash: color-mix(in srgb, var(--aether-ok) 12%, transparent);
   --aether-cool: #2f6f6b;
   --aether-cool-soft: #5fa4a0;
   --aether-cool-wash: rgba(95, 164, 160, 0.15);

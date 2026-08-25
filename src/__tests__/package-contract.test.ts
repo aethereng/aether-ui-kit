@@ -36,22 +36,33 @@ describe('exports map', () => {
     expect(entries.length).toBeGreaterThan(0)
   })
 
-  it.each(entries)('%s resolves to a file that exists', (subpath, conditions) => {
+  /* SCOPE, stated because the previous version of this block overstated it twice.
+   *
+   * This assertion checks the WORKSPACE and nothing else. Every target exists here by
+   * construction, so passing it means only that the exports map has no typo -- it says nothing
+   * about whether a consumer receives the file. Named accordingly.
+   *
+   * The assertion that sat below it, "ships every exported file inside the published files
+   * globs", is GONE rather than fixed, and it is worth saying why. Its predicate filtered out
+   * the negation patterns -- the only globs in `files` that can exclude anything -- and then
+   * reduced each survivor to its first path segment, leaving `rel.startsWith('src')`. It
+   * returned true for a __tests__ file, for a *.test.ts, and for a path not under src at all.
+   * Measured 2026-08-25: with a subpath added pointing at a file the tarball does not contain,
+   * all 91 tests in this file passed.
+   *
+   * Not replaced with a better predicate, because re-deriving npm's glob semantics by hand is
+   * what produced the broken one. The only honest way to ask "is this file in the tarball" is to
+   * pack and look, which is too slow for a unit test -- so the property moved to
+   * scripts/check-exports.mjs (npm run check:exports), which packs, extracts, compares the
+   * clean-clone tree a git dependency actually installs, and builds all 32 subpaths through the
+   * installed package's own exports map. It runs nightly.
+   *
+   * An inert assertion beside a live one is worse than no assertion: it spends the credibility
+   * the live one earned. */
+  it.each(entries)('%s resolves in the workspace (a typo check, NOT a ship check)', (subpath, conditions) => {
     for (const [condition, target] of Object.entries(conditions)) {
       const abs = resolve(root, target)
       expect(existsSync(abs), `${subpath} [${condition}] -> ${target} does not exist`).toBe(true)
-    }
-  })
-
-  it('ships every exported file inside the published "files" globs', () => {
-    // exports pointing outside `files` resolve locally and 404 once published
-    const globs: string[] = pkg.files
-    for (const [subpath, conditions] of entries) {
-      for (const target of Object.values(conditions)) {
-        const rel = target.replace(/^\.\//, '')
-        const covered = globs.some((g) => !g.startsWith('!') && rel.startsWith(g.replace(/\/.*$/, '')))
-        expect(covered, `${subpath} -> ${target} is not covered by "files"`).toBe(true)
-      }
     }
   })
 

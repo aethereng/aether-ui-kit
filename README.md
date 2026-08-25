@@ -71,7 +71,18 @@ out to be wrong, the next patch tag supersedes it. That is the guarantee your lo
 the commit it resolved keeps meaning what it meant. (v0.9.0 was moved once, on 2026-08-15, before
 this was written down. v0.9.1 is the same tree under a name that has not moved.)
 
-The package ships raw `.vue` and `.ts` — your bundler compiles it, same as any source dependency. With Vite, keep it out of the pre-bundler so the Vue plugin sees it:
+The package ships raw `.vue` and `.ts` — your bundler compiles it, same as any source dependency.
+
+**A bundler is required, and that is a decision rather than an accident** (Platform, 2026-08-25).
+There is deliberately no Node-importable entry point: no `main`, and all 32 `exports` subpaths
+point at `.vue`, `.ts` or `.css`, none of which Node can load. `require('@aether/ui-kit')` will not
+work and is not meant to. `scripts/check-exports.mjs` holds the decision rather than leaving it as
+folklore — it resolves and builds every subpath through a real Vite build against the packed
+tarball, and it *fails* on a subpath pointing at a `.js` file rather than letting it inherit the
+exemption from the `.vue` targets beside it. Such a target is one a consumer could reasonably
+`require()`, with nothing having ever executed this package under Node.
+
+With Vite, keep it out of the pre-bundler so the Vue plugin sees it:
 
 ```ts
 // vite.config.ts

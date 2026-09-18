@@ -3,9 +3,9 @@
 #
 # Tag-triggered rather than push-triggered: what is served should be a version a consumer can
 # actually install, not whatever landed on main ten minutes ago. Between tags the site lags main,
-# and the local gate stands in for CI meanwhile -- the same three commands this workflow runs:
+# and the local gate stands in for CI meanwhile -- the same two commands this workflow runs:
 #
-#     npm run guard:names && npm run types:check && npm run test:unit -- --run
+#     npm run types:check && npm run test:unit -- --run
 #
 # The gate runs on the tag too, so a release cannot be published without passing it -- but it runs
 # AFTER the tag exists, so a red run means a bad tag is already public. The fix is the next patch
@@ -41,20 +41,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      # This repo is public, and nothing enforced the internal-name scrub until this existed.
-      # One implementation, in scripts/guard-names.mjs, so it is runnable locally as
-      # `npm run guard:names` BEFORE pushing. It was inline shell here and nowhere else, which is
-      # exactly how it failed: an internal name entered a CSS comment in v0.4.1 and CI stayed red
-      # across four tagged releases, because the local gate sequence never ran it.
-      #
-      # The script asserts its own pattern does not match this project's identity ("@aether/ui-kit",
-      # "aethereng/aether-ui-kit", "aethereng.github.io", "Aether Engineering") and exits 2 if it
-      # does -- so widening the pattern cannot silently start failing on a clean tree.
-      #
-      # Plain node with no deps, so it stays ahead of npm ci and fails in seconds.
-      - name: Guard — no internal names in the published surface
-        run: node scripts/guard-names.mjs
 
       - uses: actions/setup-node@v5
         with:

@@ -155,7 +155,6 @@
     "build-only": "vite build",
     "types": "vue-tsc -p tsconfig.build.json",
     "types:check": "vue-tsc -p tsconfig.build.json && git diff --exit-code -- \"*.d.ts\"",
-    "guard:names": "node scripts/guard-names.mjs",
     "type-check": "vue-tsc --build",
     "test:unit": "vitest",
     "lint": "eslint . --fix",

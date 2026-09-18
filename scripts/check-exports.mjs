@@ -3,11 +3,10 @@
  *
  * WHY THIS EXISTS. `@aether/ui-kit` is public, `type: module`, has no `main`, and declares 32
  * exports subpaths over 64 condition targets. That is the same manifest shape as the two quintus
- * packages that shipped unimportable — except this one is already published and already consumed,
- * by aether-os and quintus, as a tag-pinned git dependency. Nothing verified that any of those 64
- * targets reaches an installed copy. It is decision-log policy that a published package is
- * verified by executing what a consumer receives; the kit was the package where that had never
- * been done.
+ * packages that shipped unimportable — except this one is already published and already consumed
+ * as a tag-pinned git dependency. Nothing verified that any of those 64 targets reaches an
+ * installed copy. A published package is verified by executing what a consumer receives; the
+ * kit was the package where that had never been done.
  *
  * WHAT WAS ALREADY THERE, AND WHY IT COULD NOT CATCH THIS. `src/__tests__/package-contract.test.ts`
  * has an assertion named "ships every exported file inside the published `files` globs". Its

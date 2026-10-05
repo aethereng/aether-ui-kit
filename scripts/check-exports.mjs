@@ -52,7 +52,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const NL = String.fromCharCode(10)  // no escape to lose (cascade 3.0)
+const NL = String.fromCharCode(10)  // a char code, so no backslash escape can be lost
 
 const CLEAN = 0
 const BLOCKING = 1
@@ -88,7 +88,7 @@ function sh(cmd, args, cwd, quiet = true) {
 }
 
 /** Every file under `dir`, as POSIX-relative paths. `sep` rather than a literal backslash: a
- *  backslash in a string is one more escape to lose, and cascade §3.0 is about exactly that. */
+ *  backslash in a string is one more escape to lose. */
 function walk(dir, base = dir, out = []) {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name)
@@ -145,10 +145,9 @@ async function main() {
     }
 
     // --- RUNTIME: the bundler-only decision, checked rather than assumed ---
-    // RULED 2026-08-25, Platform, as owner of this package: @aether/ui-kit is BUNDLER-ONLY. It is
-    // not a preference, it is what the manifest already is -- 27 of the 32 import targets are
-    // .vue, 4 are .ts and 1 is .css, and Node can import none of those. That is why quintus's
-    // "import it under Node" gate does not port, and why the dynamic half above is a Vite build.
+    // @aether/ui-kit is BUNDLER-ONLY. Its import targets are .vue, .ts and .css sources
+    // (BUNDLER_EXT below), and Node can import none of those. That is why quintus's "import it
+    // under Node" gate does not port, and why the dynamic half above is a Vite build.
     //
     // Recorded here as well as in README.md so it cannot decay into folklore. If someone adds a
     // .js or .mjs subpath, the bundler-only premise no longer covers the package -- a consumer

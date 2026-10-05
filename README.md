@@ -73,7 +73,7 @@ this was written down. v0.9.1 is the same tree under a name that has not moved.)
 
 The package ships raw `.vue` and `.ts` — your bundler compiles it, same as any source dependency.
 
-**A bundler is required, and that is a decision rather than an accident** (Platform, 2026-08-25).
+**A bundler is required.**
 There is deliberately no Node-importable entry point: no `main`, and all 32 `exports` subpaths
 point at `.vue`, `.ts` or `.css`, none of which Node can load. `require('@aether/ui-kit')` will not
 work and is not meant to. `scripts/check-exports.mjs` holds the decision rather than leaving it as

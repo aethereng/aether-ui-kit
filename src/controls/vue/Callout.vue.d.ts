@@ -2,7 +2,7 @@ type Tone = 'info' | 'success' | 'warning' | 'danger';
 type __VLS_Props = {
     /** info is the default and the quiet one; danger and warning are meant to stop you. */
     tone?: Tone;
-    /** Optional heading. The body reads as prose without one. */
+    /** Optional heading. Without one the body reads as plain text. */
     title?: string;
     /**
      * Promote to a live region, for a callout that appears in response to an action rather than

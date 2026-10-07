@@ -325,7 +325,7 @@ const tabs = computed<SegOption<Tab>[]>(() => {
   white-space: pre;
   margin: 0;
   /* `normal` gave 16px at 12px type — a 1.33 ratio, which is fine for the single line this block
-     used to be and cramped the moment it became several. Code needs more leading than prose, not
+     used to be and cramped the moment it became several. Code needs more leading than body text, not
      less: the eye tracks a line by its indentation, and stacked import paths are near-identical
      strings that have to be told apart at a glance. */
   line-height: 1.7;

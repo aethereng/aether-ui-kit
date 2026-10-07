@@ -40,7 +40,7 @@ const checks: { verdict: Verdict; title: string; note: string }[] = [
       {{ c.note }}
     </Callout>
 
-    <!-- The reason this is not a Toast. It stays, it prints, and it holds prose rather than a
+    <!-- The reason this is not a Toast. It stays, it prints, and it holds a paragraph rather than a
          line of text. -->
     <Callout tone="warning" title="Withheld from published coverage">
       <p>

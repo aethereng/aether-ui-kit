@@ -257,7 +257,7 @@ export const COMPONENTS: CompMeta[] = [
     name: 'Callout',
     subpath: '@aether/ui-kit/controls/callout',
     group: 'Controls',
-    blurb: 'Persistent, printable block of prose in four semantic tones.',
+    blurb: 'Persistent, printable block of text in four semantic tones.',
     detail:
       "A block that says \"this one is different, and here is how\". It sits in the document flow, stays, and prints — the opposite of Toast on every axis. Every callout carries its severity as visually-hidden TEXT, so a failure and a note differ in the accessibility tree and in a greyscale print, not only in hue: that is the part a Card cannot substitute for. `role=\"note\"` at rest, because a report renders several on first paint and announcing each assertively would make it unreadable; `live` promotes it for a callout that appears in response to something.",
     props: [
@@ -266,7 +266,11 @@ export const COMPONENTS: CompMeta[] = [
         type: "'info' | 'success' | 'warning' | 'danger'?",
         note: "default 'info'; matches Badge's vocabulary — one name per tone across the kit",
       },
-      { name: 'title', type: 'string?', note: 'optional heading; body reads as prose without one' },
+      {
+        name: 'title',
+        type: 'string?',
+        note: 'optional heading; without one the body reads as plain text',
+      },
       {
         name: 'live',
         type: 'boolean?',

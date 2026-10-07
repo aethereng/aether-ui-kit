@@ -215,7 +215,7 @@ describe('the checks above have teeth', () => {
   it('the theme parser reads real CSS, not the documentation snippet', () => {
     /* App.vue contains two `:root` blocks. The first is the example showing a host how to remap
      * tokens — `--aether-surface: var(--my-surface)` — and reading it made every token look absent.
-     * A value that is a `var(--my-…)` here means the parser has drifted back onto the prose. */
+     * A value that is a `var(--my-…)` here means the parser has drifted back onto the snippet. */
     const light = THEMES['gallery light']
     expect(light['--aether-surface']).toMatch(/^#[0-9a-f]{6}$/i)
     expect(Object.values(light).join(' ')).not.toContain('var(--my-')

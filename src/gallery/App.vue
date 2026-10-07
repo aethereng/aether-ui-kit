@@ -989,7 +989,7 @@ body {
    captions of 129-493px, so the caption set the block width and consecutive buttons ended up
    separated by the length of the previous label -- read as gaps in a row of buttons, which is
    exactly what it was. A tile gives every block the same width, wraps the caption inside it, and
-   lets the controls pack left on a grid instead of drifting with the prose.
+   lets the controls pack left on a grid instead of drifting with the caption.
    `align-self: stretch` overrides .g-demo's `align-items: center` for these only, so a tile fills
    its row's height and the caption below can take the slack. */
 .g-ex--tile,
@@ -1054,14 +1054,14 @@ body {
   color: var(--aether-ink-soft);
 }
 
-/* Prose inside a demo. Nothing styled a bare <p> here, so it fell all the way to the UA default --
+/* Text inside a demo. Nothing styled a bare <p> here, so it fell all the way to the UA default --
    16px with `line-height: normal` and 1em margins -- on a page whose largest body text is 14px. The
    unset line-height is what made it read as a different TYPEFACE rather than merely a larger one.
    `:not([class])` deliberately: `.g-hint` is also a <p> inside .g-demo and sets its own smaller
    size, and a bare `.g-demo p` would be (0,1,1) and quietly outrank it. A scoped example's
-   `data-v-*` is an attribute, not a class, so scoped prose still matches.
+   `data-v-*` is an attribute, not a class, so a scoped example's paragraphs still match.
    Selecting the element rather than a class an example must add keeps example files
-   copy-pasteable, and makes any future demo with prose right without touching it. */
+   copy-pasteable, and makes any future demo with paragraph text right without touching it. */
 .g-demo p:not([class]) {
   margin: 0 0 8px;
   font-size: 13.5px;

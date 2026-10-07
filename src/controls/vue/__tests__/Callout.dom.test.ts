@@ -68,7 +68,7 @@ describe('Callout', () => {
   })
 
   it('is not interactive', () => {
-    /* Same boundary Badge holds. A persistent block of prose exposed as operable lands in the tab
+    /* Same boundary Badge holds. A persistent block of text exposed as operable lands in the tab
      * order and does nothing when activated. */
     const w = mount(Callout, { props: { tone: 'danger' }, slots: { default: 'body' } })
     expect(w.find('button').exists()).toBe(false)

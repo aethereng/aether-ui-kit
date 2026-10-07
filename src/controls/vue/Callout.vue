@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* A persistent, toned block of prose: a severity, an optional title, and a body.
+/* A persistent, toned block of running text: a severity, an optional title, and a body.
  *
  * WHY NOT A CARD. A Card is a neutral surface that says nothing about what it holds. A Callout's
  * whole job is to say "this one is different, and here is how" — which is a claim about meaning,
@@ -32,7 +32,7 @@ withDefaults(
   defineProps<{
     /** info is the default and the quiet one; danger and warning are meant to stop you. */
     tone?: Tone
-    /** Optional heading. The body reads as prose without one. */
+    /** Optional heading. Without one the body reads as plain text. */
     title?: string
     /**
      * Promote to a live region, for a callout that appears in response to an action rather than
@@ -87,7 +87,7 @@ const SEVERITY: Record<Tone, string> = {
   color: var(--aether-ink);
 }
 
-/* Body text stays --aether-ink rather than the tone. Tinting prose to the severity is what drove
+/* Body text stays --aether-ink rather than the tone. Tinting it to the severity is what drove
    --aether-warm-ink into existence: --aether-warm on --aether-panel measures 3.83, under the 4.5
    floor for small text, and a host that inverts the hue for a dark theme moves the ratio again.
    Only the title and the border carry the tone, and the title is large enough for the 3:1 rule. */

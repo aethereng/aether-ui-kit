@@ -30,7 +30,7 @@ describe('ForceLayout', () => {
   })
 
   it('mutates the node objects it was given, so a caller can share them', () => {
-    // both real consumers rely on this — the layout is not a black box that
+    // both real consumers rely on this: the layout is not a black box that
     // hands back copies, it owns the array you passed it
     const ns = nodes()
     const l = new ForceLayout(ns, edges, { dims: 3 })
@@ -122,7 +122,7 @@ describe('ForceLayout', () => {
     })
 
     it('drags the neighbourhood along: connected nodes move TOWARD a pinned node', () => {
-      // the behaviour the gallery was missing — a drag that moves one node and nothing else
+      // the behaviour the gallery was missing: a drag that moves one node and nothing else
       // reads as "the graph has no forces"
       const l = new ForceLayout(nodes(), edges, { dims: 3 })
       l.pin('a', [600, 600, 0])
@@ -140,7 +140,7 @@ describe('ForceLayout', () => {
       const d = l.nodes.find((n) => n.id === 'd')!
       const before = Math.hypot(d.pos[0]! - 600, d.pos[1]! - 600)
       for (let i = 0; i < 40; i++) l.step()
-      // 'd' has no edge to 'a' — repulsion should push it away, never pull it in
+      // 'd' has no edge to 'a'; repulsion should push it away, never pull it in
       expect(Math.hypot(d.pos[0]! - 600, d.pos[1]! - 600)).toBeGreaterThan(before * 0.9)
     })
 
@@ -192,7 +192,7 @@ describe('ForceLayout', () => {
     })
 
     it('keeps a disconnected graph bounded', () => {
-      // no edges at all — the case that made the previous version expand without limit
+      // no edges at all: the case that made the previous version expand without limit
       const loose: GNode[] = Array.from({ length: 12 }, (_, i) => ({
         id: 'n' + i,
         pos: [(i % 4) * 60 - 90, Math.floor(i / 4) * 60 - 60, 0],

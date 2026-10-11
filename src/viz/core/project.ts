@@ -3,7 +3,7 @@
 import type { Projection, Vec } from './types'
 
 // Orthographic 2D: first two axes are x/y. Extra axes are ignored for position
-// (the caller maps them via projected.depth / t / d — e.g. color a node by its
+// (the caller maps them via projected.depth / t / d: e.g. color a node by its
 // construction-sequence value). This is the plain 2-D graph view today.
 export const ortho2d: Projection = {
   name: 'ortho2d',
@@ -13,7 +13,7 @@ export const ortho2d: Projection = {
 }
 
 // Isometric 3D: axes 0,1,2 -> screen via a 30° isometric transform; depth = z
-// (radius/opacity in 2D, true depth under a GL renderer). Stub for the 3D path —
+// (radius/opacity in 2D, true depth under a GL renderer). Stub for the 3D path:
 // the math is here so the core already speaks 3D; only the *drawing* differs later.
 export const iso3d: Projection = {
   name: 'iso3d',
@@ -31,7 +31,7 @@ export const iso3d: Projection = {
  *
  * Graph2D scales world coordinates to fill its box: cx = pad + (x - minX) * s. A caller
  * handling `drag` receives VIEWPORT coordinates and, in controlled mode, has to write world
- * coordinates back — so it needs the inverse. Leaving that arithmetic for each consumer to
+ * coordinates back; so it needs the inverse. Leaving that arithmetic for each consumer to
  * rediscover produced exactly the bug you would expect: a fixed offset instead of the real
  * inverse, and a node that teleported ~100px on a 7px drag. One implementation, both
  * directions, tested. */

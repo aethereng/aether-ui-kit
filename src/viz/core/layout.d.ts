@@ -11,7 +11,7 @@ export declare class ForceLayout {
     alpha(): number;
     /** Re-heat. Call on a drag so the neighbourhood relaxes around the moved node. */
     reheat(to?: number): void;
-    /** True while the sim is still worth stepping — drive your rAF loop off this. */
+    /** True while the sim is still worth stepping; drive your rAF loop off this. */
     get running(): boolean;
     /** Hold a node in place: forces still propagate FROM it, but nothing moves it. */
     pin(id: string, pos?: number[]): void;

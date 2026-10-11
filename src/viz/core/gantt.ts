@@ -1,4 +1,4 @@
-// Gantt layout math — generic, framework-free, no date dependencies.
+// Gantt layout math: generic, framework-free, no date dependencies.
 // Operates on DAY-INDICES (numbers), not dates: the caller maps dates→index via its own
 // domain helpers. Extracted from a working timeline surface's chart code; the only
 // change on the way out was generics:
@@ -59,7 +59,7 @@ export interface LaneLayout {
   /** Stacking row per span id. Returned as data rather than stamped onto the caller's
    *  objects: this function must not mutate its input. A consumer may hand us a deep
    *  reactive array (the gallery does), and writing to it from inside the computed that
-   *  reads it is a write-during-read — currently idempotent, but it stops being so the
+   *  reads it is a write-during-read: currently idempotent, but it stops being so the
    *  moment a drag changes rows mid-gesture. */
   rowOf: Record<string, number>
 }
@@ -123,7 +123,7 @@ export function laneLayout(
   return lanes
 }
 
-// Total pixel height of all lanes (plus spine) — used to size the inner container.
+// Total pixel height of all lanes (plus spine); used to size the inner container.
 export function lanesHeight(lanes: Record<string, LaneLayout>): number {
   let h = 0
   for (const t of Object.keys(lanes)) {

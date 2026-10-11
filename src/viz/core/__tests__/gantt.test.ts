@@ -17,7 +17,7 @@ describe('laneLayout', () => {
   it('does not mutate the items it is given', () => {
     // The regression this guards: laneLayout used to stamp `_row` onto the caller's own
     // objects. A consumer may pass deep-reactive state (the gallery does) and call this
-    // from inside a computed that also reads it — a write-during-read that only stays
+    // from inside a computed that also reads it: a write-during-read that only stays
     // benign while rows never change mid-gesture. Drag makes them change.
     const items = [
       item({ id: 'a', start: 0, end: 5 }),

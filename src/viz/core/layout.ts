@@ -1,5 +1,5 @@
 // Dimension-agnostic force layout. Operates on number[] positions so it is blind
-// to 2D vs 3D vs 4D — adding axes is data, not code. O(n^2) repulsion; fine to
+// to 2D vs 3D vs 4D: adding axes is data, not code. O(n^2) repulsion; fine to
 // ~1k nodes. The GL/3D+ path later swaps the *renderer*, not this engine.
 import type { GNode, GEdge, LayoutOptions } from './types'
 
@@ -31,7 +31,7 @@ export class ForceLayout {
     this.edges = edges
     /* Defaults are the reference implementation's, measured rather than guessed. The port had
      * drifted to repulsion 9000 / spring 0.03 / rest 120 with one sub-step, no range cutoff
-     * and no centring — roughly 3.5x the effective repulsion with nothing holding the cloud
+     * and no centring: roughly 3.5x the effective repulsion with nothing holding the cloud
      * together, which settles looser and, with disconnected nodes, never settles at all. */
     this.opts = {
       dims: opts.dims,
@@ -64,7 +64,7 @@ export class ForceLayout {
     this.alphaValue = Math.max(this.alphaValue, to)
   }
 
-  /** True while the sim is still worth stepping — drive your rAF loop off this. */
+  /** True while the sim is still worth stepping; drive your rAF loop off this. */
   get running(): boolean {
     return this.alphaValue > 0.02
   }
@@ -103,7 +103,7 @@ export class ForceLayout {
      * and integrates once at the end. Damping per sub-step instead would bleed off most of
      * the force before it ever moved anything. */
     for (let s = 0; s < substeps; s++) {
-      // repulsion — short range, so a distant component stops pushing entirely
+      // repulsion: short range, so a distant component stops pushing entirely
       for (let i = 0; i < this.nodes.length; i++) {
         const a = this.nodes[i]!
         const va = this.vel.get(a.id)!

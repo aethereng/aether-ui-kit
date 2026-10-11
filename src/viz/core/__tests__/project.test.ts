@@ -33,7 +33,7 @@ describe('fitToViewport / unproject', () => {
   })
 
   it('survives a degenerate span without dividing by zero', () => {
-    // every node on one line — spanY is 0
+    // every node on one line: spanY is 0
     const f = fitToViewport([{ x: 0, y: 5 }, { x: 10, y: 5 }], 560, 360)
     expect(Number.isFinite(f.s)).toBe(true)
     expect(Number.isFinite(unproject(100, 100, f).x)).toBe(true)

@@ -32,7 +32,7 @@ export interface LaneLayout {
     /** Stacking row per span id. Returned as data rather than stamped onto the caller's
      *  objects: this function must not mutate its input. A consumer may hand us a deep
      *  reactive array (the gallery does), and writing to it from inside the computed that
-     *  reads it is a write-during-read — currently idempotent, but it stops being so the
+     *  reads it is a write-during-read: currently idempotent, but it stops being so the
      *  moment a drag changes rows mid-gesture. */
     rowOf: Record<string, number>;
 }

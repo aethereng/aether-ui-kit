@@ -8,7 +8,7 @@ import pkg from './package.json' with { type: 'json' }
 // vue-tsc --build); the gallery app lives under src/gallery/.
 export default defineConfig({
   // The hero used to hard-code "v0.1.0" two lines under a paragraph about stats being
-  // "derived, never hand-counted" — and it was wrong by the time anyone read it.
+  // "derived, never hand-counted"; and it was wrong by the time anyone read it.
   define: { __KIT_VERSION__: JSON.stringify(pkg.version) },
   plugins: [vue()],
   resolve: {

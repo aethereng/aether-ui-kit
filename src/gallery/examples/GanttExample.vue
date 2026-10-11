@@ -25,7 +25,7 @@ const items = ref<GanttItem[]>([
    than darker. Mixing against `transparent` keeps a wash at a fixed alpha of whatever the hue
    currently is, so both themes get it right from one line. */
 const wash = (token: string) => `color-mix(in srgb, var(${token}) 18%, transparent)`
-/* A lane's `color` is TEXT — the lane name and every bar label — so it has to clear a contrast
+/* A lane's `color` is TEXT (the lane name and every bar label); so it has to clear a contrast
    floor, which a soft accent does not. `--aether-cool-soft` measured 2.7:1 on the light surface
    here against 10.7 on the dark one: a token meant for fills, invisible as type in exactly one of
    the two themes. `--aether-cool` is 5.5 and 8.8. */
@@ -100,7 +100,7 @@ function onResize(id: string, edge: 'l' | 'r', value: number) {
 function onNewAt(day: number, type: string) {
   items.value.push({ id: 'n' + day + type, start: day, type, status: 'open', title: 'New ' + type })
 }
-/* expandDay emits an OBJECT — { t, i } — not a day number. */
+/* expandDay emits an OBJECT ({ t, i }) and not a day number. */
 function onExpandDay(day: { t: string; i: number } | null) {
   expanded.value = day ? day.t + ' day ' + day.i : '—'
 }

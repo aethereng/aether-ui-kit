@@ -15,7 +15,7 @@ const zoomLabel = (pos: number) => {
   const f = factor(pos)
   return f < 1 ? `×${f.toFixed(2)}` : f < 10 ? `×${f.toFixed(1)}` : `×${Math.round(f)}`
 }
-/* ×1 lands at position 43 on this curve — not the middle, and nothing about the track says so.
+/* ×1 lands at position 43 on this curve (not the middle), and nothing about the track says so.
    That is the case for `ticks`: on a non-linear scale the meaningful value sits somewhere
    arbitrary, and a mark is what puts it back within reach. */
 const zoomTicks: SliderTick[] = [{ value: 43, label: '×1' }]

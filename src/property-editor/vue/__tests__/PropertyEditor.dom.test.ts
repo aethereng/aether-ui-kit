@@ -5,7 +5,7 @@ import type { FieldDescriptor, FieldValues } from '../../core/types'
 
 /* Covers the two affordances added for a consumer that mapped its whole form surface against this
  * component: a swatch beside a label, and a range field. The range's no-rounding behaviour is the
- * one worth pinning — it is the exact way the library this replaces gets it wrong. */
+ * one worth pinning: it is the exact way the library this replaces gets it wrong. */
 
 function mountEditor(
   fields: FieldDescriptor[],
@@ -73,7 +73,7 @@ describe('PropertyEditor — labelPlacement', () => {
 
   it('changes NOTHING else in the DOM', () => {
     /* THE test, and the reason the label is positioned rather than wrapped in a new element: a
-     * host writing overrides against this structure — and one does — must not have them stop
+     * host writing overrides against this structure (and one does) must not have them stop
      * matching because a form asked for a different label position. If this ever fails, the
      * placement has grown a structural cost it is not supposed to have. */
     const above = mountEditor(fields, values)
@@ -108,7 +108,7 @@ describe('PropertyEditor — range', () => {
   })
 
   it('does NOT write a corrected value back for a value off the step grid', () => {
-    /* THE test. 0.37 is not on a 0.05 grid, so the native thumb sits at the nearest valid stop —
+    /* THE test. 0.37 is not on a 0.05 grid, so the native thumb sits at the nearest valid stop;
      * and a component that read `.value` back on render would silently rewrite the caller's data
      * to 0.35 for a field the user never touched. That is the documented failure of the slider
      * this replaces. Mounting alone must emit nothing. */

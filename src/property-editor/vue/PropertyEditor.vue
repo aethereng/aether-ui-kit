@@ -9,7 +9,7 @@ import type { FieldDescriptor, FieldValues } from '../core/types'
 import DateField from '../../controls/vue/DateField.vue'
 /* This component composes the kit's standalone controls rather than hand-rolling raw inputs. It
    used to render `<input>`/`<select>`/`<textarea>` directly with the styling keyed to
-   `.aether-property-editor__field`, which meant the controls existed only inside a form — a
+   `.aether-property-editor__field`, which meant the controls existed only inside a form: a
    consumer with one standalone toggle could not reach them. The engine below is what this
    component is actually for; the widgets are now shared. */
 import Switch from '../../controls/vue/Switch.vue'
@@ -89,7 +89,7 @@ function onFieldInput(key: string, value: unknown) {
    never form logic; it is what typing a number means. */
 
 /* The enum button group's roving tabindex and arrow handling moved to RadioGroup.vue with the
-   control itself — this file composes it now, exactly as it composes Switch and Select, and keeps
+   control itself; this file composes it now, exactly as it composes Switch and Select, and keeps
    only the descriptor-to-control dispatch that is genuinely form-specific. */
 
 const hasErrors = computed(() => Object.keys(errors).length > 0)
@@ -193,7 +193,7 @@ defineExpose({ isValid: () => !hasErrors.value, getValues: () => engine.getValue
            keyboard user got three tab stops instead of one control to arrow inside.
 
            Deliberately NOT Seg, which looks identical. Seg is role="tablist" with role="tab"
-           children — it announces tabs, and a form field is not a tab strip. Same pixels, different
+           children: it announces tabs, and a form field is not a tab strip. Same pixels, different
            thing to say.
 
            Arrows MOVE AND SELECT here, which is the radio pattern and differs from the menu's:

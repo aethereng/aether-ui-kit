@@ -1,4 +1,4 @@
-# Builds and publishes the component gallery to GitHub Pages when a version tag is pushed.
+# Builds and publishes the component gallery as a static site when a version tag is pushed.
 # Also runnable by hand: Actions tab -> "Run workflow", or `gh workflow run deploy-gallery.yml`.
 #
 # Tag-triggered rather than push-triggered: what is served should be a version a consumer can
@@ -18,7 +18,7 @@
 #
 # One-time setup this workflow depends on: Settings → Pages → Source = "GitHub Actions".
 # Until that's set, this runs and produces an artifact but nothing is served.
-name: Deploy gallery to Pages
+name: Deploy gallery
 
 on:
   push:

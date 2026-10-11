@@ -255,7 +255,7 @@ function setGroup(g: Group, open: boolean) {
     <header class="g-hero">
       <h1>@aether/ui-kit</h1>
       <p class="g-hero__lede">
-        Shared interface components for Aether's engineering surfaces — a framework-free core with a
+        Shared interface components for Aether's engineering surfaces: a framework-free core with a
         thin Vue wrapper, so the mechanics can outlive the framework.
       </p>
       <p class="g-hero__sub">
@@ -280,7 +280,7 @@ function setGroup(g: Group, open: boolean) {
       <p>
         Components never hardcode a colour. They read <code>--aether-*</code> custom properties; the
         kit ships a light fallback palette so it renders standalone, and a host app overrides those
-        tokens to make the kit its own. <strong>This page is that host</strong> — the light/dark
+        tokens to make the kit its own. <strong>This page is that host</strong>: the light/dark
         switch above rewrites the tokens and every component below follows, with no component code
         involved.
       </p>
@@ -417,14 +417,14 @@ function setGroup(g: Group, open: boolean) {
       <h2>Using the kit</h2>
       <pre><code>// once, at your app entry
 import '@aether/ui-kit/styles'
-import './your-tokens.css'   // after the kit — see the token contract above
+import './your-tokens.css'   // after the kit (see the token contract above)
 
 // then, per component
 import Seg from '@aether/ui-kit/controls/seg'</code></pre>
       <p>
         Each component exposes its own subpath, so a consumer pulls only what it uses. Components
         with a <span class="g-badge-inline">core</span> badge have a plain-TypeScript module
-        underneath with no Vue import — that is the part designed to outlive this wrapper.
+        underneath with no Vue import; that is the part designed to outlive this wrapper.
       </p>
     </footer>
   </div>

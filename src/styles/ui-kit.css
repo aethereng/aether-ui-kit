@@ -1,7 +1,7 @@
-/* @aether/ui-kit — component CSS, shipped with the kit so it is portable.
+/* @aether/ui-kit: component CSS, shipped with the kit so it is portable.
  * Consumers import this once. A consumer may override any --aether-* token or
  * the .aether-* rules; the kit never depends on a host's own stylesheet.
- * The :root block below is a *fallback* palette — if the host app already
+ * The :root block below is a *fallback* palette: if the host app already
  * defines --aether-surface etc., these are inert. Tokens are kept to the
  * minimal set the components actually consume. */
 
@@ -23,24 +23,24 @@
   --aether-warm: #a9591b;
   --aether-warm-soft: #c8742e;
   /* Foreground for text sitting ON --aether-warm. A host with a dark theme usually inverts
-     --aether-warm to a light amber, at which point a near-white foreground is unreadable —
+     --aether-warm to a light amber, at which point a near-white foreground is unreadable;
      so this is a token, not a constant. */
   --aether-warm-ink: #fbf8f2;
   --aether-rose: #a33b52;
   --aether-rose-wash: rgba(163, 59, 82, 0.12);
   /* The affirmative tone, and the only one the palette was missing: warm, rose and cool cover
      caution, failure and accent, and nothing said "passed". Deliberately NOT --aether-cool, which
-     is what --aether-selected resolves to — a success marker rendered in the selection colour makes
+     is what --aether-selected resolves to; a success marker rendered in the selection colour makes
      "this passed" and "this is selected" the same pixels, which is the bug that made Transport
      stop telling two host apps apart. */
   --aether-ok: #3f6b3a;
-  /* SEMANTIC TONES — what a colour MEANS, as opposed to which colour it is.
+  /* SEMANTIC TONES: what a colour MEANS, as opposed to which colour it is.
      Everything above is a hue: warm, rose, ok, cool. The kit has shipped those since the start and
      has never said what any of them stands for, so every consumer needing to render "this failed"
      picked a hue itself and the library standardised structure while leaving meaning unshared. For
      a firm whose product is verification verdicts, that is the wrong thing to leave to each app.
 
-     Named to match Badge's EXISTING prop union — success / warning / danger — rather than
+     Named to match Badge's EXISTING prop union (success / warning / danger) rather than
      error/warn/info. Two names for one tone is the condition being fixed, not a detail; a kit that
      says `danger` in one component and `error` in another has standardised nothing. `info` is the
      one addition, because nothing in the kit meant "a note" and a callout needs it.
@@ -51,7 +51,7 @@
 
      The washes are derived with color-mix rather than written per theme, so a re-themed hue carries
      its own wash. No static fallback beneath it: the kit's own contract test forbids declaring a
-     property twice for one selector, and that guard is right — a duplicate is far more often a
+     property twice for one selector, and that guard is right; a duplicate is far more often a
      mistake than a deliberate cascade. color-mix has been in every browser this kit supports since
      2023, so the fallback would buy nothing and cost an exemption. --aether-rose-wash and --aether-cool-wash keep their hand-written values (a host
      may already set them) and the two hues that never had one get a derived default. */
@@ -68,8 +68,8 @@
   --aether-cool-wash: rgba(95, 164, 160, 0.15);
   /* The SELECTED state, split out from --aether-cool.
      One token used to drive both a component's accent (Transport's scrub and focus ring) and the
-     active state of Seg/Chip. A host that wants those to differ — an accent on one brand colour and
-     selection on another — could not express it, because setting the accent moved the selection with
+     active state of Seg/Chip. A host that wants those to differ (an accent on one brand colour and
+     selection on another) could not express it, because setting the accent moved the selection with
      it. These default to the cool accent, so a host that does not care sees no change at all; a host
      that does maps them separately. */
   --aether-selected: var(--aether-cool);
@@ -81,7 +81,7 @@
   --aether-scrollbar: var(--aether-cool);
 
   /* Control typography. Hardcoded 12.5px until now, which a host on a different type scale could
-     only fight with an override — kit controls sat visibly smaller beside a 14px list. */
+     only fight with an override; kit controls sat visibly smaller beside a 14px list. */
   --aether-control-font-size: 12.5px;
 
   --aether-shadow: 0 1px 2px rgba(27, 30, 35, 0.06);
@@ -89,9 +89,9 @@
   --aether-shadow-hover: 0 2px 6px rgba(27, 30, 35, 0.14);
   --aether-lane-alt: rgba(27, 30, 35, 0.012);
   --aether-radius: 8px;
-  /* The radius above is the CONTROL radius — chips, buttons, fields. A SURFACE is a different
+  /* The radius above is the CONTROL radius: chips, buttons, fields. A SURFACE is a different
      scale of thing and gets its own, because a host retuning its controls should not silently
-     reshape its panels — one consumer sets --aether-radius to 6px, and its cards should not follow.
+     reshape its panels: one consumer sets --aether-radius to 6px, and its cards should not follow.
      It existed as a literal 8px in Disclosure and again in Card, so the two agreed by luck and
      a host could tune neither. Same default, so nothing moves by adding it. */
   --aether-radius-surface: 8px;
@@ -119,7 +119,7 @@
      this at it; the default keeps the kit dependency-free. */
   --aether-font-mono: ui-monospace, monospace;
   /* Transport surface. Both real consumers float it over a live 3-D canvas, where an
-     opaque background is wrong — they need a transparent, blurred bar. These are tokens
+     opaque background is wrong; they need a transparent, blurred bar. These are tokens
      precisely so a host can make that swap without forking the component's CSS. */
   --aether-transport-bg: var(--aether-surface);
   --aether-transport-backdrop: none;
@@ -148,10 +148,10 @@
   text-transform: uppercase;
   color: var(--aether-ink-soft);
 }
-/* The shared box that used to be declared here (and again, differently, further down — the later
+/* The shared box that used to be declared here (and again, differently, further down; the later
    one won on source order) now lives in each control. Removing it is what makes the controls
    portable: a box keyed to `.aether-property-editor__field` is a box that only exists in a form. */
-/* The enum button group's styling left with the control — see RadioGroup.vue. Two unconditional
+/* The enum button group's styling left with the control (see RadioGroup.vue). Two unconditional
    `.aether-property-editor__buttons` blocks lived in this file, here and further down, and the
    later one won on source order: this block's radius, padding and its entire accent `.on` state
    had never rendered. Measured on the running consumer before the move, so what the component
@@ -174,8 +174,8 @@
    resize as digits change under it. */
 /* The range and its read-out moved to Slider.vue in 0.13.0, along with the number field's box and
    suffix (NumberField.vue), the text box (TextField.vue), the select and its base-select theming
-   (Select.vue) and the boolean pill (Switch.vue). What remains in this file is FORM LAYOUT — the
-   field container, the label, the error line — because that is all that was ever specific to a
+   (Select.vue) and the boolean pill (Switch.vue). What remains in this file is FORM LAYOUT: the
+   field container, the label, the error line; because that is all that was ever specific to a
    form. The controls were only here because there was nowhere else to put them, which meant they
    did not exist outside a `FieldDescriptor[]`. */
 
@@ -191,10 +191,10 @@
      so it stretches to fill whatever contains it: in a narrow drawer column it painted a bordered
      box with ~100px of empty space to the right of the last segment, which is what blocked adoption
      in one consumer.
-     `fit-content` rather than `inline-flex`, deliberately — inline-flex would also let the control
+     `fit-content` rather than `inline-flex`, deliberately; inline-flex would also let the control
      share a line with adjacent inline content, which is a second behavioural change nobody asked
      for. This constrains the width and nothing else.
-     Inside a flex row — how both consumers place it today — this changes NOTHING, because a flex
+     Inside a flex row (how both consumers place it today); this changes NOTHING, because a flex
      item is already sized by its content. It only bites in a block container, which is exactly the
      case that was broken. A caller that genuinely wants a full-width control sets `width: 100%` at
      the call site: opting into stretching is much rarer than opting out of it. */
@@ -295,7 +295,7 @@
   flex-wrap: wrap;
   gap: 6px;
 }
-/* A sidebar rail is a LIST, not a wrapping row of pills — one full-width row per option. */
+/* A sidebar rail is a LIST, not a wrapping row of pills: one full-width row per option. */
 .aether-chips--row {
   flex-direction: column;
   flex-wrap: nowrap;
@@ -336,7 +336,7 @@
   border-color: currentColor;
   font-weight: 600;
 }
-/* de-emphasised but still clickable — see ChipOption.muted */
+/* de-emphasised but still clickable (see ChipOption.muted) */
 .aether-chip.muted {
   opacity: 0.4;
 }
@@ -362,7 +362,7 @@
 }
 
 /* THE PILL VARIANT IS NOW ACTUALLY A PILL. It was named `pill` and drew an 8px radius on a 26px
-   control — a rounded rectangle, and the name had been describing an intention rather than the
+   control: a rounded rectangle, and the name had been describing an intention rather than the
    render. Badge is the kit's pill at 999px, and Chip is Badge's clickable twin ("if it is
    clickable it is a Chip"), so the two should read as one family rather than two shapes.
    The extra horizontal padding is not decoration: at a full radius the curve eats into the box,
@@ -653,7 +653,7 @@
      rather than at a library default. */
   font-size: 1em;
 }
-/* Any <svg>, at ANY depth — the descendant combinator is load-bearing. This was `> svg`, which
+/* Any <svg>, at ANY depth; the descendant combinator is load-bearing. This was `> svg`, which
    matched only the bare inline <svg> the gallery example passes, and that was the only thing ever
    tried. An icon COMPONENT renders a wrapper element (Vuetify's <v-icon> is an <i>), so its svg is a
    grandchild and the rule missed it completely, leaving every icon at the library's default 24px
@@ -666,7 +666,7 @@
 }
 /* FONT icons are the case this cannot reach. A component that sets its own `font-size` rather than
    inheriting (Vuetify's <v-icon> does) wins over the inherited 1em above, and overriding it would
-   mean naming that library's classes here — which this kit deliberately does not know. Size those at
+   mean naming that library's classes here; the kit deliberately does not know them. Size those at
    the call site instead: `<v-icon size="16">`. Documented rather than fought. */
 /* The trailing slot mirrors __icon, and shares its svg sizing rule below rather than repeating it.
    Its own inset is tightened: a caret sits closer to the word it belongs to than a leading icon
@@ -738,7 +738,7 @@
    below: getting order right in this file has already cost two regressions, so where either would
    work, prefer specificity. */
 /* A <select>'s dropdown highlights the hovered option with the system blue, the same off-palette
-   colour the date field's segments had — but unlike the date picker, this one HAS a platform fix.
+   colour the date field's segments had; but unlike the date picker, this one HAS a platform fix.
    `appearance: base-select` opts the control into the customizable-select rendering, which makes
    the popup and its options ordinary styleable boxes. (This is exactly the opt-in that does not
    exist for date inputs: `base-select` is the only `base-*` appearance value there is, which is why
@@ -751,7 +751,7 @@
 /* The date field is the same construction, so its inner input needs the same treatment: the box is
    the wrapper (.aether-datefield, styled in DateField.vue) and the input inside it must give up its
    own border, background and padding. This rule lives here rather than in the component because a
-   scoped rule compiles to `.aether-datefield__input[data-v-x]` — two classes — and would LOSE to
+   scoped rule compiles to `.aether-datefield__input[data-v-x]` (two classes) and would LOSE to
    `.aether-property-editor__field input[type='date']` above, which is two classes plus an element.
    Same lesson as the number field: where either order or specificity would work, use specificity. */
 /* DateField styles its own inner input now. */
@@ -808,7 +808,7 @@
    lands at ~39px with the label inside it, against 50px for a 32px control with a 14px label and a
    4px gap stacked above. Shorter AND labelled. */
 /* THREE classes on every one of these, deliberately. Each control is a scoped component now, so its
-   own rule compiles to `.aether-textfield[data-v-x]` — two classes' worth of specificity. A
+   own rule compiles to `.aether-textfield[data-v-x]`: two classes' worth of specificity. A
    two-class selector here would TIE with it and leave source order to decide, and the order of an
    injected component style block is not ours to control. This used to matter only for DateField;
    since the controls moved out it matters for all of them. */
@@ -904,7 +904,7 @@
   resize: vertical;
 }
 
-/* boolean field: native checkbox reads as unfinished — give it a clean token-driven switch */
+/* boolean field: native checkbox reads as unfinished; give it a clean token-driven switch */
 .aether-property-editor__field:has(input[type='checkbox']) {
   flex-direction: row;
   align-items: center;
@@ -919,7 +919,7 @@
   color: var(--aether-ink);
   font-weight: 500;
 }
-/* The pill itself moved to Switch.vue in 0.13.0 — it is a control, and living here meant the
+/* The pill itself moved to Switch.vue in 0.13.0; it is a control, and living here meant the
    appearance existed only inside a form. What stays is the FORM LAYOUT above (the row direction,
    the sentence-case label) plus `order`, which positions the input relative to that label and is
    meaningless outside this container. */
@@ -1039,7 +1039,7 @@
 }
 
 /* ==========================================================================================
-   TOUCH TARGETS AND INPUT SIZING — the file's only @media block, and it must stay last.
+   TOUCH TARGETS AND INPUT SIZING: the file's only @media block, and it must stay last.
    ==========================================================================================
 
    Everything above this line is an unconditional cascade, and @media contributes ZERO

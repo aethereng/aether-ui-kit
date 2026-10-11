@@ -163,7 +163,7 @@ describe('TextField', () => {
 describe('NumberField', () => {
   it('does NOT commit a half-typed number', async () => {
     /* The reason it is its own component. "1." is unparseable, and a field that committed it would
-     * write 1 and make 1.5 unreachable. jsdom does not set badInput itself, so it is forced here —
+     * write 1 and make 1.5 unreachable. jsdom does not set badInput itself, so it is forced here;
      * the branch under test is what the component does WITH that signal. */
     const w = mount(NumberField, { props: { modelValue: 1 } })
     const el = w.get('input').element as HTMLInputElement

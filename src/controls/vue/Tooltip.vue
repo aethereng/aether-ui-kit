@@ -38,7 +38,7 @@ const supportsAnchor =
   typeof CSS !== 'undefined' && CSS.supports?.('position-anchor: --a') === true
 /* Optional-called rather than assumed. jsdom implements neither showPopover nor the `popover`
    attribute, so an unguarded call throws on mount and breaks any consumer test that renders a
-   tooltip. Where it is missing the `is-open` class carries visibility instead — see the
+   tooltip. Where it is missing the `is-open` class carries visibility instead; see the
    `@supports not selector(:popover-open)` block, which only applies there. */
 const supportsPopover =
   typeof HTMLElement !== 'undefined' &&
@@ -99,7 +99,7 @@ function place() {
   el.style.left = `${Math.max(4, Math.min(left, innerWidth - t.width - 4))}px`
 }
 
-/* aria-describedby goes on the TRIGGER, which is the caller's element inside the slot — so it is
+/* aria-describedby goes on the TRIGGER, which is the caller's element inside the slot; so it is
  * set imperatively rather than bound.
  *
  * And it is set only when the tooltip says something the accessible name does not. Half the real
@@ -111,7 +111,7 @@ function wireTrigger() {
   if (!trigger) return
 
   /* anchor-name goes on the TRIGGER, not on the wrapper. The wrapper is `display: contents` so it
-     adds nothing to layout — and an element with `display: contents` generates no box, which means
+     adds nothing to layout; and an element with `display: contents` generates no box, which means
      it cannot be an anchor at all. Named there, the popover silently fell back to the viewport
      corner. Anchoring to the trigger is also what you actually want: the tooltip should track the
      button, not a span that happens to contain it. */

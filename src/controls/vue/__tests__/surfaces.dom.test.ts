@@ -37,7 +37,7 @@ describe('Card', () => {
       expect(card, `Card lost: ${decl}`).toContain(decl)
       expect(disc, `Disclosure lost: ${decl}`).toContain(decl)
     }
-    // Card's padding is Disclosure's BODY padding — the content inset, not the header's
+    // Card's padding is Disclosure's BODY padding: the content inset, not the header's
     expect(card).toContain('padding: 12px 14px')
     expect(disc).toContain('padding: 12px 14px')
   })
@@ -80,7 +80,7 @@ describe('Spinner', () => {
   })
 
   it('slows under reduced motion rather than stopping', () => {
-    /* A frozen spinner reads as a hung process — the one message it exists to disprove. Source
+    /* A frozen spinner reads as a hung process: the one message it exists to disprove. Source
      * again: jsdom evaluates no media queries. */
     const src = readFileSync(resolve(__dirname, '../Spinner.vue'), 'utf8')
     const block = src.slice(src.indexOf('prefers-reduced-motion'))
@@ -121,7 +121,7 @@ describe('FilterRail', () => {
   })
 
   it('keeps a zero-count option clickable, so the axis stays visible', () => {
-    /* `muted` de-emphasises without disabling — a filter that hid its empty options would hide the
+    /* `muted` de-emphasises without disabling: a filter that hid its empty options would hide the
      * fact that the axis exists. */
     const w = mount(FilterRail, { props: { groups } })
     const zero = w.findAll('.aether-chip')[1]!

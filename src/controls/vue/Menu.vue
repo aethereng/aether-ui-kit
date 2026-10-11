@@ -43,7 +43,7 @@ const supportsPopover =
   typeof HTMLElement !== 'undefined' &&
   Object.prototype.hasOwnProperty.call(HTMLElement.prototype, 'popover')
 
-/* Typeahead buffer. Cleared on a pause so "fi" then later "l" searches for "l", not "fil" —
+/* Typeahead buffer. Cleared on a pause so "fi" then later "l" searches for "l", not "fil";
    without the reset, a menu becomes progressively harder to navigate the longer it stays open. */
 let buffer = ''
 let bufferTimer: ReturnType<typeof setTimeout> | null = null
@@ -62,7 +62,7 @@ function show(cursorAt: string | null) {
 }
 
 /* Found rather than reffed, because a caller supplying #trigger replaces the default button
-   entirely — a ref bound inside the fallback content is null in exactly that case, which is when
+   entirely: a ref bound inside the fallback content is null in exactly that case, which is when
    focus return matters just as much. */
 function triggerEl(): HTMLElement | null {
   return anchorEl.value?.querySelector<HTMLElement>(
@@ -82,7 +82,7 @@ function hide(returnFocus = true) {
 
 /* Menus move real DOM focus rather than using aria-activedescendant: it is what the APG pattern
    specifies, and it means Enter and Space land on the focused element with no extra wiring.
-   It is also load-bearing for dismissal — opening by MOUSE and leaving focus on the trigger put
+   It is also load-bearing for dismissal: opening by MOUSE and leaving focus on the trigger put
    the keydown handler out of reach, so Escape did nothing. Every open lands on an item. */
 async function focusCursor() {
   await nextTick()
@@ -138,7 +138,7 @@ function select(itemId: string) {
   hide()
 }
 
-/* The browser can close an `auto` popover on its own — a click outside, or another popover opening.
+/* The browser can close an `auto` popover on its own: a click outside, or another popover opening.
    Without this the component's state would drift out of step with what is on screen. */
 function onToggle(e: Event) {
   const newState = (e as ToggleEvent).newState
@@ -149,7 +149,7 @@ function onToggle(e: Event) {
 }
 
 /* Same reason as Tooltip's: the wrapper is `display: contents` and so generates no box, and an
-   element with no box cannot be an anchor — named there, the surface falls back to the viewport
+   element with no box cannot be an anchor; named there, the surface falls back to the viewport
    corner. It goes on the trigger, found rather than reffed so a caller's own #trigger works too. */
 watch(
   [anchorEl, () => props.items],

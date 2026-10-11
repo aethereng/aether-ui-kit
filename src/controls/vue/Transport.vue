@@ -73,7 +73,7 @@ defineSlots<{
 
 const atEnd = computed(() => isAtEnd(props.current, props.duration))
 const pct = computed(() => Math.round(props.precomputePct))
-// A zero-length timeline would make step 0, which browsers reject — fall back to a
+// A zero-length timeline would make step 0, which browsers reject; fall back to a
 // continuous range until a real duration arrives.
 const step = computed(() => (props.duration > 0 ? props.duration / 600 : 'any'))
 
@@ -88,7 +88,7 @@ function onSpeed() {
 
 /* The scrub handshake has to survive the pointer leaving the slider. A release outside the
  * input never fires pointerup on it, so binding scrub-end to the element alone strands the
- * caller in the paused state it entered on scrub-start — the transport looks alive but the
+ * caller in the paused state it entered on scrub-start; the transport looks alive but the
  * clock never restarts. Listen on the window for the release instead. */
 let scrubbing = false
 function endScrub() {

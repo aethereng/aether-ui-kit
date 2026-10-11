@@ -28,7 +28,7 @@ describe('Badge', () => {
   it.each(['success', 'warning', 'danger'] as const)('carries the %s tone as a class', (tone) => {
     const w = mount(Badge, { props: { tone }, slots: { default: 'x' } })
     expect(w.classes()).toContain(`aether-badge--${tone}`)
-    // Exactly one tone at a time — a stale class alongside a new one would paint the wrong colour.
+    // Exactly one tone at a time: a stale class alongside a new one would paint the wrong colour.
     expect(w.classes().filter((c) => c.startsWith('aether-badge--'))).toHaveLength(1)
     w.unmount()
   })

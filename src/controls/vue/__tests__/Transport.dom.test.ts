@@ -58,8 +58,8 @@ describe('Transport play phase', () => {
 })
 
 describe('Transport speed, in both modes', () => {
-  /* `speedMode` is the axis the two real consumers differ on — one cycles a single button, the
-   * other lays the ladder out — which is why it is a prop and not two components. */
+  /* `speedMode` is the axis the two real consumers differ on: one cycles a single button, the
+   * other lays the ladder out; this is why it is a prop and not two components. */
   const speeds = [0.5, 1, 2]
 
   it('cycle mode is one button carrying the current speed', () => {
@@ -105,7 +105,7 @@ describe('Transport precompute phase', () => {
   })
 
   it('offers Stop only when the host says the work is stoppable', () => {
-    /* A consumer whose precompute cannot be cancelled passes `:stoppable="false"` — a button that
+    /* A consumer whose precompute cannot be cancelled passes `:stoppable="false"`: a button that
      * pretends otherwise is worse than no button. */
     const off = mount(Transport, { props: { ...base, phase: 'precompute', stoppable: false } })
     expect(off.find('.at-stop').exists()).toBe(false)

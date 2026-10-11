@@ -26,7 +26,7 @@ describe('Slider read-out', () => {
 
   it('separates the suffix with a NON-BREAKING space', () => {
     /* THE REGRESSION. The template had a literal space leading the suffix span, which the compiler's
-       default `whitespace: "condense"` strips — so every consumer rendered "521m". A plain-space
+       default `whitespace: "condense"` strips; so every consumer rendered "521m". A plain-space
        assertion would pass on the broken version too, so this pins the code point. */
     const w = mount(Slider, { props: { modelValue: 521, min: 0, max: 800, suffix: 'm' } })
     const text = readoutOf(w)
@@ -73,7 +73,7 @@ describe('Slider ticks', () => {
 
   it('gives each tick its own --at, independent of the slider’s', () => {
     /* Half of the tick-position contract: every mark carries the fraction of ITS OWN value, which
-       is the input the CSS calc consumes. The other half — that the calc actually reads it — is
+       is the input the CSS calc consumes. The other half (that the calc actually reads it) is
        pinned in the source assertion below, because it cannot be observed here; see there. */
     const w = mount(Slider, { props: { modelValue: 50, ticks } })
     const root = w.element as HTMLElement
@@ -86,13 +86,13 @@ describe('Slider ticks', () => {
   it('declares --pos on the tick itself, not once on the parent', () => {
     /* THE REGRESSION, and it is asserted against the SOURCE because nothing else can see it.
        `--pos` was first declared once on `.aether-slider`, and a custom property referencing
-       another is substituted where it is DECLARED — so the parent baked in its own --at and every
+       another is substituted where it is DECLARED; so the parent baked in its own --at and every
        tick inherited a finished number, painting every mark under the thumb. The mounted DOM is
        identical either way (each tick's inline --at is correct in both), and jsdom neither applies
        an SFC's scoped styles nor resolves calc() against layout, so a rendered assertion passes on
        the broken version. Verified: reintroducing the bug leaves all the DOM cases green.
 
-       Same technique package-contract.test.ts uses to pin the switch's box model — the invariant is
+       Same technique package-contract.test.ts uses to pin the switch's box model: the invariant is
        a CSS declaration, so the test reads CSS. */
     const src = readFileSync(resolve(__dirname, '../Slider.vue'), 'utf8')
     const decl = src.match(/^([^\n]*(?:,\n[^\n]*)*)\{\s*\n\s*--pos:/m)
@@ -156,7 +156,7 @@ describe('Slider is controlled', () => {
 
   it('never writes a step-corrected value back on its own', async () => {
     /* A native range snaps its THUMB to the nearest step. A component that read `.value` back would
-       silently rewrite a stored 0.37 to 0.35 for a field nobody touched — so the read-out must keep
+       silently rewrite a stored 0.37 to 0.35 for a field nobody touched; so the read-out must keep
        showing the STORED number even when the thumb cannot sit exactly on it. */
     const w = mount(Slider, { props: { modelValue: 0.37, min: 0, max: 1, step: 0.05 } })
     expect(readoutOf(w)).toBe('0.37')

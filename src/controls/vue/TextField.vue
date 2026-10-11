@@ -66,16 +66,16 @@ function grow() {
 
 if (props.autogrow) {
   // One path covers both triggers: typing emits update:modelValue, the caller's v-model writes
-  // it back into the `modelValue` prop, and that is what this watches — so a caller
+  // it back into the `modelValue` prop, and that is what this watches; so a caller
   // reassigning the value directly re-measures exactly the same way typing does, with no
   // separate DOM 'input' listener needed for either case.
   watch(() => props.modelValue, () => nextTick(grow), { immediate: true })
   // The mount-time measurement above can still be wrong regardless: it runs against whatever
   // font is ACTUALLY painted at that instant, and on a first load that's routinely a fallback,
   // not the real one yet (this component makes no assumption about which font loads it, or
-  // when — that's entirely the host's stylesheet). A narrower fallback wraps fewer lines than
+  // when (that's entirely the host's stylesheet). A narrower fallback wraps fewer lines than
   // the real font will, so the very first grow() undersizes the box, and nothing re-measures
-  // afterward — until an edit happens to call grow() again, well after the font has settled,
+  // afterward; until an edit happens to call grow() again, well after the font has settled,
   // which is why retyping "fixes" it. document.fonts.ready is the actual signal to wait for.
   if (typeof document !== 'undefined' && document.fonts) document.fonts.ready.then(grow)
 }

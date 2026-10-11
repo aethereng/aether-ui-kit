@@ -3,7 +3,7 @@
  *  - running (default, e.g. gallery): owns the force sim, steps it each frame.
  *  - controlled (running=false): the caller owns nodes[].pos
  *    (store-backed positions, pinning, layout modes); Graph2D only renders and
- *    emits interaction. Same core, same projection — only who drives pos differs.
+ *    emits interaction. Same core, same projection; only who drives pos differs.
  * A future GraphGL.vue reuses the same core and only swaps the draw call. */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
@@ -27,9 +27,9 @@ const props = withDefaults(
     selection?: string | null
     neighbors?: Set<string> | null
     /** How positions map to the viewport.
-     *  'fit'   — rescale the cloud to fill the box every render. Convenient, but the scale
+     *  'fit':    rescale the cloud to fill the box every render. Convenient, but the scale
      *            changes as the data moves, so a dragged node does not track the cursor.
-     *  'direct'— positions ARE viewport coordinates, drawn 1:1. What the reference does; pair
+     *  'direct': positions ARE viewport coordinates, drawn 1:1. What the reference does; pair
      *            it with the layout's `bounds` so nothing can leave the stage. */
     mapping?: 'fit' | 'direct'
     /** Wheel/pinch to zoom, background-drag to pan. Off by default: a graph that eats the
@@ -59,7 +59,7 @@ const emit = defineEmits<{
   dragEnd: [id: string]
   /** Current scale, after every zoom. Hosts that show a percentage read this. */
   zoom: [k: number]
-  /** Pointer is over a node — fired on entry and on every move while it stays there, so a
+  /** Pointer is over a node: fired on entry and on every move while it stays there, so a
    *  host card can track the cursor. The kit does not own tooltip content: only the host
    *  knows what a node means. Paired with nodeLeave. */
   nodeHover: [id: string, clientX: number, clientY: number]

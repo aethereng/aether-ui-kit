@@ -4,12 +4,12 @@ import { nextTick } from 'vue'
 import Graph2D from '../Graph2D.vue'
 import type { GNode, GEdge } from '../../core'
 
-/* The Graph2D VIEW LAYER — the transform, and the pointer maths that has to invert it.
+/* The Graph2D VIEW LAYER: the transform, and the pointer maths that has to invert it.
  *
  * The trap this guards is specific: the layout runs in world coordinates and one <g> carries
  * the view transform, so every gesture arriving in client pixels has to be converted back
  * through that transform before it means anything. Get it wrong and everything still renders,
- * still compiles, and drags land somewhere other than the cursor — worse the further you have
+ * still compiles, and drags land somewhere other than the cursor; worse the further you have
  * zoomed. That is invisible to type-checking and to the core's own tests.
  *
  * jsdom has no layout, so getBoundingClientRect is stubbed to a known box below. These tests
@@ -243,7 +243,7 @@ describe('Graph2D pan', () => {
   /* The regression that only shows up on the SECOND gesture, which is why every
      one-gesture-per-mount test above missed it. A press on a node was recorded as an active
      pointer but never released, so the next press made the component think two fingers were
-     down and take the pinch branch — zooming off the distance between a live pointer and a
+     down and take the pinch branch: zooming off the distance between a live pointer and a
      ghost. Two node drags, then a background drag, must still be a plain pan. */
   it('still pans after earlier node drags -- released pointers are not left behind', async () => {
     const w = mountGraph({ zoomable: true })

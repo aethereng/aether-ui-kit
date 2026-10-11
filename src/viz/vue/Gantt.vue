@@ -45,14 +45,14 @@ const props = withDefaults(
 
 interface GanttEmit {
   select: [id: string]
-  /** Fired once, when a gesture crosses the movement threshold — BEFORE the first move/resize.
+  /** Fired once, when a gesture crosses the movement threshold: BEFORE the first move/resize.
    *  A caller that supports undo checkpoints here; without it, a drag emits a stream of
    *  mutations with no boundary and undo has nothing coherent to restore. */
   dragStart: [id: string]
   move: [id: string, start: number, end: number | null]
   resize: [id: string, edge: 'l' | 'r', value: number]
   /** Fired once when a real (moved) gesture ends. Callers persist here rather than on every
-   *  pointermove. Not fired for a click that never moved — that emits `select` instead. */
+   *  pointermove. Not fired for a click that never moved; that emits `select` instead. */
   dragEnd: [id: string]
   newAt: [day: number, type: string]
   expandDay: [day: { t: string; i: number } | null]
@@ -140,7 +140,7 @@ function onPointerMove(e: PointerEvent) {
   const d = drag
   if (!d) return
   const dd = Math.round((e.clientX - d.x0) / props.ppd)
-  // The threshold crossing is the gesture's real start — announce it once, before the first
+  // The threshold crossing is the gesture's real start: announce it once, before the first
   // mutation, so a caller can snapshot the pre-drag state.
   if (!d.moved && Math.abs(e.clientX - d.x0) > 4) {
     d.moved = true
@@ -181,7 +181,7 @@ function onDblClick(e: MouseEvent) {
   emit('newAt', day, type)
 }
 
-/* An anchor takes its LANE's colour, exactly as the original does — the port coloured by
+/* An anchor takes its LANE's colour, exactly as the original does; the port coloured by
  * STATUS instead, so every open anchor came out rose and the lane encoding was lost. */
 const anchors = computed(() =>
   props.items
@@ -217,8 +217,8 @@ const anchors = computed(() =>
            keyboard path a user needs.
            The rule is pointing at something real all the same, and this comment is the record rather
            than a dismissal: `newAt` has NO keyboard equivalent, so a keyboard-only user cannot
-           create an item by this route. Closing that means an affordance decision — a host-provided
-           "add" control, or a focusable lane with its own key handling — which changes this
+           create an item by this route. Closing that means an affordance decision: a host-provided
+           "add" control, or a focusable lane with its own key handling; that changes this
            component's API and is not a lint fix. Left open deliberately, not overlooked. -->
       <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
       <div
@@ -588,8 +588,8 @@ const anchors = computed(() =>
   background: var(--aether-surface);
 }
 /* Label sits ABOVE the diamond, centred on it and free to wrap. Absolute + a fixed width so the
-   anchor stays zero-width on its date — a long title must never drag the diamond off the day it
-   marks — centred rather than the earlier left/right-aligned split: that needed a `.flip` past
+   anchor stays zero-width on its date: a long title must never drag the diamond off the day it
+   marks; centred rather than the earlier left/right-aligned split: that needed a `.flip` past
    the view's midpoint to stop a long single-line title running off the right edge, and even
    flipped, a title could still run past whichever edge it was left-aligned toward. Centred +
    wrapped bounds the footprint to WIDTH regardless of which day it sits on, so both edges are
@@ -683,13 +683,13 @@ const anchors = computed(() =>
  * This was `opacity: 0.45` on the whole bar, which put the label at 2.1:1 on the dark theme and
  * 1.7 on the light one. Raising the value does not fix it and that was measured rather than
  * assumed: a group opacity blends the text AND the fill toward the same surface, and a bar's label
- * is the lane colour sitting on a wash of that same colour, so both sides move together — at 0.8,
+ * is the lane colour sitting on a wash of that same colour, so both sides move together; at 0.8,
  * still only 3.8 and 2.8. The lever was never the amount of dimming.
  *
  * A `::before` veil got the contrast right (0.8 opacity floods the wash, label sits above it) but
  * cost a stacking context of its own (`position: relative` + a z-index bump on the label) for
  * something st-risk already does with a single declaration: an INSET box-shadow, which the spec
- * guarantees paints no further out than the border box, full stop — no separate box, nothing that
+ * guarantees paints no further out than the border box, full stop; no separate box, nothing that
  * can ever read as taller than the row it was assigned. color-mix keeps it a one-liner: no extra
  * --aether-surface-rgb token just to get 80% of it. */
 .ag-ev.st-done {

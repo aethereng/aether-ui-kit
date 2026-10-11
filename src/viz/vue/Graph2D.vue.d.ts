@@ -9,9 +9,9 @@ type __VLS_Props = {
     selection?: string | null;
     neighbors?: Set<string> | null;
     /** How positions map to the viewport.
-     *  'fit'   — rescale the cloud to fill the box every render. Convenient, but the scale
+     *  'fit':    rescale the cloud to fill the box every render. Convenient, but the scale
      *            changes as the data moves, so a dragged node does not track the cursor.
-     *  'direct'— positions ARE viewport coordinates, drawn 1:1. What the reference does; pair
+     *  'direct': positions ARE viewport coordinates, drawn 1:1. What the reference does; pair
      *            it with the layout's `bounds` so nothing can leave the stage. */
     mapping?: 'fit' | 'direct';
     /** Wheel/pinch to zoom, background-drag to pan. Off by default: a graph that eats the

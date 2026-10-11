@@ -12,7 +12,7 @@ import type { GanttItem, GanttLane } from '../../core/gantt'
  * which is the only layer that would have caught it.
  *
  * jsdom has no layout and no pointer capture, so both are stubbed below. That makes these
- * tests about WIRING — does a gesture on this element reach that handler — not about
+ * tests about WIRING (does a gesture on this element reach that handler); they are not about
  * pixel-accurate geometry. Geometry is the core's job and is tested there. */
 
 const lanes: GanttLane[] = [
@@ -39,7 +39,7 @@ beforeAll(() => {
     Element.prototype.setPointerCapture = () => {}
     Element.prototype.releasePointerCapture = () => {}
   }
-  // every rect is zero in jsdom — give bars a width so edge-vs-body hit tests are meaningful
+  // every rect is zero in jsdom; give bars a width so edge-vs-body hit tests are meaningful
   Element.prototype.getBoundingClientRect = function () {
     return { x: 0, y: 0, top: 0, left: 0, right: 200, bottom: 30, width: 200, height: 30 } as DOMRect
   }
@@ -87,7 +87,7 @@ describe('Gantt pointer gestures', () => {
     pm(bar, 130)
     pm(bar, 170)
     pu(bar)
-    // one undo checkpoint per gesture is the whole contract — not one per pixel
+    // one undo checkpoint per gesture is the whole contract; not one per pixel
     expect(w.emitted('dragStart')).toHaveLength(1)
     const moves = w.emitted('move') ?? []
     expect(moves.length).toBeGreaterThan(0)

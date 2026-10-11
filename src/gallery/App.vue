@@ -3,7 +3,7 @@
  *
  * This page is also the kit's own proof: it is a HOST APP. It defines the --aether-* tokens
  * itself (light + dark below) and the kit's components follow, which is exactly the contract
- * a consumer gets. The theme switch at the top is not a mock — it re-themes this page, and the
+ * a consumer gets. The theme switch at the top is not a mock; it re-themes this page, and the
  * components re-theme with it because they never hardcode a colour. */
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import GSection from './GSection.vue'
@@ -74,21 +74,21 @@ import GanttExampleSrc from './examples/GanttExample.vue?raw'
 
 
 
-/* ── page theme — the kit's token contract, demonstrated rather than described ── */
+/* ── page theme: the kit's token contract, demonstrated rather than described ── */
 const THEME_KEY = 'aether-theme'
 
 function saved(): 'paper' | 'timber' {
   try {
     return localStorage.getItem(THEME_KEY) === 'timber' ? 'timber' : 'paper'
   } catch {
-    return 'paper' /* private mode — the switch still works for this session */
+    return 'paper' /* private mode: the switch still works for this session */
   }
 }
 
 /* APPLIED AT SETUP, NOT onMounted, and that is a bug fix rather than a tidy-up.
  *
  * Applied after mount, the page painted once in the light palette and then had the dark one
- * swapped underneath it — which starts a transition on every element whose background is a token.
+ * swapped underneath it; this starts a transition on every element whose background is a token.
  * Most settle. `.aether-chip--row.on` did not: measured on a clean load in the dark theme, its
  * background stayed at the light palette's panel colour indefinitely, giving light ink on a light
  * pill at 1.1:1 while `getAnimations()` reported nothing running. A transition that begins before
@@ -101,13 +101,13 @@ document.documentElement.setAttribute('data-theme', theme.value)
 
 /* A deliberate theme SWITCH is the other half: the palette changes under a rendered page, so the
  * same transitions fire for real. They are there to make a hover feel responsive, and a hover is
- * not what happened — suppressed for one frame so the swap is instant and nothing can latch. */
+ * not what happened: suppressed for one frame so the swap is instant and nothing can latch. */
 function applyTheme(t: 'paper' | 'timber') {
   const root = document.documentElement
   root.classList.add('g-no-transition')
   theme.value = t
   root.setAttribute('data-theme', t)
-  /* Force the new palette to commit while transitions are off, then restore them — synchronously,
+  /* Force the new palette to commit while transitions are off, then restore them; synchronously,
      in one turn. A requestAnimationFrame pair is the usual way to write this and it is wrong here:
      rAF is throttled in a background tab, so switching the theme and then leaving the tab would
      strand the class and disable every transition on the page until it was next foregrounded.
@@ -148,11 +148,11 @@ const groupAnchor = (g: Group) => g.toLowerCase()
 
    Built from the kit's own Disclosure, for the same reason the nav's buttons are Tools: chrome this
    page hand-rolls is chrome that cannot fail when the component it imitates regresses. It also puts
-   Disclosure under a shape its own demo does not — four controlled instances sharing one state, and
+   Disclosure under a shape its own demo does not: four controlled instances sharing one state, and
    the `aside` slot carrying a real control rather than an illustrative one. */
 const openGroups = ref(new Set<Group>())
 
-/** The group holding whatever the URL points at — a component id (#slider) or a group anchor
+/** The group holding whatever the URL points at: a component id (#slider) or a group anchor
  *  (#forms), because both are real targets on this page. */
 function groupFromHash(hash: string): Group | undefined {
   const id = hash.replace(/^#/, '')
@@ -162,7 +162,7 @@ function groupFromHash(hash: string): Group | undefined {
 
 /* Exactly one group open on arrival: the one you were sent to, or the first. Opening none leaves
    four dead rows on first paint; opening all restores the wall this replaces. Set at setup rather
-   than onMounted so the rail paints in its final state — the same first-paint rule the theme
+   than onMounted so the rail paints in its final state; the same first-paint rule the theme
    above follows, and for the same reason. */
 openGroups.value.add(groupFromHash(location.hash) ?? GROUPS[0]!)
 
@@ -245,7 +245,7 @@ function setGroup(g: Group, open: boolean) {
   </aside>
   <!-- A scrim is a mouse convenience, and it cannot carry the keyboard path the rule asks for: it
        is not focusable, so a keydown bound here would never fire. The keyboard equivalent already
-       exists elsewhere and is what makes this dismissible without a pointer — `onRailKey` closes on
+       exists elsewhere and is what makes this dismissible without a pointer; `onRailKey` closes on
        Escape, and the toggle carries aria-expanded. Disabled with that as the reason, not to quiet
        the rule. -->
   <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
@@ -433,7 +433,7 @@ import Seg from '@aether/ui-kit/controls/seg'</code></pre>
 <style>
 /* ── the gallery acting as a host app: it owns the --aether-* tokens ──
    Values are a real application's light and dark palettes, so what you see here is what the
-   kit looks like in the app it was extracted from — not a gallery-only fiction. */
+   kit looks like in the app it was extracted from: not a gallery-only fiction. */
 /* This is `paper`, the light theme -- named the same as `applyTheme('paper')` and
    `html[data-theme='timber']` below, and selected the same way, so the two themes are equally
    real in this file rather than one being an explicit block and the other "whatever :root
@@ -474,7 +474,7 @@ html[data-theme='paper'],
   color-scheme: light;
   --aether-transport-shadow: 0 4px 20px rgba(27, 30, 35, 0.14);
 
-  /* gallery-own chrome — deliberately NOT --aether-*, so it is obvious which tokens
+  /* gallery-own chrome: deliberately NOT --aether-*, so it is obvious which tokens
      belong to the kit's contract and which are this page's own furniture */
   --g-page: #f4f0e8;
   --g-code: #efe9dd;
@@ -482,31 +482,31 @@ html[data-theme='paper'],
      Ratios are WCAG against --g-code, computed on the rendered page rather than estimated: an
      early pass here was eyeballed and three of the ten sat under 4.5 while the comments beside
      them claimed otherwise. Comment and punct were the worst, and they are the two that carry the
-     most characters — quiet is a colour choice, unreadable is not.
+     most characters: quiet is a colour choice, unreadable is not.
 
-     REBALANCED — this set used to be "warm against the paper ground, so a code block reads as part
+     REBALANCED: this set used to be "warm against the paper ground, so a code block reads as part
      of the page rather than a screenshot of an editor dropped onto it". That intent was right and
      was taken too far: six of the ten landed in a 23-49° hue band and comment, attr and punct sat
      at 10-15% saturation, which is grey. Since comments are most of the characters in these files,
-     the whole block read brown-on-cream — monochrome, accurately. Mean saturation was 38%.
+     the whole block read brown-on-cream: monochrome, accurately. Mean saturation was 38%.
 
      The rule now is by ROLE rather than uniformly warm. The quiet tokens that carry bulk text
      (attr, punct) stay warm-neutral so the block still belongs to the page; the tokens that
      actually distinguish one thing from another (keyword, string, tag, fn, directive, interp) get
      real chroma; and comment moves to sage, off the warm axis entirely, so the most common token is
      no longer a slightly different brown from its neighbours. That also makes the two themes agree
-     on meaning — timber's comment is already sage, its tag teal, its fn blue.
+     on meaning: timber's comment is already sage, its tag teal, its fn blue.
      Mean saturation 57%, hues spread from six-in-a-band to 16/28/45/49/57/135/145/173/216/326. */
-  --g-tok-comment: #5a6b61; /* 4.68 — sage, off the warm axis so bulk comment text separates */
+  --g-tok-comment: #5a6b61; /* 4.68: sage, off the warm axis so bulk comment text separates */
   --g-tok-string: #7a5e0c; /* 5.06 */
   --g-tok-keyword: #b03d12; /* 4.93 */
   --g-tok-number: #8a4d16; /* 5.51 */
   --g-tok-fn: #2a5da8; /* 5.38 */
   --g-tok-tag: #0a6f64; /* 5.00 */
-  --g-tok-directive: #a81f6d; /* 5.64 — loudest, and bolded */
-  --g-tok-attr: #6d6337; /* 4.98 — deliberately quiet: it carries bulk text */
+  --g-tok-directive: #a81f6d; /* 5.64: loudest, and bolded */
+  --g-tok-attr: #6d6337; /* 4.98; deliberately quiet because it carries bulk text */
   --g-tok-interp: #19702f; /* 5.11 */
-  --g-tok-punct: #64634f; /* 5.05 — quietest, and the most frequent glyph on the page */
+  --g-tok-punct: #64634f; /* 5.05: quietest, and the most frequent glyph on the page */
   --g-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
   --g-mono: 'Spline Sans Mono', ui-monospace, 'SF Mono', Consolas, monospace;
   --g-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -522,7 +522,7 @@ html[data-theme='timber'] {
   --aether-warm: #e5a45f;
   --aether-rose: #e08fa4;
   /* Inverted with the rest of the tone family. Left at the kit's dark default green, a filled
-     success badge is dark-green-on-dark-ink at 2.84 — the failure is silent, because every other
+     success badge is dark-green-on-dark-ink at 2.84; the failure is silent, because every other
      tone still looks right. */
   --aether-ok: #8fbf84;
   --aether-cool: #8fc6c2;
@@ -553,13 +553,13 @@ html[data-theme='timber'] {
      reads as MORE saturated, so the light theme's values inverted come out garish while its quiet
      ones vanish. Pulled toward this theme's own timber-and-sage family.
      Ratios measured against --g-code on the rendered page, same as above. */
-  --g-tok-comment: #869a91; /* 5.2 — quiet, but it was 3.8 and comments are most of these files */
+  --g-tok-comment: #869a91; /* 5.2: quiet, but it was 3.8 and comments are most of these files */
   --g-tok-string: #c9b458; /* 7.5 */
   --g-tok-keyword: #e39a6b; /* 6.7 */
   --g-tok-number: #d8a97e; /* 7.3 */
   --g-tok-fn: #8fb8de; /* 7.4 */
   --g-tok-tag: #6fc7ba; /* 7.8 */
-  --g-tok-directive: #e59ac2; /* 7.2 — loudest here too */
+  --g-tok-directive: #e59ac2; /* 7.2: loudest here too */
   --g-tok-attr: #b6b39c; /* 7.3 */
   --g-tok-interp: #97ce8b; /* 8.5 */
   --g-tok-punct: #7f9189; /* 4.7 */
@@ -686,7 +686,7 @@ body {
      rail can show, later items get compressed toward zero rather than the CONTAINER scrolling
      past them, even though #g-rail is `overflow-y: auto` and very much willing to. flex-shrink:
      0 is what makes each group keep the height its own content asked for, so the rail is what
-     ends up too tall — which is exactly the case overflow-y: auto is already there to handle. */
+     ends up too tall; this is exactly the case overflow-y: auto is already there to handle. */
   flex-shrink: 0;
 }
 #g-rail .aether-disclosure:last-child {
@@ -919,7 +919,7 @@ body {
   flex-wrap: wrap;
 }
 /* The graph's hover card. Fixed, because it is positioned from the client coordinates
-   Graph2D hands over — this is host chrome, deliberately not part of the component. */
+   Graph2D hands over; this is host chrome, deliberately not part of the component. */
 .g-hovcard {
   position: fixed;
   z-index: 40;

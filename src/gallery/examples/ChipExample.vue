@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import Chip from '@aether/ui-kit/controls/chip'
 import type { ChipOption } from '@aether/ui-kit/controls/core'
@@ -11,18 +11,18 @@ const chipOptions: ChipOption[] = [
   { value: 'fact', label: 'Facts', count: 6, dotColor: 'var(--aether-cool-soft)' },
   { value: 'idea', label: 'Ideas', count: 3 },
   { value: 'risk', label: 'Risks', count: 2, dotColor: 'var(--aether-warm)' },
-  /* `muted` dims an option without disabling it — a filter whose count is zero but which should
+  /* `muted` dims an option without disabling it: a filter whose count is zero but which should
      still be visible and clickable. Contrast with `disabled` below. */
   { value: 'link', label: 'Links', count: 0, muted: true },
   { value: 'lane', label: 'Colour-accented', count: 4, color: 'var(--aether-warm)' },
   /* `swatch` takes a raw CSS declaration list rather than a colour, so a chip can carry the same
-     encoding as the thing it filters — which is what lets a set of chips replace a legend
+     encoding as the thing it filters; this is what lets a set of chips replace a legend
      instead of sitting beside one. */
   { value: 'planned', label: 'Planned', count: 5, swatch: 'border:1.5px dashed var(--aether-warm)' },
   { value: 'shipped', label: 'Shipped', count: 9, swatch: 'background:var(--aether-cool);opacity:.45' },
   /* disabled: unavailable, not merely empty. Click is a no-op. */
   { value: 'archived', label: 'Archived', count: 0, disabled: true },
-  /* title: per-option explanatory text as the native tooltip. Known tradeoff — native `title`
+  /* title: per-option explanatory text as the native tooltip. Known tradeoff: native `title`
      has no touch equivalent, so this text is unreachable on a phone and nothing errors. Fine
      for a hint; if the text is load-bearing, it needs a visible affordance instead. */
   {

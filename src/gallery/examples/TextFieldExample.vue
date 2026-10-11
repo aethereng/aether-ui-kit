@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import TextField from '@aether/ui-kit/controls/text-field'
 
@@ -16,17 +16,17 @@ const longNote = ref(
       <TextField v-model="label" placeholder="Untitled" />
     </label>
 
-    <!-- `multiline` is a PROP, not a second component: a textarea types exactly like an input —
-         same data, same commit-per-keystroke, same bordered box — and only its shape differs. -->
+    <!-- `multiline` is a PROP, not a second component: a textarea types exactly like an input:
+         same data, same commit-per-keystroke, same bordered box; and only its shape differs. -->
     <label class="g-tf-row"><span>Note — multiline</span>
       <TextField v-model="note" multiline :rows="2" placeholder="Anything worth recording…" />
     </label>
 
     <!-- autogrow: height tracks content instead of the fixed `rows` above, growing and
-         shrinking live as it's typed — and resize switches off, since auto-grow already IS
+         shrinking live as it's typed; and resize switches off, since auto-grow already IS
          the resize. Seeded past its 8-row default ceiling on purpose, so the demo shows the
          capped-and-scrolling state at rest, not just the open-ended growth. Try adding or
-         deleting lines — including past the point where it starts scrolling instead of growing. -->
+         deleting lines (including past the point where it starts scrolling instead of growing). -->
     <label class="g-tf-row"><span>Note — autogrow (capped at 8 rows)</span>
       <TextField v-model="longNote" multiline autogrow placeholder="Grows as you type…" />
     </label>

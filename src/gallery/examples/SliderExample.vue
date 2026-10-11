@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import Slider from '@aether/ui-kit/controls/slider'
 import type { SliderTick } from '@aether/ui-kit/controls/core'
@@ -7,7 +7,7 @@ import type { SliderTick } from '@aether/ui-kit/controls/core'
 const opacity = ref(0.65)
 
 /* A slider position is not always the value it shows. This one is 0–100 and maps through a
-   logarithmic zoom, printed with the precision that matters at each magnitude — which is what
+   logarithmic zoom, printed with the precision that matters at each magnitude; this is what
    `format` is for. Without it the read-out could only print "50", the wrong quantity entirely. */
 const zoom = ref(50)
 const factor = (pos: number) => 0.05 * Math.pow(10, pos / 33)

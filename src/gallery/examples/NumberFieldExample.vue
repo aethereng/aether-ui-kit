@@ -1,10 +1,10 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import NumberField from '@aether/ui-kit/controls/number-field'
 
 /* Type "0." into the flow rate and watch the read-out below: it does NOT become 0. That is why
-   this is a separate component and not a `type` on TextField — a field committing every keystroke
+   this is a separate component and not a `type` on TextField: a field committing every keystroke
    would rewrite the model mid-decimal and 0.5 would be unreachable. */
 const flow = ref(2.5)
 const ratio = ref(1.0)

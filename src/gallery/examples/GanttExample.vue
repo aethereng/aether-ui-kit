@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Gantt from '@aether/ui-kit/viz/gantt'
 import { computePPD } from '@aether/ui-kit/viz/core/gantt'

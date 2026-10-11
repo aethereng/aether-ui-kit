@@ -1,9 +1,9 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import DateField from '@aether/ui-kit/controls/date-field'
 
-/* `YYYY-MM-DD` or '' — the native input's own value format, kept rather than invented so a caller
+/* `YYYY-MM-DD` or '': the native input's own value format, kept rather than invented so a caller
    can hand it straight to a date input, a JSON payload or `new Date()` without a conversion step. */
 const start = ref('2026-08-17')
 const end = ref('')

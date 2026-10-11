@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import Tree from '@aether/ui-kit/controls/tree'
 import type { TreeNode } from '@aether/ui-kit/controls/core'
@@ -7,10 +7,10 @@ import type { TreeNode } from '@aether/ui-kit/controls/core'
 /* Controlled, like the rest of the kit: the caller owns `expanded` and `selected`. Both are plain
    data, so a host can persist them, restore them, or drive them from a route.
 
-   The keyboard model lives in the framework-free core (`treeKey`), not in the component — it is the
+   The keyboard model lives in the framework-free core (`treeKey`), not in the component; it is the
    part that is genuinely easy to get wrong. Two arrows do two things each:
-     Right  — expands a closed folder; on an already-open one, steps INTO it
-     Left   — closes an open folder; on a closed one or a file, steps OUT to the parent
+     Right:   expands a closed folder; on an already-open one, steps INTO it
+     Left:    closes an open folder; on a closed one or a file, steps OUT to the parent
    Plus Up/Down across visible rows only, Home/End, Enter/Space to select, and typeahead. */
 const nodes: TreeNode[] = [
   {
@@ -66,7 +66,7 @@ const selected = ref<string | null>('main')
 </template>
 
 <style scoped>
-/* The caller owns the frame — the kit ships no panel around the tree, because a tree lives in a
+/* The caller owns the frame; the kit ships no panel around the tree, because a tree lives in a
    sidebar, a drawer or a card and each of those brings its own box. */
 .g-tree {
   width: 100%;

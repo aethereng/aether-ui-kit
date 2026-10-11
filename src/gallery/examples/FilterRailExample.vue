@@ -1,12 +1,12 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import FilterRail from '@aether/ui-kit/controls/filter-rail'
 import type { FilterGroup } from '@aether/ui-kit/controls/core'
 
 /* Grouping and selection are pure data; the rail renders one Chip row per group and wires
    toggle/clear mechanically. Both orientations below share ONE state object, which is why
-   toggling either updates both — they are two views of the same filter, not two filters. */
+   toggling either updates both; they are two views of the same filter, not two filters. */
 const groups = ref<FilterGroup[]>([
   {
     key: 'type',
@@ -29,7 +29,7 @@ const groups = ref<FilterGroup[]>([
   },
 ])
 
-/* Shown as "N hidden" when non-zero — the rail reports what the filter is costing you. */
+/* Shown as "N hidden" when non-zero; the rail reports what the filter is costing you. */
 const hidden = ref(0)
 
 function onToggle(groupKey: string, value: string) {

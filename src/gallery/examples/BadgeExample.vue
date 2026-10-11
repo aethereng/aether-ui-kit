@@ -1,9 +1,9 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import Badge from '@aether/ui-kit/controls/badge'
 
 /* The kit maps tone -> pixels and stops there. Mapping a domain state onto a tone is the caller's
-   job, and it looks like this — a lookup in the host, where the vocabulary means something. A
+   job, and it looks like this: a lookup in the host, where the vocabulary means something. A
    `status` prop that understood these words would pull one domain's dictionary into a design
    system, and the next domain's would not fit. */
 type RunState = 'complete' | 'degraded' | 'failed' | 'queued'
@@ -16,7 +16,7 @@ const toneOf: Record<RunState, 'success' | 'warning' | 'danger' | 'neutral'> = {
 const solves: RunState[] = ['complete', 'degraded', 'failed', 'queued']
 
 /* A row of badges has no shared state and no active member, so there is nothing to model and no
-   group component — the row is a flex container the caller owns. Same reasoning as
+   group component; the row is a flex container the caller owns. Same reasoning as
    `.aether-button-group`. */
 const counts = [
   { label: 'Samples 4 812', tone: 'neutral' as const },

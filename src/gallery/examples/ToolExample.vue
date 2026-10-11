@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import Tool from '@aether/ui-kit/controls/tool'
 /* Material Design Icons as PATH STRINGS, not a font and not a component library. `@mdi/js` is
@@ -11,7 +11,7 @@ import { mdiContentSave, mdiDelete } from '@mdi/js'
 const clicks = ref(0)
 
 /* A closed variant set rather than an open style hook. If both `hot` and `danger` are passed,
-   danger wins — mislabelling a destructive action as primary is the worse failure, so the
+   danger wins; mislabelling a destructive action as primary is the worse failure, so the
    component decides rather than leaving it to declaration order.
 
    There is deliberately NO active/pressed state: Tool is a stateless command, which is the line

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import ChatPanel from '@aether/ui-kit/controls/chat-panel'
 import type { ChatMessage } from '@aether/ui-kit/controls/core'
@@ -48,7 +48,7 @@ function onApplyReply() {
       @send="onSend"
       @apply-reply="onApplyReply"
     >
-      <!-- #empty is the caller's copy for an empty log — the kit ships no default wording -->
+      <!-- #empty is the caller's copy for an empty log: the kit ships no default wording -->
       <template #empty>Queue a message, then Send to export a request file.</template>
     </ChatPanel>
   </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import Switch from '@aether/ui-kit/controls/switch'
 
@@ -15,7 +15,7 @@ const solids = 4812
 <template>
   <div class="g-sw">
     <!-- The switch is one bare input and owns no label. Association is the caller's, exactly as
-         it is inside PropertyEditor — which lets a label carry whatever the surface needs. -->
+         it is inside PropertyEditor; this lets a label carry whatever the surface needs. -->
     <div class="g-sw-row">
       <Switch id="sw-gravity" v-model="gravity" />
       <label for="sw-gravity">Gravity</label>

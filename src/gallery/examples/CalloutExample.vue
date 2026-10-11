@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import Callout from '@aether/ui-kit/controls/callout'
 
 /* Same division of labour Badge documents: the kit maps a tone to pixels and to an accessible

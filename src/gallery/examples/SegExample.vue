@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* THIS FILE IS THE EXAMPLE. The gallery renders it as the Seg demo and shows this same source in
- * the Template and Script tabs, sliced out of it at runtime — so what you read is what ran.
+ * the Template and Script tabs, sliced out of it at runtime; so what you read is what ran.
  *
  * It imports through the published specifier rather than a relative path, which makes the example
  * copy-pasteable AND makes it a live check that the package's own exports map resolves. */
@@ -25,7 +25,7 @@ const grain = ref<Grain>('week')
 const grainPill = ref<Grain>('week')
 
 /* `disabled` on an option: documented, styled and honoured by the component, but nothing on the
- * page rendered it until now — an option nobody can see is an option nobody trusts. Clicking it
+ * page rendered it until now: an option nobody can see is an option nobody trusts. Clicking it
  * emits nothing. */
 const rangeOptions: SegOption<Grain>[] = [
   { value: 'day', label: 'Day' },
@@ -35,7 +35,7 @@ const rangeOptions: SegOption<Grain>[] = [
 const range = ref<Grain>('day')
 
 /* modelValue accepts null, for a preset selector over CONTINUOUS state: when the real value matches
- * no preset, nothing is active. The alternative — a synthetic "Custom" option — lies about the
+ * no preset, nothing is active. The alternative (a synthetic "Custom" option) lies about the
  * option set and becomes selectable, so it needs its own guard against being chosen.
  *
  * The width is a READ-OUT, not a field: it stands for state the rest of an app owns (a dragged
@@ -78,7 +78,7 @@ const matched = computed<Preset | null>(() => {
     <span class="g-variant">modelValue = null — the value matches no preset, so nothing is active</span>
     <div class="g-ex-row">
       <!-- `@update:model-value`, not the deprecated `@change`. This is the case `change` was added
-           for — a caller with no v-model, because the bound value is DERIVED and often null — and
+           for (a caller with no v-model, because the bound value is DERIVED and often null) and
            it works identically here, which is the whole argument for the deprecation. -->
       <Seg
         :options="presets"

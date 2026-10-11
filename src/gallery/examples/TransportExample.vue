@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref, onBeforeUnmount } from 'vue'
 import Transport from '@aether/ui-kit/controls/transport'
 
@@ -42,7 +42,7 @@ function onSeek(t: number) {
   current.value = Math.max(0, Math.min(t, duration.value))
 }
 
-/* Scrubbing pauses and then restores — the bar reports the gesture boundaries so the caller can
+/* Scrubbing pauses and then restores; the bar reports the gesture boundaries so the caller can
    decide that, rather than the component guessing. */
 let wasPlaying = false
 function onScrubStart() {

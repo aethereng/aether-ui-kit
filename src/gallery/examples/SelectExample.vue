@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import Select from '@aether/ui-kit/controls/select'
 import type { SelectGroup } from '@aether/ui-kit/controls/core'
@@ -15,7 +15,7 @@ const solvents = [
 ]
 
 /* Groups are structure, not decoration. Flattened into one list, a channel that is MEASURED and one
-   that is COMPUTED from other channels become indistinguishable — and `subtitle` is what lets two
+   that is COMPUTED from other channels become indistinguishable; and `subtitle` is what lets two
    similarly named rows tell themselves apart. */
 const channelGroups: SelectGroup[] = [
   {

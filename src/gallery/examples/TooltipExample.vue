@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import Tooltip from '@aether/ui-kit/controls/tooltip'
 import Disclosure from '@aether/ui-kit/controls/disclosure'
@@ -16,7 +16,7 @@ const open = ref(true)
          the two, so a caller does not have to think about it. -->
     <!-- Inline SVG, the same idiom ToolExample uses: a 16x16 viewBox, `fill="none"`, and
          `stroke="currentColor"` so each mark takes the button's own colour. These were Unicode
-         arrow glyphs (⤢ ⤡ ↧) until it turned out none of them came from the kit's typeface at all —
+         arrow glyphs (⤢ ⤡ ↧) until it turned out none of them came from the kit's typeface at all:
          measured identical widths in Inter, monospace and serif, which means every family was
          falling back to the same system font, and a machine without the codepoint would have shown
          tofu. On a kit whose whole point is shipping no icon font, that was the wrong thing to
@@ -53,8 +53,8 @@ const open = ref(true)
       </Tooltip>
     </div>
 
-    <!-- THE case this component exists for. Disclosure's body is `overflow: hidden` by design — it
-         is what lets the 0fr row clip during the reveal — so anything positioned inside it that
+    <!-- THE case this component exists for. Disclosure's body is `overflow: hidden` by design; it
+         is what lets the 0fr row clip during the reveal; so anything positioned inside it that
          tries to escape is cut off. Measured here before the fix: 0 of 260px visible.
 
          `popover` puts the surface in the top layer, which is outside every ancestor's overflow,

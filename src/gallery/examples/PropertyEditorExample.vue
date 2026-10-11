@@ -1,23 +1,23 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import PropertyEditor from '@aether/ui-kit/property-editor'
 import type { FieldDescriptor, FieldValues } from '@aether/ui-kit/property-editor/core'
 
 /* The form is DATA, not markup: a descriptor list in, values out. That is the point of the
-   component — a host that gains a field adds a row here rather than editing a template. */
+   component; a host that gains a field adds a row here rather than editing a template. */
 const fields: FieldDescriptor[] = [
   { key: 'title', label: 'Title', type: 'text', placeholder: 'Untitled' },
-  /* autogrow: height tracks content instead of a fixed row count, live — see TextFieldExample
-     for the field on its own. Off by default, so every OTHER textarea in a form stays exactly
+  /* autogrow: height tracks content instead of a fixed row count, live (see TextFieldExample
+     for the field on its own). Off by default, so every OTHER textarea in a form stays exactly
      as it already was; this is the one row in this form that opts in. */
   { key: 'body', label: 'Body', type: 'textarea', placeholder: 'Write…', autogrow: true },
   /* number: step/min/max/precision map straight to the native input's attributes. `suffix` is
-     rendered after the field with NO meaning attached — the kit renders a unit, it never knows
+     rendered after the field with NO meaning attached: the kit renders a unit, it never knows
      one, so conversion and unit systems stay with the caller. Out of range fails validation. */
   { key: 'load', label: 'Design load', type: 'number', min: 0, max: 500, precision: 1, suffix: 'kN' },
   { key: 'count', label: 'Bays', type: 'number', min: 1, max: 40, step: 1 },
-  /* range: the same data as `number` and the same min/max/step, but dragged rather than typed —
+  /* range: the same data as `number` and the same min/max/step, but dragged rather than typed:
      for a value where the SCALE matters more than the digits. It never writes a corrected value
      back: a native range snaps its THUMB to the nearest step, so a component that read `.value`
      back on render would silently rewrite an off-grid stored value for a field nobody touched. */
@@ -48,7 +48,7 @@ const fields: FieldDescriptor[] = [
   /* Given a real value: an EMPTY date input renders the UA's grey mm/dd/yyyy segments, which
      is the one place a themed form still looked unstyled. */
   { key: 'due', label: 'Due', type: 'date' },
-  /* boolean renders as a switch rather than a checkbox — 38x22 with its own knob geometry.
+  /* boolean renders as a switch rather than a checkbox: 38x22 with its own knob geometry.
      `swatch` takes a raw CSS declaration list, exactly as ChipOption.swatch does: a toggle for a
      coloured layer carries that layer's own encoding, so the panel reads as its own legend rather
      than needing one beside it. The kit renders the declaration and interprets none of it. */
@@ -77,7 +77,7 @@ const out = ref<FieldValues>({ ...values })
 
 <template>
   <!-- The SAME descriptor list, rendered both ways. `labelPlacement` is whole-component rather
-       than per field, because a form should be internally consistent — and it changes no markup,
+       than per field, because a form should be internally consistent; and it changes no markup,
        only where the label sits, so a host's overrides keep matching either way.
 
        Note which fields do NOT move: the range, the button group and the three switches have no

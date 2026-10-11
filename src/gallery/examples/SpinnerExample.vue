@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import Spinner from '@aether/ui-kit/controls/spinner'
 import Badge from '@aether/ui-kit/controls/badge'
 </script>

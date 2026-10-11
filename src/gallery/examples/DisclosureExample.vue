@@ -1,15 +1,15 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import Disclosure from '@aether/ui-kit/controls/disclosure'
 
 /* Controlled, like Graph2D/Gantt/Transport: the caller owns `open`, and `v-model:open` is the
    binding. One ref per panel here rather than none, because a real consumer usually keys open-state
-   by row — an id, a filename — and often persists it, which a self-managing panel cannot express.
+   by row (an id, a filename) and often persists it, which a self-managing panel cannot express.
 
    Why this is not a <details>/<summary>, which would have given the keyboard and screen-reader
    contract for free: everything after a <summary> is hidden while the panel is CLOSED, so a header
-   control that must stay reachable when collapsed cannot live there — and nesting it inside the
+   control that must stay reachable when collapsed cannot live there; and nesting it inside the
    <summary> instead flattens it in the accessibility tree. The `#aside` slot below is that case,
    and it is the reason this component owns its header row. */
 const options = ref(true)
@@ -61,7 +61,7 @@ const diagnostics = ref(false)
 </template>
 
 <style scoped>
-/* The aside is the caller's markup, so the caller styles it — the kit ships no link appearance. */
+/* The aside is the caller's markup, so the caller styles it; the kit ships no link appearance. */
 .g-aside-link {
   flex: none;
   color: var(--aether-cool);

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import Menu from '@aether/ui-kit/controls/menu'
 import type { MenuItem } from '@aether/ui-kit/controls/core'
 
 const dirty = ref(false)
 
-/* Items are DATA, and `disabled` is the caller's judgement — the kit never decides that "Save as"
+/* Items are DATA, and `disabled` is the caller's judgement; the kit never decides that "Save as"
    is unavailable, it just renders and skips it. Arrow keys pass over a disabled row rather than
    landing on it, which is the difference between a menu and a list of buttons. */
 const items = ref<MenuItem[]>([

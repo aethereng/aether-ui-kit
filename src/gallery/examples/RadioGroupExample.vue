@@ -1,12 +1,12 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs. */
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
 import { ref } from 'vue'
 import RadioGroup from '@aether/ui-kit/controls/radio-group'
 import Seg from '@aether/ui-kit/controls/seg'
 import type { RadioOption } from '@aether/ui-kit/controls/core'
 
 /* A VALUE: picking a unit changes what the numbers beside it mean. Nothing appears or disappears,
-   so there is no panel to announce — which is what makes this a radiogroup and not a tab strip. */
+   so there is no panel to announce; this is what makes this a radiogroup and not a tab strip. */
 const unit = ref('c')
 const units: RadioOption[] = [
   { value: 'c', label: '°C' },
@@ -22,7 +22,7 @@ const smoothings: RadioOption[] = [
 ]
 
 /* A TAB STRIP, for contrast: choosing swaps the fields below it. Same pixels, different thing to
-   say — and the two sit side by side here because that is the only decision worth making when you
+   say; and the two sit side by side here because that is the only decision worth making when you
    reach for either. */
 const source = ref<'sensor' | 'manual'>('sensor')
 </script>

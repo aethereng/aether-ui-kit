@@ -1,9 +1,9 @@
 <script setup lang="ts">
-/* THIS FILE IS THE EXAMPLE — rendered as the demo and sliced for the Template/Script tabs.
+/* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs.
  *
  * Deliberately run CONTROLLED (:running="false"), the way a host that owns its own node positions
  * does: the caller owns nodes[].pos and drives the force sim with the exported ForceLayout. That
- * is the kit's thesis made visible — the layout core is framework-free and usable without the
+ * is the kit's thesis made visible: the layout core is framework-free and usable without the
  * component, and the component only renders and emits. It is also the only mode in which dragging
  * a node can work, because in running mode the component's internal layout owns the positions and
  * a caller's write is ignored. */
@@ -26,7 +26,7 @@ const W = 560
 const H = 360
 
 /* Positions are VIEWPORT coordinates and the sim is clamped to the stage, so with mapping="direct"
-   the graph draws 1:1 — nothing wanders off the canvas and a dragged node sits exactly under the
+   the graph draws 1:1; nothing wanders off the canvas and a dragged node sits exactly under the
    cursor. The default mapping="fit" refits the cloud every frame, which made the scale drift as
    nodes moved and a drag track at about a third of the pointer. */
 const BOUNDS: [number, number, number, number] = [30, 24, W - 30, H - 20]
@@ -115,7 +115,7 @@ function onDragEnd(id: string) {
 type GraphApi = { zoomIn: () => void; zoomOut: () => void; zoomFit: (pad?: number) => void }
 const graph = ref<GraphApi | null>(null)
 
-/* The hover card is the host's, not the kit's — Graph2D emits which node and where the pointer is,
+/* The hover card is the host's, not the kit's; Graph2D emits which node and where the pointer is,
    and only the host knows what a node means. */
 const hover = ref<{ id: string; x: number; y: number } | null>(null)
 const hoverNode = computed(() => nodes.value.find((n) => n.id === hover.value?.id) ?? null)

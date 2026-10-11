@@ -10,7 +10,7 @@ import { COMPONENTS } from '../gallery/meta'
  * files that did not exist (an entry point that 404s for anyone importing the package
  * normally), and the CSS read three --aether-* tokens that no palette defined (so a themed
  * host silently got a light fallback in a dark app). Neither is visible to vue-tsc, eslint,
- * or any component test — they only surface when someone installs the thing. */
+ * or any component test: they only surface when someone installs the thing. */
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'))
@@ -100,7 +100,7 @@ describe('token contract', () => {
 
   /* THE BUG THIS EXISTS FOR, and it shipped: ui-kit.css carried two unconditional
      `.aether-property-editor__buttons button` blocks, added in the same commit. The later won on
-     source order, so the first block's radius, padding and its whole active state never rendered —
+     source order, so the first block's radius, padding and its whole active state never rendered;
      and the enum group spent months looking like Seg, the one control it must not be confused
      with. Nothing caught it: both blocks were valid CSS, both were right there in the file, and
      every test passed.
@@ -158,7 +158,7 @@ describe('token contract', () => {
   })
 
   it('has no bare hex colours outside the fallback palette block', () => {
-    // a hardcoded colour cannot be themed — this is how .aether-tool.hot ended up
+    // a hardcoded colour cannot be themed: this is how .aether-tool.hot ended up
     // unreadable on a dark host
     const shared = readFileSync(resolve(root, 'src/styles/ui-kit.css'), 'utf8')
     const body = shared.slice(shared.indexOf('}', shared.indexOf(':root')))
@@ -189,7 +189,7 @@ describe('token contract', () => {
 })
 
 describe('components that set their own dimensions state their own box model', () => {
-  /* The kit ships no global reset on purpose — it must not impose one on a host. The cost is
+  /* The kit ships no global reset on purpose; it must not impose one on a host. The cost is
    * that any rule setting an explicit width has to say what that width means, or it silently
    * depends on the host having a reset. The boolean switch did exactly that: 38x22 in the
    * gallery (which resets), 60x36 for anyone else, because it inherited the text-input
@@ -204,7 +204,7 @@ describe('components that set their own dimensions state their own box model', (
     /* Reads Switch.vue rather than the shared sheet since 0.13.0: the pill moved out of
      * `.aether-property-editor__field input[type='checkbox']` and into its own component, because
      * the appearance existed only inside a form and a standalone toggle could not reach it. The
-     * ASSERTION is unchanged and still load-bearing — the kit ships no global reset, so a control
+     * ASSERTION is unchanged and still load-bearing; the kit ships no global reset, so a control
      * declaring an explicit 38x22 must state its own box model or inherit a host's. */
     const sw = readFileSync(resolve(root, 'src/controls/vue/Switch.vue'), 'utf8')
     const rule = sw.slice(sw.indexOf('.aether-switch {'), sw.indexOf('}', sw.indexOf('.aether-switch {')))
@@ -242,7 +242,7 @@ describe('interactive controls give feedback before they are clicked', () => {
 })
 
 describe('the gallery only offers imports that are real', () => {
-  /* The import block has a COPY BUTTON, so what it shows is not documentation — it is code someone
+  /* The import block has a COPY BUTTON, so what it shows is not documentation: it is code someone
      pastes. It was built as `import ${name} from '${subpath}'` over the raw meta fields, which is
      right for a section covering one component and nonsense for one covering several:
 
@@ -251,7 +251,7 @@ describe('the gallery only offers imports that are real', () => {
      A middot is not an import list and there is no single specifier for four paths. It was copied,
      which is exactly what the button is for. Sections with several components now carry an
      `imports` list, and this holds every line to being (a) a well-formed default import and (b) a
-     subpath the exports map actually declares — so a typo or a new multi-component section cannot
+     subpath the exports map actually declares; so a typo or a new multi-component section cannot
      put an unusable line behind that button again. */
   const declared = new Set(Object.keys(pkg.exports as Record<string, unknown>))
   const lines = COMPONENTS.flatMap((c) =>
@@ -311,11 +311,11 @@ describe('every symbol a core module exports is reachable through the exports ma
     const barrel = readFileSync(resolve(root, barrelPath), 'utf8')
     const src = readFileSync(resolve(root, file), 'utf8')
 
-    /* `core/` means framework-free, not public — those are different axes, and this test originally
+    /* `core/` means framework-free, not public; those are different axes, and this test originally
      * conflated them. A module marked @internal is logic a component keeps to itself, and demanding
      * it be re-exported would force private helpers into the public API just to satisfy the check.
      * The marker has to be explicit: the invariant worth keeping is that a module intended as PUBLIC
-     * is reachable, and intent that is never written down cannot be distinguished from an omission —
+     * is reachable, and intent that is never written down cannot be distinguished from an omission;
      * which is the exact bug this test was added to catch. */
     if (/@internal\b/.test(src)) return
 

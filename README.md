@@ -273,7 +273,7 @@ function reschedule(id: string, start: number, end: number | null) {
 
 ### **[aethereng.github.io/aether-ui-kit](https://aethereng.github.io/aether-ui-kit/)**
 
-Every component, live, with its props, emits, exposed methods, and a copyable worked example including its data. Deploys from `main` on every push.
+Every component, live, with its props, emits, exposed methods, and a copyable worked example including its data. Deploys when a version tag is pushed, or by hand from the Actions tab.
 
 Or run it locally:
 

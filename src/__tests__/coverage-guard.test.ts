@@ -6,7 +6,7 @@ import { COMPONENTS } from '../gallery/meta'
 
 /* TWO GUARDS OVER THE GALLERY AND THE SUITE, both for failures that are silent by nature.
  *
- * A component can ship, or move directory, and lose its tests without anything going red — the
+ * A component can ship, or move directory, and lose its tests without anything going red: the
  * suite still passes, with one fewer file in it. That happened three times: Chip shipped with no
  * test file at all and an accessibility defect that survived months in the control behind every
  * filter rail in both apps; DateField lost its coverage moving out of property-editor/; and
@@ -14,7 +14,7 @@ import { COMPONENTS } from '../gallery/meta'
  * rather than failing on it.
  *
  * And meta.ts hand-transcribes each component's props, emits and slots. Its own header says what
- * happens when it drifts — "the gallery is lying" — and nothing checked. Adding Tool's `#trailing`
+ * happens when it drifts ("the gallery is lying") and nothing checked. Adding Tool's `#trailing`
  * slot required remembering to update it by hand, which is exactly the shape of thing nobody
  * remembers twice. */
 
@@ -34,7 +34,7 @@ const all = walk(SRC)
 const testFiles = all.filter((p) => p.includes('__tests__') && p.endsWith('.ts'))
 const testText = testFiles.map((p) => readFileSync(p, 'utf8')).join('\n')
 
-/** Every shipped Vue component — the gallery's own files are chrome, not product. */
+/** Every shipped Vue component: the gallery's own files are chrome, not product. */
 const components = all
   .filter((p) => p.endsWith('.vue') && !p.includes('gallery'))
   .map((p) => basename(p, '.vue'))
@@ -54,7 +54,7 @@ describe('every component is exercised by the suite', () => {
 
 describe('meta.ts describes the components as they actually are', () => {
   /* Names only, deliberately. The `note` fields are editorial and often better than the JSDoc for
-   * someone browsing the gallery, so this does not try to generate them — it only checks that the
+   * someone browsing the gallery, so this does not try to generate them; it only checks that the
    * gallery cannot document a prop that does not exist, or miss one that does. */
   const sourceOf = (id: string): string | null => {
     const meta = COMPONENTS.find((c) => c.id === id)!
@@ -72,10 +72,10 @@ describe('meta.ts describes the components as they actually are', () => {
     '%s documents only props the component declares',
     (id) => {
       const src = sourceOf(id)
-      if (!src) return // a section whose component lives outside controls/ — covered by its own file
+      if (!src) return // a section whose component lives outside controls/ (covered by its own file)
       const meta = COMPONENTS.find((c) => c.id === id)!
       const hay = src + types
-      /* A row may document several props at once — `min / max / step` is one row for three props
+      /* A row may document several props at once: `min / max / step` is one row for three props
          that all pass straight to the native input. Split rather than forbid it: the combined row
          reads better in the table, and each name still has to exist. */
       for (const row of meta.props) {
@@ -85,7 +85,7 @@ describe('meta.ts describes the components as they actually are', () => {
         }
       }
       for (const row of meta.slots ?? []) {
-        /* The default slot has no name in the source — it is `<slot />`. Every other slot is
+        /* The default slot has no name in the source; it is `<slot />`. Every other slot is
            `name="x"`, so that is what gets looked for. */
         const needle = row.name === 'default' ? '<slot />' : row.name
         expect(src, `${meta.name}: meta documents slot \`${row.name}\` that the source does not declare`)

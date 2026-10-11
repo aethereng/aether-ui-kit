@@ -17,7 +17,7 @@ describe('cycleSpeed', () => {
   })
 
   it('falls to the first preset when the current speed is not one of them', () => {
-    // indexOf returns -1, so (-1 + 1) % n === 0 — a speed set from elsewhere
+    // indexOf returns -1, so (-1 + 1) % n === 0; a speed set from elsewhere
     // must not strand the button.
     expect(cycleSpeed([0.5, 1, 2], 999)).toBe(0.5)
   })
@@ -48,7 +48,7 @@ describe('isAtEnd', () => {
   })
 
   it('is false for a zero duration', () => {
-    // nothing loaded yet — Play must not render as Replay on an empty transport
+    // nothing loaded yet: Play must not render as Replay on an empty transport
     expect(isAtEnd(0, 0)).toBe(false)
   })
 

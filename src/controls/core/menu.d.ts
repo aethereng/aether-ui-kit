@@ -17,5 +17,5 @@ export declare function focusableItems(items: readonly MenuItem[]): MenuItem[];
 export declare function firstItem(items: readonly MenuItem[]): string | null;
 export declare function lastItem(items: readonly MenuItem[]): string | null;
 export declare function menuKey(items: readonly MenuItem[], key: string, cursorId: string | null): MenuKeyResult;
-/** A printable character that should feed typeahead — one grapheme, no modifier combination. */
+/** A printable character that should feed typeahead: one grapheme, no modifier combination. */
 export declare function isTypeaheadKey(key: string): boolean;

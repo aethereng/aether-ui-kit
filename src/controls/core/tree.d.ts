@@ -1,7 +1,7 @@
 export interface TreeNode<T = unknown> {
     id: string;
     label: string;
-    /** Absent or empty means a leaf. An EMPTY array still counts as a leaf — a node that can hold
+    /** Absent or empty means a leaf. An EMPTY array still counts as a leaf: a node that can hold
      *  children but has none is not expandable, and claiming otherwise gives the user a control that
      *  reveals nothing. */
     children?: TreeNode<T>[];
@@ -28,7 +28,7 @@ export declare function isExpandable<T>(node: TreeNode<T>): boolean;
 /** Depth-first walk, descending only into expanded nodes: the rows a user can actually see and
  *  therefore the only rows the keyboard may land on. */
 export declare function visibleRows<T>(nodes: TreeNode<T>[], expanded: Set<string>): TreeRow<T>[];
-/** What a key press means. The caller applies it — this decides nothing about state itself, which is
+/** What a key press means. The caller applies it; this decides nothing about state itself, which is
  *  what lets the same logic drive a controlled and an uncontrolled tree. */
 export type TreeKeyResult = {
     kind: 'move';

@@ -1,7 +1,7 @@
 /* Framework-free core for the Menu control: the keyboard model, as pure functions over plain data.
  * No Vue, no DOM.
  *
- * Same reasoning as tree.ts. A menu's keyboard contract is small but exact — arrows wrap, disabled
+ * Same reasoning as tree.ts. A menu's keyboard contract is small but exact: arrows wrap, disabled
  * items are skipped rather than landed on and ignored, Home/End are not optional, Escape closes and
  * returns focus to the trigger, and Tab closes rather than moving inside. Written once and tested
  * without a browser, because every one of those is a thing a hand-rolled menu forgets. */
@@ -27,7 +27,7 @@ export function focusableItems(items: readonly MenuItem[]): MenuItem[] {
   return items.filter((i) => !i.separator && !i.disabled)
 }
 
-/* Movement wraps in both directions. Wrapping is the behaviour a menu is expected to have — unlike
+/* Movement wraps in both directions. Wrapping is the behaviour a menu is expected to have; unlike
    a tree, where running off the end means you have reached the end of a structure. */
 function step(items: readonly MenuItem[], cursorId: string | null, delta: 1 | -1): string | null {
   const list = focusableItems(items)
@@ -52,7 +52,7 @@ export function lastItem(items: readonly MenuItem[]): string | null {
  * Tab returns 'close' rather than 'none': a menu that stays open while focus walks out from under
  * it leaves an orphaned surface floating over the page, which is the failure people notice and
  * cannot explain. Letting the browser then move focus normally is the component's job, not this
- * one's — which is why 'close' says nothing about preventing the default. */
+ * one's; this is why 'close' says nothing about preventing the default. */
 export function menuKey(
   items: readonly MenuItem[],
   key: string,
@@ -77,7 +77,7 @@ export function menuKey(
     }
     case 'Enter':
     case ' ': {
-      /* Activating nothing is 'none', not 'activate' with no id — a caller destructuring `id` and
+      /* Activating nothing is 'none', not 'activate' with no id: a caller destructuring `id` and
          dispatching on it would otherwise fire an action for undefined. */
       if (!cursorId) return { kind: 'none' }
       const item = items.find((i) => i.id === cursorId)
@@ -92,7 +92,7 @@ export function menuKey(
   }
 }
 
-/** A printable character that should feed typeahead — one grapheme, no modifier combination. */
+/** A printable character that should feed typeahead: one grapheme, no modifier combination. */
 export function isTypeaheadKey(key: string): boolean {
   return key.length === 1 && key !== ' '
 }

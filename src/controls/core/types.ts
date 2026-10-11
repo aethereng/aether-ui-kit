@@ -17,8 +17,8 @@ export interface SegProps<V extends string = string> {
    *  selectable, so it needs its own guard against being chosen. This does not. */
   modelValue: V | null
   ariaLabel?: string
-  /** 'default' — square-cornered, panel-grey active segment.
-   *  'pill'    — fully rounded, uppercase mono, accent-wash active segment. A second real look
+  /** 'default':  square-cornered, panel-grey active segment.
+   *  'pill':     fully rounded, uppercase mono, accent-wash active segment. A second real look
    *              that already shipped in a consumer's header, not a style hook: the same
    *              precedent Chip's `variant` set. */
   variant?: 'default' | 'pill'
@@ -26,7 +26,7 @@ export interface SegProps<V extends string = string> {
 
 /* One option in a RadioGroup. Structurally the same row as PropertyEditor's EnumOption, which is
    what lets a `FieldDescriptor.options` array pass straight through when the form composes this
-   control — the form's type is not re-declared here, and neither is converted at the boundary. */
+   control; the form's type is not re-declared here, and neither is converted at the boundary. */
 export type RadioOption<V extends string = string> = {
   value: V
   label: string
@@ -48,7 +48,7 @@ export type ChipOption<V extends string = string> = {
   dotColor?: string
   /** A raw CSS declaration list for the leading swatch, e.g. 'background:#c33' or
    *  'border:1.5px dashed #c33'. Where dotColor gives an 8px colour dot, this gives a wider
-   *  block that can carry the SAME encoding as the thing being filtered — a dashed border for
+   *  block that can carry the SAME encoding as the thing being filtered: a dashed border for
    *  "planned", a faded fill for "done". That is what lets a set of chips replace a legend
    *  rather than sit beside one. Takes precedence over dotColor. */
   swatch?: string
@@ -83,7 +83,7 @@ export interface ChipProps<V extends string = string> {
    *  Declared HERE and not only on the component: index.ts tells consumers to type their own state
    *  against this interface, so a prop the component accepts and the interface omits is a prop they
    *  cannot pass without an error. Seg shipped exactly this defect, with the same prop name, and
-   *  the fix there was the same — take props from the exported type rather than an inline literal. */
+   *  the fix there was the same: take props from the exported type rather than an inline literal. */
   variant?: 'pill' | 'row'
 }
 
@@ -103,7 +103,7 @@ export interface ToolProps {
  * contract for free: everything after a <summary> is hidden while the panel is closed -- verified,
  * not assumed (`checkVisibility()` returns false and the element does not hit-test) -- so a header
  * control that must stay reachable when collapsed cannot live there. Putting it INSIDE the summary
- * instead flattens it in the accessibility tree — the exact defect a consuming app shipped, where a
+ * instead flattens it in the accessibility tree: the exact defect a consuming app shipped, where a
  * link inside the click target needed an inline stopPropagation to work at all, and the header took
  * no keyboard focus. A header row the component owns can hold both; a <summary> cannot.
  * The one thing <details> gave that had to be rebuilt is find-in-page reaching collapsed text --
@@ -116,13 +116,13 @@ export interface DisclosureProps {
   label: string
   /** Whether the region is revealed. The caller owns it. */
   open?: boolean
-  /** Quieter second line under `label` — a filename, a count, what is inside. */
+  /** Quieter second line under `label`: a filename, a count, what is inside. */
   meta?: string
   /** Disable the toggle. The region stays in whatever state `open` says. */
   disabled?: boolean
 }
 
-/* One row in a Select. `subtitle` is a quieter second line — a consumer's ULS combination carries
+/* One row in a Select. `subtitle` is a quieter second line: a consumer's ULS combination carries
    its factored formula there ("1.35·G + 1.5·Q"), which is what makes two similarly-named rows
    distinguishable rather than decorative. */
 export interface SelectOption {
@@ -143,8 +143,8 @@ export interface SelectGroup {
 /* One mark on a Slider's track, at a value the scale itself does not make obvious.
  *
  * NOT decoration, and the case that asked for it says why: a consumer's deform scale is ×1 at
- * position 25 of 100 — deliberately LEFT of centre, because exaggerating a deflection is the
- * common need and shrinking it is rare — and a drag that lands near 25 SNAPS onto it. Without a
+ * position 25 of 100 (deliberately LEFT of centre, because exaggerating a deflection is the
+ * common need and shrinking it is rare) and a drag that lands near 25 SNAPS onto it. Without a
  * mark, neither fact is visible: the neutral point is somewhere unmarked in the left quarter, and
  * the snap reads as the control jumping on its own.
  *
@@ -156,7 +156,7 @@ export interface SliderTick {
 }
 
 // A named group of toggles inside a FilterRail. `options` are ChipOption rows;
-// `selected` is the active Set for this group. Grouping + selection are data —
+// `selected` is the active Set for this group. Grouping + selection are data:
 // the rail renders one Chip row per group and wires toggle/clear mechanically.
 export interface FilterGroup<V extends string = string> {
   key: string
@@ -167,7 +167,7 @@ export interface FilterGroup<V extends string = string> {
 
 // A message in a ChatPanel log. `role` picks the bubble style and the printed label
 // ('you' / 'agent' / 'note' for sys); `queued` marks a request not yet sent, which both
-// real consumers style as dashed + dimmed. `refs` is always an array — a caller with a
+// real consumers style as dashed + dimmed. `refs` is always an array: a caller with a
 // single reference passes a one-element array rather than the panel juggling two shapes.
 export interface ChatMessage {
   role: 'you' | 'agent' | 'sys'

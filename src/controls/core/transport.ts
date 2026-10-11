@@ -16,7 +16,7 @@ export function isAtEnd(current: number, duration: number, eps = 1e-6): boolean 
 }
 
 // Scrub-while-playing puts two writers on one playhead (the drag and the rAF).
-// The caller pauses on scrub-start and resumes on scrub-end — this is the same
+// The caller pauses on scrub-start and resumes on scrub-end; this is the same
 // bargain both real transports make; centralised here so it's one decision, not two.
 export interface ScrubHandle {
   resume: boolean

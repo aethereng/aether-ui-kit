@@ -2,7 +2,7 @@
  * entire keyboard model. No Vue.
  *
  * The keyboard model lives here rather than in the component on purpose. It is the part everyone
- * gets wrong — both consuming apps shipped a tree where Tab reached nothing and arrows did nothing,
+ * gets wrong: both consuming apps shipped a tree where Tab reached nothing and arrows did nothing,
  * and "operable" was as far as a hand-rolled fix got. Arrow behaviour in a tree is genuinely
  * non-obvious (Right means two different things depending on expansion state; Left means two more),
  * so it is written once, as pure functions over plain data, and tested without a DOM.
@@ -11,7 +11,7 @@
 export interface TreeNode<T = unknown> {
   id: string
   label: string
-  /** Absent or empty means a leaf. An EMPTY array still counts as a leaf — a node that can hold
+  /** Absent or empty means a leaf. An EMPTY array still counts as a leaf: a node that can hold
    *  children but has none is not expandable, and claiming otherwise gives the user a control that
    *  reveals nothing. */
   children?: TreeNode<T>[]
@@ -65,7 +65,7 @@ export function visibleRows<T>(nodes: TreeNode<T>[], expanded: Set<string>): Tre
   return out
 }
 
-/** What a key press means. The caller applies it — this decides nothing about state itself, which is
+/** What a key press means. The caller applies it; this decides nothing about state itself, which is
  *  what lets the same logic drive a controlled and an uncontrolled tree. */
 export type TreeKeyResult =
   | { kind: 'move'; id: string }
@@ -122,7 +122,7 @@ export function treeKey(key: string, rows: TreeRow[], cursorId: string): TreeKey
  * cycle through matches instead of sticking on the first one. */
 export function typeahead(
   /* Widened from TreeRow[] to what the function actually reads. A TreeRow still satisfies it, so no
-     existing caller changes — but Menu needs the same behaviour over items that are not tree rows,
+     existing caller changes; but Menu needs the same behaviour over items that are not tree rows,
      and cycling-on-repeat-keypress is the exact detail worth having in one place rather than two. */
   rows: readonly { id: string; label: string }[],
   query: string,

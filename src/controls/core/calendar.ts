@@ -1,23 +1,23 @@
 /* Calendar arithmetic for the date field's own picker.
  *
- * @internal — and that tag is load-bearing, not decoration: the package-contract test treats every
+ * @internal; and that tag is load-bearing, not decoration: the package-contract test treats every
  * other module in a `core/` folder as public and fails the build if the barrel does not re-export
  * it. This is the one marker that says "private on purpose" rather than "someone forgot".
  *
  * Not in the exports map and not re-exported from ./index, because the picker is an
- * implementation detail of the date field, not a component in its own right — if a second consumer
+ * implementation detail of the date field, not a component in its own right; if a second consumer
  * ever needs a bare month grid, it gets extracted then, under the kit's two-consumer rule. It lives
  * in core/ rather than inside the .vue only so it can be unit-tested, which is the whole reason to
  * keep the arithmetic out of the component.
  *
  * Everything works on plain integers, and the ONE Date constructed is UTC and used only to ask which
  * weekday a day-number falls on. That is not fussiness: `new Date('2026-08-21')` parses as UTC
- * midnight, so `.getDate()` in any negative-offset zone answers the 20th — a date-only value that
+ * midnight, so `.getDate()` in any negative-offset zone answers the 20th: a date-only value that
  * round-trips through local time comes back a day early for half the planet. `today()` is the
  * deliberate exception, since "today" is a question about the user's local clock.
  */
 
-/** Calendar date. `m` is 1-12, NOT the 0-11 that Date uses — the off-by-one between the two is the
+/** Calendar date. `m` is 1-12, NOT the 0-11 that Date uses: the off-by-one between the two is the
  *  single most common bug in date code, so this type never carries the ambiguous form. */
 export interface YMD {
   y: number
@@ -27,7 +27,7 @@ export interface YMD {
 
 const pad = (n: number) => (n < 10 ? '0' + n : String(n))
 
-/** `YYYY-MM-DD` — the value format of `<input type="date">`, which is what this field stores. */
+/** `YYYY-MM-DD`: the value format of `<input type="date">`, which is what this field stores. */
 export function toISO(v: YMD): string {
   return `${v.y}-${pad(v.m)}-${pad(v.d)}`
 }
@@ -74,7 +74,7 @@ export function sameDay(a: YMD | null, b: YMD | null): boolean {
   return !!a && !!b && a.y === b.y && a.m === b.m && a.d === b.d
 }
 
-/** The user's local today — the one place local time is the correct question to ask. */
+/** The user's local today: the one place local time is the correct question to ask. */
 export function today(): YMD {
   const n = new Date()
   return { y: n.getFullYear(), m: n.getMonth() + 1, d: n.getDate() }

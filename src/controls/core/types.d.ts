@@ -11,8 +11,8 @@ export interface SegProps<V extends string = string> {
      *  selectable, so it needs its own guard against being chosen. This does not. */
     modelValue: V | null;
     ariaLabel?: string;
-    /** 'default' — square-cornered, panel-grey active segment.
-     *  'pill'    — fully rounded, uppercase mono, accent-wash active segment. A second real look
+    /** 'default':  square-cornered, panel-grey active segment.
+     *  'pill':     fully rounded, uppercase mono, accent-wash active segment. A second real look
      *              that already shipped in a consumer's header, not a style hook: the same
      *              precedent Chip's `variant` set. */
     variant?: 'default' | 'pill';
@@ -36,7 +36,7 @@ export type ChipOption<V extends string = string> = {
     dotColor?: string;
     /** A raw CSS declaration list for the leading swatch, e.g. 'background:#c33' or
      *  'border:1.5px dashed #c33'. Where dotColor gives an 8px colour dot, this gives a wider
-     *  block that can carry the SAME encoding as the thing being filtered — a dashed border for
+     *  block that can carry the SAME encoding as the thing being filtered: a dashed border for
      *  "planned", a faded fill for "done". That is what lets a set of chips replace a legend
      *  rather than sit beside one. Takes precedence over dotColor. */
     swatch?: string;
@@ -70,7 +70,7 @@ export interface ChipProps<V extends string = string> {
      *  Declared HERE and not only on the component: index.ts tells consumers to type their own state
      *  against this interface, so a prop the component accepts and the interface omits is a prop they
      *  cannot pass without an error. Seg shipped exactly this defect, with the same prop name, and
-     *  the fix there was the same — take props from the exported type rather than an inline literal. */
+     *  the fix there was the same: take props from the exported type rather than an inline literal. */
     variant?: 'pill' | 'row';
 }
 export interface ToolProps {
@@ -83,7 +83,7 @@ export interface DisclosureProps {
     label: string;
     /** Whether the region is revealed. The caller owns it. */
     open?: boolean;
-    /** Quieter second line under `label` — a filename, a count, what is inside. */
+    /** Quieter second line under `label`: a filename, a count, what is inside. */
     meta?: string;
     /** Disable the toggle. The region stays in whatever state `open` says. */
     disabled?: boolean;

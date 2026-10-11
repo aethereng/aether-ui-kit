@@ -251,7 +251,7 @@ const tabs = computed<SegOption<Tab>[]>(() => {
       </table>
 
       <p v-if="meta.core" class="g-corenote">
-        Framework-free core: <code>{{ meta.core }}</code> — plain TypeScript, no Vue import. The
+        Framework-free core: <code>{{ meta.core }}</code> (plain TypeScript, no Vue import). The
         component above is a thin wrapper over it.
       </p>
     </details>

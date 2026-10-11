@@ -7,7 +7,6 @@
 [![Gallery](https://img.shields.io/badge/gallery-live-2F6F6B?style=flat-square)](https://aethereng.github.io/aether-ui-kit/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 [![Runtime deps](https://img.shields.io/badge/runtime%20deps-0-A9591B?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-175-2F6F6B?style=flat-square)](#testing)
 [![Deploy gallery](https://github.com/aethereng/aether-ui-kit/actions/workflows/deploy-gallery.yml/badge.svg)](https://github.com/aethereng/aether-ui-kit/actions/workflows/deploy-gallery.yml)
 
 ### → **[See every component, live](https://aethereng.github.io/aether-ui-kit/)** ←
@@ -303,11 +302,11 @@ reads convincingly like a broken test. This is a *development* requirement only:
 itself has zero runtime dependencies, so there is deliberately no `engines` field gating
 consumers on a Node they do not need.
 
-175 tests, in three layers that exist for different reasons:
+The tests are in three layers that exist for different reasons:
 
-- **Cores (62)**: lane packing, span-vs-point classification, force-layout convergence, the scrub handoff, speed cycling, field coercion. No DOM. This is where the logic lives, so this is where most tests live.
-- **The package contract (33)**: that every `exports` subpath resolves to a file that exists *and* is inside the published `files` globs; that runtime dependencies stay at zero; that the token contract holds. Both classes of bug here have shipped once: an entry point that 404s for anyone installing normally, and CSS reading tokens no palette defined.
-- **Wrapper / pointer layer (80)**: real `pointerdown`/`move`/`up` sequences against rendered DOM. This layer exists because that is where these components have actually broken: an extraction renamed a class, every hit-test selector silently stopped matching, and drag, resize and create were all dead while everything still compiled and type-checked.
+- **Cores**: lane packing, span-vs-point classification, force-layout convergence, the scrub handoff, speed cycling, field coercion. No DOM. This is where the logic lives, so this is where most tests live.
+- **The package contract**: that every `exports` subpath resolves to a file that exists *and* is inside the published `files` globs; that runtime dependencies stay at zero; that the token contract holds. Both classes of bug here have shipped once: an entry point that 404s for anyone installing normally, and CSS reading tokens no palette defined.
+- **Wrapper / pointer layer**: real `pointerdown`/`move`/`up` sequences against rendered DOM. This layer exists because that is where these components have actually broken: an extraction renamed a class, every hit-test selector silently stopped matching, and drag, resize and create were all dead while everything still compiled and type-checked.
 
 ### What earns a place here
 

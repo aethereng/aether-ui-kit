@@ -11,7 +11,7 @@
 # AFTER the tag exists, so a red run means a bad tag is already public. The fix is the next patch
 # version, never a moved tag (see README).
 #
-# The gallery is also the kit's own proof of the token contract (see README) — it's a
+# The gallery is also the kit's own proof of the token contract (see README); it's a
 # real host app, not a mock, so a broken build here means the kit itself is broken.
 # `npm run build` therefore runs the same type-check + vitest-covered build a consumer
 # would run, not a gallery-only shortcut.
@@ -54,7 +54,7 @@ jobs:
 
       - run: npm ci
 
-      # The .d.ts files under src/ are GENERATED and COMMITTED — consumers install straight from
+      # The .d.ts files under src/ are GENERATED and COMMITTED; consumers install straight from
       # a git tag, so there is no publish step that could build them. Committed artifacts drift,
       # and a stale declaration is worse than none: it type-checks green against a contract the
       # component no longer has. This regenerates them and fails if the result differs from what
@@ -66,7 +66,7 @@ jobs:
         run: npm run test:unit -- --run
 
       - name: Build gallery
-        # `build` runs type-check and the gallery build in parallel (package.json) —
+        # `build` runs type-check and the gallery build in parallel (package.json);
         # a broken .vue prop type fails this step, same as it would for a consumer.
         run: npm run build
 

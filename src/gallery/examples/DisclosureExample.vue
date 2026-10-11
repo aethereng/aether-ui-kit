@@ -19,18 +19,18 @@ const diagnostics = ref(false)
 
 <template>
   <div class="g-ex g-ex--full">
-    <span class="g-variant">label + meta — the meta line says what is inside, so collapsing it does
+    <span class="g-variant">label + meta: the meta line says what is inside, so collapsing it does
       not hide that it exists</span>
     <Disclosure v-model:open="options" label="Advanced options" meta="4 set · 2 left at default">
       <p>
-        Anything can go in the region — a form, a table, a chart. The panel measures nothing and
+        Anything can go in the region: a form, a table, a chart. The panel measures nothing and
         lays out nothing inside it; it only shows and hides.
       </p>
     </Disclosure>
   </div>
 
   <div class="g-ex g-ex--full">
-    <span class="g-variant">#aside — a header control that stays reachable while COLLAPSED, and is
+    <span class="g-variant">#aside: a header control that stays reachable while COLLAPSED, and is
       its own tab stop rather than nested inside the toggle</span>
     <Disclosure v-model:open="limits" label="Rate limits" meta="inherited from the parent policy">
       <template #aside>
@@ -38,14 +38,14 @@ const diagnostics = ref(false)
       </template>
       <p>
         Tab from the toggle and focus lands on the link, not past it. Shut the panel and the link is
-        still there — that is the whole reason this is a button and a region rather than a
+        still there; that is the whole reason this is a button and a region rather than a
         &lt;details&gt;.
       </p>
     </Disclosure>
   </div>
 
   <div class="g-ex g-ex--full">
-    <span class="g-variant">disabled — the toggle emits nothing; `open` still says what the region
+    <span class="g-variant">disabled: the toggle emits nothing; `open` still says what the region
       does</span>
     <Disclosure v-model:open="diagnostics" label="Diagnostics" meta="nothing to show yet" disabled>
       <p>Unreachable while disabled.</p>
@@ -54,7 +54,7 @@ const diagnostics = ref(false)
 
   <p class="g-hint">
     Collapsed panels are hidden with <code>hidden="until-found"</code>, not
-    <code>display: none</code> — so the browser's find-in-page still reaches the text inside a
+    <code>display: none</code>; so the browser's find-in-page still reaches the text inside a
     closed one and fires <code>beforematch</code>, which the component turns into
     <code>update:open</code>. Try Ctrl+F for “measures” with the first panel shut.
   </p>

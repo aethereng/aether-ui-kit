@@ -14,7 +14,7 @@ const end = ref('')
     <label class="g-df-row" for="df-start"><span>Start</span></label>
     <DateField id="df-start" v-model="start" />
 
-    <label class="g-df-row" for="df-end"><span>End — empty until picked</span></label>
+    <label class="g-df-row" for="df-end"><span>End (empty until picked)</span></label>
     <DateField id="df-end" v-model="end" />
 
     <code class="g-ex-state">start = {{ start || '(empty)' }} · end = {{ end || '(empty)' }}</code>

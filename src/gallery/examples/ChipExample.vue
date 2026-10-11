@@ -29,7 +29,7 @@ const chipOptions: ChipOption[] = [
     value: 'derived',
     label: 'Derived',
     count: 3,
-    title: 'Computed from other fields — not editable directly',
+    title: 'Computed from other fields. Not editable directly.',
   },
 ]
 
@@ -66,17 +66,17 @@ function toggleRow(v: string) {
 
 <template>
   <div class="g-ex">
-    <span class="g-variant">default (pill) — multi-select via a Set</span>
+    <span class="g-variant">default (pill): multi-select via a Set</span>
     <Chip :options="chipOptions" :model-value="active" aria-label="Filter by kind" @toggle="toggle" />
   </div>
 
   <div class="g-ex">
-    <span class="g-variant">a single value instead of a Set — one active chip</span>
+    <span class="g-variant">a single value instead of a Set: one active chip</span>
     <Chip :options="singleOptions" :model-value="single" aria-label="Scope" @toggle="single = $event" />
   </div>
 
   <div class="g-ex" style="min-width: 210px">
-    <span class="g-variant">variant="row" — the sidebar form</span>
+    <span class="g-variant">variant="row" (the sidebar form)</span>
     <Chip variant="row" :options="rowOptions" :model-value="rows" aria-label="Status" @toggle="toggleRow" />
   </div>
 

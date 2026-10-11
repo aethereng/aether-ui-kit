@@ -64,11 +64,11 @@ const open = ref(true)
       <div class="g-tt-inner">
         <Tooltip
           placement="left"
-          text="Suppress this coupling — it is derived again on the next solve but deliberately not made, and the suppression is undoable."
+          text="Suppress this coupling; it is derived again on the next solve but deliberately not made, and the suppression is undoable."
         >
           <button type="button" class="g-tt-btn">Suppress</button>
         </Tooltip>
-        <span class="g-tt-hint">hover the button — the tooltip leaves the panel</span>
+        <span class="g-tt-hint">hover the button; the tooltip leaves the panel</span>
       </div>
     </Disclosure>
   </div>

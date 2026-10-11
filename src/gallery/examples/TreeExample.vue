@@ -42,7 +42,7 @@ const selected = ref<string | null>('main')
 
 <template>
   <div class="g-ex g-ex--full">
-    <span class="g-variant">arrow keys move a cursor; Enter selects — moving is not selecting, so
+    <span class="g-variant">arrow keys move a cursor; Enter selects: moving is not selecting, so
       arrowing through a tree never fires the caller's open handler</span>
     <div class="g-tree">
       <Tree
@@ -58,7 +58,7 @@ const selected = ref<string | null>('main')
   <code class="g-ex-state">selected = {{ selected }} · expanded = {{ JSON.stringify(expanded) }}</code>
 
   <p class="g-hint">
-    Tab into the tree and it takes <em>one</em> tab stop, not one per row — the focused row roves
+    Tab into the tree and it takes <em>one</em> tab stop, not one per row; the focused row roves
     with the arrow keys. Type a letter to jump. Every row carries
     <code>aria-level</code>, <code>aria-setsize</code> and <code>aria-posinset</code>, which is what
     makes a flat list of rows read as a tree to a screen reader.

@@ -58,7 +58,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
 
 <template>
   <div class="g-ex" style="flex-basis: 100%">
-    <span class="g-variant">speed-mode="cycle" (default) — one button steps through the speeds</span>
+    <span class="g-variant">speed-mode="cycle" (default): one button steps through the speeds</span>
     <Transport
       :current="current"
       :duration="duration"
@@ -80,7 +80,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
          button beside it stepped through DEFAULT_SPEEDS [0.25, 0.5, 1, 2, 4], which made the
          sentence above false: cycling to 0.25 or 4 highlighted nothing in this row, and clicking 0.2
          or 5 set a speed the button could not reach. Both now read the one ladder. -->
-    <span class="g-variant">speed-mode="presets" — the whole ladder, laid out</span>
+    <span class="g-variant">speed-mode="presets": the whole ladder, laid out</span>
     <Transport
       :current="current"
       :duration="duration"
@@ -97,7 +97,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
 
   <div class="g-ex" style="flex-basis: 100%">
     <!-- phase="precompute" swaps the scrub for a progress bar: there is nothing to scrub yet. -->
-    <span class="g-variant">phase="precompute" — building, not playing</span>
+    <span class="g-variant">phase="precompute": building, not playing</span>
     <Transport
       :current="0"
       :duration="duration"

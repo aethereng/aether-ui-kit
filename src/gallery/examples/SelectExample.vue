@@ -37,11 +37,11 @@ const channelGroups: SelectGroup[] = [
 
 <template>
   <div class="g-sel">
-    <label class="g-sel-row"><span>Solvent — a flat list</span>
+    <label class="g-sel-row"><span>Solvent: a flat list</span>
       <Select v-model="solvent" :options="solvents" />
     </label>
 
-    <label class="g-sel-row"><span>Channel — two kinds of thing, so two groups</span>
+    <label class="g-sel-row"><span>Channel: two kinds of thing, so two groups</span>
       <Select v-model="channel" :groups="channelGroups" />
     </label>
 

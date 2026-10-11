@@ -23,7 +23,7 @@ const zoomTicks: SliderTick[] = [{ value: 43, label: '×1' }]
 
 <template>
   <div class="g-sl">
-    <label class="g-sl-row"><span>Opacity — the stored value, shown as a percentage</span>
+    <label class="g-sl-row"><span>Opacity: the stored value, shown as a percentage</span>
       <Slider
         v-model="opacity"
         :min="0"
@@ -34,7 +34,7 @@ const zoomTicks: SliderTick[] = [{ value: 43, label: '×1' }]
       />
     </label>
 
-    <label class="g-sl-row"><span>Zoom — a mapped value, with a tick at ×1</span>
+    <label class="g-sl-row"><span>Zoom: a mapped value, with a tick at ×1</span>
       <Slider v-model="zoom" :min="0" :max="100" :step="1" :format="zoomLabel" :ticks="zoomTicks" />
     </label>
 

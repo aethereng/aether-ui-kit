@@ -134,7 +134,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
 
 <template>
   <p class="g-hint">
-    Drag a node — its neighbours follow. Click one to light its neighbourhood. Wheel or pinch to
+    Drag a node: its neighbours follow. Click one to light its neighbourhood. Wheel or pinch to
     zoom, drag the background to pan; hover a node for the card.
     <button class="g-mini" type="button" @click="rerun()">Re-run layout</button>
     <button class="g-mini" type="button" @click="graph?.zoomOut()">−</button>

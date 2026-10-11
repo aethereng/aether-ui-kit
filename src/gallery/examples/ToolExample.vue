@@ -20,34 +20,34 @@ const clicks = ref(0)
 
 <template>
   <div class="g-ex g-ex--tile">
-    <span class="g-variant">hot — the primary action on a surface</span>
+    <span class="g-variant">hot: the primary action on a surface</span>
     <Tool label="New card" hot @click="clicks++" />
   </div>
 
   <div class="g-ex g-ex--tile">
-    <span class="g-variant">default — neutral</span>
+    <span class="g-variant">default: neutral</span>
     <Tool label="Plain" @click="clicks++" />
   </div>
 
   <div class="g-ex g-ex--tile">
-    <span class="g-variant">danger — destructive</span>
+    <span class="g-variant">danger: destructive</span>
     <Tool label="Delete" danger @click="clicks++" />
   </div>
 
   <div class="g-ex g-ex--tile">
-    <span class="g-variant">disabled — emits nothing</span>
+    <span class="g-variant">disabled: emits nothing</span>
     <Tool label="Disabled" disabled @click="clicks++" />
   </div>
 
   <div class="g-ex g-ex--tile">
-    <span class="g-variant">both hot and danger — danger wins</span>
+    <span class="g-variant">both hot and danger: danger wins</span>
     <Tool label="Discard all" hot danger title="danger takes precedence" @click="clicks++" />
   </div>
 
   <div class="g-ex g-ex--tile">
     <!-- #icon is a SLOT, not an `icon` prop: a prop would imply an icon vocabulary, and zero
          runtime dependencies is load-bearing for this kit. Bring your own SVG. -->
-    <span class="g-variant">#icon slot, with a label — a hand-written SVG</span>
+    <span class="g-variant">#icon slot, with a label: a hand-written SVG</span>
     <Tool label="Fit view" @click="clicks++">
       <template #icon>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -58,7 +58,7 @@ const clicks = ref(0)
   </div>
 
   <div class="g-ex g-ex--tile">
-    <span class="g-variant">#trailing — an affordance after the label, not a second icon</span>
+    <span class="g-variant">#trailing: an affordance after the label, not a second icon</span>
     <Tool label="Sort" @click="clicks++">
       <template #trailing>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -74,7 +74,7 @@ const clicks = ref(0)
     <!-- The same slot, fed from @mdi/js. mdi paths are drawn on a 24x24 grid, so the viewBox is
          "0 0 24 24" and `fill="currentColor"` makes the glyph inherit the button's colour -- both
          the hot and danger variants included, without the icon knowing which it is in. -->
-    <span class="g-variant">#icon slot, fed from @mdi/js — path strings, tree-shaken, no font</span>
+    <span class="g-variant">#icon slot, fed from @mdi/js: path strings, tree-shaken, no font</span>
     <div class="g-ex-row">
       <Tool label="Save" hot @click="clicks++">
         <template #icon>
@@ -92,7 +92,7 @@ const clicks = ref(0)
   <div class="g-ex g-ex--tile">
     <!-- labelHidden keeps `label` as the ACCESSIBLE NAME via aria-label, so an icon-only button
          is never unlabelled to a screen reader. -->
-    <span class="g-variant">labelHidden — icon only, still named for screen readers</span>
+    <span class="g-variant">labelHidden: icon only, still named for screen readers</span>
     <Tool label="Zoom to selection" label-hidden title="Zoom to selection" @click="clicks++">
       <template #icon>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">

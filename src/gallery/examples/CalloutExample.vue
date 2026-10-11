@@ -33,7 +33,7 @@ const checks: { verdict: Verdict; title: string; note: string }[] = [
 
 <template>
   <div class="g-callout-rows">
-    <Callout>The four tones, at rest. This one is <code>info</code> — the default and the quiet one.</Callout>
+    <Callout>The four tones, at rest. This one is <code>info</code> (the default and the quiet one).</Callout>
 
     <!-- Domain -> tone, resolved by the caller. -->
     <Callout v-for="c in checks" :key="c.title" :tone="toneOf[c.verdict]" :title="c.title">

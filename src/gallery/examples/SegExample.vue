@@ -57,25 +57,25 @@ const matched = computed<Preset | null>(() => {
 
 <template>
   <div class="g-ex g-ex--full">
-    <span class="g-variant">default — square corners, panel-grey active segment</span>
+    <span class="g-variant">default: square corners, panel-grey active segment</span>
     <Seg v-model="grain" :options="grainOptions" aria-label="Granularity" />
   </div>
 
   <div class="g-ex g-ex--full">
     <!-- Deliberately the SAME options as above: the only thing that differs is `variant`. -->
     <span class="g-variant">
-      variant="pill" — the same options as a rounded capsule, uppercase mono, accent-wash active
+      variant="pill": the same options as a rounded capsule, uppercase mono, accent-wash active
     </span>
     <Seg v-model="grainPill" variant="pill" :options="grainOptions" aria-label="Granularity, pill" />
   </div>
 
   <div class="g-ex g-ex--full">
-    <span class="g-variant">a disabled option — dimmed, and clicking it emits nothing</span>
+    <span class="g-variant">a disabled option: dimmed, and clicking it emits nothing</span>
     <Seg v-model="range" :options="rangeOptions" aria-label="Range" />
   </div>
 
   <div class="g-ex g-ex--full">
-    <span class="g-variant">modelValue = null — the value matches no preset, so nothing is active</span>
+    <span class="g-variant">modelValue = null: the value matches no preset, so nothing is active</span>
     <div class="g-ex-row">
       <!-- `@update:model-value`, not the deprecated `@change`. This is the case `change` was added
            for (a caller with no v-model, because the bound value is DERIVED and often null) and

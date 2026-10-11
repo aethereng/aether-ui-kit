@@ -19,13 +19,13 @@ const setpoint = ref<number | undefined>(65)
 
     <!-- `precision` derives the step when none is given: 2 → 0.01, so the spinner moves by a sane
          amount for the decimals expected. It does not round what is stored or shown. -->
-    <label class="g-nf-row"><span>Mixing ratio — precision 2, no explicit step</span>
+    <label class="g-nf-row"><span>Mixing ratio: precision 2, no explicit step</span>
       <NumberField v-model="ratio" :precision="2" />
     </label>
 
     <!-- Clearing it emits `undefined`, not 0: a caller has to tell "no value" from "zero", and
          only `validity.badInput` separates an empty field from a half-typed one. -->
-    <label class="g-nf-row"><span>Setpoint — clear this one</span>
+    <label class="g-nf-row"><span>Setpoint: clear this one</span>
       <NumberField v-model="setpoint" suffix="°C" placeholder="—" />
     </label>
 

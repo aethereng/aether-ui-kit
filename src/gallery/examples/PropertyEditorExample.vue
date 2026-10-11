@@ -85,13 +85,13 @@ const out = ref<FieldValues>({ ...values })
        an omission. -->
   <div class="g-pe-pair">
     <div>
-      <p class="g-pe-cap"><code>labelPlacement="above"</code> — the default. A property sheet.</p>
+      <p class="g-pe-cap"><code>labelPlacement="above"</code> (the default). A property sheet.</p>
       <div class="g-pe">
         <PropertyEditor :fields="fields" :model-value="values" @update:model-value="out = $event" />
       </div>
     </div>
     <div>
-      <p class="g-pe-cap"><code>labelPlacement="inside"</code> — for form surfaces.</p>
+      <p class="g-pe-cap"><code>labelPlacement="inside"</code> (for form surfaces).</p>
       <div class="g-pe">
         <PropertyEditor
           label-placement="inside"

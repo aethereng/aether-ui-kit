@@ -110,7 +110,7 @@ function onExpandDay(day: { t: string; i: number } | null) {
   <p class="g-hint">
     Drag a bar to move it, its edges to resize. Double-click empty lane space to create. Undo
     checkpoints come from drag-start / drag-end, not every pixel. The strip under each lane is the
-    one-day row — three items share day 12, so they are stacked into one block rather than
+    one-day row: three items share day 12, so they are stacked into one block rather than
     overlapping. Click it to expand them.
   </p>
 

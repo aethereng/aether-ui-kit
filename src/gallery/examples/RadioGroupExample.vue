@@ -30,17 +30,17 @@ const source = ref<'sensor' | 'manual'>('sensor')
 <template>
   <div class="g-rg">
     <div class="g-rg-row">
-      <span class="g-rg-cap">Units — a value</span>
+      <span class="g-rg-cap">Units: a value</span>
       <RadioGroup v-model="unit" :options="units" aria-label="Units" />
     </div>
 
     <div class="g-rg-row">
-      <span class="g-rg-cap">Smoothing — a value, one option unavailable</span>
+      <span class="g-rg-cap">Smoothing: a value, one option unavailable</span>
       <RadioGroup v-model="smoothing" :options="smoothings" aria-label="Smoothing" />
     </div>
 
     <div class="g-rg-row">
-      <span class="g-rg-cap">Source — a tab strip, so Seg</span>
+      <span class="g-rg-cap">Source: a tab strip, so Seg</span>
       <Seg
         v-model="source"
         :options="[

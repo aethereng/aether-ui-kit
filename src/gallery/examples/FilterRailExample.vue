@@ -51,12 +51,12 @@ function onClear() {
 <template>
   <div class="g-rails">
     <div class="g-ex">
-      <span class="g-variant">orientation="vertical" (default) — a filter sidebar</span>
+      <span class="g-variant">orientation="vertical" (default): a filter sidebar</span>
       <FilterRail :groups="groups" :hidden-count="hidden" @toggle="onToggle" @clear="onClear" />
     </div>
 
     <div class="g-ex">
-      <span class="g-variant">orientation="horizontal" — the same rail, same state, as a header bar</span>
+      <span class="g-variant">orientation="horizontal": the same rail, same state, as a header bar</span>
       <FilterRail
         :groups="groups"
         :hidden-count="hidden"

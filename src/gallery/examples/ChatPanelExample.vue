@@ -22,19 +22,19 @@ function onSend() {
   reqs.forEach((m) => (m.queued = false))
   messages.value.push({
     role: 'sys',
-    text: 'Sent ' + reqs.length + ' request(s) — exported as request.json.',
+    text: 'Sent ' + reqs.length + ' request(s): exported as request.json.',
   })
 }
 
 /* A host calls this after importing a reply file; here it hands back a canned response. */
 function onApplyReply() {
-  messages.value.push({ role: 'agent', text: 'Done — see the diff.' })
+  messages.value.push({ role: 'agent', text: 'Done. See the diff.' })
 }
 </script>
 
 <template>
   <p class="g-hint">
-    Type a line, hit Queue, then Send — the count on the button clears and a system note lands in
+    Type a line, hit Queue, then Send; the count on the button clears and a system note lands in
     the log. Apply reply hands back a canned response, the way a real host would after importing a
     reply file.
   </p>

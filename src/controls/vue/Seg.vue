@@ -14,8 +14,8 @@ const props = withDefaults(defineProps<SegProps<V>>(), {
 
 /* ONE EMIT. `change` is gone: it carried the same value as `update:modelValue` and fired straight
  * after it, so a caller binding both got the same thing twice and a caller binding only `change`
- * was writing `@update:model-value` the long way. RadioGroup — the control Seg is most confused
- * with — always shipped one, and two sibling selectors disagreeing on their event surface is a
+ * was writing `@update:model-value` the long way. RadioGroup: the control Seg is most confused
+ * with: always shipped one, and two sibling selectors disagreeing on their event surface is a
  * difference with nothing at the call site to explain it.
  *
  * It was deprecated first rather than deleted outright, because removing an emit does NOT fail at

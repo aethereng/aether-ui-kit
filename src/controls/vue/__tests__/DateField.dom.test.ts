@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import DateField from '../DateField.vue'
 
 /* DateField had no tests. It moved out of property-editor/ into controls/ when it became a
- * standalone control, and whatever the form's suite covered did not come with it — which is the
+ * standalone control, and whatever the form's suite covered did not come with it; which is the
  * failure mode the coverage guard in package-contract.test.ts now catches.
  *
  * What matters here is the SEAM: this wraps a native `input[type=date]` and replaces only the

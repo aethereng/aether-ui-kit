@@ -5,8 +5,8 @@ import { resolve } from 'node:path'
 import Slider from '../Slider.vue'
 import type { SliderTick } from '../../core/types'
 
-/* Slider changed more than anything else in the kit this week — it took over its own track and
- * thumb, gained ticks and an aria-valuetext — and had no test at all. Two of the cases below are
+/* Slider changed more than anything else in the kit this week; it took over its own track and
+ * thumb, gained ticks and an aria-valuetext; and had no test at all. Two of the cases below are
  * regressions that shipped and were caught only by looking at a running browser, which is exactly
  * the kind of thing a test should be holding instead. */
 

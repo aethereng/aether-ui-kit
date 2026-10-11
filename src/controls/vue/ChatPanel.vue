@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /* A message log + compose box for the "queue instructions, export a request file, apply the
  * reply" pattern used by every surface that talks to an agent. Extracted after two hosts
- * (a file browser, a card board) shipped it identically — same log shape, same three
- * buttons, same Ctrl/Cmd+Enter-to-queue binding, same "queued" dashed state — with only the
+ * (a file browser, a card board) shipped it identically: same log shape, same three
+ * buttons, same Ctrl/Cmd+Enter-to-queue binding, same "queued" dashed state: with only the
  * export/import logic actually differing between them. That is the split this component
  * draws: it owns the log and the compose box; the caller owns what Send and Apply reply DO.
  *
@@ -61,7 +61,7 @@ watch(
 
 const textareaEl = ref<HTMLTextAreaElement | null>(null)
 /* A host with an "ask about this" shortcut needs to both prefill the compose box (via
- * v-model, from outside) and focus it in one call — the same need SearchField's expose
+ * v-model, from outside) and focus it in one call: the same need SearchField's expose
  * solves for its input. */
 defineExpose({ focus: () => textareaEl.value?.focus() })
 </script>

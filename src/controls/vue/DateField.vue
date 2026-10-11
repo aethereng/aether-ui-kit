@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* The date field, with its own picker.
  *
- * IT USED TO BE PRIVATE to PropertyEditor — not in the exports map, not documented — which made it
+ * IT USED TO BE PRIVATE to PropertyEditor (not in the exports map, not documented), which made it
  * the last control in the kit reachable only by describing a form: a FieldDescriptor[], a
  * FieldValues object and a (key, value) handler, to render one date input. That is the packaging
  * failure v0.13.0 named and fixed for five controls and RadioGroup fixed for a sixth; this is the
@@ -9,15 +9,15 @@
  *
  * It exists as its own control, rather than a styled `input[type="date"]`, because Chrome's date
  * picker popup cannot be styled at all: it is browser UI painted outside the page, not page
- * content. Verified rather than assumed — `input.shadowRoot` is null, the only
+ * content. Verified rather than assumed: `input.shadowRoot` is null, the only
  * pseudo-elements Chrome exposes for a date input are the inline parts (`::-webkit-datetime-edit*`,
  * the three sub-fields, the picker indicator, the spin and clear buttons), the popup is in none of
  * them, and there is no opt-in: `base-select` is the only `appearance: base-*` value in Chromium
  * 148, so customizable controls shipped for <select> and not for date inputs.
  *
  * So the native popup is suppressed by hiding its indicator, and the panel below is ours. The
- * <input type="date"> is KEPT for typing: it gives locale-ordered segments, real validation, and —
- * the part worth protecting — on a touch device tapping the field still opens the OS date wheel,
+ * <input type="date"> is KEPT for typing: it gives locale-ordered segments, real validation, and
+ * the part worth protecting: on a touch device tapping the field still opens the OS date wheel,
  * which is better than anything drawn here. Hence no popup on coarse pointers: the platform's is
  * better there, and only the desktop popup was the ugly one.
  */
@@ -36,7 +36,7 @@ import {
 } from '../core/calendar'
 
 const props = defineProps<{
-  /** `YYYY-MM-DD`, or '' for empty — the value format of the native input this wraps. */
+  /** `YYYY-MM-DD`, or '' for empty: the value format of the native input this wraps. */
   modelValue: string
   id?: string
 }>()
@@ -223,7 +223,7 @@ function stepMonth(delta: number) {
 </template>
 
 <style scoped>
-/* A WRAPPER that looks like the input, with a borderless input inside it — the same construction as
+/* A WRAPPER that looks like the input, with a borderless input inside it: the same construction as
    .aether-property-editor__number, and for the same reason: the trigger belongs INSIDE the box.
    A bordered input with a button next to it reads as two controls, and the icon looks like it
    belongs to the form rather than to this field. The inner input is stripped in ui-kit.css, where
@@ -245,7 +245,7 @@ function stepMonth(delta: number) {
   border-color: var(--aether-ink-soft);
 }
 /* The inner input, styled HERE since 0.13.0 rather than by the form's stylesheet. The wrapper is
-   the thing with the border, so the input gives up its own box entirely — and it has to state its
+   the thing with the border, so the input gives up its own box entirely; and it has to state its
    font and colour itself, because the shared `.aether-property-editor__field input` rule that used
    to supply them has gone with the other controls. Without this the date reads at the host's
    default size and colour inside a kit-sized box. */
@@ -369,7 +369,7 @@ function stepMonth(delta: number) {
 .aether-datefield__day:hover {
   background: var(--aether-panel);
 }
-/* Borrowed days stay visible but recede — hiding them would leave holes that break the grid's
+/* Borrowed days stay visible but recede: hiding them would leave holes that break the grid's
    shape, and greying them is how you tell 31 July from 1 August at a glance. */
 .aether-datefield__day.out {
   color: var(--aether-faint);

@@ -2,13 +2,13 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import Transport from '../Transport.vue'
 
-/* Transport had no wrapper tests, and `package-contract.test.ts` said so in a comment — "which is
- * most of Transport's surface" — so the gap was written down rather than noticed. Its CORE is
+/* Transport had no wrapper tests, and `package-contract.test.ts` said so in a comment: "which is
+ * most of Transport's surface"; so the gap was written down rather than noticed. Its CORE is
  * tested (the scrub bargain, cycleSpeed, isAtEnd); this covers the part the core cannot see: what
  * the bar renders in each phase, and which events reach the host.
  *
  * It floats over a live 3-D canvas in both consuming apps, so "reports rather than decides" is
- * the whole contract — it never advances its own clock. */
+ * the whole contract; it never advances its own clock. */
 
 const base = { current: 5, duration: 20, playing: false }
 

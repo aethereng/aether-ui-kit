@@ -2,17 +2,17 @@
 /* Thin, neutral transport control. Controlled (like Graph2D/Gantt): the caller owns
  * current/duration/playing/speed; Transport renders + emits deltas. Replaces the two
  * duplicated Vuetify transports (DiagnosticTransport.vue, DynamicsPlayer.vue) with one
- * shared, framework-free component. Uses a native range input — no Vuetify dependency.
+ * shared, framework-free component. Uses a native range input: no Vuetify dependency.
  *
  * It does NOT position or size itself. Both real consumers float it over a 3-D canvas at
  * their own width and offset, so the host owns the wrapper; the transport fills it.
  *
  * Emits:
- *   toggle   — play/pause (or replay when at end)
- *   seek     — (t:number) scrub to time t
- *   set-speed— (s:number) cycle/choose speed
- *   stop     — dismiss the player
- *   scrub-start / scrub-end — caller pauses on start, resumes on end (one playhead rule)
+ *   toggle: play/pause (or replay when at end)
+ *   seek: (t:number) scrub to time t
+ *   set-speed: (s:number) cycle/choose speed
+ *   stop: dismiss the player
+ *   scrub-start / scrub-end: caller pauses on start, resumes on end (one playhead rule)
  */
 import { computed, onBeforeUnmount } from 'vue'
 import { DEFAULT_SPEEDS, cycleSpeed, isAtEnd } from '../core/transport'
@@ -28,13 +28,13 @@ const props = withDefaults(
     precomputePct?: number
     format?: (t: number) => string
     /** 'cycle' is one button that steps through `speeds`; 'presets' lays them all out as a
-     *  row of toggles. Both real consumers exist — the editor diagnostic cycles, the viewer
-     *  shows the ladder — so this is the interaction axis they differ on, not two components. */
+     *  row of toggles. Both real consumers exist: the editor diagnostic cycles, the viewer
+     *  shows the ladder; so this is the interaction axis they differ on, not two components. */
     speedMode?: 'cycle' | 'presets'
     /** Label a speed. Defaults to `1×`; a host wanting `½×` supplies its own. */
     speedLabel?: (s: number) => string
-    /** Render the dismiss button. The editor diagnostic has no stop affordance of its own —
-     *  it is left via the surrounding UI — so the button has to be omittable. */
+    /** Render the dismiss button. The editor diagnostic has no stop affordance of its own;
+     *  it is left via the surrounding UI; so the button has to be omittable. */
     stoppable?: boolean
     /** Text shown beside the progress bar during `phase: 'precompute'`. */
     computeLabel?: string
@@ -261,7 +261,7 @@ onBeforeUnmount(() => {
   min-width: 120px;
   accent-color: var(--aether-cool);
 }
-/* the precompute bar is a plain div — there is nothing to scrub yet */
+/* the precompute bar is a plain div: there is nothing to scrub yet */
 .at-progress {
   flex: 1 1 auto;
   min-width: 120px;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* A tooltip that survives being inside something with `overflow: hidden` — which is the only
+/* A tooltip that survives being inside something with `overflow: hidden`; which is the only
  * reason it exists as a component rather than a CSS sibling.
  *
  * `popover` puts the surface in the TOP LAYER, outside every ancestor's overflow, clip, transform
@@ -8,7 +8,7 @@
  * There is no Teleport here and none is needed.
  *
  * Position comes from CSS anchor positioning, so the browser tracks the anchor through scroll and
- * resize itself — no listeners, no measuring loop. `position-try-fallbacks` does the collision flip.
+ * resize itself: no listeners, no measuring loop. `position-try-fallbacks` does the collision flip.
  * Where anchor positioning is unsupported the popover still reaches the top layer (that half is
  * broadly available), and a small rect-based fallback places it. */
 import { onBeforeUnmount, ref, useId, watch } from 'vue'
@@ -19,7 +19,7 @@ const props = withDefaults(
      *  keyboard and invisible to touch. Anything interactive belongs in a Menu or a Dialog. */
     text: string
     placement?: 'top' | 'bottom' | 'left' | 'right'
-    /** Dwell before showing on hover, in ms. Pointer only — focus shows immediately, because a
+    /** Dwell before showing on hover, in ms. Pointer only: focus shows immediately, because a
      *  keyboard user has already committed by landing on the control. */
     delay?: number
     disabled?: boolean
@@ -138,7 +138,7 @@ onBeforeUnmount(() => {
 
 <template>
   <!-- A wrapper, not a control. The interactive element is the caller's, inside the slot; these
-       listeners only observe it — pointer and focus to open, Escape to dismiss without closing
+       listeners only observe it: pointer and focus to open, Escape to dismiss without closing
        whatever is behind. Moving them onto the trigger would mean reaching into slotted content
        and rewriting a caller's own element. -->
   <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->

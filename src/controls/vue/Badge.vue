@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* A static status marker. Deliberately NOT a Chip: Chip is a <button> with click, disabled and an
- * emit, and you cannot prop your way out of button semantics — a marker that announces itself as a
+ * emit, and you cannot prop your way out of button semantics: a marker that announces itself as a
  * control is worse than a wrong colour. This is a <span> and it does nothing.
  *
  * The kit maps tone -> pixels. It does NOT map domain -> tone. A caller with `singular`,
@@ -20,7 +20,7 @@ withDefaults(
 )
 
 /* No role="status". Most badges are static, and a live region on a count that never changes makes a
-   screen reader announce furniture. A caller whose badge DOES change — a solve result landing —
+   screen reader announce furniture. A caller whose badge DOES change (a solve result landing)
    owns that, by wrapping it in its own live region where it knows the update is worth speaking. */
 </script>
 
@@ -31,12 +31,12 @@ withDefaults(
 <style scoped>
 /* Filled, and that is a contrast decision rather than a stylistic one.
 
-   A tonal badge — tone-coloured text on the page's own ground — cannot be made to pass. Measured
+   A tonal badge (tone-coloured text on the page's own ground) cannot be made to pass. Measured
    against the shipped palette, `--aether-warm` on `--aether-panel` is 3.83, under the 4.5 floor,
    and tinting the background toward the text colour only makes it worse. Painting its own ground
    fixes it by construction: the ratio becomes tone-vs-`--aether-warm-ink`, which no longer depends
    on what the badge is sitting on. That is also the answer to the same badge shipping into two host
-   palettes with different surfaces — there is nothing left for the surface to break.
+   palettes with different surfaces: there is nothing left for the surface to break.
 
    `--aether-warm-ink` rather than a literal white for the same reason it exists on the filled Tool:
    a host inverting these tones for a dark theme moves the foreground with them. */

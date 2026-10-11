@@ -19,7 +19,7 @@ function mountD(props: Record<string, unknown> = {}, slots: Record<string, strin
 
 describe('Disclosure — the toggle is a real button', () => {
   it('is a <button type="button">, not a click-handled div', () => {
-    // A div with @click takes no focus, so Tab skips it — the real defect this replaced.
+    // A div with @click takes no focus, so Tab skips it: the real defect this replaced.
     const w = mountD()
     const t = w.get('.aether-disclosure__toggle')
     expect(t.element.tagName).toBe('BUTTON')

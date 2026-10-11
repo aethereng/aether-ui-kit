@@ -5,7 +5,7 @@
  * focus returned to whatever opened it. None of that is reimplemented here.
  *
  * What IS here: keeping the element in step with a controlled `open` prop, closing on a backdrop
- * click, and locking page scroll — the one thing showModal() does not do. */
+ * click, and locking page scroll: the one thing showModal() does not do. */
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const props = withDefaults(
@@ -16,7 +16,7 @@ const props = withDefaults(
     /** Matches the widest call site seen in the wild; a caller with different content overrides it. */
     maxWidth?: string
     /** Escape and backdrop clicks close it. Set false for a dialog with unsaved work in it, and
-     *  give the user an explicit way out — a dialog with no exit is worse than a dismissible one. */
+     *  give the user an explicit way out: a dialog with no exit is worse than a dismissible one. */
     dismissible?: boolean
   }>(),
   { title: undefined, maxWidth: '720px', dismissible: true },
@@ -28,10 +28,10 @@ const el = ref<HTMLDialogElement | null>(null)
 let restoreOverflow: string | null = null
 
 /* showModal() throws InvalidStateError if the dialog is already open, and close() on a closed
-   dialog fires a spurious `close` event — so both are guarded on the element's own state rather
+   dialog fires a spurious `close` event; so both are guarded on the element's own state rather
    than on the prop, which can be set to what it already is. */
 /* showModal is optional-called because it does not exist everywhere the component might be
-   constructed — jsdom has <dialog> but not showModal, so an unguarded call throws on mount and
+   constructed: jsdom has <dialog> but not showModal, so an unguarded call throws on mount and
    takes down any consumer's test that renders a dialog. Setting `open` is the degraded path: a
    non-modal dialog is still visible and still closes, it simply loses the top layer and the trap. */
 function sync(open: boolean) {
@@ -48,7 +48,7 @@ function sync(open: boolean) {
     if (typeof d.close === 'function') d.close()
     else d.open = false
     /* Unconditional, and NOT left to the `close` event. Measured in Chrome 148: showModal()
-       followed by close() fires no `close` event at all — not synchronously, not after a task —
+       followed by close() fires no `close` event at all (not synchronously, not after a task);
        so a component that cleans up there leaves the page permanently unscrollable. release() is
        idempotent, so the handler below can also call it without doing this twice. */
     release()
@@ -69,7 +69,7 @@ function release() {
 }
 
 /* Fires for Escape AND for close(). Cancelling a non-dismissible dialog has to preventDefault on
-   `cancel` specifically — by the time `close` fires it has already gone. */
+   `cancel` specifically: by the time `close` fires it has already gone. */
 /* `cancel` is Escape, and it is the RELIABLE half of the pair: the browser fires it before closing,
    it is cancelable, and unlike `close` it actually arrives. So the state sync for a
    browser-initiated close hangs off this rather than off `close`. */
@@ -86,7 +86,7 @@ function onClose() {
   emit('update:open', false)
 }
 
-/* A click on the backdrop lands on the <dialog> ELEMENT, not on any child — the backdrop is its
+/* A click on the backdrop lands on the <dialog> ELEMENT, not on any child: the backdrop is its
    pseudo-element and has no separate hit target. So "outside" means outside the element's own
    content box, which is what this compares. Without the rect check, a click on the padding would
    read as a backdrop click. */

@@ -8,7 +8,7 @@ declare const _default: <V extends string = string>(__VLS_props: NonNullable<Awa
         hiddenCount?: number;
         clearLabel?: string;
         /** 'vertical' stacks groups down a sidebar (label above its chips); 'horizontal' lays
-         *  them along a bar (label inline before its chips). The mechanics are identical —
+         *  them along a bar (label inline before its chips). The mechanics are identical;
          *  this is the layout axis these surfaces genuinely differ on, not two components. */
         orientation?: "vertical" | "horizontal";
     } & Partial<{}>> & import("vue").PublicProps;

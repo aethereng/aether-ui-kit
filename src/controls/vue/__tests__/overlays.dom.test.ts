@@ -7,7 +7,7 @@ import type { MenuItem } from '../../core/menu'
 
 /* Grouped on purpose: what these three share is not markup, it is a dependency on platform APIs
  * that DO NOT EXIST HERE. jsdom implements neither the popover API nor dialog.showModal, and
- * CSS.supports('position-anchor') is false — so this file runs every one of them down its degraded
+ * CSS.supports('position-anchor') is false; so this file runs every one of them down its degraded
  * path, which is the path a consumer's own test suite will take too.
  *
  * That makes the first describe the important one. Written unguarded, all three threw on mount and
@@ -78,7 +78,7 @@ describe('Dialog', () => {
   })
 
   it('releases the scroll lock when the OPEN PROP goes false', async () => {
-    /* The regression this exists for. Cleanup originally hung off the `close` event — and measured
+    /* The regression this exists for. Cleanup originally hung off the `close` event; and measured
      * in Chrome 148, showModal() followed by close() fires no `close` event at all, so the lock
      * was never released and the page stayed unscrollable with no dialog on screen to explain it.
      * Release now happens on the path the component controls. */

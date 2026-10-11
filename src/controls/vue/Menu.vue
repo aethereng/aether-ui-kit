@@ -1,6 +1,6 @@
 <script setup lang="ts">
-/* A dropdown menu. Same platform story as Tooltip — `popover` for the top layer, CSS anchor
- * positioning for placement — with one addition: `popover="auto"` also gives light-dismiss, so a
+/* A dropdown menu. Same platform story as Tooltip: `popover` for the top layer, CSS anchor
+ * positioning for placement: with one addition: `popover="auto"` also gives light-dismiss, so a
  * click anywhere outside closes it without a document listener that has to be added, removed, and
  * taught not to fire on the opening click.
  *

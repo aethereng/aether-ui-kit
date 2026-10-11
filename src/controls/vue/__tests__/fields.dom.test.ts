@@ -58,7 +58,7 @@ describe('TextField', () => {
         get() { return 480 },
       })
       // getComputedStyle().lineHeight has the same problem as border-width above (jsdom applies
-      // no SFC style, so this component's real `line-height: 1.5` is invisible here) — but
+      // no SFC style, so this component's real `line-height: 1.5` is invisible here); but
       // unlike border-width, the maxRows math NEEDS a real number to multiply: 'normal' isn't
       // one, and parseFloat('normal') is NaN, which poisons the whole calculation silently
       // (el.style.height = 'NaNpx' is an invalid CSS value, so the assignment is just dropped,

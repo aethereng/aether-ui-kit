@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* Search input with a clear button that appears only once there is something to clear.
  *
- * Extracted after two surfaces shipped it identically — same wrapper, same absolutely
+ * Extracted after two surfaces shipped it identically: same wrapper, same absolutely
  * positioned circular button, same glyph, same "only when non-empty" rule, down to matching
  * CSS in both source files. That is the bar: two real consumers sharing a render paradigm, a
  * data shape (one string) and an interaction contract, not two things that merely look alike.
@@ -34,7 +34,7 @@ defineExpose({ focus: () => inputEl.value?.focus() })
 function onClear() {
   emit('update:modelValue', '')
   emit('clear')
-  // return the caret to the field — clearing is almost always followed by retyping
+  // return the caret to the field: clearing is almost always followed by retyping
   inputEl.value?.focus()
 }
 </script>

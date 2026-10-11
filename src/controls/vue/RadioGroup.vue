@@ -2,7 +2,7 @@
 /* One choice out of a few, drawn as a row of buttons.
  *
  * WHY IT IS A COMPONENT NOW. It already existed, but only as PropertyEditor's `enum` field with
- * `variant: 'buttons'` — so reaching it meant describing a form: a FieldDescriptor[], a
+ * `variant: 'buttons'`; so reaching it meant describing a form: a FieldDescriptor[], a
  * FieldValues object and a (key, value) change handler, to render two buttons. A consumer did
  * exactly that twice in one afternoon, for a units picker and an analysis-mode picker, neither of
  * which is a form. That is the same packaging failure v0.13.0 fixed for the other five controls,
@@ -11,7 +11,7 @@
  *
  * DELIBERATELY NOT Seg, which looks identical and is a different statement. Seg is role="tablist"
  * with role="tab" children: it announces tabs, and it belongs where choosing swaps a panel. This
- * is role="radiogroup" with role="radio" children, for a VALUE — a unit, a mode, a grade. Same
+ * is role="radiogroup" with role="radio" children, for a VALUE: a unit, a mode, a grade. Same
  * pixels, different thing to say, and a screen reader says whichever one you picked.
  *
  * ONE EMIT. v-model is the contract, and nothing else is offered. Seg shipped a second `change`
@@ -20,7 +20,7 @@
  * The keyboard model lives in this file rather than controls/core, and that is proportionate
  * rather than inconsistent: menuKey and treeKey are in core because a caller building its own menu
  * or tree surface reuses them, while this is ten lines of index arithmetic with exactly one
- * consumer — itself. It moves to core the day something else needs it. */
+ * consumer: itself. It moves to core the day something else needs it. */
 import { nextTick, useTemplateRef } from 'vue'
 import type { RadioOption, RadioGroupProps } from '../core/types'
 
@@ -31,7 +31,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: V] }>()
 const root = useTemplateRef<HTMLElement>('root')
 
 /* Roving tabindex: exactly ONE button is tabbable, so the group is a single stop in the tab order
-   rather than one stop per option. The tabbable one is the checked option — or the first, when
+   rather than one stop per option. The tabbable one is the checked option; or the first, when
    nothing is checked, because a group you cannot tab into at all is worse than one starting at the
    top. */
 function tabIndexFor(value: V): number {
@@ -45,7 +45,7 @@ function select(opt: RadioOption<V>) {
   emit('update:modelValue', opt.value)
 }
 
-/* Arrows wrap and they SELECT as they move — the radio pattern, where the focused option is the
+/* Arrows wrap and they SELECT as they move: the radio pattern, where the focused option is the
    chosen one, so there is no separate commit step. Home/End reach the ends. Space and Enter are
    left to the button's own click. `preventDefault` stops the page scrolling under the group.
    Disabled options are skipped rather than landed on, or an arrow could park focus somewhere that
@@ -67,7 +67,7 @@ function onKey(e: KeyboardEvent) {
   /* Focus follows selection, or the roving tabindex points at a button the user is not on.
      Post-flush, because the tabindex that makes it focusable renders from the value just set.
      Scoped to THIS group's root: a document-wide lookup would find the first matching button on
-     the page, so two groups sharing an option value would steal each other's focus — the kind of
+     the page, so two groups sharing an option value would steal each other's focus: the kind of
      bug that survives a demo. */
   nextTick(() => {
     root.value?.querySelector<HTMLElement>(`[data-rv="${CSS.escape(value)}"]`)?.focus()
@@ -95,14 +95,14 @@ function onKey(e: KeyboardEvent) {
 </template>
 
 <style scoped>
-/* CHIP'S LANGUAGE, NOT SEG'S — and that is the whole point of the control existing.
+/* CHIP'S LANGUAGE, NOT SEG'S; and that is the whole point of the control existing.
  *
  * ui-kit.css carried two unconditional `.aether-property-editor__buttons` blocks, added in the
  * same commit, and the later won on source order. Lining them up against the rest of the kit shows
  * what the collision actually cost: the losing block was Chip's look (`--aether-radius`, a
  * selected-wash fill, accent text) and the winning one was Seg's (`--aether-panel` fill,
  * `--aether-ink` text, weight 600). So an enum group has been rendering as a visual twin of the
- * tab strip it is not — the exact confusion this component was extracted to end, made worse by
+ * tab strip it is not: the exact confusion this component was extracted to end, made worse by
  * being invisible in the source.
  *
  * The active state therefore matches Chip, which is the kit's other single-value toggle: a value
@@ -136,7 +136,7 @@ function onKey(e: KeyboardEvent) {
      second thing to keep in step with it. */
   border-color: currentColor;
   /* The one line the dead accent block did not carry, kept because BOTH the shipped look and Chip
-     set it: weight is the part of "chosen" that survives when colour does not — a monochrome
+     set it: weight is the part of "chosen" that survives when colour does not: a monochrome
      print, a high-contrast mode, or an option whose own colour is close to the ink. */
   font-weight: 600;
 }
@@ -144,8 +144,8 @@ function onKey(e: KeyboardEvent) {
   cursor: default;
   opacity: 0.55;
 }
-/* The kit's ring, carried over unchanged. It was already there — ui-kit.css named
-   `.aether-property-editor__buttons button:focus-visible` in the shared block — so this is the
+/* The kit's ring, carried over unchanged. It was already there: ui-kit.css named
+   `.aether-property-editor__buttons button:focus-visible` in the shared block; so this is the
    same declaration under the new selector, at the OUTSIDE offset that block gives standalone
    controls. The inset variant beside it exists only for `.aether-seg`, which clips its children's
    corners with `overflow: hidden`; nothing clips this group, so outside is right. */

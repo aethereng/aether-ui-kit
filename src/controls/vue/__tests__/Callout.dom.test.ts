@@ -4,8 +4,8 @@ import Callout from '../Callout.vue'
 
 /* Callout carries meaning rather than behaviour, so these pin the parts a stylesheet cannot: that
  * the severity exists as TEXT and not only as a hue, that it is not a live region when it is part
- * of a document, and that it becomes one when it is not. The colour itself is untested on purpose
- * — it is a token alias, and asserting a hex here would pin the theme rather than the contract. */
+ * of a document, and that it becomes one when it is not. The colour itself is untested on purpose;
+ * it is a token alias, and asserting a hex here would pin the theme rather than the contract. */
 
 describe('Callout', () => {
   it('defaults to info, and to a note rather than a live region', () => {

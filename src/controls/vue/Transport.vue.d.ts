@@ -8,13 +8,13 @@ type __VLS_Props = {
     precomputePct?: number;
     format?: (t: number) => string;
     /** 'cycle' is one button that steps through `speeds`; 'presets' lays them all out as a
-     *  row of toggles. Both real consumers exist — the editor diagnostic cycles, the viewer
-     *  shows the ladder — so this is the interaction axis they differ on, not two components. */
+     *  row of toggles. Both real consumers exist: the editor diagnostic cycles, the viewer
+     *  shows the ladder; so this is the interaction axis they differ on, not two components. */
     speedMode?: 'cycle' | 'presets';
     /** Label a speed. Defaults to `1×`; a host wanting `½×` supplies its own. */
     speedLabel?: (s: number) => string;
-    /** Render the dismiss button. The editor diagnostic has no stop affordance of its own —
-     *  it is left via the surrounding UI — so the button has to be omittable. */
+    /** Render the dismiss button. The editor diagnostic has no stop affordance of its own;
+     *  it is left via the surrounding UI; so the button has to be omittable. */
     stoppable?: boolean;
     /** Text shown beside the progress bar during `phase: 'precompute'`. */
     computeLabel?: string;

@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T">
-/* Thin Vue wrapper over the tree core. All the keyboard logic lives in ../core/tree — this file
+/* Thin Vue wrapper over the tree core. All the keyboard logic lives in ../core/tree; this file
  * owns rendering, focus and emits, and decides nothing about what an arrow key means.
  *
  * CONTROLLED, like the rest of the kit: the caller owns `expanded` and `selected`. Both consumers
@@ -10,8 +10,8 @@
  * without redoing the markup. It also keeps the roving tabindex to a single list.
  *
  * Emits:
- *   update:expanded — (string[]) the new expanded set
- *   select          — (id, node) a row was activated by click, Enter or Space
+ *   update:expanded: (string[]) the new expanded set
+ *   select: (id, node) a row was activated by click, Enter or Space
  */
 import { computed, nextTick, ref, watch } from 'vue'
 import { treeKey, typeahead, visibleRows, type TreeNode, type TreeRow } from '../core/tree'
@@ -37,7 +37,7 @@ const emit = defineEmits<{
 
 defineSlots<{
   /** Replace a row's content. Receives the row, so a caller can render badges, counts, icons.
-   *  Anything focusable in here would break the roving tabindex — put controls outside the tree. */
+   *  Anything focusable in here would break the roving tabindex: put controls outside the tree. */
   row?: (props: { row: TreeRow<T> }) => unknown
 }>()
 
@@ -45,7 +45,7 @@ const openSet = computed(() => new Set(props.expanded))
 const rows = computed(() => visibleRows(props.nodes, openSet.value))
 
 /* The cursor is NOT the selection. Arrowing through a tree moves a focus ring without committing
- * anything — a tree where every arrow key fired `select` would load a file per keypress. */
+ * anything: a tree where every arrow key fired `select` would load a file per keypress. */
 const cursor = ref<string | null>(null)
 const root = ref<HTMLElement | null>(null)
 
@@ -105,7 +105,7 @@ function onKey(e: KeyboardEvent) {
 
   const result = treeKey(e.key, rows.value, id)
   if (result.kind === 'none') return
-  // Only prevent default for keys we actually consumed — Space and the arrows scroll the page
+  // Only prevent default for keys we actually consumed: Space and the arrows scroll the page
   // otherwise, but an unhandled key must stay the host's.
   e.preventDefault()
   if (result.kind === 'move') moveTo(result.id)
@@ -131,7 +131,7 @@ function onTwisty(id: string, open: boolean) {
          changes. Binding keydown per row would attach handlers to elements that cannot receive
          focus. The rule cannot see an ancestor's listener, so it reads this as mouse-only when the
          keyboard path is the better one. (`no-static-element-interactions` correctly stays silent
-         here — role="treeitem" is interactive.) -->
+         here: role="treeitem" is interactive.) -->
     <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events -->
     <div
       v-for="row in rows"
@@ -153,7 +153,7 @@ function onTwisty(id: string, open: boolean) {
     >
       <!-- The twisty is a plain span, not a button, and that is deliberate: a treeitem must not
            contain its own focusable element or the roving tabindex breaks and screen readers
-           announce a control inside a control. It is a MOUSE affordance — the keyboard path is
+           announce a control inside a control. It is a MOUSE affordance: the keyboard path is
            ArrowRight/ArrowLeft on the row itself, handled above. Hence the lint exemption: the
            keyboard equivalent exists, it just is not bound here. -->
       <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->

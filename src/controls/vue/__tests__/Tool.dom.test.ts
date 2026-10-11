@@ -79,7 +79,7 @@ describe('Tool — the variant set is still closed', () => {
 })
 
 /* Everything below covers ground the kit had never exercised. `#icon` shipped with exactly one
- * consumer — the gallery example, passing a bare inline <svg> — and both real apps used text-only
+ * consumer (the gallery example, passing a bare inline <svg>) and both real apps used text-only
  * Tools. So the two things a host actually needs from an icon button, an icon COMPONENT and a
  * layout hook, had never once been tried. */
 describe('Tool — an icon component, not just a bare <svg>', () => {
@@ -114,7 +114,7 @@ describe('Tool — an icon component, not just a bare <svg>', () => {
   it('leaves the svg reachable by a DESCENDANT selector, not only as a direct child', () => {
     /* The regression this pins: `.aether-tool__icon > svg` matched the gallery's bare <svg> and
      * nothing else, so a wrapped icon kept the library's own size. jsdom applies no stylesheet, so
-     * this asserts the STRUCTURE the corrected selector depends on — the svg is a grandchild. */
+     * this asserts the STRUCTURE the corrected selector depends on: the svg is a grandchild. */
     const w = mount(Tool, { props: { label: 'Save' }, slots: { icon: IconComponent } })
     const span = w.get('.aether-tool__icon').element
     expect(span.querySelector(':scope > svg')).toBeNull()

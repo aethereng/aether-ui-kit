@@ -2,7 +2,7 @@
 /* A number the user drags rather than types, with a read-out beside it.
  *
  * NOT a variant of NumberField, and that distinction is the kit's own: a slider is a different
- * INTERACTION for a value whose scale matters more than its digits — an opacity, a cutting plane.
+ * INTERACTION for a value whose scale matters more than its digits: an opacity, a cutting plane.
  * Same data, different control.
  *
  * IT NEVER WRITES A CORRECTED VALUE BACK. A native range snaps its THUMB to the nearest step, so a
@@ -13,10 +13,10 @@
  *
  * `format` exists because a stored value and a displayed one are not always the same thing. A real
  * consumer drives a deform scale from a 0-100 slider position through a non-linear map and shows
- * "×2.4" — three precision tiers, none of them the slider's own number. Without this the read-out
+ * "×2.4": three precision tiers, none of them the slider's own number. Without this the read-out
  * can only print what is stored, which is the wrong quantity for that whole class of control.
  *
- * `ticks` is why this component draws its own track and thumb — see the style block. A mark has to
+ * `ticks` is why this component draws its own track and thumb: see the style block. A mark has to
  * sit exactly under the value it names, that position depends on the thumb's width, and the UA
  * only lets you know the width by setting it. The whole of the styling below follows from that one
  * requirement; it is not a restyle that happened to arrive at the same time.
@@ -24,7 +24,7 @@
  * THE SUFFIX SPACE IS `&nbsp;`, NOT A LITERAL SPACE. It was a literal one and never rendered: a
  * plain space leading the span's text is whitespace at the start of an element, which the
  * compiler's default `whitespace: 'condense'` strips, so every consumer read "521m". Measured in a
- * host app, not reasoned about — the emitted HTML was `521<span>m</span>`. The entity survives
+ * host app, not reasoned about: the emitted HTML was `521<span>m</span>`. The entity survives
  * condensing, and being non-breaking is what the pair wants anyway: a value and its unit are one
  * token, and this read-out is a 4.5ch column narrow enough to wrap them apart. */
 
@@ -62,7 +62,7 @@ function onInput(e: Event) {
   emit('update:modelValue', Number((e.target as HTMLInputElement).value))
 }
 
-/* Where a value sits along the thumb's TRAVEL, 0..1 — the one number both the filled track and
+/* Where a value sits along the thumb's TRAVEL, 0..1: the one number both the filled track and
    every tick are positioned from, so a mark and the thumb it marks cannot drift apart.
    Clamped: a tick outside [min,max] is a caller's mistake, and pinning it to the end it overshot
    keeps it on the control instead of flying off into the layout. */
@@ -77,7 +77,7 @@ const readout = computed(() =>
 )
 
 /* What a screen reader says instead of the raw number. A range announces its VALUE, which for the
-   whole class of control `format` exists for is the wrong quantity — "25" where the field reads
+   whole class of control `format` exists for is the wrong quantity: "25" where the field reads
    "×1.0". Setting it from the same function the read-out uses is what keeps the spoken and the
    printed value one thing. Left undefined when there is nothing to correct, so an ordinary slider
    keeps the platform's own announcement rather than a stringified copy of it. */
@@ -124,20 +124,20 @@ const valueText = computed(() => {
    resize as digits change under it.
    NO border and no padding, which IS a change: the old shared rule was
    `.aether-property-editor__field input:not([type='checkbox'])`, and it caught `type="range"` by
-   accident — a slider carried a 1px border and 6px/10px of padding, making the row 13.7px taller
+   accident: a slider carried a 1px border and 6px/10px of padding, making the row 13.7px taller
    than the control needs. That was never a decision about sliders, it was a selector that only
    excluded the switch. A track does not want a box, so it does not get one.
 
    ── THE KIT DRAWS THE TRACK AND THE THUMB, as of the tick support below ────────────────────
    This replaced `accent-color`, and NOT as a preference. A tick has to sit exactly under the
-   value it marks, and the thumb centre travels from thumb/2 to width−thumb/2 — so the geometry is
+   value it marks, and the thumb centre travels from thumb/2 to width−thumb/2; so the geometry is
    unknowable unless the kit sets the thumb size itself. Styling `::-webkit-slider-thumb` is
    silently IGNORED unless the input is also `appearance: none` (measured: a thumb rule alone left
    the computed height at the UA's 16px; with the input reset it took the declared 22px). Removing
    the native appearance takes the native track with it, which is why both are drawn here.
 
    `accent-color` is gone with them. It is the declaration that tinted what the UA drew, and the
-   UA now draws none of it — leaving it would be a rule with nothing to colour.
+   UA now draws none of it: leaving it would be a rule with nothing to colour.
 
    GRID, not flex, because ticks add a SECOND ROW under the track while the read-out stays beside
    it. Both live in column 1, so they are the same width by construction and the tick math and the
@@ -146,7 +146,7 @@ const valueText = computed(() => {
 .aether-slider {
   /* Local geometry, deliberately NOT --aether-* tokens: these are two numbers three rules have to
      agree on, not a theming surface. A host that could retune the thumb would silently move every
-     tick, and the kit's token list is audited by consumers — it should not grow for an internal
+     tick, and the kit's token list is audited by consumers; it should not grow for an internal
      constant. */
   --thumb: 16px;
   --rail: 4px;
@@ -157,11 +157,11 @@ const valueText = computed(() => {
 }
 /* The thumb centre for whatever --at the element itself carries: the input inherits the model
    value's fraction from the root, each tick sets its own inline. One formula, two readings.
-   DECLARED ON BOTH, not once on the parent and inherited — that was the first version and it put
+   DECLARED ON BOTH, not once on the parent and inherited; that was the first version and it put
    every tick under the thumb. A custom property referencing another is substituted where it is
    DECLARED, so `--pos` on the root baked in the root's --at and the ticks inherited a finished
    number rather than the formula. `100%` is not resolved at that point, though, so it still means
-   "this element's own box" at each use site — the track and the tick strip, which are one column
+   "this element's own box" at each use site: the track and the tick strip, which are one column
    wide by construction and therefore agree. */
 .aether-slider input[type='range'],
 .aether-slider__tick {
@@ -185,7 +185,7 @@ const valueText = computed(() => {
 }
 
 /* The rail, filled to the thumb and plain beyond it. Chrome has no ::-moz-range-progress
-   equivalent, so the split is a hard-stop gradient at --pos rather than a second element —
+   equivalent, so the split is a hard-stop gradient at --pos rather than a second element;
    which also keeps Firefox on the identical code path instead of a second answer. */
 .aether-slider input[type='range']::-webkit-slider-runnable-track {
   height: var(--rail);
@@ -206,7 +206,7 @@ const valueText = computed(() => {
   );
 }
 
-/* The knob. Same shape language as Switch's — a circle with the same lift — so the two controls
+/* The knob. Same shape language as Switch's (a circle with the same lift); so the two controls
    read as one family rather than one kit control and one browser's. */
 .aether-slider input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;

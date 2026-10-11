@@ -11,7 +11,7 @@ import type { FieldDescriptor, FieldValues } from '../../../property-editor/core
  *
  * They target the standalone control now. They were written against PropertyEditor because that
  * was the only way to reach the group at all, and kept pointing there after RadioGroup was
- * extracted — so the suite was exercising the composition and calling it a test of the control.
+ * extracted; so the suite was exercising the composition and calling it a test of the control.
  * The composition still gets a check at the bottom; it is one case, not the subject. */
 
 const options: RadioOption[] = [
@@ -122,7 +122,7 @@ describe('RadioGroup and disabled options', () => {
   ]
 
   it('arrows SKIP a disabled option rather than landing on it', async () => {
-    /* Focus must never park on something that refuses to be chosen — the user would arrow onto it
+    /* Focus must never park on something that refuses to be chosen: the user would arrow onto it
      * and nothing would happen. */
     const w = mountGroup('fact', withDisabled)
     await w.trigger('keydown', { key: 'ArrowRight' })

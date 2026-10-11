@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* A boolean toggle, rendered as a pill switch rather than a native checkbox.
  *
- * WHY THIS EXISTS AS A COMPONENT. The kit already drew this switch — but only under
+ * WHY THIS EXISTS AS A COMPONENT. The kit already drew this switch; but only under
  * `.aether-property-editor__field input[type='checkbox']`, so the appearance existed solely inside
  * a form. A consumer with one standalone toggle had no way to reach it and kept a framework
  * dependency for the shape. That is a packaging failure, not a missing feature: the styling moved
@@ -73,7 +73,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
 }
 
 /* The kit's focus ring, which this control never had. ui-kit.css declares one ring "for every
-   control the kit ships" and lists Tool, Chip, Seg, the enum buttons and SearchField's clear —
+   control the kit ships" and lists Tool, Chip, Seg, the enum buttons and SearchField's clear:
    the switch was missed, so keyboard focus fell through to the user agent's own ring. That is the
    off-palette blue leak the whole block exists to stop. Same 2px cool ring, offset outward: this
    is a standalone control with nothing clipping it. */
@@ -84,7 +84,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
 
 /* NO coarse-pointer floor here, and that is carried over rather than overlooked. ui-kit.css's touch
    block names this control in its "not fixed here, deliberately" list: the track is 22px and the
-   knob is 18px at top/left 2px with translateX(16px) when checked — every number tuned to that
+   knob is 18px at top/left 2px with translateX(16px) when checked: every number tuned to that
    track, so a min-height floor rewrites the track and leaves the knob behind. It has been broken
    that way once already. Reaching 44px needs a padded wrapper around the switch, not a rule on it. */
 </style>

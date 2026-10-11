@@ -2,7 +2,7 @@
 /* A single-choice dropdown over a native <select>.
  *
  * Native on purpose: it is the one control where the platform's own popup beats anything we could
- * build — it renders above everything without a portal, it works on touch, and on mobile it becomes
+ * build; it renders above everything without a portal, it works on touch, and on mobile it becomes
  * the OS picker. What it did NOT allow was theming its options, which is why `appearance:
  * base-select` matters: it opts the control into the customizable-select rendering, and the popup
  * and its rows become ordinary styleable boxes. Behind @supports, so a browser without it is left
@@ -70,8 +70,8 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
   border-radius: 7px;
   padding: 7px 9px;
   accent-color: var(--aether-cool);
-  /* A picker is pressed, not typed into. Left at the UA default it computed to `auto` — an arrow,
-     the same pointer the page background gets — while every other control you click in this kit
+  /* A picker is pressed, not typed into. Left at the UA default it computed to `auto`: an arrow,
+     the same pointer the page background gets: while every other control you click in this kit
      shows a hand. The rows get it too, below, where they are styleable at all. */
   cursor: pointer;
 }
@@ -124,7 +124,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
   .aether-select option:disabled {
     cursor: default;
   }
-  /* The blue, replaced. `:hover` is the pointer highlight and `:focus` the keyboard one — both are
+  /* The blue, replaced. `:hover` is the pointer highlight and `:focus` the keyboard one: both are
      needed, or arrowing through the list leaves the system colour in place for keyboard users. */
   .aether-select option:hover,
   .aether-select option:focus {

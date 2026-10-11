@@ -4,12 +4,12 @@ import Chip from '../Chip.vue'
 import type { ChipOption } from '../../core/types'
 
 /* Chip had no test file. Badge's suite mentions it only to explain why a Badge is not a Chip, so
- * the control that carries every filter rail in both apps was going untested — which is how the
+ * the control that carries every filter rail in both apps was going untested; which is how the
  * missing aria-pressed below survived. */
 
 describe('Chip says which chips are on', () => {
   /* The on-state used to be `class="on"` and nothing else, so a chip group was visibly a set of
-   * toggles and audibly a row of plain buttons — a screen reader read every label and never said
+   * toggles and audibly a row of plain buttons: a screen reader read every label and never said
    * which were active. Exactly the defect RadioGroup carries a test for.
    *
    * `aria-pressed` rather than aria-checked: a chip is a toggle BUTTON and several can be on at
@@ -103,7 +103,7 @@ describe('Chip renders what an option carries', () => {
 describe('Chip variants', () => {
   /* `variant` is the interaction-neutral axis: a filter bar of pills and a sidebar rail of rows are
    * the same control in two shapes. It was declared on the component and MISSING from ChipProps,
-   * which index.ts tells consumers to type against — so it is pinned here on both. */
+   * which index.ts tells consumers to type against; so it is pinned here on both. */
   it('defaults to pill and applies the variant to group and chips', () => {
     const p = mount(Chip, { props: { options: [{ value: 'a', label: 'A' }], modelValue: '' } })
     expect(p.classes()).toContain('aether-chips--pill')
@@ -125,7 +125,7 @@ describe('Chip reports, and never decides', () => {
 
   it('emits the value and leaves the Set to the caller', () => {
     /* The whole contract: Chip is controlled. It emits `toggle` and does NOT mutate modelValue, so
-     * a caller that ignores the event sees no change — which is what makes a filter rail's state
+     * a caller that ignores the event sees no change; which is what makes a filter rail's state
      * live in one place. */
     const w = mount(Chip, { props: { options: opts, modelValue: new Set<string>() } })
     w.findAll('button')[0]!.trigger('click')

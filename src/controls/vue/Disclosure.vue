@@ -6,7 +6,7 @@
  * Controlled: the caller owns `open`. `v-model:open` is the intended binding.
  *
  * Emits:
- *   update:open — (boolean) the state the caller should move to
+ *   update:open: (boolean) the state the caller should move to
  */
 import { useId } from 'vue'
 import type { DisclosureProps } from '../core/types'
@@ -21,19 +21,19 @@ const emit = defineEmits<{
   'update:open': [boolean]
 }>()
 
-/* Not assigned to a const, unlike Tool's: nothing here branches on whether a slot was passed —
+/* Not assigned to a const, unlike Tool's: nothing here branches on whether a slot was passed:
  * an empty <slot name="aside" /> renders no element and a flex gap applies only between items. */
 defineSlots<{
   /** The collapsible content. */
   default?: () => unknown
-  /** Header controls that must stay reachable while COLLAPSED — a link, a menu, a status badge.
+  /** Header controls that must stay reachable while COLLAPSED: a link, a menu, a status badge.
    *  Renders as a SIBLING of the toggle, never inside it, so it is its own tab stop. */
   aside?: () => unknown
 }>()
 
 /* aria-controls needs an IDREF, and the region is not the caller's element to name. useId arrived
  * in Vue 3.5 (this kit's peer floor), so it is stable across SSR without a module-level counter.
- * Caveat worth knowing: useId is unique per APP, not per document — a page that mounts several Vue
+ * Caveat worth knowing: useId is unique per APP, not per document: a page that mounts several Vue
  * apps hands each one its own `v-0`, and colliding ids would make one panel's toggle point at
  * another's region. Vue's remedy is `app.config.idPrefix`, which only the host can set. Every
  * current consumer mounts one app per page, so this is a note rather than a defect. */
@@ -71,7 +71,7 @@ const regionId = useId()
          Browsers that do not know `until-found` treat the unknown value as plain hidden, so the
          degradation is the old behaviour rather than a broken panel.
          This choice does NOT cost the reveal animation, which was the open question when the first
-         consumer adopted it — see the transition block in the styles below for how the two coexist
+         consumer adopted it: see the transition block in the styles below for how the two coexist
          and what the trade is. -->
     <div
       :id="regionId"
@@ -91,7 +91,7 @@ const regionId = useId()
 <style scoped>
 .aether-disclosure {
   border: 1px solid var(--aether-line);
-  /* The SURFACE radius, not the control one — see the token's note in ui-kit.css. This was a
+  /* The SURFACE radius, not the control one: see the token's note in ui-kit.css. This was a
      literal 8px here and again in Card, so the two panels a consumer stacks in one column agreed
      only by coincidence. */
   border-radius: var(--aether-radius-surface);

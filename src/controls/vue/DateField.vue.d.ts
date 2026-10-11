@@ -1,5 +1,5 @@
 type __VLS_Props = {
-    /** `YYYY-MM-DD`, or '' for empty — the value format of the native input this wraps. */
+    /** `YYYY-MM-DD`, or '' for empty: the value format of the native input this wraps. */
     modelValue: string;
     id?: string;
 };

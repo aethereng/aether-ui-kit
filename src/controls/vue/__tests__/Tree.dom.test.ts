@@ -4,7 +4,7 @@ import Tree from '../Tree.vue'
 import type { TreeNode } from '../../core/tree'
 
 /* The core tests cover what a key MEANS. These cover what the component does with that: the ARIA
- * the row must carry, the roving tabindex, and the line between moving and selecting — which is the
+ * the row must carry, the roving tabindex, and the line between moving and selecting; which is the
  * distinction a hand-rolled tree loses first. */
 
 const nodes = (): TreeNode[] => [
@@ -56,7 +56,7 @@ describe('Tree — structure and ARIA', () => {
   })
 
   it('sets aria-expanded on parents only, never on leaves', () => {
-    /* A leaf with aria-expanded="false" advertises a control that reveals nothing — the user hits
+    /* A leaf with aria-expanded="false" advertises a control that reveals nothing: the user hits
      * Right and gets silence. */
     const w = mountTree()
     const rows = w.findAll('[role="treeitem"]')

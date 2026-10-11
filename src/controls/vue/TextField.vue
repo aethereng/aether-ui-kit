@@ -3,8 +3,8 @@
  *
  * `multiline` is a PROP rather than a second component, and that is the kit's own rule applied
  * consistently: different INTERACTION means a different component, different SHAPE means a prop.
- * A textarea types exactly like an input — same data, same commit-per-keystroke, same bordered box
- * — and only its shape differs, which is the `enum` variant case. NumberField is a component for
+ * A textarea types exactly like an input: same data, same commit-per-keystroke, same bordered box;
+ * and only its shape differs, which is the `enum` variant case. NumberField is a component for
  * the opposite reason: it cannot commit per keystroke without making "1.5" unreachable. */
 
 import { nextTick, ref, watch } from 'vue'
@@ -13,21 +13,21 @@ const props = withDefaults(
   defineProps<{
     modelValue: string
     multiline?: boolean
-    /** Visible rows when multiline. Ignored otherwise, and ignored once `autogrow` takes over —
+    /** Visible rows when multiline. Ignored otherwise, and ignored once `autogrow` takes over:
      *  kept only as the height the very first paint uses, before JS has measured anything. */
     rows?: number
     placeholder?: string
     disabled?: boolean
     /** Multiline only. Height tracks content instead of a fixed `rows`, growing and shrinking
-     *  live — both on typing and when `modelValue` changes from OUTSIDE (a caller reassigning
+     *  live: both on typing and when `modelValue` changes from OUTSIDE (a caller reassigning
      *  the field's value, not just the user typing into it). Also switches `resize` off: once
      *  height is no longer something to drag, the browser's own corner-triangle glyph is
      *  leftover affordance for a gesture that no longer does anything. No min-height here for
-     *  the same reason the multiline rule above has none — that is the caller's layout to set,
+     *  the same reason the multiline rule above has none; that is the caller's layout to set,
      *  not this component's to assume. */
     autogrow?: boolean
     /** autogrow only. The ceiling it grows to before it stops pushing on whatever layout it
-     *  sits in and starts scrolling internally instead — unbounded growth is fine for the field
+     *  sits in and starts scrolling internally instead: unbounded growth is fine for the field
      *  but not for the panel around it, which is exactly what held-down Enter demonstrates.
      *  8 is a working default, not a considered one; there is no natural "right" ceiling, only
      *  a layout it should stop pushing on. */
@@ -115,7 +115,7 @@ function onInput(e: Event) {
   font: inherit;
   font-size: 13.5px;
   /* `font: inherit` resets line-height along with everything else, and nothing below sets it
-     back — so it falls through to the font's own "normal", whatever that resolves to. Most
+     back; so it falls through to the font's own "normal", whatever that resolves to. Most
      fonts distribute that leading unevenly above vs. below the glyphs, which is invisible on a
      single line (padding absorbs it symmetrically either way) but reads as mismatched top/
      bottom padding once autogrow's height comes from the same box-model math this pins. */
@@ -141,7 +141,7 @@ function onInput(e: Event) {
      NO min-height. One was tried and removed: the height a textarea wants is what `rows` says, and
      a floor here fought labelPlacement="inside", whose 17px top padding then pushed the field 7px
      past where it had always been.
-     No scrollbar rule here any more — a fixed-`rows` field whose content outgrew it gets one from
+     No scrollbar rule here any more: a fixed-`rows` field whose content outgrew it gets one from
      the kit-wide `*::-webkit-scrollbar*` / `:root { scrollbar-* }` rules in ui-kit.css, same as
      every other scrolling surface the kit draws. This component used to carry its own, narrower
      copy; keeping one scrollbar treatment in one place is the point of making it global. */
@@ -149,12 +149,12 @@ function onInput(e: Event) {
 }
 /* The UA's own corner-triangle glyph, replaced with a plain tinted patch in the kit's own
    accent rather than the browser's grey diagonal lines. Chromium/WebKit only (Firefox exposes
-   no equivalent, and "best-effort" there already accepts gaps like this one) — but of that
+   no equivalent, and "best-effort" there already accepts gaps like this one); but of that
    pair, only Chromium is a *supported* browser, so this reaches the target, not the floor.
    Unconditional rather than gated on :hover/:focus on purpose: the datetime-edit rule above
    is the proof this kit already has that a UA sub-element rarely receives the state selector
    you would reach for first (:focus there never fires; the sub-field just isn't what focus
-   lands on) — an unconditional background was the one thing proven, in-browser, to paint. */
+   lands on): an unconditional background was the one thing proven, in-browser, to paint. */
 .aether-textfield--multiline::-webkit-resizer {
   /* The resizer's box is a plain square; a flat background-color fills the whole thing rather
      than reading as a corner grip. A diagonal split (135deg = top-left to bottom-right) leaves
@@ -163,7 +163,7 @@ function onInput(e: Event) {
      --aether-scrollbar, not --aether-cool-wash, --aether-cool-soft or --aether-cool directly:
      the first two were tried and both read wrong at this size (wash barely-there, soft rough
      against the light theme's cream surface), and --aether-scrollbar is the token that carries
-     whichever solid colour a host has settled on for scrolling chrome — the resizer is the same
+     whichever solid colour a host has settled on for scrolling chrome: the resizer is the same
      kind of chrome as the scrollbar it sits beside, so it takes the same token rather than its
      own fixed one. See --aether-scrollbar's definition in ui-kit.css. */
   background: linear-gradient(135deg, transparent 50%, var(--aether-scrollbar) 50%);
@@ -173,7 +173,7 @@ function onInput(e: Event) {
   /* auto, not hidden: below maxRows there is nothing TO scroll (height already fits scrollHeight
      exactly), so this paints nothing until content actually hits the ceiling -- at which point
      it needs to scroll the overflow rather than clip it silently. Also textfield--multiline's
-     own class, so it already carries that variant's ::-webkit-scrollbar theming — no separate
+     own class, so it already carries that variant's ::-webkit-scrollbar theming: no separate
      rule needed for the capped case specifically. */
   overflow-y: auto;
 }

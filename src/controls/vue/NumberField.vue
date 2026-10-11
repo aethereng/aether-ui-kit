@@ -6,11 +6,11 @@
  *   COMMIT SEMANTICS. A text field commits every keystroke. A number field that did would rewrite
  *   the model to 1 the moment you type "1.", and you could never reach 1.5. `coerceNumberInput`
  *   distinguishes mid-typing from genuinely cleared using `validity.badInput`, which is the only
- *   signal that tells them apart — an unparseable number input reports an EMPTY `.value`, so
+ *   signal that tells them apart: an unparseable number input reports an EMPTY `.value`, so
  *   without it "1." and "" are indistinguishable.
  *
  *   DOM. The border lives on a WRAPPER with a borderless input inside, so the unit sits inside the
- *   box. Doing it the other way — a bordered input with a sibling span — reads as two controls and
+ *   box. Doing it the other way (a bordered input with a sibling span) reads as two controls and
  *   makes the unit look like a caption.
  *
  * The framework a consumer is migrating off has no separate number component, so its number fields

@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import Badge from '../Badge.vue'
 
 /* Badge is almost all CSS, so these pin the two things that are not: the contract with the caller
- * (a tone class and slotted content, nothing else) and the two boundaries it must not cross —
+ * (a tone class and slotted content, nothing else) and the two boundaries it must not cross:
  * becoming interactive, or learning what a domain state means. */
 
 describe('Badge', () => {

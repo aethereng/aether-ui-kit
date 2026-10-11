@@ -3,7 +3,7 @@
  * groups with a clear-all and an optional hidden-count. Grouping + selection are
  * pure data (FilterGroup[]); this component renders one Chip row per group and
  * wires toggle/clear mechanically. Domain semantics (what a group means, what a
- * dot color encodes) stay with the caller — same discipline as Chip itself. */
+ * dot color encodes) stay with the caller: same discipline as Chip itself. */
 import Chip from './Chip.vue'
 import type { FilterGroup } from '../core/types'
 
@@ -13,7 +13,7 @@ withDefaults(
     hiddenCount?: number
     clearLabel?: string
     /** 'vertical' stacks groups down a sidebar (label above its chips); 'horizontal' lays
-     *  them along a bar (label inline before its chips). The mechanics are identical —
+     *  them along a bar (label inline before its chips). The mechanics are identical;
      *  this is the layout axis these surfaces genuinely differ on, not two components. */
     orientation?: 'vertical' | 'horizontal'
   }>(),

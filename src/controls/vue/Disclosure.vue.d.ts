@@ -2,7 +2,7 @@ import type { DisclosureProps } from '../core/types';
 type __VLS_Slots = {
     /** The collapsible content. */
     default?: () => unknown;
-    /** Header controls that must stay reachable while COLLAPSED — a link, a menu, a status badge.
+    /** Header controls that must stay reachable while COLLAPSED: a link, a menu, a status badge.
      *  Renders as a SIBLING of the toggle, never inside it, so it is its own tab stop. */
     aside?: () => unknown;
 };

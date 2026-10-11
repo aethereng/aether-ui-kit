@@ -5,7 +5,7 @@ type __VLS_Props = {
     /** Matches the widest call site seen in the wild; a caller with different content overrides it. */
     maxWidth?: string;
     /** Escape and backdrop clicks close it. Set false for a dialog with unsaved work in it, and
-     *  give the user an explicit way out — a dialog with no exit is worse than a dismissible one. */
+     *  give the user an explicit way out: a dialog with no exit is worse than a dismissible one. */
     dismissible?: boolean;
 };
 declare var __VLS_1: {}, __VLS_3: {}, __VLS_5: {};

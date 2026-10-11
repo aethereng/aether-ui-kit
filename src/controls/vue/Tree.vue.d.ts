@@ -17,7 +17,7 @@ declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>
     attrs: any;
     slots: {
         /** Replace a row's content. Receives the row, so a caller can render badges, counts, icons.
-         *  Anything focusable in here would break the roving tabindex — put controls outside the tree. */
+         *  Anything focusable in here would break the roving tabindex: put controls outside the tree. */
         row?: (props: {
             row: TreeRow<T>;
         }) => unknown;

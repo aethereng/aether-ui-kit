@@ -2,7 +2,7 @@
 /* A persistent, toned block of running text: a severity, an optional title, and a body.
  *
  * WHY NOT A CARD. A Card is a neutral surface that says nothing about what it holds. A Callout's
- * whole job is to say "this one is different, and here is how" — which is a claim about meaning,
+ * whole job is to say "this one is different, and here is how"; which is a claim about meaning,
  * not about layout, and it has to survive being read aloud and being printed. A screen reader
  * given a Card hears a plain box; the colour that makes a failure legible to a sighted reader is
  * not information it has at all.
@@ -13,7 +13,7 @@
  * THE SEVERITY IS TEXT, NOT ONLY COLOUR. Every callout renders a visually-hidden severity word
  * before its content, so "Danger" and "Note" differ in the accessibility tree and not merely in
  * hue. That is the part a Card cannot substitute for, and it is also the part that survives a
- * greyscale print — the left border carries weight but the word carries the meaning.
+ * greyscale print: the left border carries weight but the word carries the meaning.
  *
  * NOT A LIVE REGION BY DEFAULT. `role="note"` is the resting state, because the case this was
  * built for is a verification report where five of these are present on first paint; announcing
@@ -67,13 +67,13 @@ const SEVERITY: Record<Tone, string> = {
 </template>
 
 <style scoped>
-/* box-sizing is stated because this sets its own padding and the kit ships no global reset — the
+/* box-sizing is stated because this sets its own padding and the kit ships no global reset: the
    same reason Card declares it. */
 .aether-callout {
   box-sizing: border-box;
   /* Containing block for the clipped severity span below. Without it that span positions against
      whatever ancestor happens to be positioned, and a 1px absolutely-positioned element in a
-     scroll container can extend its scroll extent — a bug that would surface far from here. */
+     scroll container can extend its scroll extent: a bug that would surface far from here. */
   position: relative;
   background: var(--tone-wash);
   /* The left border is the visual weight. A full border in the tone reads as a filled alert and
@@ -110,7 +110,7 @@ const SEVERITY: Record<Tone, string> = {
 }
 
 /* Visually hidden, but present for a screen reader AND for a text-only rendering. NOT
-   `display: none` or `visibility: hidden`, both of which remove it from the accessibility tree —
+   `display: none` or `visibility: hidden`, both of which remove it from the accessibility tree;
    which would delete the one thing that distinguishes a failure from a note without colour. */
 .aether-callout-severity {
   position: absolute;
@@ -144,7 +144,7 @@ const SEVERITY: Record<Tone, string> = {
 
 /* PRINTABLE, which is a requirement rather than a nicety: the report this was built for is handed
    to a client as a document. Backgrounds are commonly dropped by print settings, so the border is
-   forced to print — without it a danger callout and a note become the same grey block. */
+   forced to print: without it a danger callout and a note become the same grey block. */
 @media print {
   .aether-callout {
     border-left-width: 4px;

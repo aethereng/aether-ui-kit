@@ -8,7 +8,7 @@ import { isChipActive } from '../core'
 
 /* Props come from the EXPORTED ChipProps rather than an inline literal, so the public type and what
    this accepts cannot diverge. They had: `variant` was declared here and never reached ChipProps,
-   which index.ts points consumers at — the same defect, on the same prop, that Seg was fixed for. */
+   which index.ts points consumers at: the same defect, on the same prop, that Seg was fixed for. */
 withDefaults(defineProps<ChipProps<V>>(), { variant: 'pill', ariaLabel: undefined })
 
 /* `aria-pressed` on each chip, and it is not decoration: the on-state was carried by `class="on"`

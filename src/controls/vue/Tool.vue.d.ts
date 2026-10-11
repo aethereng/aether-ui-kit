@@ -10,7 +10,7 @@ type __VLS_Props = {
     /** FILLED rather than outline. Only meaningful with `danger`, and deliberately not a general
      *  "make it solid" switch: the kit's destructive button is outline by default because a filled
      *  red button repeated across a dense toolbar stops reading as a warning. Raise this for the
-     *  destructive action whose consequence is genuinely worse than its neighbours' — deleting model
+     *  destructive action whose consequence is genuinely worse than its neighbours': deleting model
      *  geometry rather than clearing a filter. If everything on a surface is filled, nothing is. */
     fill?: boolean;
 };

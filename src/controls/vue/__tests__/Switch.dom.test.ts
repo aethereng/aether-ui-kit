@@ -58,7 +58,7 @@ describe('PropertyEditor still renders a boolean the way hosts target it', () =>
   /* THE EXTRACTION CONSTRAINT. A consumer overrides
    *   .aether-property-editor__field input[type='checkbox']
    * and swapping a raw input for a component must not stop that matching. The DOM is not
-   * byte-identical — Switch adds its own class so its scoped CSS can attach — so the assertion is
+   * byte-identical (Switch adds its own class so its scoped CSS can attach); so the assertion is
    * that the SELECTOR still resolves, which is the thing a host actually depends on. */
   const fields: FieldDescriptor[] = [
     { key: 'live', type: 'boolean', label: 'Live' },

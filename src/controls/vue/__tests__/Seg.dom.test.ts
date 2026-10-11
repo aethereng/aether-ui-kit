@@ -53,7 +53,7 @@ describe('Seg — no-selection state', () => {
 
 describe('Seg — emit contract', () => {
   /* Seg emits ONE event. This used to pin that `change` fired after `update:modelValue`, both
-     carrying the same value — a redundancy the component's own comment called a mistake it could
+     carrying the same value: a redundancy the component's own comment called a mistake it could
      not cheaply undo. It was undone: the emit is gone, and what is pinned now is its absence, so
      it cannot come back for symmetry with some future control. */
   it('emits update:modelValue, and nothing else', async () => {

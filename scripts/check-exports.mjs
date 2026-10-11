@@ -3,7 +3,7 @@
  *
  * WHY THIS EXISTS. `@aether/ui-kit` is public, `type: module`, has no `main`, and declares 32
  * exports subpaths over 64 condition targets. That is the same manifest shape as the two quintus
- * packages that shipped unimportable — except this one is already published and already consumed
+ * packages that shipped unimportable; except this one is already published and already consumed
  * as a tag-pinned git dependency. Nothing verified that any of those 64 targets reaches an
  * installed copy. A published package is verified by executing what a consumer receives; the
  * kit was the package where that had never been done.
@@ -14,8 +14,8 @@
  *
  *     globs.some((g) => !g.startsWith('!') && rel.startsWith(g.replace(/\/.*$/, '')))
  *
- * It FILTERS OUT the negation patterns — `!src/**\/__tests__` and `!src/**\/*.test.ts` are the only
- * two globs in `files` that can exclude anything — and then reduces each survivor to its first path
+ * It FILTERS OUT the negation patterns: `!src/**\/__tests__` and `!src/**\/*.test.ts` are the only
+ * two globs in `files` that can exclude anything; and then reduces each survivor to its first path
  * segment, so the test reduces to `rel.startsWith('src')`. Measured: it returns true for
  * `src/controls/vue/__tests__/Seg.dom.test.ts`, for `src/anything.test.ts`, and for
  * `srcXYZ/not-even-a-real-dir.ts`. The assertion cannot fail. A gate that matches everything and a
@@ -25,8 +25,8 @@
  * target exists there by construction; the question is whether it exists in the tarball, and a
  * workspace symlink is precisely what hides that.
  *
- * THE RUNTIME IS NOT NODE, SO THE QUINTUS GATE DOES NOT PORT. The kit publishes SOURCE — `files`
- * is `["src", "!src/**\/__tests__", "!src/**\/*.test.ts", "NOTICE"]` — so 30 of the 32 subpaths
+ * THE RUNTIME IS NOT NODE, SO THE QUINTUS GATE DOES NOT PORT. The kit publishes SOURCE: `files`
+ * is `["src", "!src/**\/__tests__", "!src/**\/*.test.ts", "NOTICE"]` ; so 30 of the 32 subpaths
  * point at `.vue` files, which Node cannot import at all. "Import it under Node" is the wrong
  * question here. The property is identical; the runtime is a bundler.
  *
@@ -40,7 +40,7 @@
  *           that is untracked or ignored but matches `files` is in one tree and not the other,
  *           and the consumer gets the smaller one. Exercised rather than assumed: the two paths
  *           are not the same code and the assumption that they agree is what this checks.
- *   BUNDLER a real Vite build importing all 32 subpaths FROM THE EXTRACT — not from the
+ *   BUNDLER a real Vite build importing all 32 subpaths FROM THE EXTRACT; not from the
  *           workspace, not through a `file:` link. A workspace symlink resolves a subpath whose
  *           target never left the repo, which is the whole class.
  *

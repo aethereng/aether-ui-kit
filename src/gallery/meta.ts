@@ -1,8 +1,8 @@
-/* Gallery metadata — the single source for section titles, import lines, API tables, and the
+/* Gallery metadata: the single source for section titles, import lines, API tables, and the
  * worked example shown under each demo.
  *
  * Every prop and emit below is transcribed from the component's own defineProps/defineEmits.
- * If a signature changes and this file does not, the gallery is lying — so treat this as part
+ * If a signature changes and this file does not, the gallery is lying; so treat this as part
  * of the component contract, not documentation about it.
  *
  * This file holds NO example code. Each section's Template and Script tabs are sliced at runtime
@@ -27,7 +27,7 @@ export interface CompMeta {
   id: string
   name: string
   /* ONE component per section, so this is always a real import specifier. There used to be an
-     `imports` list here for sections documenting several at once — because those emitted
+     `imports` list here for sections documenting several at once; because those emitted
      `import A · B from 'x · y'`, which is not code, into a block with a copy button. The list
      fixed the symptom; one section per component removes the cause, and a reader looking for
      Select now finds a section called Select rather than a batch named after the commit that
@@ -687,16 +687,16 @@ export const COMPONENTS: CompMeta[] = [
 
 export const GROUPS: Group[] = ['Controls', 'Overlays', 'Forms', 'Visualization']
 
-/* Alphabetical WITHIN a group, sorted here rather than by hand in the array above — so a new
+/* Alphabetical WITHIN a group, sorted here rather than by hand in the array above; so a new
  * component lands in the right place by being added anywhere, and the rail and the page cannot
  * drift, because both render this one function.
  *
  * Sorted by `name`, the label a reader actually scans, NOT by `id`. The two disagree wherever a
- * name is multi-word: `radio-group`/`RadioGroup`, `search-field`/`SearchField`, `graph2d`/`Graph2D`
- * — and sorting by id would put `chat-panel` before `chip` while showing `Chip` before `ChatPanel`,
+ * name is multi-word: `radio-group`/`RadioGroup`, `search-field`/`SearchField`, `graph2d`/`Graph2D`;
+ * and sorting by id would put `chat-panel` before `chip` while showing `Chip` before `ChatPanel`,
  * which reads as no order at all.
  *
- * `.sort()` mutates its receiver, and the receiver here is the fresh array `filter()` just made —
+ * `.sort()` mutates its receiver, and the receiver here is the fresh array `filter()` just made;
  * never COMPONENTS itself. Sorting COMPONENTS in place would reorder the exported array under
  * every other consumer of it. */
 export const byGroup = (g: Group) =>

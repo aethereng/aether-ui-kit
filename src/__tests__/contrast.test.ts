@@ -8,7 +8,7 @@ import { resolve } from 'node:path'
  * host palettes, 4.59 in a third. Nobody has headroom.
  *
  * That is fine while nobody touches the greys. It stops being fine the moment someone nudges one for
- * aesthetic reasons, because the failure is invisible — the page still renders, nothing errors, and
+ * aesthetic reasons, because the failure is invisible: the page still renders, nothing errors, and
  * only a contrast checker or a person who cannot read it finds out. This test is the tripwire.
  *
  * It reads the SHIPPED stylesheet rather than a copy of the values, so editing ui-kit.css is what
@@ -17,7 +17,7 @@ import { resolve } from 'node:path'
 
 const css = readFileSync(resolve(__dirname, '../styles/ui-kit.css'), 'utf8')
 
-/** The `:root` block only — later blocks redefine tokens for other contexts. */
+/** The `:root` block only; later blocks redefine tokens for other contexts. */
 function rootTokens(): Record<string, string> {
   const root = /:root\s*\{([\s\S]*?)\n\}/.exec(css)
   if (!root) throw new Error('contrast: no :root block found in ui-kit.css')
@@ -68,7 +68,7 @@ describe('the kit palette clears WCAG AA', () => {
 
   it('keeps the ladder monotonic, so a fix to one rung cannot invert another', () => {
     /* This is not theory. Raising `faint` alone to clear AA once made it HIGHER contrast than
-     * `muted` in a host palette — the type hierarchy inverted, and the quietest text became the
+     * `muted` in a host palette: the type hierarchy inverted, and the quietest text became the
      * loudest. Both tokens had to move together. Ordering is part of the contract, not a nicety. */
     const ground = t('--aether-panel')
     const ink = ratio(t('--aether-ink'), ground)
@@ -97,7 +97,7 @@ describe('the kit palette clears WCAG AA', () => {
  * a wash pulls the background toward the text. Filled removes the page from the calculation, which
  * is also what makes one badge safe in two host palettes with different surfaces.
  *
- * 11px at weight 650 is NORMAL text under WCAG — "large" starts at 18.66px bold — so the floor here
+ * 11px at weight 650 is NORMAL text under WCAG ("large" starts at 18.66px bold); so the floor here
  * is 4.5, not 3.0. */
 const FILLED_TONES = ['--aether-ok', '--aether-warm', '--aether-rose'] as const
 
@@ -120,7 +120,7 @@ describe('Badge tones clear WCAG AA', () => {
 
   it('success is NOT the selection accent', () => {
     /* --aether-selected resolves to --aether-cool. A success badge in that colour would make
-     * "this passed" and "this is selected" the same pixels — the failure that made Transport stop
+     * "this passed" and "this is selected" the same pixels: the failure that made Transport stop
      * distinguishing two host apps, one level worse because these sit side by side in a row. */
     expect(t('--aether-ok')).not.toBe(t('--aether-cool'))
     expect(tokens['--aether-ok']).not.toContain('cool')
@@ -133,7 +133,7 @@ describe('Badge tones clear WCAG AA', () => {
   })
 })
 
-/* The blocks above read ui-kit.css, which ships LIGHT tokens only — every dark theme lives in a
+/* The blocks above read ui-kit.css, which ships LIGHT tokens only; every dark theme lives in a
  * host. That gap is not theoretical: `--aether-ok` was added to the kit and the gallery's dark
  * theme did not get it, so a filled success badge rendered dark-green on dark ink at 2.84 while
  * every other tone still looked correct. Nothing in the kit could see it, because nothing in the
@@ -143,7 +143,7 @@ describe('Badge tones clear WCAG AA', () => {
  * every other host owns for itself. A new tone token that a theme forgets now fails a test instead
  * of shipping. */
 function themeTokens(selector: RegExp, from: string): Record<string, string> {
-  /* All matches, not the first. App.vue contains TWO `:root` blocks — one is the documentation
+  /* All matches, not the first. App.vue contains TWO `:root` blocks: one is the documentation
      snippet showing a host how to remap tokens (`--aether-surface: var(--my-surface)`), and it is
      not CSS that runs. Taking the first match silently read the example and reported every token
      as missing. Real theme blocks are the ones declaring literal colours. */
@@ -165,7 +165,7 @@ const THEMES = {
 
 /* Tokens resolve kit :root -> host :root -> theme block, so a theme only has to restate what it
    changes. Extracted as a pure function over a resolved map so the SAME logic can be run against
-   deliberately broken maps below — a check nobody has ever seen fail is a check nobody knows works. */
+   deliberately broken maps below: a check nobody has ever seen fail is a check nobody knows works. */
 function resolveTheme(theme: Record<string, string>): Record<string, string> {
   return { ...tokens, ...THEMES['gallery light'], ...theme }
 }
@@ -199,11 +199,11 @@ describe('every host theme carries the tone tokens it overrides', () => {
   }
 })
 
-/* MUTATION FIXTURES — tests of the tests.
+/* MUTATION FIXTURES: tests of the tests.
  *
  * Everything above is green, which proves the palette is currently fine and proves NOTHING about
  * whether the checks would notice if it stopped being fine. A loosened threshold, a regex that
- * quietly stops matching, a merge order that makes a lookup always find a default — each leaves the
+ * quietly stops matching, a merge order that makes a lookup always find a default; each leaves the
  * whole file passing while guarding nothing. That is not hypothetical: the theme parser here DID
  * silently read App.vue's documentation snippet instead of its real `:root`, and reported every
  * token as missing rather than failing.
@@ -214,7 +214,7 @@ describe('every host theme carries the tone tokens it overrides', () => {
 describe('the checks above have teeth', () => {
   it('the theme parser reads real CSS, not the documentation snippet', () => {
     /* App.vue contains two `:root` blocks. The first is the example showing a host how to remap
-     * tokens — `--aether-surface: var(--my-surface)` — and reading it made every token look absent.
+     * tokens (`--aether-surface: var(--my-surface)`) and reading it made every token look absent.
      * A value that is a `var(--my-…)` here means the parser has drifted back onto the snippet. */
     const light = THEMES['gallery light']
     expect(light['--aether-surface']).toMatch(/^#[0-9a-f]{6}$/i)
@@ -224,7 +224,7 @@ describe('the checks above have teeth', () => {
   it('fires when a dark theme forgets --aether-warm-ink', () => {
     /* The failure a consumer actually shipped: their ink resolved through a framework's automatic
      * on-primary, which derives from the LIGHT accent and gives near-white in every theme. Our own
-     * timber theme is one deleted line from the same thing — measured, all three tones collapse to
+     * timber theme is one deleted line from the same thing: measured, all three tones collapse to
      * roughly 2.0, which is worse than the consumer's 2.91/2.74/3.50. */
     const timber = { ...THEMES['gallery dark (timber)'] }
     delete timber['--aether-warm-ink']
@@ -235,7 +235,7 @@ describe('the checks above have teeth', () => {
   it('fires when a dark theme forgets to invert --aether-ok, and names only that tone', () => {
     /* The exact bug that shipped into the gallery: --aether-ok was added to the kit, timber never
      * got it, and a filled success badge rendered dark-green on dark ink at 2.84 while warm and
-     * rose still looked correct. Asserting the OTHER two still pass is the point — a check that
+     * rose still looked correct. Asserting the OTHER two still pass is the point; a check that
      * failed everything here would pass this test while being useless. */
     const timber = { ...THEMES['gallery dark (timber)'], '--aether-ok': '#3f6b3a' }
     expect(toneFailures(resolveTheme(timber))).toEqual(['--aether-ok'])
@@ -256,7 +256,7 @@ describe('the checks above have teeth', () => {
 
 describe('the tokens a host is expected to remap', () => {
   /* These default to another token rather than to a literal. That is what makes them free to
-   * ignore — a host that never sets them sees exactly the previous appearance — so the defaults
+   * ignore (a host that never sets them sees exactly the previous appearance); so the defaults
    * are part of the contract and worth pinning. */
   it('--aether-selected defaults to the cool accent', () => {
     expect(tokens['--aether-selected']).toBe('var(--aether-cool)')

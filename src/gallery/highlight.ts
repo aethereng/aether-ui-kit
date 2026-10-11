@@ -1,6 +1,6 @@
 /* A small syntax highlighter for the gallery's Template and Script panels.
  *
- * @internal — gallery furniture, not part of the kit's contract.
+ * @internal: gallery furniture, not part of the kit's contract.
  *
  * HAND-ROLLED because the package declares zero runtime dependencies and a test enforces it. The
  * input is also not arbitrary: it is this repo's own example files, so the tokenizer only has to
@@ -8,10 +8,10 @@
  * rather than a broken page.
  *
  * ONE PASS, ORDERED ALTERNATION. Comments and strings come first in the pattern so a keyword
- * inside a comment, or an angle bracket inside a string, is never re-tokenized — the classic way
+ * inside a comment, or an angle bracket inside a string, is never re-tokenized: the classic way
  * these go wrong. Everything not matched is emitted as escaped plain text.
  *
- * Output is HTML, so every slice goes through `esc` on the way out — including the unmatched text
+ * Output is HTML, so every slice goes through `esc` on the way out; including the unmatched text
  * between tokens. The source is ours, but a highlighter that forgets to escape is one example file
  * away from injecting markup into the page that documents it.
  */
@@ -22,7 +22,7 @@ const esc = (s: string) =>
 const span = (cls: string, text: string) => `<span class="tok-${cls}">${esc(text)}</span>`
 
 /* TypeScript: comments, then strings (all three quote forms), then the words worth colouring.
-   `ref|computed` are in the keyword set deliberately — in these examples they are the load-bearing
+   `ref|computed` are in the keyword set deliberately; in these examples they are the load-bearing
    vocabulary, and a reader scanning a script tab is looking for exactly those. */
 const TS = new RegExp(
   [
@@ -37,7 +37,7 @@ const TS = new RegExp(
 )
 
 /* Vue template: comments, interpolation, then tags and their attributes. Directives get their own
-   class rather than sharing with plain attributes — `v-model`, `:prop` and `@event` are where the
+   class rather than sharing with plain attributes: `v-model`, `:prop` and `@event` are where the
    behaviour is, and colouring them apart is most of the value of highlighting a template at all. */
 const VUE = new RegExp(
   [

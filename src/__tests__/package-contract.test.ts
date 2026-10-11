@@ -165,6 +165,27 @@ describe('token contract', () => {
     const hexes = body.match(/#[0-9a-fA-F]{3,8}\b/g) ?? []
     expect(hexes, `hardcoded colours outside :root: ${hexes.join(', ')}`).toEqual([])
   })
+
+  /* Every component's own <style> block, not only ui-kit.css. Scoped to the component directories:
+   * src/gallery is a host app that defines the tokens itself, so the colours in it are the host's.
+   * The seed proves the scanner sees a hex before an empty result is read as a pass, and the length
+   * check stops a glob that matches nothing from passing. */
+  it('has no hex colours in any component <style> block', () => {
+    const hexesIn = (text: string) =>
+      Array.from(text.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g), (m) =>
+        Array.from(m[1]!.matchAll(/#[0-9a-fA-F]{3,8}\b/g), (h) => h[0]),
+      ).flat()
+    expect(hexesIn('<style>.a { color: #abc; }</style>')).toEqual(['#abc'])
+    const components = globSync('src/{controls,viz,property-editor}/vue/**/*.vue', {
+      cwd: root,
+      nodir: true,
+    }) as string[]
+    expect(components.length, 'the component glob matched no .vue files').toBeGreaterThan(0)
+    const found = components.flatMap((f) =>
+      hexesIn(readFileSync(resolve(root, f), 'utf8')).map((h) => `${f} ${h}`),
+    )
+    expect(found, `hardcoded colours in component styles: ${found.join(', ')}`).toEqual([])
+  })
 })
 
 describe('components that set their own dimensions state their own box model', () => {

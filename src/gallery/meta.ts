@@ -89,9 +89,9 @@ export const COMPONENTS: CompMeta[] = [
     subpath: '@aether/ui-kit/controls/radio-group',
     group: 'Forms',
     core: '@aether/ui-kit/controls/core',
-    blurb: 'One choice out of a few, as buttons. A value — not a tab strip.',
+    blurb: 'One choice out of a few, as buttons. A value (not a tab strip).',
     detail:
-      'One choice out of a few, drawn as buttons. A `radiogroup`: one tab stop, arrows that move and select, disabled options skipped. Use it for a value — if choosing swaps a panel, that is a Seg.',
+      'One choice out of a few, drawn as buttons. A `radiogroup`: one tab stop, arrows that move and select, disabled options skipped. Use it for a value: if choosing swaps a panel, that is a Seg.',
     props: [
       { name: 'options', type: 'RadioOption<V>[]', note: '{ value, label, disabled? }' },
       { name: 'modelValue', type: 'V', note: 'controlled; v-model' },
@@ -129,7 +129,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Forms',
     blurb: 'Boolean toggle as a pill switch. One bare input; you own the label.',
     detail:
-      'A boolean, drawn as a pill switch. One bare `input[type=checkbox]` with no wrapper and no label of its own: pair it with a `<label for>` so the label can carry whatever the surface needs — a count, a swatch, a second line.',
+      'A boolean, drawn as a pill switch. One bare `input[type=checkbox]` with no wrapper and no label of its own: pair it with a `<label for>` so the label can carry whatever the surface needs: a count, a swatch, a second line.',
     props: [
       { name: 'modelValue', type: 'boolean', note: 'controlled; v-model' },
       { name: 'disabled', type: 'boolean?' },
@@ -151,7 +151,7 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'placeholder', type: 'string?' },
       { name: 'disabled', type: 'boolean?' },
       { name: 'autogrow', type: 'boolean?', note: 'multiline only; height tracks content, live' },
-      { name: 'maxRows', type: 'number?', note: 'autogrow only; caps growth, then scrolls internally — default 8' },
+      { name: 'maxRows', type: 'number?', note: 'autogrow only; caps growth, then scrolls internally; default 8' },
     ],
     emits: [{ name: 'update:modelValue', type: '[value: string]' }],
   },
@@ -182,7 +182,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/controls/core',
     blurb: 'A single-choice dropdown over a native <select>.',
     detail:
-      'A single-choice dropdown over a native `<select>` — themed where the browser allows it, and the OS picker on mobile. `options` is a flat list, `groups` renders `<optgroup>`s, and a row can carry a `subtitle` as a quieter second line.',
+      'A single-choice dropdown over a native `<select>` (themed where the browser allows it, and the OS picker on mobile). `options` is a flat list, `groups` renders `<optgroup>`s, and a row can carry a `subtitle` as a quieter second line.',
     props: [
       { name: 'modelValue', type: 'string', note: 'controlled; v-model' },
       { name: 'options', type: 'SelectOption[]?', note: '{ value, label, subtitle?, disabled? }' },
@@ -217,7 +217,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Controls',
     blurb: 'A panel surface: bordered, padded, holds content and does nothing.',
     detail:
-      'A bordered, padded surface that holds content and does nothing else. Static by design — no click, no state. Override padding at the call site for a denser or roomier box.',
+      'A bordered, padded surface that holds content and does nothing else. Static by design: no click, no state. Override padding at the call site for a denser or roomier box.',
     props: [],
     emits: [],
   },
@@ -242,7 +242,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Controls',
     blurb: 'Static status marker in four tones. A span, not a control.',
     detail:
-      'A static status marker in four tones. A `<span>`, not a control — if it should be clickable, that is a Chip. The kit maps a tone to pixels; deciding which tone a domain state deserves stays with the caller.',
+      'A static status marker in four tones. A `<span>`, not a control: if it should be clickable, that is a Chip. The kit maps a tone to pixels; deciding which tone a domain state deserves stays with the caller.',
     props: [
       {
         name: 'tone',
@@ -259,12 +259,12 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Controls',
     blurb: 'Persistent, printable block of text in four semantic tones.',
     detail:
-      "A block that says \"this one is different, and here is how\". It sits in the document flow, stays, and prints — the opposite of Toast on every axis. Every callout carries its severity as visually-hidden TEXT, so a failure and a note differ in the accessibility tree and in a greyscale print, not only in hue: that is the part a Card cannot substitute for. `role=\"note\"` at rest, because a report renders several on first paint and announcing each assertively would make it unreadable; `live` promotes it for a callout that appears in response to something.",
+      "A block that says \"this one is different, and here is how\". It sits in the document flow, stays, and prints: the opposite of Toast on every axis. Every callout carries its severity as visually-hidden TEXT, so a failure and a note differ in the accessibility tree and in a greyscale print, not only in hue: that is the part a Card cannot substitute for. `role=\"note\"` at rest, because a report renders several on first paint and announcing each assertively would make it unreadable; `live` promotes it for a callout that appears in response to something.",
     props: [
       {
         name: 'tone',
         type: "'info' | 'success' | 'warning' | 'danger'?",
-        note: "default 'info'; matches Badge's vocabulary — one name per tone across the kit",
+        note: "default 'info'; matches Badge's vocabulary: one name per tone across the kit",
       },
       {
         name: 'title',
@@ -303,7 +303,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/controls/core',
     blurb: 'Dropdown menu with the full APG keyboard model.',
     detail:
-      'A popup list of actions. Arrows move, typing jumps, Escape closes and returns focus. Items are data — separators and disabled entries included — and the caller handles what a pick does.',
+      'A popup list of actions. Arrows move, typing jumps, Escape closes and returns focus. Items are data (separators and disabled entries included) and the caller handles what a pick does.',
     props: [
       { name: 'items', type: 'MenuItem[]', note: '{ id, label, disabled?, separator?, data? }' },
       { name: 'label', type: 'string?', note: 'trigger text; #trigger replaces the button' },
@@ -348,26 +348,26 @@ export const COMPONENTS: CompMeta[] = [
     props: [
       { name: 'label', type: 'string', note: 'also the accessible name when the label is hidden' },
       { name: 'hot', type: 'boolean?', note: 'the primary action on a surface' },
-      { name: 'danger', type: 'boolean?', note: 'destructive — delete, discard' },
+      { name: 'danger', type: 'boolean?', note: 'destructive: delete, discard' },
       { name: 'disabled', type: 'boolean?' },
       { name: 'title', type: 'string?', note: 'native tooltip' },
       { name: 'labelHidden', type: 'boolean?', note: 'icon only; ignored without an #icon slot' },
       {
         name: 'fill',
         type: 'boolean?',
-        note: 'filled rather than outline; only meaningful with `danger`. Outline is the default because a filled red button repeated across a toolbar stops reading as a warning — raise it for the destructive action whose consequence is genuinely worse than its neighbours’',
+        note: 'filled rather than outline; only meaningful with `danger`. Outline is the default because a filled red button repeated across a toolbar stops reading as a warning; raise it for the destructive action whose consequence is genuinely worse than its neighbours’',
       },
     ],
     slots: [
       {
         name: 'icon',
         type: '—',
-        note: 'leading icon; the caller brings its own SVG. A slot rather than an `icon` prop because a prop implies an icon vocabulary and the kit ships none — @mdi/js path strings drop straight in',
+        note: 'leading icon; the caller brings its own SVG. A slot rather than an `icon` prop because a prop implies an icon vocabulary and the kit ships none: @mdi/js path strings drop straight in',
       },
       {
         name: 'trailing',
         type: '—',
-        note: 'trailing affordance after the label — a dropdown caret, a disclosure chevron. Decorative and aria-hidden, like #icon: the accessible name stays exactly `label`, so a caret can never become the thing a screen reader reads. State a menu trigger needs to announce (aria-expanded) belongs on the button at the call site, since only the caller knows what is open',
+        note: 'trailing affordance after the label: a dropdown caret, a disclosure chevron. Decorative and aria-hidden, like #icon: the accessible name stays exactly `label`, so a caret can never become the thing a screen reader reads. State a menu trigger needs to announce (aria-expanded) belongs on the button at the call site, since only the caller knows what is open',
       },
     ],
     emits: [{ name: 'click', type: '[]' }],
@@ -380,7 +380,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/controls/core',
     blurb: 'A keyboard-complete tree: roving focus, both asymmetric arrows, typeahead.',
     detail:
-      'A hierarchy that expands and collapses. Rows derive from `TreeNode<T>[]` and the caller owns which nodes are open. The whole keyboard model — arrows, Home/End, typeahead — lives in the framework-free core.',
+      'A hierarchy that expands and collapses. Rows derive from `TreeNode<T>[]` and the caller owns which nodes are open. The whole keyboard model (arrows, Home/End, typeahead) lives in the framework-free core.',
     props: [
       { name: 'nodes', type: 'TreeNode<T>[]', note: 'id, label, optional children and free-form data' },
       { name: 'expanded', type: 'string[]?', note: 'open node ids; the caller owns them' },
@@ -396,7 +396,7 @@ export const COMPONENTS: CompMeta[] = [
       {
         name: 'row',
         type: '{ row: TreeRow<T> }',
-        note: 'replace a row’s content — badges, counts, icons. Anything focusable in here breaks the roving tabindex, so controls belong outside the tree',
+        note: 'replace a row’s content: badges, counts, icons. Anything focusable in here breaks the roving tabindex, so controls belong outside the tree',
       },
     ],
   },
@@ -411,7 +411,7 @@ export const COMPONENTS: CompMeta[] = [
     props: [
       { name: 'label', type: 'string', note: 'header text, and the toggle’s accessible name' },
       { name: 'open', type: 'boolean?', note: 'controlled by the caller; the panel never self-toggles' },
-      { name: 'meta', type: 'string?', note: 'quieter second line — a filename, a count, what is inside' },
+      { name: 'meta', type: 'string?', note: 'quieter second line: a filename, a count, what is inside' },
       { name: 'disabled', type: 'boolean?', note: 'the toggle emits nothing' },
     ],
     emits: [{ name: 'update:open', type: '[boolean]', note: 'also fired by find-in-page reveal' }],
@@ -420,7 +420,7 @@ export const COMPONENTS: CompMeta[] = [
       {
         name: 'aside',
         type: '—',
-        note: 'header controls that stay reachable while COLLAPSED — a link, a menu, a badge. Rendered as a sibling of the toggle, never inside it, so each is its own tab stop',
+        note: 'header controls that stay reachable while COLLAPSED: a link, a menu, a badge. Rendered as a sibling of the toggle, never inside it, so each is its own tab stop',
       },
     ],
   },
@@ -456,7 +456,7 @@ export const COMPONENTS: CompMeta[] = [
     detail:
       'A search input with a clear button that appears once there is something to clear. Clearing returns the caret to the field. `focus()` is exposed so a host shortcut need not reach into the DOM.',
     props: [
-      { name: 'modelValue', type: 'string', note: 'the query — the caller owns it' },
+      { name: 'modelValue', type: 'string', note: 'the query: the caller owns it' },
       { name: 'placeholder', type: 'string?' },
       { name: 'ariaLabel', type: 'string?', note: 'defaults to the placeholder' },
       { name: 'clearLabel', type: 'string?', note: 'tooltip + accessible name for the clear button' },
@@ -475,9 +475,9 @@ export const COMPONENTS: CompMeta[] = [
     blurb:
       'Controlled playback transport: play/pause/replay, scrub, speed presets, position readout.',
     detail:
-      'Playback controls: play and pause, a scrub bar, a speed cycle and a time read-out. Unit-agnostic — the same bar drives simulation seconds or calendar days. Scrubbing pauses and resumes around the drag, so a drag and a running clock never both write the playhead.',
+      'Playback controls: play and pause, a scrub bar, a speed cycle and a time read-out. Unit-agnostic: the same bar drives simulation seconds or calendar days. Scrubbing pauses and resumes around the drag, so a drag and a running clock never both write the playhead.',
     props: [
-      { name: 'current', type: 'number', note: 'playhead position — caller owns the clock' },
+      { name: 'current', type: 'number', note: 'playhead position: caller owns the clock' },
       { name: 'duration', type: 'number' },
       { name: 'playing', type: 'boolean' },
       { name: 'speed', type: 'number?' },
@@ -519,7 +519,7 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/property-editor/core',
     blurb: 'Schema-driven form: bind a FieldDescriptor[], get an editor.',
     detail:
-      'A form rendered from a `FieldDescriptor[]`, which is what makes it worth using: the field set can change at runtime — a different shape, a conditional field — without a template per case. It composes the kit\'s standalone controls for each type, and coercion and validation live in a framework-free engine.',
+      'A form rendered from a `FieldDescriptor[]`, which is what makes it worth using: the field set can change at runtime (a different shape, a conditional field) without a template per case. It composes the kit\'s standalone controls for each type, and coercion and validation live in a framework-free engine.',
     props: [
       { name: 'fields', type: 'FieldDescriptor[]', note: '{ key, label, type, options?, … }' },
       { name: 'modelValue', type: 'FieldValues', note: 'a plain record' },
@@ -554,13 +554,13 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'width', type: 'number?' },
       { name: 'height', type: 'number?' },
       { name: 'projection', type: "'ortho2d' | 'iso3d'?", note: 'how N-D positions flatten to 2-D' },
-      { name: 'running', type: 'boolean?', note: 'default true — the component owns the sim' },
+      { name: 'running', type: 'boolean?', note: 'default true: the component owns the sim' },
       { name: 'selection', type: 'string | null?' },
       { name: 'neighbors', type: 'Set<string> | null?', note: 'emphasise a neighbourhood' },
       {
         name: 'zoomable',
         type: 'boolean?',
-        note: 'default false — wheel/pinch zoom, background-drag pan. Off by default because a graph that eats the wheel is hostile inside a scrolling page.',
+        note: 'default false: wheel/pinch zoom, background-drag pan. Off by default because a graph that eats the wheel is hostile inside a scrolling page.',
       },
       { name: 'minZoom', type: 'number?', note: 'default 0.25' },
       { name: 'maxZoom', type: 'number?', note: 'default 6' },
@@ -571,14 +571,14 @@ export const COMPONENTS: CompMeta[] = [
       {
         name: 'drag',
         type: '[id: string, x: number, y: number]',
-        note: 'world coords — the view transform is already inverted, so a drag lands under the cursor at any zoom',
+        note: 'world coords: the view transform is already inverted, so a drag lands under the cursor at any zoom',
       },
       { name: 'dragEnd', type: '[id: string]' },
       { name: 'zoom', type: '[k: number]', note: 'current scale, after every zoom' },
       {
         name: 'nodeHover',
         type: '[id: string, clientX: number, clientY: number]',
-        note: 'on entry and on every move while it stays there. The kit does not own tooltip content — only you know what a node means, so you render the card.',
+        note: 'on entry and on every move while it stays there. The kit does not own tooltip content; only you know what a node means, so you render the card.',
       },
       { name: 'nodeLeave', type: '[]' },
     ],
@@ -607,7 +607,7 @@ export const COMPONENTS: CompMeta[] = [
       },
       { name: 'items', type: 'GanttItem[]', note: '{ id, start, end?, type, status, anchor? }' },
       { name: 'lanes', type: 'GanttLane[]', note: '{ type, name, color, wash }' },
-      { name: 'ppd', type: 'number', note: 'pixels per day — the zoom control' },
+      { name: 'ppd', type: 'number', note: 'pixels per day: the zoom control' },
       { name: 'ndays', type: 'number' },
       { name: 'currentDay', type: 'number | null?', note: 'draws the today marker' },
       { name: 'selection', type: 'string | null?' },
@@ -620,14 +620,14 @@ export const COMPONENTS: CompMeta[] = [
       {
         name: 'dragStart',
         type: '[id: string]',
-        note: 'once, before the first move — snapshot here',
+        note: 'once, before the first move: snapshot here',
       },
       { name: 'move', type: '[id, start, end | null]' },
       { name: 'resize', type: "[id, edge: 'l' | 'r', value]" },
       {
         name: 'dragEnd',
         type: '[id: string]',
-        note: 'once, when a moved gesture ends — persist here',
+        note: 'once, when a moved gesture ends: persist here',
       },
       { name: 'newAt', type: '[day: number, type: string]' },
       {
@@ -645,15 +645,15 @@ export const COMPONENTS: CompMeta[] = [
     core: '@aether/ui-kit/controls/core',
     blurb: 'A message log and compose box for the "queue, send, apply the reply" agent pattern.',
     detail:
-      'A message log with a composer. Messages are data — a role, optional references, a queued state for anything not yet sent. Rendering only; sending is the caller\'s.',
+      'A message log with a composer. Messages are data: a role, optional references, a queued state for anything not yet sent. Rendering only; sending is the caller\'s.',
     props: [
       { name: 'messages', type: 'ChatMessage[]', note: "{ role: 'you'|'agent'|'sys', text, queued?, refs? }" },
-      { name: 'modelValue', type: 'string', note: 'the compose box — caller owns it' },
+      { name: 'modelValue', type: 'string', note: 'the compose box: caller owns it' },
       { name: 'placeholder', type: 'string?' },
       { name: 'queueLabel', type: 'string?', note: "default 'Queue'" },
       { name: 'sendLabel', type: 'string?', note: "default 'Send'" },
       { name: 'applyLabel', type: 'string?', note: "default 'Apply reply'" },
-      { name: 'historyLimit', type: 'number?', note: 'most recent N rendered — default 50' },
+      { name: 'historyLimit', type: 'number?', note: 'most recent N rendered; default 50' },
     ],
     emits: [
       { name: 'update:modelValue', type: '[value: string]' },

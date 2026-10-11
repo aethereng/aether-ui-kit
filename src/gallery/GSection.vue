@@ -4,7 +4,7 @@
  * document rather than eight ad-hoc pages.
  *
  * The tabs are the kit's own Seg component. The gallery is built out of the thing it
- * documents on purpose — if Seg broke, this page would visibly break with it. */
+ * documents on purpose; if Seg broke, this page would visibly break with it. */
 import { computed, ref } from 'vue'
 import Seg from '@/controls/vue/Seg.vue'
 import type { SegOption } from '@/controls/core/types'
@@ -30,7 +30,7 @@ const props = defineProps<{
 /* This block has a copy button, so what it shows has to be real code. It briefly was not: sections
  * documenting several components at once emitted
  *     import TextField · NumberField · Select · Slider from '@aether/ui-kit/controls/text-field · …'
- * — a middot is not an import list, and there is no single specifier for four paths. Someone copied
+ * The middot is not an import list, and there is no single specifier for four paths. Someone copied
  * it, which is what the button is for. Every section documents ONE component now, so this is a
  * plain specifier again; a test holds every line to being well-formed and to naming a subpath the
  * exports map declares. */
@@ -45,7 +45,7 @@ const summaryMeta = computed(() =>
     'script',
     plural(props.meta.props.length, 'prop'),
     /* Optional like slots and exposed. Every component emitted something until Badge, which is a
-       static span and emits nothing — an unguarded `.length` here took the whole gallery down. */
+       static span and emits nothing: an unguarded `.length` here took the whole gallery down. */
     ...(props.meta.emits?.length ? [plural(props.meta.emits.length, 'emit')] : []),
     ...(props.meta.slots?.length ? [plural(props.meta.slots.length, 'slot')] : []),
     ...(props.meta.exposed?.length ? [`${props.meta.exposed.length} exposed`] : []),
@@ -67,8 +67,8 @@ function sliceBlock(src: string, tag: 'script' | 'template'): string | null {
 
 /* Strip the COMMON leading indent, not a fixed two spaces.
  *
- * It was `.replace(/^ {2}/gm, '')`, which is right for a <template> — its content is indented two
- * inside the block — and wrong for a <script setup>, whose content starts at column 0. Applied
+ * It was `.replace(/^ {2}/gm, '')`, which is right for a <template>: its content is indented two
+ * inside the block; and wrong for a <script setup>, whose content starts at column 0. Applied
  * there it ate the first two spaces of every line that had any, so a function body rendered flush
  * with its own `function` line and a nested branch lost a level:
  *
@@ -104,7 +104,7 @@ async function copy(key: string, text: string) {
     await navigator.clipboard.writeText(text)
     copiedKey.value = key
   } catch {
-    // clipboard is blocked on insecure origins — don't flash a success that didn't happen
+    // clipboard is blocked on insecure origins; don't flash a success that didn't happen
     copiedKey.value = null
   }
   clearTimeout(copyT)
@@ -193,7 +193,7 @@ const tabs = computed<SegOption<Tab>[]>(() => {
         </button>
       </div>
 
-      <!-- v-html on OUR OWN example files, escaped by the highlighter on the way out — every
+      <!-- v-html on OUR OWN example files, escaped by the highlighter on the way out; every
            slice, including the text between tokens. -->
       <pre v-if="tab === 'template'" class="g-code"><code v-html="litTemplate" /></pre>
       <pre v-else-if="tab === 'script'" class="g-code"><code v-html="litScript" /></pre>
@@ -319,12 +319,12 @@ const tabs = computed<SegOption<Tab>[]>(() => {
   padding: 6px 10px;
   border-radius: 6px;
   overflow-x: auto;
-  /* `pre` so several imports stay several lines. `nowrap` still holds per line — a path should
-     scroll rather than fold — but the block must be free to be taller than one row, so the flex
+  /* `pre` so several imports stay several lines. `nowrap` still holds per line: a path should
+     scroll rather than fold; but the block must be free to be taller than one row, so the flex
      parent stops centring it against a button that is now shorter than it. */
   white-space: pre;
   margin: 0;
-  /* `normal` gave 16px at 12px type — a 1.33 ratio, which is fine for the single line this block
+  /* `normal` gave 16px at 12px type: a 1.33 ratio, which is fine for the single line this block
      used to be and cramped the moment it became several. Code needs more leading than body text, not
      less: the eye tracks a line by its indentation, and stacked import paths are near-identical
      strings that have to be told apart at a glance. */
@@ -462,7 +462,7 @@ const tabs = computed<SegOption<Tab>[]>(() => {
 }
 
 /* Syntax colours. Set per theme rather than derived from the kit's palette: those tokens carry
-   MEANING — cool is selection, rose is danger — and borrowing them for "this is a string" would
+   MEANING: cool is selection, rose is danger; and borrowing them for "this is a string" would
    make a code block argue with the components beside it.
    Comments are the one deliberately quiet token: these examples are heavily commented, and a
    comment coloured as loudly as the code turns the panel into stripes. */

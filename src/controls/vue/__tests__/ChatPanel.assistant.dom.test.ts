@@ -881,6 +881,26 @@ describe('the scroll rule', () => {
       expect(el.scrollTop).toBe(el.scrollHeight)
     })
 
+    it('a streaming entry appended to a settled log leaves a reader who scrolled up where they were', async () => {
+      const w = mountPanel([agent('Settled')])
+      const el = layout(w)
+      el.scrollTop = 37
+      expect(distance(el)).toBeGreaterThan(STREAM_FOLLOW_THRESHOLD)
+      await w.setProps({ messages: [agent('Settled'), agent('', { streaming: true })] })
+      await settle()
+      expect(el.scrollTop).toBe(37)
+    })
+
+    it('a streaming entry appended to a settled log is followed by a reader at the bottom', async () => {
+      const w = mountPanel([agent('Settled')])
+      const el = layout(w)
+      el.scrollTop = el.scrollHeight - VIEW
+      expect(distance(el)).toBe(0)
+      await w.setProps({ messages: [agent('Settled'), agent('', { streaming: true })] })
+      await settle()
+      expect(el.scrollTop).toBe(el.scrollHeight)
+    })
+
     it('holds for a message pushed onto a reactive array', async () => {
       const messages = reactive<ChatEntry[]>([streaming()])
       const w = mountHost(messages)

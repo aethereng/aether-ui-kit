@@ -18,7 +18,7 @@ function mountEditor(
   })
 }
 
-describe('PropertyEditor — label swatch', () => {
+describe('PropertyEditor: label swatch', () => {
   const fields: FieldDescriptor[] = [
     { key: 'supports', type: 'boolean', label: 'Supports', swatch: 'background:#c33' },
     { key: 'plain', type: 'boolean', label: 'Plain' },
@@ -45,7 +45,7 @@ describe('PropertyEditor — label swatch', () => {
   })
 })
 
-describe('PropertyEditor — labelPlacement', () => {
+describe('PropertyEditor: labelPlacement', () => {
   /* The whole placement is CSS driven off one root class, so these assert the class contract
    * rather than computed styles: jsdom never loads ui-kit.css, and a test that "checked" the
    * padding here would be checking nothing. */
@@ -57,7 +57,7 @@ describe('PropertyEditor — labelPlacement', () => {
   ]
   const values: FieldValues = { title: 'Beam', load: 12, opacity: 0.5, live: true }
 
-  it('defaults to above — an existing consumer sees no new class', () => {
+  it('defaults to above; an existing consumer sees no new class', () => {
     const w = mountEditor(fields, values)
     expect(w.get('.aether-property-editor').classes()).not.toContain(
       'aether-property-editor--inside',
@@ -95,7 +95,7 @@ describe('PropertyEditor — labelPlacement', () => {
   })
 })
 
-describe('PropertyEditor — range', () => {
+describe('PropertyEditor: range', () => {
   const fields: FieldDescriptor[] = [
     { key: 'opacity', type: 'range', label: 'Opacity', min: 0, max: 1, step: 0.05, suffix: '×' },
   ]

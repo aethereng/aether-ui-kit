@@ -81,7 +81,7 @@ describe('laneLayout', () => {
 })
 
 describe('isPoint', () => {
-  it('treats a missing, null, or equal end as a point — and an anchor as neither', () => {
+  it('treats a missing, null, or equal end as a point and an anchor as neither', () => {
     expect(isPoint(item({ id: '1', start: 3 }))).toBe(true)
     expect(isPoint(item({ id: '2', start: 3, end: null }))).toBe(true)
     expect(isPoint(item({ id: '3', start: 3, end: 3 }))).toBe(true)

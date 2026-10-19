@@ -5,7 +5,7 @@ import PropertyEditor from '../../../property-editor/vue/PropertyEditor.vue'
 import type { FieldDescriptor, FieldValues } from '../../../property-editor/core/types'
 
 describe('Switch', () => {
-  it('is one bare input — no wrapper, no label of its own', () => {
+  it('is one bare input: no wrapper, no label of its own', () => {
     /* The shape matters. A self-labelling wrapper would nest a <label> inside PropertyEditor's own
      * <label for>, which is invalid, and would change the DOM consumers write overrides against. */
     const w = mount(Switch, { props: { modelValue: false } })
@@ -25,7 +25,7 @@ describe('Switch', () => {
     w.unmount()
   })
 
-  it('is controlled — it does not move on its own', async () => {
+  it('is controlled: it does not move on its own', async () => {
     /* Emitting without the parent writing back must leave it where it was, or a caller that
      * rejects a change (an undo guard, a validation veto) gets a switch disagreeing with its data. */
     const w = mount(Switch, { props: { modelValue: false } })

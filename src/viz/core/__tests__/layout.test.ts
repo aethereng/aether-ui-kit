@@ -54,7 +54,7 @@ describe('ForceLayout', () => {
     expect(late).toBeLessThan(early)
   })
 
-  it('stays finite — damping must not let the sim explode', () => {
+  it('stays finite: damping must not let the sim explode', () => {
     const l = new ForceLayout(nodes(), edges, { dims: 3 })
     for (let i = 0; i < 500; i++) l.step()
     for (const n of l.nodes) {
@@ -95,7 +95,7 @@ describe('ForceLayout', () => {
       expect(l.running).toBe(false)
     })
 
-    it('reheat revives a settled sim — this is what makes a drag look physical', () => {
+    it('reheat revives a settled sim; this is what makes a drag look physical', () => {
       const l = new ForceLayout(nodes(), edges, { dims: 3 })
       for (let i = 0; i < 400; i++) l.step()
       expect(l.running).toBe(false)

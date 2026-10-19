@@ -277,7 +277,7 @@ export const COMPONENTS: CompMeta[] = [
         note: "default false; true → role alert (danger/warning) or status (info/success)",
       },
     ],
-    slots: [{ name: 'default', type: '—', note: 'the body; plain text or block content' }],
+    slots: [{ name: 'default', type: 'no props', note: 'the body; plain text or block content' }],
   },
   {
     id: 'tooltip',
@@ -293,7 +293,7 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'delay', type: 'number?', note: 'hover dwell in ms, default 400; focus is immediate' },
       { name: 'disabled', type: 'boolean?' },
     ],
-    slots: [{ name: 'default', type: '—', note: 'the trigger element' }],
+    slots: [{ name: 'default', type: 'no props', note: 'the trigger element' }],
   },
   {
     id: 'menu',
@@ -332,9 +332,9 @@ export const COMPONENTS: CompMeta[] = [
     ],
     emits: [{ name: 'update:open', type: '[value: boolean]' }],
     slots: [
-      { name: 'default', type: '—', note: 'dialog body' },
-      { name: 'title', type: '—', note: 'replaces the heading' },
-      { name: 'footer', type: '—', note: 'action row; omitted entirely when not supplied' },
+      { name: 'default', type: 'no props', note: 'dialog body' },
+      { name: 'title', type: 'no props', note: 'replaces the heading' },
+      { name: 'footer', type: 'no props', note: 'action row; omitted entirely when not supplied' },
     ],
   },
   {
@@ -361,12 +361,12 @@ export const COMPONENTS: CompMeta[] = [
     slots: [
       {
         name: 'icon',
-        type: '—',
+        type: 'no props',
         note: 'leading icon; the caller brings its own SVG. A slot rather than an `icon` prop because a prop implies an icon vocabulary and the kit ships none: @mdi/js path strings drop straight in',
       },
       {
         name: 'trailing',
-        type: '—',
+        type: 'no props',
         note: 'trailing affordance after the label: a dropdown caret, a disclosure chevron. Decorative and aria-hidden, like #icon: the accessible name stays exactly `label`, so a caret can never become the thing a screen reader reads. State a menu trigger needs to announce (aria-expanded) belongs on the button at the call site, since only the caller knows what is open',
       },
     ],
@@ -416,10 +416,10 @@ export const COMPONENTS: CompMeta[] = [
     ],
     emits: [{ name: 'update:open', type: '[boolean]', note: 'also fired by find-in-page reveal' }],
     slots: [
-      { name: 'default', type: '—', note: 'the collapsible region' },
+      { name: 'default', type: 'no props', note: 'the collapsible region' },
       {
         name: 'aside',
-        type: '—',
+        type: 'no props',
         note: 'header controls that stay reachable while COLLAPSED: a link, a menu, a badge. Rendered as a sibling of the toggle, never inside it, so each is its own tab stop',
       },
     ],
@@ -508,7 +508,7 @@ export const COMPONENTS: CompMeta[] = [
         type: '{ playing: boolean; atEnd: boolean }',
         note: 'replaces the ▶/❚❚/⟲ glyph. Scoped, so the caller renders the right icon for the state without tracking it',
       },
-      { name: 'stop', type: '—', note: 'replaces the ✕ glyph' },
+      { name: 'stop', type: 'no props', note: 'replaces the ✕ glyph' },
     ],
   },
   {

@@ -52,7 +52,7 @@ describe('Badge', () => {
     w.unmount()
   })
 
-  it('renders no wrapper for a row — a row of badges is a caller’s flex container', () => {
+  it('renders no wrapper for a row; a row of badges is a caller’s flex container', () => {
     // Same reasoning .aether-button-group gets: no shared state, no active member, nothing to model.
     const w = mount(Badge, { slots: { default: 'a' } })
     expect(w.element.children).toHaveLength(0)

@@ -64,7 +64,7 @@ describe('RadioGroup says what it is', () => {
   })
 })
 
-describe('RadioGroup keyboard — arrows move AND select', () => {
+describe('RadioGroup keyboard: arrows move AND select', () => {
   it('emits on arrow, which is the radio pattern', async () => {
     /* Different from the menu's model, where movement and commit are separate: in a radiogroup the
      * focused option IS the chosen one, so arrowing emits. */
@@ -160,7 +160,7 @@ describe('RadioGroup is controlled, and emits once', () => {
     w.unmount()
   })
 
-  it('does not move on its own — the prop decides', async () => {
+  it('does not move on its own; the prop decides', async () => {
     const w = mountGroup('fact')
     await w.trigger('keydown', { key: 'ArrowRight' })
     // it asked to change, but nothing wrote back, so it must still show `fact`

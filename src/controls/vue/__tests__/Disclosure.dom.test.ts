@@ -17,7 +17,7 @@ function mountD(props: Record<string, unknown> = {}, slots: Record<string, strin
   })
 }
 
-describe('Disclosure — the toggle is a real button', () => {
+describe('Disclosure: the toggle is a real button', () => {
   it('is a <button type="button">, not a click-handled div', () => {
     // A div with @click takes no focus, so Tab skips it: the real defect this replaced.
     const w = mountD()
@@ -89,7 +89,7 @@ describe('Disclosure — the toggle is a real button', () => {
   })
 })
 
-describe('Disclosure — the aside is not inside the button', () => {
+describe('Disclosure: the aside is not inside the button', () => {
   it('renders #aside as a sibling of the toggle', () => {
     /* THE load-bearing test. This component's whole reason to exist over <details> is that a header
      * control can stay reachable when collapsed. Nested inside the button it would be flattened in
@@ -111,7 +111,7 @@ describe('Disclosure — the aside is not inside the button', () => {
   })
 })
 
-describe('Disclosure — collapsed content stays findable', () => {
+describe('Disclosure: collapsed content stays findable', () => {
   it('hides the region with until-found rather than a bare hidden', () => {
     /* `hidden="until-found"` is what keeps Ctrl+F working into a closed panel. A plain `hidden`
      * (or a CSS display:none) hides it from find-in-page too, silently. Asserting the literal
@@ -151,7 +151,7 @@ describe('Disclosure — collapsed content stays findable', () => {
   })
 })
 
-describe('Disclosure — props', () => {
+describe('Disclosure: props', () => {
   it('renders meta only when given', () => {
     const bare = mountD()
     expect(bare.find('.aether-disclosure__meta').exists()).toBe(false)

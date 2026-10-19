@@ -32,7 +32,7 @@ describe('Transport play phase', () => {
     w.unmount()
   })
 
-  it('never moves on its own — the model decides', () => {
+  it('never moves on its own; the model decides', () => {
     /* It renders `current`; it does not own it. A bar that advanced itself would fight a host
      * resampling a precomputed trajectory, which is exactly what both consumers do. */
     const w = mount(Transport, { props: base })

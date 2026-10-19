@@ -81,7 +81,7 @@ function rerun() {
 }
 
 const selected = ref<string | null>(null)
-const dragged = ref('—')
+const dragged = ref('∅')
 const zoom = ref(1)
 
 /* neighbours of the selection, so the `neighbors` emphasis prop has something to do */

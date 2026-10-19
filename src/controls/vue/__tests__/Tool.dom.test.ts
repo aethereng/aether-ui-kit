@@ -18,7 +18,7 @@ function mountTool(props: Record<string, unknown> = {}, slots: Record<string, st
   return w
 }
 
-describe('Tool — without an icon, nothing changes', () => {
+describe('Tool: without an icon, nothing changes', () => {
   it('renders the label and does NOT take the icon layout class', () => {
     const w = mountTool()
     expect(w.text()).toBe('Fit view')
@@ -33,7 +33,7 @@ describe('Tool — without an icon, nothing changes', () => {
   })
 })
 
-describe('Tool — with an #icon slot', () => {
+describe('Tool: with an #icon slot', () => {
   const icon = { icon: '<svg data-test="glyph"></svg>' }
 
   it('renders the caller markup alongside the label', () => {
@@ -60,7 +60,7 @@ describe('Tool — with an #icon slot', () => {
   })
 })
 
-describe('Tool — the variant set is still closed', () => {
+describe('Tool: the variant set is still closed', () => {
   it('danger wins over hot, because mislabelling a destructive action is the worse failure', () => {
     const w = mountTool({ hot: true, danger: true })
     expect(w.classes()).toContain('danger')
@@ -82,7 +82,7 @@ describe('Tool — the variant set is still closed', () => {
  * consumer (the gallery example, passing a bare inline <svg>) and both real apps used text-only
  * Tools. So the two things a host actually needs from an icon button, an icon COMPONENT and a
  * layout hook, had never once been tried. */
-describe('Tool — an icon component, not just a bare <svg>', () => {
+describe('Tool: an icon component, not just a bare <svg>', () => {
   /* Stands in for any icon library's component (Vuetify's <v-icon>, an inline-SVG set, a font
    * glyph): the point is that it renders a WRAPPER around whatever it draws, which is what the
    * kit's old `> svg` rule failed to see. */
@@ -129,7 +129,7 @@ describe('Tool — an icon component, not just a bare <svg>', () => {
   })
 })
 
-describe('Tool — the layout hook is a class, not a prop', () => {
+describe('Tool: the layout hook is a class, not a prop', () => {
   it('merges a caller class onto the button alongside its own', () => {
     /* This is the answer to "a Tool cannot be made to fill a flex row". `.aether-tool` declares no
      * flex at all, and Vue falls attributes through to the single root element, so a host writes
@@ -148,7 +148,7 @@ describe('Tool — the layout hook is a class, not a prop', () => {
   })
 })
 
-describe('Tool — the filled destructive variant', () => {
+describe('Tool: the filled destructive variant', () => {
   it('fills only when danger is also set', () => {
     /* `fill` is not a general "make it solid" switch. On its own it must do nothing, or it becomes
      * the open style hook the variant set exists to avoid. */
@@ -209,7 +209,7 @@ describe('Tool #trailing', () => {
     w.unmount()
   })
 
-  it('composes with #icon — leading and trailing are independent', () => {
+  it('composes with #icon; leading and trailing are independent', () => {
     const w = mount(Tool, {
       props: { label: 'File' },
       slots: { icon: '<svg data-i />', trailing: T },

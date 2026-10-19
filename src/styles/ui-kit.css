@@ -1060,11 +1060,11 @@
    does not.
 */
 @media (pointer: coarse) {
-  /* Highest-leverage selector in the file. .aether-tool is also every ChatPanel compose
+  /* This rule sets the touch target for .aether-tool, which is also every ChatPanel compose
      button (ChatPanel renders three <Tool>s and carries no button CSS of its own) and every
-     .aether-button-group child, so this one rule covers those too -- as do .hot and .danger,
-     which change colour only. inline-flex + center because a bare min-height would leave the
-     label top-aligned in the taller box. */
+     .aether-button-group child; .hot and .danger change colour only, so they take it too.
+     inline-flex + center because a bare min-height would leave the label top-aligned in the
+     taller box. */
   .aether-tool {
     min-height: var(--aether-touch);
     display: inline-flex;

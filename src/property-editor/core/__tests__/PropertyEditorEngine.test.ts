@@ -34,7 +34,7 @@ const timelineEventFields: FieldDescriptor[] = [
   { key: 'note', type: 'textarea', label: 'Note' },
 ]
 
-describe('PropertyEditorEngine — static field list (editing-drawer shape)', () => {
+describe('PropertyEditorEngine: static field list (editing-drawer shape)', () => {
   it('reads back the initial values it was constructed with', () => {
     const engine = new PropertyEditorEngine(timelineEventFields, {
       title: 'Scope freeze',
@@ -85,7 +85,7 @@ describe('PropertyEditorEngine — static field list (editing-drawer shape)', ()
   })
 })
 
-describe('PropertyEditorEngine — schema-derived field list (IFC entity-panel shape)', () => {
+describe('PropertyEditorEngine: schema-derived field list (IFC entity-panel shape)', () => {
   /* The point of this second block: the SAME engine, unmodified, handles a field list built at
      runtime from a schema rather than typed out by hand -- proving the static/schema-derived axis
      is a caller concern, not something this engine needs to know about. */
@@ -172,7 +172,7 @@ describe('numberStep', () => {
   })
 })
 
-describe('PropertyEditorEngine — number fields', () => {
+describe('PropertyEditorEngine: number fields', () => {
   const doseFields: FieldDescriptor[] = [
     { key: 'load', type: 'number', label: 'Design load', min: 0, max: 500, suffix: 'kN' },
   ]

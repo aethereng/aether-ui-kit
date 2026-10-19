@@ -35,7 +35,7 @@ function onSelect(id: string) {
 
     <Menu :items="items" label="Aligned right" align="end" @select="onSelect" />
 
-    <code class="g-ex-state">last selected = {{ last ?? '—' }}</code>
+    <code class="g-ex-state">last selected = {{ last ?? '∅' }}</code>
   </div>
 </template>
 

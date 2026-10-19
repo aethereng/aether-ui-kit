@@ -29,7 +29,7 @@ function mountTree(props: Record<string, unknown> = {}) {
 const rowIds = (w: ReturnType<typeof mountTree>) =>
   w.findAll('[role="treeitem"]').map((r) => r.attributes('data-id'))
 
-describe('Tree — structure and ARIA', () => {
+describe('Tree: structure and ARIA', () => {
   it('is a role=tree of role=treeitem rows', () => {
     const w = mountTree()
     expect(w.get('[role="tree"]').exists()).toBe(true)
@@ -76,7 +76,7 @@ describe('Tree — structure and ARIA', () => {
   })
 })
 
-describe('Tree — roving tabindex', () => {
+describe('Tree: roving tabindex', () => {
   it('makes exactly one row tabbable', () => {
     /* The failure this pins: `tabindex="0"` on every row turns a 200-node tree into 200 tab stops,
      * and `tabindex="-1"` on all of them makes the tree unreachable entirely. */
@@ -103,7 +103,7 @@ describe('Tree — roving tabindex', () => {
   })
 })
 
-describe('Tree — keys move the cursor without selecting', () => {
+describe('Tree: keys move the cursor without selecting', () => {
   it('ArrowDown moves the tabbable row and emits no selection', async () => {
     const w = mountTree()
     await w.get('[role="tree"]').trigger('keydown', { key: 'ArrowDown' })
@@ -156,7 +156,7 @@ describe('Tree — keys move the cursor without selecting', () => {
   })
 })
 
-describe('Tree — mouse', () => {
+describe('Tree: mouse', () => {
   it('clicking a row selects it', async () => {
     const w = mountTree()
     await w.findAll('[role="treeitem"]')[3]!.trigger('click')

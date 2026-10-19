@@ -61,7 +61,7 @@ describe('the kit palette clears WCAG AA', () => {
         expect(
           r,
           `${fg} (${t(fg)}) on ${bg} (${t(bg)}) measures ${r.toFixed(2)}, under the 4.5 floor for ` +
-            `normal-size text. Raising the text token is not automatically the fix — see the ladder ` +
+            `normal-size text. Raising the text token is not automatically the fix; see the ladder ` +
             `test below, which a lone raise will invert.`,
         ).toBeGreaterThanOrEqual(4.5)
       })
@@ -86,7 +86,7 @@ describe('the kit palette clears WCAG AA', () => {
     const rows = TEXT.flatMap((fg) =>
       GROUNDS.map((bg) => `${fg} on ${bg}: ${ratio(t(fg), t(bg)).toFixed(2)}`),
     )
-    console.log('  contrast — ' + rows.join(' · '))
+    console.log('  contrast: ' + rows.join(' · '))
     expect(rows).toHaveLength(6)
   })
 })
@@ -108,7 +108,7 @@ describe('Badge tones clear WCAG AA', () => {
       expect(
         r,
         `Badge text on ${tone} (${t(tone)}) measures ${r.toFixed(2)}, under the 4.5 floor. The ` +
-          `badge is filled precisely so this pairing is the only one that matters — if it fails, ` +
+          `badge is filled precisely so this pairing is the only one that matters; if it fails, ` +
           `the tone itself is wrong, not the treatment.`,
       ).toBeGreaterThanOrEqual(4.5)
     })
@@ -128,7 +128,7 @@ describe('Badge tones clear WCAG AA', () => {
 
   it('reports the tone headroom too', () => {
     const rows = FILLED_TONES.map((x) => `${x}: ${ratio(t('--aether-warm-ink'), t(x)).toFixed(2)}`)
-    console.log('  badge tones — ' + rows.join(' · '))
+    console.log('  badge tones: ' + rows.join(' · '))
     expect(rows).toHaveLength(3)
   })
 })
@@ -247,7 +247,7 @@ describe('the checks above have teeth', () => {
     expect(textFailures({ ...tokens, '--aether-faint': '#8A857A' })).toEqual(['--aether-faint'])
   })
 
-  it('does NOT fire on the real palette — the fixtures are detecting the break, not everything', () => {
+  it('does NOT fire on the real palette; the fixtures are detecting the break, not everything', () => {
     // Without this, all four above would pass even if the checks returned "broken" unconditionally.
     expect(toneFailures(resolveTheme(THEMES['gallery dark (timber)']))).toEqual([])
     expect(textFailures(tokens)).toEqual([])

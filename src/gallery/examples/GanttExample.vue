@@ -54,7 +54,7 @@ const markers = [
 ]
 
 const selection = ref<string | null>(null)
-const expanded = ref('—')
+const expanded = ref('∅')
 
 /* Zoom to fit. Pinned at 26px/day, 60 days always came to 1560px and always scrolled, even on a
    wide desktop with room to spare. computePPD divides the width we actually have by the days we
@@ -102,7 +102,7 @@ function onNewAt(day: number, type: string) {
 }
 /* expandDay emits an OBJECT ({ t, i }) and not a day number. */
 function onExpandDay(day: { t: string; i: number } | null) {
-  expanded.value = day ? day.t + ' day ' + day.i : '—'
+  expanded.value = day ? day.t + ' day ' + day.i : '∅'
 }
 </script>
 

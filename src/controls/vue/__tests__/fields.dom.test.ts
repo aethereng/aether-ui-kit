@@ -12,7 +12,7 @@ import type { SelectGroup, SelectOption } from '../../core/types'
  * What is tested here is what each one PROMISES that a plain input does not. */
 
 describe('TextField', () => {
-  it('commits every keystroke — that is the whole difference from NumberField', async () => {
+  it('commits every keystroke; that is the whole difference from NumberField', async () => {
     const w = mount(TextField, { props: { modelValue: '' } })
     const el = w.get('input')
     ;(el.element as HTMLInputElement).value = 'Bea'
@@ -21,7 +21,7 @@ describe('TextField', () => {
     w.unmount()
   })
 
-  it('is a textarea when multiline, and an input otherwise — a prop, not a component', () => {
+  it('is a textarea when multiline, and an input otherwise: a prop, not a component', () => {
     const single = mount(TextField, { props: { modelValue: 'x' } })
     expect(single.element.tagName).toBe('INPUT')
     single.unmount()
@@ -116,7 +116,7 @@ describe('TextField', () => {
       w.unmount()
     })
 
-    it('re-measures when a caller reassigns modelValue directly — the case this exists for, not just typing', async () => {
+    it('re-measures when a caller reassigns modelValue directly: the case this exists for, not just typing', async () => {
       // A caller loading a different record into the same field never fires a DOM 'input'
       // event; a listener on 'input' alone (the obvious first implementation) would miss it.
       const w = mount(TextField, { props: { modelValue: 'short', multiline: true, autogrow: true, maxRows: 100 } })

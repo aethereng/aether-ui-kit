@@ -341,7 +341,7 @@ describe('every symbol a core module exports is reachable through the exports ma
     expect(
       unreachable,
       `${file} exports ${unreachable.join(', ')} but ${barrelPath} does not re-export them, and ` +
-        `the exports map has no wildcard — a consumer cannot import them at all`,
+        `the exports map has no wildcard; a consumer cannot import them at all`,
     ).toEqual([])
   })
 })

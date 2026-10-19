@@ -26,7 +26,7 @@ const setpoint = ref<number | undefined>(65)
     <!-- Clearing it emits `undefined`, not 0: a caller has to tell "no value" from "zero", and
          only `validity.badInput` separates an empty field from a half-typed one. -->
     <label class="g-nf-row"><span>Setpoint: clear this one</span>
-      <NumberField v-model="setpoint" suffix="°C" placeholder="—" />
+      <NumberField v-model="setpoint" suffix="°C" placeholder="unset" />
     </label>
 
     <code class="g-ex-state">flow = {{ flow }} · ratio = {{ ratio }} · setpoint = {{ setpoint === undefined ? 'undefined' : setpoint }}</code>

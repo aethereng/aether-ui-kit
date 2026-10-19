@@ -112,7 +112,7 @@ describe('Dialog', () => {
   })
 })
 
-describe('Tooltip — the description it does and does not add', () => {
+describe('Tooltip: the description it does and does not add', () => {
   it('describes the trigger when the tooltip says something new', async () => {
     const w = mount(Tooltip, {
       props: { text: 'Suppress this coupling (undoable)' },

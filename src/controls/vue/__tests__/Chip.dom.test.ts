@@ -61,7 +61,7 @@ describe('Chip renders what an option carries', () => {
     w.unmount()
   })
 
-  it('count 0 still renders — an empty facet is a fact, not a missing one', () => {
+  it('count 0 still renders; an empty facet is a fact, not a missing one', () => {
     /* `v-if="opt.count !== undefined"` rather than a truthiness check. A filter reading "Risk"
      * with no number beside it says something different from "Risk 0". */
     const w = mount(Chip, { props: { options: [{ value: 'a', label: 'A', count: 0 }], modelValue: 'a' } })
@@ -134,7 +134,7 @@ describe('Chip reports, and never decides', () => {
     w.unmount()
   })
 
-  it('a disabled chip is inert — no emit, and the attribute is real', () => {
+  it('a disabled chip is inert: no emit, and the attribute is real', () => {
     const w = mount(Chip, { props: { options: opts, modelValue: '' } })
     const b = w.findAll('button')[1]!
     expect(b.attributes('disabled')).toBeDefined()

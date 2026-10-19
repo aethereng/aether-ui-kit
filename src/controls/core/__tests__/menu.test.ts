@@ -28,7 +28,7 @@ describe('focusable items', () => {
   })
 })
 
-describe('menuKey — movement', () => {
+describe('menuKey: movement', () => {
   it('skips a disabled item rather than landing on it', () => {
     /* THE case. A cursor that lands on a disabled row and does nothing reads as a broken menu:
      * the user presses Down, something appears to happen, and Enter is ignored. */
@@ -62,7 +62,7 @@ describe('menuKey — movement', () => {
   })
 })
 
-describe('menuKey — activation and dismissal', () => {
+describe('menuKey: activation and dismissal', () => {
   it('activates on Enter and Space', () => {
     expect(menuKey(items, 'Enter', 'save')).toEqual({ kind: 'activate', id: 'save' })
     expect(menuKey(items, ' ', 'save')).toEqual({ kind: 'activate', id: 'save' })

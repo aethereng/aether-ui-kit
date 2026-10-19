@@ -79,7 +79,7 @@ describe('visibleRows', () => {
   })
 })
 
-describe('treeKey — the two asymmetric arrows', () => {
+describe('treeKey: the two asymmetric arrows', () => {
   it('Right EXPANDS a collapsed parent, and only then descends', () => {
     // Implementing just one half of this is the common bug: Right either always expands (and never
     // walks in) or always moves (and never opens).
@@ -115,7 +115,7 @@ describe('treeKey — the two asymmetric arrows', () => {
   })
 })
 
-describe('treeKey — linear movement', () => {
+describe('treeKey: linear movement', () => {
   it('Down and Up walk VISIBLE rows, crossing levels', () => {
     const rows = rowsWith('shared')
     // 'glossary' is a child; the next visible row is a root again.

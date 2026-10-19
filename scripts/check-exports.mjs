@@ -186,7 +186,7 @@ async function main() {
       const onlyCl = [...fromClone.files].filter((f) => !fromWorkspace.files.has(f))
       if (onlyWs.length || onlyCl.length) {
         problems.push(
-          `GITDEP — npm pack from the workspace and from a clean clone disagree. A git dependency ` +
+          `GITDEP: npm pack from the workspace and from a clean clone disagree. A git dependency ` +
           `installs the CLONE's tree, so anything present only in the workspace is a file the ` +
           `consumer does not get.\n` +
           onlyWs.slice(0, 10).map((f) => `      workspace only: ${f}`).join('\n') +
@@ -204,7 +204,7 @@ async function main() {
     for (const r of rows) {
       if (!consumer.files.has(r.target)) {
         problems.push(
-          `PACK — ${r.subpath} [${r.condition}] -> ${r.target} is NOT in the ${which}. ` +
+          `PACK: ${r.subpath} [${r.condition}] -> ${r.target} is NOT in the ${which}. ` +
           `It resolves in the workspace and 404s for anyone who installs the package.`,
         )
       }
@@ -216,7 +216,7 @@ async function main() {
     if (skipBundler) {
       console.log('  bundler: skipped (--skip-bundler)')
     } else if (problems.length) {
-      console.log('  bundler: not run — a target is already missing, so a build failure would ' +
+      console.log('  bundler: not run; a target is already missing, so a build failure would ' +
         'only restate it')
     } else {
       // A REAL CONSUMER INSTALL, not an alias. Aliasing the package name to the extract would
@@ -296,7 +296,7 @@ async function main() {
     for (const p of problems) console.error(`  - ${p}`)
     process.exit(BLOCKING)
   }
-  console.log('\ncheck-exports: clean — every exports subpath survives into an installed copy.')
+  console.log('\ncheck-exports: clean; every exports subpath survives into an installed copy.')
   process.exit(CLEAN)
 }
 

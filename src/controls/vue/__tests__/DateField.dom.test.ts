@@ -41,7 +41,7 @@ describe('DateField wraps a native date input', () => {
     w.unmount()
   })
 
-  it('is controlled — typing does not move it on its own', () => {
+  it('is controlled: typing does not move it on its own', () => {
     const w = mountField('2026-08-18')
     const input = w.find('input')
     ;(input.element as HTMLInputElement).value = '2026-01-09'

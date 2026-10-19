@@ -25,7 +25,7 @@ function mountSeg(modelValue: 'a' | 'b' | 'c' | null) {
   return w
 }
 
-describe('Seg — no-selection state', () => {
+describe('Seg: no-selection state', () => {
   it('marks NOTHING active when modelValue is null', () => {
     const w = mountSeg(null)
     expect(w.findAll('button.on')).toHaveLength(0)
@@ -51,7 +51,7 @@ describe('Seg — no-selection state', () => {
   })
 })
 
-describe('Seg — emit contract', () => {
+describe('Seg: emit contract', () => {
   /* Seg emits ONE event. This used to pin that `change` fired after `update:modelValue`, both
      carrying the same value: a redundancy the component's own comment called a mistake it could
      not cheaply undo. It was undone: the emit is gone, and what is pinned now is its absence, so

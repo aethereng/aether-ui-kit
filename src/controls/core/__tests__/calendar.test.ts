@@ -13,7 +13,7 @@ import {
 /* The bugs these guard against are all the same shape: a date-only value that is correct until it
  * touches a timezone or a month boundary, and then is quietly off by one. */
 
-describe('parseISO — strict, because a date input reports "" for anything it cannot parse', () => {
+describe('parseISO: strict, because a date input reports "" for anything it cannot parse', () => {
   it('accepts a real date', () => {
     expect(parseISO('2026-08-21')).toEqual({ y: 2026, m: 8, d: 21 })
   })
@@ -56,7 +56,7 @@ describe('daysInMonth', () => {
   })
 })
 
-describe('addMonths — the modulo has to survive going backwards', () => {
+describe('addMonths: the modulo has to survive going backwards', () => {
   it('steps forward across a year boundary', () => {
     expect(addMonths(2026, 12, 1)).toEqual({ y: 2027, m: 1 })
   })
@@ -96,7 +96,7 @@ describe('addDays', () => {
   })
 })
 
-describe('weekdayIndex — 0 = Monday', () => {
+describe('weekdayIndex: 0 = Monday', () => {
   it('places known days', () => {
     expect(weekdayIndex({ y: 2026, m: 8, d: 17 })).toBe(0) // a Monday
     expect(weekdayIndex({ y: 2026, m: 8, d: 23 })).toBe(6) // the Sunday after

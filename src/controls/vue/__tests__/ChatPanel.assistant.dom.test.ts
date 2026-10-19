@@ -554,14 +554,14 @@ describe('the proposal card', () => {
     }
   })
 
-  it('renders every row, however many, in a region that scrolls and can be reached by keyboard', () => {
+  it('renders every row, however many, in a group that scrolls and can be reached by keyboard', () => {
     const w = mountPanel([proposal({ rows: rows(250) })])
     expect(w.findAll('.aether-chat__diff tbody tr')).toHaveLength(250)
     expect(w.findAll('.aether-chat__proposed')).toHaveLength(250)
-    const region = w.find('.aether-chat__rows')
-    expect(region.attributes('role')).toBe('group')
-    expect(region.attributes('tabindex')).toBe('0')
-    expect(accessibleName(region.element)).toContain('Example proposal')
+    const box = w.find('.aether-chat__rows')
+    expect(box.attributes('role')).toBe('group')
+    expect(box.attributes('tabindex')).toBe('0')
+    expect(accessibleName(box.element)).toContain('Example proposal')
   })
 
   it('adds no landmark per call or per proposal, and every scroll box is still a named tab stop', () => {

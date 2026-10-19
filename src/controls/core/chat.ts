@@ -223,8 +223,8 @@ function startsLine(text: string, at: number): boolean {
  *  UNRESOLVED REFERENCES ARE LEFT TO THE CALLER. A reference is skipped whatever its scope id,
  *  because this function is handed the identifiers admitted in text and not the app's index of run,
  *  model and proposal ids; it cannot know that `{{r999:x}}` points at nothing. The caller asks its
- *  own index and reports an unresolved reference itself. A reference still being
- *  typed is not yet a reference, so it is plain text here and its digit is a violation.
+ *  own index and reports an unresolved reference itself. A reference still being typed is not yet a
+ *  reference, so it is plain text here and its digit is a violation.
  *
  *  Not a markdown parser: it does not know a fenced block from a sentence. */
 export function findBareNumerals(text: string, admittedIds: Iterable<string>): BareNumeralSpan[] {
@@ -283,10 +283,11 @@ export const REF_HASH_LENGTH = 7
 export const UNRESOLVED_TEXT = 'unresolved'
 export const REDUCED_TEXT = 'reduced by the viewer'
 
-/** How far from the bottom, in px, a log still counts as AT the bottom for the one rule that
- *  follows a growing stream: a reader inside it keeps following, a reader outside it is left
- *  where they are. About one line of the log's message text, rounded up; the scroll test pins
- *  both sides of it. */
+/** How far from the bottom, in px, a log still counts as AT the bottom for the rule that follows a
+ *  stream. The rule has two triggers, the stream's growth and an entry appended during it, and
+ *  both use this distance: a reader within it keeps following, a reader beyond it is left where
+ *  they are. About one line of the log's message text, rounded up; the scroll test pins both sides
+ *  of it. */
 export const STREAM_FOLLOW_THRESHOLD = 20
 
 const HASH_LABEL: Record<RefSourceKind, string> = {

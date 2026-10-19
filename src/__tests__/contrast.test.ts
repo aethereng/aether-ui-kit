@@ -340,7 +340,8 @@ describe('the refusal label clears AA on its wash', () => {
     })
 
   it('negative arm: --aether-faint on the same wash over --aether-panel is under the floor', () => {
-    // the pair the rule replaced; if this passes the check above is not able to fail
+    // faint on the same wash over panel; if this stops holding, the floor above cannot tell the two
+    // greys apart
     expect(ratio(t('--aether-faint'), over(wash, t('--aether-panel')))).toBeLessThan(4.5)
   })
 })

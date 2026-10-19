@@ -321,7 +321,7 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
           >
             <!-- Disclosure clips its body at a fixed ceiling, so a long detail scrolls inside its own
                  box and its whole text stays reachable. The box is a named tab stop so the keyboard
-                 gets there, and a group rather than a landmark, so a long log adds no landmarks. -->
+                 gets there, and a group rather than a landmark. -->
             <pre
               class="aether-chat__detail"
               role="group"
@@ -350,8 +350,8 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
             <span class="aether-chat__state" :data-state="m.status">{{ m.status }}</span>
           </div>
           <!-- A scroll container is a named tab stop, or a keyboard user cannot reach the rows past the
-               fold; a group rather than a landmark, so each proposal adds none. The kit renders every
-               row: the cap, if any, is the app's. -->
+               fold; a group rather than a landmark. The kit renders every row: the cap, if any, is
+               the app's. -->
           <div class="aether-chat__rows" role="group" tabindex="0" :aria-label="m.title + ' rows'">
             <table class="aether-chat__diff">
               <thead>
@@ -499,7 +499,7 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
   box-sizing: border-box;
 }
 
-/* The state is its word. The tone is a left rule on the pill, and the word does not depend on it. */
+/* The tone is a left rule on the pill, and the state's word does not depend on it. */
 .aether-chat__state {
   display: inline-flex;
   align-items: center;

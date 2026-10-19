@@ -47,11 +47,11 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {
     onNodeHover?: ((id: string, clientX: number, clientY: number) => any) | undefined;
     onNodeLeave?: (() => any) | undefined;
 }>, {
+    running: boolean;
     width: number;
     height: number;
     selection: string | null;
     projection: "ortho2d" | "iso3d";
-    running: boolean;
     neighbors: Set<string> | null;
     mapping: "fit" | "direct";
     zoomable: boolean;

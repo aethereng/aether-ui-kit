@@ -165,13 +165,6 @@ export interface FilterGroup<V extends string = string> {
   selected: Set<V>
 }
 
-// A message in a ChatPanel log. `role` picks the bubble style and the printed label
-// ('you' / 'agent' / 'note' for sys); `queued` marks a request not yet sent, which both
-// real consumers style as dashed + dimmed. `refs` is always an array: a caller with a
-// single reference passes a one-element array rather than the panel juggling two shapes.
-export interface ChatMessage {
-  role: 'you' | 'agent' | 'sys'
-  text: string
-  queued?: boolean
-  refs?: string[]
-}
+// ChatMessage is defined in ./chat, beside the rest of the message union, and re-exported here so
+// that imports through this module resolve.
+export type { ChatMessage } from './chat'

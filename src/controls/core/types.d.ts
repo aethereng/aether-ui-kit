@@ -108,9 +108,4 @@ export interface FilterGroup<V extends string = string> {
     options: ChipOption<V>[];
     selected: Set<V>;
 }
-export interface ChatMessage {
-    role: 'you' | 'agent' | 'sys';
-    text: string;
-    queued?: boolean;
-    refs?: string[];
-}
+export type { ChatMessage } from './chat';

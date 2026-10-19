@@ -17,7 +17,6 @@ export type {
   ChipProps,
   ToolProps,
   DisclosureProps,
-  ChatMessage,
   SelectOption,
   SelectGroup,
   SliderTick,
@@ -55,6 +54,38 @@ export function isChipActive<V extends string>(value: V, active: V | Set<V>): bo
 // needed it wrote its own copy, which is the duplication this package exists to end.
 export { DEFAULT_SPEEDS, cycleSpeed, isAtEnd, beginScrub, endScrub } from './transport'
 export type { ScrubHandle } from './transport'
+
+// The ChatPanel core: the message union, the `{{scope:path}}` reference grammar and the bare-numeral
+// rule. Public because the app that fills a log in is the one that knows what a reference points at
+// and which numerals it admits, and may run the same rules outside any component.
+export type {
+  ChatMessage,
+  ChatMark,
+  ChatToolMessage,
+  ChatToolStatus,
+  ChatRefusalMessage,
+  ChatProposalMessage,
+  ChatProposalRow,
+  ChatProposalFlag,
+  ChatProposalStatus,
+  ChatCardMessage,
+  ChatEntry,
+  ChatSegment,
+  BareNumeralSpan,
+  RefSourceKind,
+  RefChipData,
+  RefChipText,
+} from './chat'
+export {
+  isTextMessage,
+  splitReferences,
+  findBareNumerals,
+  describeRef,
+  REF_HASH_LENGTH,
+  UNRESOLVED_TEXT,
+  REDUCED_TEXT,
+  STREAM_FOLLOW_THRESHOLD,
+} from './chat'
 
 // The Tree core: the row model and the whole keyboard contract, framework-free. Public because a
 // caller types its own node data against TreeNode<T> and may drive the same key handling itself.

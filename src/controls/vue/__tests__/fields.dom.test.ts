@@ -241,8 +241,22 @@ describe('Select', () => {
 
   it('carries a subtitle into the row rather than dropping it', () => {
     const w = mount(Select, { props: { modelValue: 'none', groups } })
-    expect(w.findAll('optgroup')[1]!.find('option').text()).toContain('1.35·G + 1.5·Q')
+    expect(w.findAll('optgroup')[1]!.find('option').text()).toBe('ULS-1: 1.35·G + 1.5·Q')
     w.unmount()
+    // a flat row carries it as the option's label attribute, and a row without one keeps its own
+    const flat = mount(Select, {
+      props: {
+        modelValue: 'a',
+        options: [
+          { value: 'a', label: 'A', subtitle: 'first' },
+          { value: 'b', label: 'B' },
+        ],
+      },
+    })
+    const rows = flat.findAll('option')
+    expect(rows[0]!.attributes('label')).toBe('A: first')
+    expect(rows[1]!.attributes('label')).toBeUndefined()
+    flat.unmount()
   })
 
   it('reflects modelValue and emits the chosen value', async () => {

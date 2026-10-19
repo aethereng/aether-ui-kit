@@ -41,7 +41,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
       :key="opt.value"
       :value="opt.value"
       :disabled="opt.disabled"
-      :label="opt.subtitle ? `${opt.label} — ${opt.subtitle}` : undefined"
+      :label="opt.subtitle ? `${opt.label}: ${opt.subtitle}` : undefined"
     >
       {{ opt.label }}
     </option>
@@ -52,7 +52,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
         :value="opt.value"
         :disabled="opt.disabled"
       >
-        {{ opt.subtitle ? `${opt.label} — ${opt.subtitle}` : opt.label }}
+        {{ opt.subtitle ? `${opt.label}: ${opt.subtitle}` : opt.label }}
       </option>
     </optgroup>
   </select>

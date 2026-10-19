@@ -379,6 +379,13 @@ describe('describeRef', () => {
     expect(reduced.name).toBe('summary.max_abs_displacement: 0.0123 m, ' + REDUCED_TEXT)
   })
 
+  it('an empty path and value start the name at the first tag, with no leading separator', () => {
+    const bare = { ...run, path: '', value: '', unit: null }
+    expect(resolved(bare).name).toBe('r1, 3b1f2c9')
+    expect(resolved({ ...bare, source: { ...run.source, hash: '' } }).name).toBe('r1')
+    expect(resolved({ ...bare, source: { ...run.source, hash: '' }, reduced: true }).name).toBe('r1, ' + REDUCED_TEXT)
+  })
+
   it('adds "reduced by the viewer" to the tag, the name and the hover, only when reduced', () => {
     const reduced = resolved({ ...run, reduced: true })
     expect(REDUCED_TEXT).toBe('reduced by the viewer')

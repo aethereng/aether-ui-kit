@@ -333,7 +333,7 @@ export function describeRef(ref: string, data: RefChipData | null): RefChipText 
     resolved: true,
     quantity,
     tag: tags.join(' · '),
-    name: [[data.path, quantity].filter(Boolean).join(': '), ...tags].join(', '),
+    name: [[data.path, quantity].filter(Boolean).join(': '), ...tags].filter(Boolean).join(', '),
     hover: [
       data.path,
       data.provenance ?? '',

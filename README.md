@@ -39,7 +39,8 @@ The core knows how to stack overlapping bars into lanes. It does not know what a
 | **Gantt**, **Graph2D** | real algorithms: lane packing, span/point classification, force layout, projections | rendering, pointer handling, CSS |
 | **PropertyEditor**, **Transport** | field coercion and validation; the scrub handoff and speed ladder | rendering |
 | **Seg**, **Chip**, **Tool**, **FilterRail** | types and a couple of predicates | essentially all of it |
-| **SearchField**, **Toast**, **ChatPanel** | none | all of it, because the logic *is* a watcher and a timer |
+| **SearchField**, **Toast** | none | all of it, because the logic *is* a watcher and a timer |
+| **ChatPanel** | `chat.ts`: the message union, the `{{scope:path}}` reference grammar, the bare-numeral rule | rendering, the live region and the scroll rules |
 
 So for `Gantt` and `Graph2D`, a wrapper for another framework genuinely would be a new file importing the same core; that claim is load-bearing, and the gallery already drives `ForceLayout` directly, without the component, to prove the core stands alone. For the small controls it would be a rewrite: there is just not much to rewrite.
 
@@ -195,7 +196,7 @@ focus ring), which every component needs and no component owns.
 | **Menu** | `controls/menu` | Dropdown menu with the full APG keyboard model. |
 | **Dialog** | `controls/dialog` | Modal dialog over the native `<dialog>` element. |
 | **SearchField** | `controls/search-field` | Search input whose clear button appears only once there is something to clear. |
-| **ChatPanel** | `controls/chat-panel` | Message log + compose box for the queue → send → apply-reply agent pattern. Owns the log; you own what Send *does*. |
+| **ChatPanel** | `controls/chat-panel` | Message log + compose box for the queue → send → apply-reply agent pattern. Owns the log; you own what Send *does*. `actions="assistant"` switches to Send and Stop over a log that also holds streaming text, reference chips, tool calls, refusals, proposals and cards. |
 | **Toast** | `controls/toast` | Transient status pill that fades itself out. Controlled: you own the message. |
 | **Transport** | `controls/transport` | Playback transport: play/pause/replay, scrub, speed, precompute progress. Unit-agnostic: drives simulation seconds or calendar days. |
 | **Switch** | `controls/switch` | Boolean toggle as a pill switch. One bare input; you own the label. |
@@ -310,7 +311,7 @@ The tests are in three layers that exist for different reasons:
 
 ### What earns a place here
 
-A component is extracted when it has **two real consumers**, not two that look alike. Before extracting, we check the candidates share a render paradigm, a data shape, *and* an interaction contract. Several plausible-looking candidates have been rejected on exactly that test, and one was rejected twice. Where two consumers genuinely differ along one axis, that axis becomes a prop (`FilterRail`'s `orientation`, `Transport`'s `speedMode`, `Seg`'s `variant`), not a second component and not an open style hook.
+A component is extracted when it has **two real consumers**, not two that look alike. Before extracting, we check the candidates share a render paradigm, a data shape, *and* an interaction contract. Several plausible-looking candidates have been rejected on exactly that test, and one was rejected twice. Where two consumers genuinely differ along one axis, that axis becomes a prop (`FilterRail`'s `orientation`, `Transport`'s `speedMode`, `Seg`'s `variant`, `ChatPanel`'s `actions`), not a second component and not an open style hook.
 
 ---
 

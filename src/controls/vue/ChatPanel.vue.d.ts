@@ -1,6 +1,6 @@
-import type { ChatMessage } from '../core';
+import type { ChatEntry, RefChipData } from '../core/chat';
 type __VLS_Props = {
-    messages: ChatMessage[];
+    messages: ChatEntry[];
     modelValue: string;
     placeholder?: string;
     queueLabel?: string;
@@ -10,22 +10,48 @@ type __VLS_Props = {
      *  caller, so some cap matters for a conversation that runs long; both real consumers
      *  cap it differently (50 vs 60), hence a prop rather than a constant. */
     historyLimit?: number;
+    /** 'relay': Queue, Send and Apply reply, with the queued count. 'assistant': Send, and Stop
+     *  while `busy`; it also turns on everything the props below describe. */
+    actions?: 'relay' | 'assistant';
+    /** A request is in flight: Send is disabled and Stop is shown. Assistant only. */
+    busy?: boolean;
+    /** A line shown under every agent text message, and absent when empty. Assistant only. */
+    fixedLine?: string;
+    /** A line shown on every proposal card. Assistant only. */
+    proposalLine?: string;
+    /** The app's answer for a reference (`scope:path`): what to show in the chip, or null when it
+     *  cannot resolve it. Absent means every reference is the warning chip. Assistant only. */
+    resolveRef?: (ref: string) => RefChipData | null;
 };
-declare var __VLS_1: {};
-type __VLS_Slots = {} & {
-    empty?: (props: typeof __VLS_1) => any;
+type __VLS_Slots = {
+    /** The caller's copy for an empty log. */
+    empty?: () => unknown;
+    /** Extra content inside each message, of any kind. Assistant only. */
+    'message-extra'?: (props: {
+        message: ChatEntry;
+    }) => unknown;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {
     focus: () => void | undefined;
 }, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    stop: () => any;
     "update:modelValue": (value: string) => any;
     queue: () => any;
     send: () => any;
+    accept: (proposalId: string) => any;
+    discard: (proposalId: string) => any;
+    "open-ref": (ref: string) => any;
+    "toggle-tool": (callId: string) => any;
     "apply-reply": () => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
+    onStop?: (() => any) | undefined;
     "onUpdate:modelValue"?: ((value: string) => any) | undefined;
     onQueue?: (() => any) | undefined;
     onSend?: (() => any) | undefined;
+    onAccept?: ((proposalId: string) => any) | undefined;
+    onDiscard?: ((proposalId: string) => any) | undefined;
+    "onOpen-ref"?: ((ref: string) => any) | undefined;
+    "onToggle-tool"?: ((callId: string) => any) | undefined;
     "onApply-reply"?: (() => any) | undefined;
 }>, {
     placeholder: string;
@@ -33,6 +59,11 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {
     sendLabel: string;
     applyLabel: string;
     historyLimit: number;
+    actions: "relay" | "assistant";
+    busy: boolean;
+    fixedLine: string;
+    proposalLine: string;
+    resolveRef: (ref: string) => RefChipData | null;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;

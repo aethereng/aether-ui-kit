@@ -274,3 +274,73 @@ describe('the tokens a host is expected to remap', () => {
     expect(block.slice(0, 200)).toContain('var(--aether-warm-ink)')
   })
 })
+
+/* The refusal label in ChatPanel is 9px bold, which is normal-size text, over the danger wash: a
+ * translucent tone over whatever the log paints. The label's colour is read from the component's
+ * own rule rather than restated here, so changing the rule runs this check. The wash is composited
+ * over both grounds, because the log sits on either. */
+const chatPanelSource = readFileSync(resolve(__dirname, '../controls/vue/ChatPanel.vue'), 'utf8')
+
+/** Follow `var(--x)` chains through the :root tokens until a literal is reached. */
+function literal(name: string): string {
+  let v = t(name)
+  for (let n = 0; n < 8; n++) {
+    const next = /^var\((--aether-[a-z0-9-]+)\)$/.exec(v)
+    if (!next) return v
+    v = t(next[1]!)
+  }
+  throw new Error(`contrast: ${name} does not resolve to a literal`)
+}
+/** `rgba(r, g, b, a)` composited over a `#rrggbb` ground, as `#rrggbb`. */
+function over(wash: string, ground: string): string {
+  const m = /^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)$/.exec(wash)
+  if (!m) throw new Error(`contrast: expected rgba(), got "${wash}"`)
+  const g = HEX.exec(ground)
+  if (!g) throw new Error(`contrast: expected a 6-digit hex, got "${ground}"`)
+  const a = parseFloat(m[4]!)
+  const out = [0, 1, 2].map((i) => {
+    const under = parseInt(g[1]!.slice(i * 2, i * 2 + 2), 16)
+    return Math.round(parseInt(m[i + 1]!, 10) * a + under * (1 - a))
+  })
+  return '#' + out.map((c) => c.toString(16).padStart(2, '0')).join('')
+}
+/** The `color` token a rule gives its text, or null when the selector or the colour is absent. */
+function ruleColor(source: string, selector: string): string | null {
+  const start = source.indexOf(selector + ' {')
+  if (start < 0) return null
+  const body = source.slice(start, source.indexOf('}', start))
+  return /color:\s*var\((--aether-[a-z0-9-]+)\)/.exec(body)?.[1] ?? null
+}
+
+describe('the refusal label clears AA on its wash', () => {
+  const SELECTOR = '.aether-chat__refusal .aether-chat__who'
+  const wash = literal('--aether-tone-danger-wash')
+
+  it('can read a colour out of a rule, and can tell a missing one (a seeded known case)', () => {
+    const seeded = '.a .b {\n  color: var(--aether-ink-soft);\n}\n.c {\n  color: var(--aether-faint);\n}'
+    expect(ruleColor(seeded, '.a .b')).toBe('--aether-ink-soft')
+    expect(ruleColor(seeded, '.c')).toBe('--aether-faint')
+    expect(ruleColor(seeded, '.missing')).toBeNull()
+  })
+
+  it('composites a wash the way a browser paints it', () => {
+    expect(over('rgba(0, 0, 0, 0.5)', '#ffffff')).toBe('#808080')
+    expect(over('rgba(255, 255, 255, 0)', '#123456')).toBe('#123456')
+  })
+
+  for (const ground of GROUNDS)
+    it(`the label colour on the danger wash over ${ground}`, () => {
+      const token = ruleColor(chatPanelSource, SELECTOR)
+      expect(token, `ChatPanel.vue has no "${SELECTOR}" rule with a --aether colour`).not.toBeNull()
+      const r = ratio(t(token!), over(wash, t(ground)))
+      expect(
+        r,
+        `${token} (${t(token!)}) on the danger wash over ${ground} measures ${r.toFixed(2)}, under the 4.5 floor.`,
+      ).toBeGreaterThanOrEqual(4.5)
+    })
+
+  it('negative arm: --aether-faint on the same wash over --aether-panel is under the floor', () => {
+    // the pair the rule replaced; if this passes the check above is not able to fail
+    expect(ratio(t('--aether-faint'), over(wash, t('--aether-panel')))).toBeLessThan(4.5)
+  })
+})

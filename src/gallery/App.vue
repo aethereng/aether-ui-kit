@@ -903,6 +903,16 @@ body {
   border-radius: var(--aether-radius);
   overflow: hidden;
 }
+/* The assistant demo holds every message kind at once, so it is as tall as they are, capped at the
+   viewport so the whole box is always on one screen and the log scrolls inside it when the screen
+   is short. */
+.g-chat--assistant {
+  max-width: 600px;
+  height: min(1140px, 92vh);
+}
+.g-hint--spaced {
+  margin-top: 22px;
+}
 .g-rails {
   display: flex;
   flex-direction: column;

@@ -142,6 +142,10 @@
       "types": "./src/assistant/core/key.d.ts",
       "import": "./src/assistant/core/key.ts"
     },
+    "./assistant/core/loop": {
+      "types": "./src/assistant/core/loop.d.ts",
+      "import": "./src/assistant/core/loop.ts"
+    },
     "./viz/graph": {
       "types": "./src/viz/vue/Graph2D.vue.d.ts",
       "import": "./src/viz/vue/Graph2D.vue"

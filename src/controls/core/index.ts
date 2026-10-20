@@ -66,6 +66,7 @@ export type {
   ChatRefusalMessage,
   ChatProposalMessage,
   ChatProposalRow,
+  ChatProposalBasis,
   ChatProposalFlag,
   ChatProposalStatus,
   ChatCardMessage,
@@ -85,6 +86,7 @@ export {
   UNRESOLVED_TEXT,
   REDUCED_TEXT,
   STREAM_FOLLOW_THRESHOLD,
+  CHIP_TEXT_LIMIT,
 } from './chat'
 
 // The reference grammar: the scope list, the numeral gate and the path rules. An app that mints or

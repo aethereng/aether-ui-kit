@@ -62,10 +62,19 @@ export interface ChatRefusalMessage {
   source: 'engine' | 'api'
 }
 
+/** Where a proposed value came from. `suggestion` is a value the assistant chose itself; the panel
+ *  marks it as the assistant's suggestion. The kit judges nothing about the value. */
+export interface ChatProposalBasis {
+  kind: 'person' | 'file' | 'list' | 'suggestion'
+  text: string
+}
+
 export interface ChatProposalRow {
   path: string
   before: string
   after: string
+  /** Shown in its own column when any row of the proposal has a basis. */
+  basis?: ChatProposalBasis | null
 }
 
 export interface ChatProposalFlag {
@@ -84,6 +93,11 @@ export interface ChatProposalMessage {
   flags: ChatProposalFlag[]
   /** Accept and Discard show only while `pending`; the app moves it on. */
   status: ChatProposalStatus
+  /** The card says so in text, and its Accept control is labelled for it. Not by colour alone. */
+  destructive?: boolean
+  /** A card that can still be taken up after its status has moved on: `accept` for a superseded or
+   *  discarded card, `load-again` for an accepted one. Absent or null shows neither. */
+  later?: 'accept' | 'load-again' | null
 }
 
 export interface ChatCardMessage {
@@ -114,7 +128,7 @@ export type { BareNumeralSpan, ChatSegment, ReferenceScopes } from './refs'
 
 // ---- reference chips ---------------------------------------------------------------------
 
-export type RefSourceKind = 'run' | 'model' | 'proposal' | 'capabilities' | 'schema'
+export type RefSourceKind = 'run' | 'model' | 'proposal' | 'capabilities' | 'schema' | 'verification' | 'findings' | 'registry'
 
 /** What the app's `resolveRef` returns for a reference it can answer. The kit shows these fields
  *  and decides nothing about them. */
@@ -135,6 +149,8 @@ export interface RefChipData {
   provenance: string | null
   /** True when the viewer reduced the value. */
   reduced?: boolean
+  /** A mark drawn after the value, such as `(lower bound)` for a value that bounds the true one. */
+  mark?: string | null
 }
 
 /** Characters of a hash shown in the chip's tag. */
@@ -156,7 +172,17 @@ const HASH_LABEL: Record<RefSourceKind, string> = {
   proposal: 'proposal hash',
   capabilities: 'viewer build',
   schema: 'viewer build',
+  verification: 'building result hash',
+  findings: 'build',
+  registry: 'build',
 }
+
+/** The kinds whose tag names the build a value came from, rather than an id and a hash. */
+const BUILD_KINDS: ReadonlySet<RefSourceKind> = new Set(['capabilities', 'schema', 'findings', 'registry'])
+
+/** Characters of a value a chip shows before it is shortened. The full text stays in the hover and
+ *  in the accessible name. */
+export const CHIP_TEXT_LIMIT = 40
 
 export type RefChipText =
   | {
@@ -185,19 +211,26 @@ export function describeRef(ref: string, data: RefChipData | null): RefChipText 
   if (!data) return { resolved: false, name: UNRESOLVED_TEXT + ': ' + ref }
   const { source } = data
   const hash = source.hash.slice(0, REF_HASH_LENGTH)
-  const build = source.kind === 'capabilities' || source.kind === 'schema'
+  const build = BUILD_KINDS.has(source.kind)
   const parts = [source.id ?? '', hash ? (build ? 'build ' + hash : hash) : ''].filter(Boolean)
   const reduced = data.reduced ? [REDUCED_TEXT] : []
-  const quantity = data.unit ? data.value + ' ' + data.unit : data.value
+  const unit = data.unit ? ' ' + data.unit : ''
+  const marks = data.mark ? [data.mark] : []
+  const chars = Array.from(data.value)
+  const shortened = chars.length > CHIP_TEXT_LIMIT
+  const shown = shortened ? chars.slice(0, CHIP_TEXT_LIMIT - 1).join('') + '…' : data.value
+  const quantity = [shown + unit, ...marks].join(' ')
+  const full = [data.value + unit, ...marks].join(' ')
   const tags = [...parts, ...reduced]
   return {
     resolved: true,
     quantity,
     tag: tags.join(' · '),
-    name: [[data.path, quantity].filter(Boolean).join(': '), ...tags].filter(Boolean).join(', '),
+    name: [[data.path, full].filter(Boolean).join(': '), ...tags].filter(Boolean).join(', '),
     hover: [
       data.path,
       data.provenance ?? '',
+      shortened ? full : '',
       source.hash ? HASH_LABEL[source.kind] + ' ' + source.hash : '',
       ...reduced,
     ]

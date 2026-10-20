@@ -34,10 +34,18 @@ export interface ChatRefusalMessage {
     text: string;
     source: 'engine' | 'api';
 }
+/** Where a proposed value came from. `suggestion` is a value the assistant chose itself; the panel
+ *  marks it as the assistant's suggestion. The kit judges nothing about the value. */
+export interface ChatProposalBasis {
+    kind: 'person' | 'file' | 'list' | 'suggestion';
+    text: string;
+}
 export interface ChatProposalRow {
     path: string;
     before: string;
     after: string;
+    /** Shown in its own column when any row of the proposal has a basis. */
+    basis?: ChatProposalBasis | null;
 }
 export interface ChatProposalFlag {
     text: string;
@@ -53,6 +61,11 @@ export interface ChatProposalMessage {
     flags: ChatProposalFlag[];
     /** Accept and Discard show only while `pending`; the app moves it on. */
     status: ChatProposalStatus;
+    /** The card says so in text, and its Accept control is labelled for it. Not by colour alone. */
+    destructive?: boolean;
+    /** A card that can still be taken up after its status has moved on: `accept` for a superseded or
+     *  discarded card, `load-again` for an accepted one. Absent or null shows neither. */
+    later?: 'accept' | 'load-again' | null;
 }
 export interface ChatCardMessage {
     kind: 'card';
@@ -64,7 +77,7 @@ export type ChatEntry = ChatMessage | ChatToolMessage | ChatRefusalMessage | Cha
 export declare function isTextMessage(m: ChatEntry): m is ChatMessage;
 export { findBareNumerals, referencesIn, splitReferences } from './refs';
 export type { BareNumeralSpan, ChatSegment, ReferenceScopes } from './refs';
-export type RefSourceKind = 'run' | 'model' | 'proposal' | 'capabilities' | 'schema';
+export type RefSourceKind = 'run' | 'model' | 'proposal' | 'capabilities' | 'schema' | 'verification' | 'findings' | 'registry';
 /** What the app's `resolveRef` returns for a reference it can answer. The kit shows these fields
  *  and decides nothing about them. */
 export interface RefChipData {
@@ -84,6 +97,8 @@ export interface RefChipData {
     provenance: string | null;
     /** True when the viewer reduced the value. */
     reduced?: boolean;
+    /** A mark drawn after the value, such as `(lower bound)` for a value that bounds the true one. */
+    mark?: string | null;
 }
 /** Characters of a hash shown in the chip's tag. */
 export declare const REF_HASH_LENGTH = 7;
@@ -96,6 +111,9 @@ export declare const REDUCED_TEXT = "reduced by the viewer";
  *  they are. About one line of the log's message text, rounded up; the scroll test pins both sides
  *  of it. */
 export declare const STREAM_FOLLOW_THRESHOLD = 20;
+/** Characters of a value a chip shows before it is shortened. The full text stays in the hover and
+ *  in the accessible name. */
+export declare const CHIP_TEXT_LIMIT = 40;
 export type RefChipText = {
     resolved: true;
     /** Value and unit as shown: `0.0123 m`. */

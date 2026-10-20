@@ -164,11 +164,15 @@ describe('findBareNumerals', () => {
     })
     it('M3 yields none when admitted', () => expect(spansOf('see M3', ['M3'])).toEqual([]))
     it('M3 yields one when not admitted', () => expect(spansOf('see M3', [])).toEqual(['M3']))
-    it('a code span holding a digit is a violation', () => expect(spansOf('use `x2` here')).toEqual(['`x2`']))
-    it('J12 in backticks is a violation (a backtick is not stripped)', () =>
-      expect(spansOf('see `J12` there')).toEqual(['`J12`']))
-    it('J12 in bold is a violation (an asterisk is not stripped)', () =>
-      expect(spansOf('see **J12** there')).toEqual(['**J12**']))
+    it('a code span holding a digit is a violation, its span the digits', () => expect(spansOf('use `x2` here')).toEqual(['x2']))
+    it('J12 in backticks passes as J12, and is a violation of its digits when J12 is not admitted', () => {
+      expect(spansOf('see `J12` there')).toEqual([])
+      expect(spansOf('see `J12` there', [])).toEqual(['J12'])
+    })
+    it('J12 in bold passes as J12, and is a violation of its digits when J12 is not admitted', () => {
+      expect(spansOf('see **J12** there')).toEqual([])
+      expect(spansOf('see **J12** there', [])).toEqual(['J12'])
+    })
     it('a superscript digit is a violation', () => {
       const sup = 'x' + ch(0xb2)
       expect(spansOf(`area ${sup}`)).toEqual([sup])

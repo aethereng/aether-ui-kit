@@ -53,9 +53,9 @@ export interface BareNumeralSpan {
  *  before comparing, namely `. , ; : ! ? ( ) [ ] { } "`, the apostrophe `'` and the typographic
  *  single quotes U+2018 and U+2019, and a trailing apostrophe-s (`'s`, in any of the three). The
  *  trailing strip repeats until nothing more comes off, so `J12.`, `(J12)`, `J12's`, `(J12's).`
- *  and `J12's's` all compare as `J12`. The comparison is exact and case-sensitive. A backtick and
- *  an asterisk are not in the strip set, so a code span or bold text around an identifier makes it
- *  a violation, and a code span is read like any other text.
+ *  and `J12's's` all compare as `J12`. The comparison is exact and case-sensitive. A backtick, an
+ *  asterisk and an underscore strip like the rest, so `` `J12` ``, `**J12**`, `_J12_` and `(`J12`)` all
+ *  compare as `J12`: the markup stays in the text, and a violation's span covers the digits only.
  *
  *  A token is a VIOLATION when, stripped, it holds a digit and does not equal an admitted
  *  identifier, unless it opens a list item the parser reads (`opensListItem`: an ordered marker after

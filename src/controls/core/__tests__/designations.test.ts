@@ -36,8 +36,15 @@ describe('an identifier of several words is read as one phrase', () => {
     expect(found('Table {{r1:x}} 3.1 here', ['Table 3.1'])).toEqual(['3.1'])
   })
 
-  it('negative arm: a bold marker is not an edge, so the phrase under bold is not found', () => {
-    expect(found('**Table 3.1**', ['Table 3.1'])).toEqual(['3.1**'])
+  it('passes a phrase under bold, emphasis or a code span, as the phrase', () => {
+    expect(found('**Table 3.1**', ['Table 3.1'])).toEqual([])
+    expect(found('_Table 3.1_', ['Table 3.1'])).toEqual([])
+    expect(found('`Table 3.1`', ['Table 3.1'])).toEqual([])
+  })
+
+  it('negative arm: a phrase under markup that is not admitted flags its digits, and the markup is not in the span', () => {
+    expect(found('**Table 3.1**', [])).toEqual(['3.1'])
+    expect(found('_Table 3.1_', [])).toEqual(['3.1'])
   })
 
   it('reads a phrase that is a prefix of a longer one only as far as its own words', () => {
@@ -69,6 +76,30 @@ describe('an identifier of several words is read as one phrase', () => {
   it('the gate reads a phrase with its references, and still reports the unresolved one', () => {
     const violations = numeralGate('See Table 3.1 and {{r9:x}}', ['Table 3.1'], () => false)
     expect(violations.map((v) => v.kind)).toEqual(['unresolved_reference'])
+  })
+})
+
+describe('an identifier written in markup reads as the identifier', () => {
+  it('passes a single-token identifier in a code span, bold, emphasis, underscores or brackets', () => {
+    expect(found('`J12`', ['J12'])).toEqual([])
+    expect(found('**J12**', ['J12'])).toEqual([])
+    expect(found('*J12*', ['J12'])).toEqual([])
+    expect(found('_J12_', ['J12'])).toEqual([])
+    expect(found('(`J12`)', ['J12'])).toEqual([])
+  })
+
+  it('negative arm: the same markup around an identifier that is not admitted flags its digits', () => {
+    expect(found('`J13`', ['J12'])).toEqual(['J13'])
+    expect(found('**J13**', ['J12'])).toEqual(['J13'])
+    expect(found('_J13_', ['J12'])).toEqual(['J13'])
+  })
+
+  it('an identifier admitted as written passes, even where its own edge is a strip character', () => {
+    expect(found('see _v2 here', ['_v2'])).toEqual([])
+  })
+
+  it('negative arm: the same identifier not admitted is flagged at its digits', () => {
+    expect(found('see _v2 here', [])).toEqual(['v2'])
   })
 })
 

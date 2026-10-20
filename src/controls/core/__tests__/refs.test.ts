@@ -48,9 +48,13 @@ describe('numeral gate', () => {
     expect(numeralGate('The M3 diagram', [], NONE)).toEqual([{ token: 'M3', start: 4, end: 6, kind: 'bare_numeral' }])
   })
 
-  it('reads a code span like any other text', () => {
+  it('reads a code span as the identifier it holds', () => {
     expect(numeralGate('Set `n_steps: 4` there', [], NONE)).toHaveLength(1)
-    expect(numeralGate('The joint `J12` holds', ['J12'], NONE)).toEqual([{ token: '`J12`', start: 10, end: 15, kind: 'bare_numeral' }])
+    expect(numeralGate('The joint `J12` holds', ['J12'], NONE)).toEqual([])
+  })
+
+  it('negative arm: an identifier in a code span that is not admitted is flagged at its digits', () => {
+    expect(numeralGate('The joint `J13` holds', ['J12'], NONE)).toEqual([{ token: 'J13', start: 11, end: 14, kind: 'bare_numeral' }])
   })
 
   it('counts a superscript digit and a decimal digit outside ASCII', () => {

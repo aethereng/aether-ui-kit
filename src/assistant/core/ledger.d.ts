@@ -54,8 +54,11 @@ export interface AcceptOutcome {
         key: string;
     } | null;
 }
-/** Whether two values hold the same content. Object keys are compared as a set, so their order does
- *  not matter; arrays compare by position. Values are JSON-like. */
+/** Whether two values hold the same content. Object keys compare as a set, so their order does not
+ *  matter; a key that is absent is not a key holding undefined. Arrays compare by length and by
+ *  position. A hole in the first array matches whatever stands at its position, and a hole in the
+ *  second matches only an undefined element, so the comparison is not symmetric for holes; JSON-like
+ *  content has none. NaN equals nothing, itself included, and -0 equals 0. */
 export declare function sameContent(a: unknown, b: unknown): boolean;
 export declare class Ledger<Opened> {
     readonly shelf: Shelved[];

@@ -167,10 +167,49 @@ describe('a discard and what stays in the record', () => {
 describe('sameContent', () => {
   it('compares JSON-like values by content, with object keys as a set and arrays by position', () => {
     expect(sameContent({ a: [1, { b: 'x' }] }, { a: [1, { b: 'x' }] })).toBe(true)
-    expect(sameContent({ a: 1, b: 2 }, { b: 2, a: 1 })).toBe(true)
     expect(sameContent({ a: [1, 2] }, { a: [2, 1] })).toBe(false)
-    expect(sameContent({ a: 1 }, { a: 1, b: undefined })).toBe(false)
     expect(sameContent(null, {})).toBe(false)
     expect(sameContent([], {})).toBe(false)
+  })
+
+  it('ignores the order of object keys', () => {
+    expect(sameContent({ a: 1, b: 2 }, { b: 2, a: 1 })).toBe(true)
+    expect(sameContent({ a: 1, b: 2 }, { b: 2, a: 3 })).toBe(false)
+  })
+
+  it('treats -0 and 0 as the same', () => {
+    expect(sameContent(-0, 0)).toBe(true)
+    expect(sameContent({ x: [-0] }, { x: [0] })).toBe(true)
+    expect(sameContent(-0, 1)).toBe(false)
+  })
+
+  it('equates NaN with nothing, itself included', () => {
+    expect(sameContent(NaN, NaN)).toBe(false)
+    expect(sameContent(NaN, 0)).toBe(false)
+    expect(sameContent([NaN], [NaN])).toBe(false)
+  })
+
+  it('does not equate an absent key with a key holding undefined, and equates two keys that both hold undefined', () => {
+    expect(sameContent({}, { x: undefined })).toBe(false)
+    expect(sameContent({ x: undefined }, {})).toBe(false)
+    expect(sameContent({ x: undefined }, { x: undefined })).toBe(true)
+  })
+
+  it('matches an array hole in the first argument with whatever stands at its position', () => {
+    const hole = (): unknown[] => {
+      const a: unknown[] = [0, 1]
+      delete a[0]
+      return a
+    }
+    expect(sameContent(hole(), [5, 1])).toBe(true)
+    expect(sameContent(hole(), [undefined, 1])).toBe(true)
+    // the second argument's hole matches only an undefined element: the comparison is not symmetric for holes
+    expect(sameContent([5, 1], hole())).toBe(false)
+    expect(sameContent([undefined, 1], hole())).toBe(true)
+  })
+
+  it('ignores a non-index property on an array', () => {
+    expect(sameContent(Object.assign([1], { note: 'x' }), [1])).toBe(true)
+    expect(sameContent([1], [2])).toBe(false)
   })
 })

@@ -60,17 +60,21 @@ export interface AcceptOutcome {
   ask: { replaces: string; key: string } | null
 }
 
-/** Whether two values hold the same content. Object keys are compared as a set, so their order does
- *  not matter; arrays compare by position. Values are JSON-like. */
+function isObject(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === 'object'
+}
+
+/** Whether two values hold the same content. Object keys compare as a set, so their order does not
+ *  matter; a key that is absent is not a key holding undefined. Arrays compare by length and by
+ *  position. A hole in the first array matches whatever stands at its position, and a hole in the
+ *  second matches only an undefined element, so the comparison is not symmetric for holes; JSON-like
+ *  content has none. NaN equals nothing, itself included, and -0 equals 0. */
 export function sameContent(a: unknown, b: unknown): boolean {
   if (a === b) return true
-  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false
-  if (Array.isArray(a) !== Array.isArray(b)) return false
-  const ra = a as Record<string, unknown>
-  const rb = b as Record<string, unknown>
-  const keys = Object.keys(ra)
-  if (keys.length !== Object.keys(rb).length) return false
-  return keys.every((k) => Object.prototype.hasOwnProperty.call(rb, k) && sameContent(ra[k], rb[k]))
+  if (Array.isArray(a) || Array.isArray(b)) return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((x, i) => sameContent(x, b[i]))
+  if (!isObject(a) || !isObject(b)) return false
+  const keys = Object.keys(a)
+  return keys.length === Object.keys(b).length && keys.every((k) => Object.prototype.hasOwnProperty.call(b, k) && sameContent(a[k], b[k]))
 }
 
 export class Ledger<Opened> {

@@ -1,9 +1,10 @@
 /* The proposal ledger: what an Accept does with the model shown, the shelf of models an Accept
  * replaced, and Load again. Framework-free: the app owns the models, the proposals' contents and
- * the load itself. The ledger decides what happens, holds the shelf and records each decision.
+ * the load itself. Here each decision is taken, the shelf is held, and each decision is recorded.
  *
  * Nothing is discarded. A superseded or discarded proposal can still be accepted, and a model an
- * Accept replaced stays on the shelf until the person loads it again or the conversation ends. */
+ * Accept replaced stays on the shelf until the person loads it again or the app calls `clear`, which
+ * it does when a new conversation starts. */
 
 export type ProposalStatus = 'pending' | 'accepted' | 'discarded' | 'superseded' | 'refused'
 
@@ -130,5 +131,10 @@ export class Ledger<Opened> {
     const entry: Shelved = { id: `k${this.shelf.length + 1}`, label: kept.label, json: kept.json, restore: kept.restore, replacedBy: by, at: this.now() }
     this.shelf.push(entry)
     this.host.shelved(entry)
+  }
+
+  /** Empties the shelf. The app calls it when a new conversation starts; nothing else empties the shelf. */
+  clear(): void {
+    this.shelf.length = 0
   }
 }

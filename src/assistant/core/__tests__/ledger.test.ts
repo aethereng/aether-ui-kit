@@ -136,6 +136,18 @@ describe('the shelf and Load again', () => {
     ledger.keepReplaced('second')
     expect(ledger.shelf.map((s) => s.replacedBy)).toEqual(['first'])
   })
+
+  it('empties the shelf when a new conversation starts, and leaves the model shown as it is', () => {
+    const f = fakeHost({ key: 'a', json: { v: 'a-edited' }, label: 'A' })
+    const ledger = new Ledger(f.host, () => NOW)
+    ledger.accept(proposal('p1', { v: 'a' }), true)
+    expect(ledger.shelf).toHaveLength(1)
+    ledger.clear()
+    expect(ledger.shelf).toEqual([])
+    expect(f.current()?.label).toBe('p1-model')
+    expect(ledger.loadAgain('k1')).toBe(false)
+    expect(f.restores).toEqual([])
+  })
 })
 
 describe('a discard and what stays in the record', () => {

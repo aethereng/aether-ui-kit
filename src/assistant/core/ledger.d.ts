@@ -76,4 +76,6 @@ export declare class Ledger<Opened> {
     /** Put the model shown on the shelf before something replaces it, named by what replaces it.
      *  Nothing is added where the shelf already holds a model with the same content. */
     keepReplaced(by: string): void;
+    /** Empties the shelf. The app calls it when a new conversation starts; nothing else empties the shelf. */
+    clear(): void;
 }

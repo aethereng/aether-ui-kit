@@ -663,6 +663,7 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'fixedLine', type: 'string?', note: 'shown under every agent text message; absent when empty' },
       { name: 'proposalLine', type: 'string?', note: 'shown on every proposal card' },
       { name: 'resolveRef', type: '(ref: string) => RefChipData | null', note: 'called while rendering for each {{scope:path}}; null draws the warning chip' },
+      { name: 'refScopes', type: 'ReferenceScopes?', note: "the scopes drawn as chips; default { indexed: ['m', 'p', 'r'], bare: ['c', 's'] }. A scope outside the list is plain text" },
     ],
     emits: [
       { name: 'update:modelValue', type: '[value: string]' },
@@ -670,8 +671,9 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'send', type: '[]', note: "Send button, or Ctrl/Cmd+Enter under 'assistant'" },
       { name: 'apply-reply', type: '[]' },
       { name: 'stop', type: '[]', note: 'Stop button, shown while busy' },
-      { name: 'accept', type: '[proposalId: string]', note: 'only while the proposal is pending; the caller moves the status on' },
+      { name: 'accept', type: '[proposalId: string]', note: "while the proposal is pending, or while its `later` is 'accept'; the caller moves the status on" },
       { name: 'discard', type: '[proposalId: string]' },
+      { name: 'load-again', type: '[proposalId: string]', note: "the card's Load again button, shown while its `later` is 'load-again'" },
       { name: 'open-ref', type: '[ref: string]', note: 'a reference chip was clicked; ref is scope:path' },
       { name: 'toggle-tool', type: '[callId: string]', note: "the tool card's Details toggle; the caller flips `open`" },
     ],

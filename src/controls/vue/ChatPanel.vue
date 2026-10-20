@@ -27,7 +27,16 @@
  * lookup. */
 import { computed, nextTick, ref, watch } from 'vue'
 import { describeRef, isTextMessage, splitReferences, STREAM_FOLLOW_THRESHOLD } from '../core/chat'
-import type { ChatEntry, ChatMessage, ChatSegment, RefChipData } from '../core/chat'
+import { DEFAULT_REFERENCE_SCOPES, type ReferenceScopes } from '../core/refs'
+import type {
+  ChatEntry,
+  ChatMessage,
+  ChatProposalBasis,
+  ChatProposalMessage,
+  ChatProposalRow,
+  ChatSegment,
+  RefChipData,
+} from '../core/chat'
 import Callout from './Callout.vue'
 import Card from './Card.vue'
 import ChatRefChip from './ChatRefChip.vue'
@@ -58,6 +67,9 @@ const props = withDefaults(
     /** The app's answer for a reference (`scope:path`): what to show in the chip, or null when it
      *  cannot resolve it. Absent means every reference is the warning chip. Assistant only. */
     resolveRef?: (ref: string) => RefChipData | null
+    /** The reference scopes drawn as chips: what a `{{scope:path}}` may name. Assistant only. A
+     *  scope outside this list is plain text. */
+    refScopes?: ReferenceScopes
   }>(),
   {
     placeholder: 'Message…',
@@ -70,6 +82,7 @@ const props = withDefaults(
     fixedLine: '',
     proposalLine: '',
     resolveRef: undefined,
+    refScopes: () => DEFAULT_REFERENCE_SCOPES,
   },
 )
 
@@ -80,6 +93,7 @@ const emit = defineEmits<{
   stop: []
   accept: [proposalId: string]
   discard: [proposalId: string]
+  'load-again': [proposalId: string]
   'open-ref': [ref: string]
   'toggle-tool': [callId: string]
   'apply-reply': []
@@ -97,7 +111,11 @@ defineSlots<{
 const TEXT = {
   stop: 'Stop',
   accept: 'Accept',
+  acceptDelete: 'Accept deletion',
   discard: 'Discard',
+  loadAgain: 'Load again',
+  destructive: 'Accepting this proposal deletes items.',
+  basis: { person: 'person', file: 'file', list: 'list', suggestion: "assistant's suggestion" },
   details: 'Details',
   refusedBy: { engine: 'refused by the engine', api: 'refused by the API' },
   glyph: { running: '…', done: '✓', refused: '⊘', failed: '✕' },
@@ -112,6 +130,20 @@ const visible = computed(() => props.messages.slice(-props.historyLimit))
 function roleLabel(role: ChatMessage['role']) {
   return role === 'you' ? 'you' : role === 'agent' ? 'agent' : 'note'
 }
+// A proposal's basis column shows only when some row has a basis; a proposal without one keeps the
+// three-column table it always had.
+function rowsHaveBasis(rows: ChatProposalRow[]): boolean {
+  return rows.some((r) => r.basis != null)
+}
+
+function basisLabel(basis: ChatProposalBasis): string {
+  return TEXT.basis[basis.kind]
+}
+
+function acceptLabel(m: ChatProposalMessage): string {
+  return m.destructive ? TEXT.acceptDelete : TEXT.accept
+}
+
 function refsLabel(refs: string[]) {
   return (refs.length > 1 ? 'refs' : 'ref') + ': ' + refs.join(' · ')
 }
@@ -126,7 +158,7 @@ type Part =
 /* References are read in agent messages only. A person's own words, or a system note, that happen
    to contain braces stay exactly as written. */
 function segmentsOf(m: ChatMessage): ChatSegment[] {
-  if (m.role === 'agent') return splitReferences(m.text)
+  if (m.role === 'agent') return splitReferences(m.text, props.refScopes)
   return m.text ? [{ kind: 'text', text: m.text, start: 0, end: m.text.length }] : []
 }
 
@@ -352,6 +384,7 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
           <!-- A scroll container is a named tab stop, or a keyboard user cannot reach the rows past the
                fold; a group rather than a landmark. The kit renders every row: the cap, if any, is
                the app's. -->
+          <p v-if="m.destructive" class="aether-chat__proposal-destructive">{{ TEXT.destructive }}</p>
           <div class="aether-chat__rows" role="group" tabindex="0" :aria-label="m.title + ' rows'">
             <table class="aether-chat__diff">
               <thead>
@@ -359,6 +392,7 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
                   <th scope="col">path</th>
                   <th scope="col">before</th>
                   <th scope="col">after</th>
+                  <th v-if="rowsHaveBasis(m.rows)" scope="col">basis</th>
                 </tr>
               </thead>
               <tbody>
@@ -372,6 +406,11 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
                       ><span class="aether-chat__proposed">proposed</span>{{ r.after }}</ins
                     >
                   </td>
+                  <td v-if="rowsHaveBasis(m.rows)">
+                    <span v-if="r.basis" class="aether-chat__basis" :data-basis="r.basis.kind"
+                      >{{ basisLabel(r.basis) }}: {{ r.basis.text }}</span
+                    >
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -382,8 +421,12 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
           </Callout>
           <p v-if="proposalLine" class="aether-chat__proposal-line">{{ proposalLine }}</p>
           <div v-if="m.status === 'pending'" class="aether-chat__proposal-actions">
-            <Tool :label="TEXT.accept" hot @click="emit('accept', m.id)" />
+            <Tool :label="acceptLabel(m)" hot @click="emit('accept', m.id)" />
             <Tool :label="TEXT.discard" @click="emit('discard', m.id)" />
+          </div>
+          <div v-else-if="m.later" class="aether-chat__proposal-actions">
+            <Tool v-if="m.later === 'accept'" :label="acceptLabel(m)" hot @click="emit('accept', m.id)" />
+            <Tool v-else :label="TEXT.loadAgain" @click="emit('load-again', m.id)" />
           </div>
           <slot name="message-extra" :message="m" />
         </div>
@@ -652,6 +695,10 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
 .aether-chat__proposal-line {
   margin: 8px 0 0;
   color: var(--aether-ink-soft);
+}
+.aether-chat__proposal-destructive {
+  margin: 6px 0 0;
+  font-weight: 600;
 }
 .aether-chat__proposal-actions {
   display: flex;

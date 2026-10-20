@@ -1,3 +1,4 @@
+import { type ReferenceScopes } from '../core/refs';
 import type { ChatEntry, RefChipData } from '../core/chat';
 type __VLS_Props = {
     messages: ChatEntry[];
@@ -22,6 +23,9 @@ type __VLS_Props = {
     /** The app's answer for a reference (`scope:path`): what to show in the chip, or null when it
      *  cannot resolve it. Absent means every reference is the warning chip. Assistant only. */
     resolveRef?: (ref: string) => RefChipData | null;
+    /** The reference scopes drawn as chips: what a `{{scope:path}}` may name. Assistant only. A
+     *  scope outside this list is plain text. */
+    refScopes?: ReferenceScopes;
 };
 type __VLS_Slots = {
     /** The caller's copy for an empty log. */
@@ -34,21 +38,23 @@ type __VLS_Slots = {
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {
     focus: () => void | undefined;
 }, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    accept: (proposalId: string) => any;
+    "load-again": (proposalId: string) => any;
     stop: () => any;
     "update:modelValue": (value: string) => any;
     queue: () => any;
     send: () => any;
-    accept: (proposalId: string) => any;
     discard: (proposalId: string) => any;
     "open-ref": (ref: string) => any;
     "toggle-tool": (callId: string) => any;
     "apply-reply": () => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
+    onAccept?: ((proposalId: string) => any) | undefined;
+    "onLoad-again"?: ((proposalId: string) => any) | undefined;
     onStop?: (() => any) | undefined;
     "onUpdate:modelValue"?: ((value: string) => any) | undefined;
     onQueue?: (() => any) | undefined;
     onSend?: (() => any) | undefined;
-    onAccept?: ((proposalId: string) => any) | undefined;
     onDiscard?: ((proposalId: string) => any) | undefined;
     "onOpen-ref"?: ((ref: string) => any) | undefined;
     "onToggle-tool"?: ((callId: string) => any) | undefined;
@@ -64,6 +70,7 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {
     fixedLine: string;
     proposalLine: string;
     resolveRef: (ref: string) => RefChipData | null;
+    refScopes: ReferenceScopes;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;

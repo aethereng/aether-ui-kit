@@ -19,7 +19,9 @@ export type Effort = (typeof EFFORTS)[number];
 /** The starting effort, set explicitly on every request because the models' own defaults differ. */
 export declare const EFFORT: Effort;
 export declare const PRICES_READ_ON = "2026-10-20";
-export declare const PRICES_SOURCE = "the vendor's API pricing page (platform.claude.com)";
+/** The line that names the page the prices were read from. The app passes the name of its vendor, so
+ *  the kit holds no vendor name of its own. */
+export declare function priceSource(vendor: string): string;
 /** USD per million tokens. `write5m` and `write1h` are cache writes at the two cache durations. */
 export interface PriceRow {
     input: number;

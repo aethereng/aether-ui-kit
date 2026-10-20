@@ -25,7 +25,12 @@ export const EFFORT: Effort = 'medium'
 // ---- prices ------------------------------------------------------------------------------------
 
 export const PRICES_READ_ON = '2026-10-20'
-export const PRICES_SOURCE = "the vendor's API pricing page (platform.claude.com)"
+
+/** The line that names the page the prices were read from. The app passes the name of its vendor, so
+ *  the kit holds no vendor name of its own. */
+export function priceSource(vendor: string): string {
+  return `${vendor}'s API pricing page (platform.claude.com)`
+}
 
 /** USD per million tokens. `write5m` and `write1h` are cache writes at the two cache durations. */
 export interface PriceRow {

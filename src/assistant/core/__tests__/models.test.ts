@@ -1,21 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { addTokens, estimateUsd, formatUsd, MODELS, NO_TOKENS, PRICES, PRICES_READ_ON, PRICES_SOURCE, tokensOf, type ModelId, type Tokens } from '../models'
+import { addTokens, estimateUsd, formatUsd, MODELS, NO_TOKENS, PRICES, PRICES_READ_ON, priceSource, tokensOf, type ModelId, type Tokens } from '../models'
 
 const t = (input: number, output = 0, cacheRead = 0, cacheWrite = 0, cacheWrite1h = 0): Tokens => ({ input, output, cacheRead, cacheWrite, cacheWrite1h })
 
-describe('K4: the price table and the model list', () => {
+describe('the price table and the model list', () => {
   it('has a price row for every selectable model and no row for any other', () => {
     expect(Object.keys(PRICES).sort()).toEqual(MODELS.map((m) => m.id).sort())
   })
 
-  it('SEEDED: a row for a model the panel cannot select is caught by the same comparison', () => {
-    const seeded: Record<string, unknown> = { ...PRICES, 'claude-unlisted-0-0': PRICES['claude-opus-5-5'] }
-    expect(Object.keys(seeded).sort()).not.toEqual(MODELS.map((m) => m.id).sort())
+  it('finds a row for a model the panel cannot select by the same comparison', () => {
+    const extra: Record<string, unknown> = { ...PRICES, 'claude-unlisted-0-0': PRICES['claude-opus-5-5'] }
+    expect(Object.keys(extra).sort()).not.toEqual(MODELS.map((m) => m.id).sort())
   })
 
-  it('labels the prices with the date they were read and where they came from', () => {
+  it('labels the prices with the date they were read and the page they came from, named by the caller', () => {
     expect(PRICES_READ_ON).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-    expect(PRICES_SOURCE).toContain('pricing page')
+    expect(priceSource('Acme')).toBe("Acme's API pricing page (platform.claude.com)")
+    expect(priceSource('Other Co')).toBe("Other Co's API pricing page (platform.claude.com)")
   })
 
   it('prices each count at its own rate, and an hour-long cache write at the hour rate', () => {

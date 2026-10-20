@@ -122,6 +122,22 @@
       "types": "./src/controls/core/index.d.ts",
       "import": "./src/controls/core/index.ts"
     },
+    "./assistant/core": {
+      "types": "./src/assistant/core/index.d.ts",
+      "import": "./src/assistant/core/index.ts"
+    },
+    "./assistant/core/models": {
+      "types": "./src/assistant/core/models.d.ts",
+      "import": "./src/assistant/core/models.ts"
+    },
+    "./assistant/core/cardDetail": {
+      "types": "./src/assistant/core/cardDetail.d.ts",
+      "import": "./src/assistant/core/cardDetail.ts"
+    },
+    "./assistant/core/texts": {
+      "types": "./src/assistant/core/texts.d.ts",
+      "import": "./src/assistant/core/texts.ts"
+    },
     "./viz/graph": {
       "types": "./src/viz/vue/Graph2D.vue.d.ts",
       "import": "./src/viz/vue/Graph2D.vue"

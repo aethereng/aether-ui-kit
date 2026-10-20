@@ -1,12 +1,15 @@
+// @ts-check
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
 import pluginA11y from 'eslint-plugin-vuejs-accessibility'
 import tseslint from 'typescript-eslint'
+// @ts-expect-error -- eslint-config-prettier ships no declaration file; this expectation fails when it does.
 import prettier from 'eslint-config-prettier'
 import globals from 'globals'
 
 // __KIT_VERSION__ is injected by vite.config.ts `define` from package.json, so it exists at
 // runtime but not to eslint's scope analysis.
+/** @type {Record<string, 'readonly'>} */
 const buildTimeGlobals = { __KIT_VERSION__: 'readonly' }
 
 export default tseslint.config(

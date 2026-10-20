@@ -5,8 +5,9 @@
     "paths": { "@/*": ["./src/*"] },
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "allowJs": true
   },
-  "include": ["src/**/*.ts", "src/**/*.vue"],
+  "include": ["src/**/*.ts", "src/**/*.vue", "eslint.config.js"],
   "exclude": ["src/**/*.test.ts", "src/**/__tests__/**"]
 }

@@ -44,7 +44,7 @@ The core knows how to stack overlapping bars into lanes. It does not know what a
 
 So for `Gantt` and `Graph2D`, a wrapper for another framework genuinely would be a new file importing the same core; that claim is load-bearing, and the gallery already drives `ForceLayout` directly, without the component, to prove the core stands alone. For the small controls it would be a rewrite: there is just not much to rewrite.
 
-Two things travel further than the components do. The cores are **exported separately** (`viz/core`, `viz/core/gantt`, `controls/core`, `property-editor/core`), so the maths is usable from React, Svelte or nothing at all without pulling Vue in. And **`ui-kit.css` is framework-agnostic**: every `.aether-*` class and the whole token contract below is plain CSS.
+Two things travel further than the components do. The cores are **exported separately** (`viz/core`, `viz/core/gantt`, `controls/core`, `property-editor/core`, `assistant/core`), so the maths is usable from React, Svelte or nothing at all without pulling Vue in. And **`ui-kit.css` is framework-agnostic**: every `.aether-*` class and the whole token contract below is plain CSS.
 
 Today, Vue is the only wrapper that exists.
 
@@ -196,7 +196,7 @@ focus ring), which every component needs and no component owns.
 | **Menu** | `controls/menu` | Dropdown menu with the full APG keyboard model. |
 | **Dialog** | `controls/dialog` | Modal dialog over the native `<dialog>` element. |
 | **SearchField** | `controls/search-field` | Search input whose clear button appears only once there is something to clear. |
-| **ChatPanel** | `controls/chat-panel` | Message log + compose box for the queue → send → apply-reply agent pattern. Owns the log; you own what Send *does*. `actions="assistant"` switches to Send and Stop over a log that also holds streaming text, reference chips, tool calls, refusals, proposals and cards. |
+| **ChatPanel** | `controls/chat-panel` | Message log + compose box for the queue → send → apply-reply agent pattern. Owns the log; you own what Send *does*. `actions="assistant"` switches to Send and Stop over a log that also holds streaming text, reference chips, tool calls, refusals, proposals and cards. `refScopes` sets the reference scopes the chips read. A proposal row may carry a `basis`, which adds a column; a proposal may be `destructive`, and `later` lets a superseded, discarded or accepted card be taken up again, emitting `accept` or `load-again`. |
 | **Toast** | `controls/toast` | Transient status pill that fades itself out. Controlled: you own the message. |
 | **Transport** | `controls/transport` | Playback transport: play/pause/replay, scrub, speed, precompute progress. Unit-agnostic: drives simulation seconds or calendar days. |
 | **Switch** | `controls/switch` | Boolean toggle as a pill switch. One bare input; you own the label. |
@@ -208,7 +208,7 @@ focus ring), which every component needs and no component owns.
 | **Graph2D** | `viz/graph` | Force-directed graph over SVG. Opt-in zoom/pan/pinch, hover reporting, edge-pan while dragging. Positions are `number[]`, so the core is dimension-agnostic. |
 | **Gantt** | `viz/gantt` | Lanes, spans, points and anchors in day-index space. Drag to move, edges to resize. |
 
-All under `@aether/ui-kit/…`. Framework-free cores, importable on their own: `controls/core`, `property-editor/core`, `viz/core`, `viz/core/gantt`.
+All under `@aether/ui-kit/…`. Framework-free cores, importable on their own: `controls/core`, `property-editor/core`, `viz/core`, `viz/core/gantt`, `assistant/core`.
 
 There is also one plain CSS class, `.aether-button-group`, for a joined row of `Tool`s. It is not a component because nothing in it is ever *active*: a row of commands only looks like a `Seg`, and bending `Seg`'s `modelValue` contract to hold three unrelated actions would make it lie about what it is.
 

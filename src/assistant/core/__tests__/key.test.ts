@@ -71,7 +71,7 @@ describe('the key store', () => {
       expect(() => keyStore(NAME).save(KEY, 'session')).not.toThrow()
       expect(keyStore(NAME).load()).toBeNull()
     } finally {
-      // the accessor above has no setter, so the saved descriptor is put back rather than assigned over
+      // the accessor above has no setter, so the saved descriptor goes back through defineProperty
       if (original) Object.defineProperty(globalThis, 'sessionStorage', original)
       else Reflect.deleteProperty(globalThis, 'sessionStorage')
     }

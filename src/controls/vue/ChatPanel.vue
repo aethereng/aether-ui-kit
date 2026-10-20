@@ -142,6 +142,7 @@ const TEXT = {
   reasoning: 'Reasoning',
   reasoningSoFar: 'Reasoning so far',
   showReasoning: 'Show reasoning',
+  code: 'Code',
   basis: { person: 'your words', file: 'file', list: 'list', suggestion: "assistant's suggestion" },
   details: 'Details',
   refusedBy: { engine: 'refused by the engine', api: 'refused by the API' },
@@ -309,7 +310,25 @@ function inlineVNodes(nodes: readonly MdInline[]): VNodeChild[] {
     return [h(n.kind, inlineVNodes(n.children))]
   })
 }
-const MdNodes = (p: { nodes: readonly MdInline[] }) => inlineVNodes(p.nodes)
+/* The blocks as draw calls. A heading is a paragraph in bold at the reply's own size; a quote is a
+   blockquote around its own blocks; a code block is preformatted, so its spaces and breaks stay, and
+   its text is a tab stop, as the panel's other scroll boxes are. */
+function blockVNodes(blocks: readonly MdBlock[]): VNodeChild[] {
+  return blocks.map((b): VNodeChild => {
+    if (b.kind === 'p') return h('p', null, inlineVNodes(b.children))
+    if (b.kind === 'heading') return h('p', { class: 'aether-chat__md-heading' }, [h('strong', null, inlineVNodes(b.children))])
+    if (b.kind === 'list') {
+      return h(b.ordered ? 'ol' : 'ul', b.ordered ? { start: b.start } : null, b.items.map((item) => h('li', null, inlineVNodes(item))))
+    }
+    if (b.kind === 'quote') return h('blockquote', { class: 'aether-chat__md-quote' }, blockVNodes(b.blocks))
+    return h(
+      'pre',
+      { class: 'aether-chat__md-code', role: 'group', tabindex: '0', 'aria-label': TEXT.code },
+      [h('code', null, inlineVNodes(b.children))],
+    )
+  })
+}
+const MdBlocks = (p: { blocks: readonly MdBlock[] }) => blockVNodes(p.blocks)
 function blocksOf(m: ChatMessage): MdBlock[] {
   return markdownBlocks(m.text, m.marks, props.refScopes)
 }
@@ -322,9 +341,11 @@ function spokenInline(nodes: readonly MdInline[]): string {
     )
     .join('')
 }
-function spokenBlocks(blocks: MdBlock[]): string {
+function spokenBlocks(blocks: readonly MdBlock[]): string {
   return blocks
-    .map((b) => (b.kind === 'p' ? spokenInline(b.children) : b.items.map(spokenInline).join('\n')))
+    .map((b) =>
+      b.kind === 'list' ? b.items.map(spokenInline).join('\n') : b.kind === 'quote' ? spokenBlocks(b.blocks) : spokenInline(b.children),
+    )
     .join('\n\n')
 }
 
@@ -436,15 +457,7 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
         >
           <span class="aether-chat__who">{{ roleLabel(m.role) }}{{ m.queued ? ' · queued' : '' }}</span>
           <div v-if="assistant && m.role === 'agent'" class="aether-chat__txt aether-chat__md">
-            <template v-for="(b, k) in blocksOf(m)" :key="k">
-              <p v-if="b.kind === 'p'"><MdNodes :nodes="b.children" /></p>
-              <ul v-else-if="!b.ordered">
-                <li v-for="(item, j) in b.items" :key="j"><MdNodes :nodes="item" /></li>
-              </ul>
-              <ol v-else :start="b.start">
-                <li v-for="(item, j) in b.items" :key="j"><MdNodes :nodes="item" /></li>
-              </ol>
-            </template>
+            <MdBlocks :blocks="blocksOf(m)" />
             <span v-if="m.streaming" class="aether-chat__caret" aria-hidden="true"></span>
           </div>
           <span v-else class="aether-chat__txt"
@@ -738,6 +751,40 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
   background: var(--aether-panel);
   font-family: var(--aether-font-mono);
   font-size: 0.92em;
+}
+/* A block quote is indented and ruled. Its last block holds no space below it. */
+.aether-chat__md-quote {
+  margin: 0 0 6px;
+  padding: 2px 0 2px 10px;
+  border-left: 3px solid var(--aether-line-strong);
+  color: var(--aether-ink-soft);
+}
+.aether-chat__md-quote > :last-child {
+  margin-bottom: 0;
+}
+/* A code block keeps its spaces and its line breaks, and scrolls inside its own box. The inline code
+   rule above is for spans, so this rule resets the code element inside the block. */
+.aether-chat__md-code {
+  margin: 0 0 6px;
+  padding: 8px 10px;
+  overflow: auto;
+  border: 1px solid var(--aether-line);
+  border-radius: var(--aether-radius);
+  background: var(--aether-panel);
+  font-family: var(--aether-font-mono);
+  font-size: 11.5px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.aether-chat__md-code code {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-size: inherit;
+}
+.aether-chat__md-code:focus-visible {
+  outline: 2px solid var(--aether-cool);
+  outline-offset: 1px;
 }
 /* A highlight is a box AND a wavy underline: the underline survives a greyscale print and a
    colour-blind reader, the tone is for everyone else. */

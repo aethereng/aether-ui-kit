@@ -15,16 +15,26 @@ export type MdInline = {
     kind: 'strong' | 'em' | 'code';
     children: MdInline[];
 };
-/** One block. A list's `start` is the number its first item carries. A bullet list starts at 1 and
- *  the panel ignores its start. */
+/** One block. A list's `start` is the number its first item carries; a bullet list starts at 1 and the
+ *  panel ignores it. A heading's text is drawn in bold at the reply's own size. A quote holds blocks of
+ *  its own. A code block holds its lines as literal text, marks and references included. */
 export type MdBlock = {
     kind: 'p';
+    children: MdInline[];
+} | {
+    kind: 'heading';
     children: MdInline[];
 } | {
     kind: 'list';
     ordered: boolean;
     start: number;
     items: MdInline[][];
+} | {
+    kind: 'quote';
+    blocks: MdBlock[];
+} | {
+    kind: 'code';
+    children: MdInline[];
 };
 /** The marks that can be drawn: whole spans of `text`, in order, none overlapping. The app's gate
  *  decides what to mark. A malformed span is dropped here rather than thrown, so one bad offset

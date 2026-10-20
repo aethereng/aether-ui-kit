@@ -1,5 +1,5 @@
-/* The clock of an assistant's activity indicator: the elapsed time in words, and the check for a long
- * quiet spell. Framework-free. The app owns the words of each phase and the moments it records; these
+/* @internal: read by ChatPanel alone, so it is not a subpath. The clock of an assistant's activity
+ * indicator: the elapsed time in words, and the check for a long quiet spell. Framework-free. The app owns the words of each phase and the moments it records; these
  * functions read the time and say what to show. Times are milliseconds on the page's clock, the one
  * `Date.now()` reads. */
 

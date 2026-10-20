@@ -15,7 +15,7 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-type Activity = { since: number; phase: string; heardAt?: number; awaitsApi?: boolean }
+type Activity = { since: number; phase: string; heardAt?: number; awaitsApi?: boolean; note?: string }
 
 function mountPanel(activity: Activity | null, extra: Record<string, unknown> = {}) {
   wrapper = mount(ChatPanel, {
@@ -103,6 +103,22 @@ describe('the activity indicator', () => {
     const w = mountPanel({ since: 10_000, phase: 'Waiting for the API', heardAt: 10_000, awaitsApi: true })
     await advance(60_000)
     expect(w.find('.aether-chat__activity-quiet').exists()).toBe(false)
+  })
+
+  it('shows the thinking note under the row when the app gives one', () => {
+    vi.useFakeTimers()
+    const w = mountPanel({ since: Date.now(), phase: 'Thinking', note: 'Weighing the two readings' })
+    const note = w.find('.aether-chat__activity-note')
+    expect(note.text()).toBe('Weighing the two readings')
+    expect(w.find('.aether-chat__activity').element.contains(note.element)).toBe(true)
+  })
+
+  it('shows no thinking note when the app gives none, or an empty one', async () => {
+    vi.useFakeTimers()
+    const w = mountPanel({ since: Date.now(), phase: 'Thinking' })
+    expect(w.find('.aether-chat__activity-note').exists()).toBe(false)
+    await w.setProps({ activity: { since: Date.now(), phase: 'Thinking', note: '' } })
+    expect(w.find('.aether-chat__activity-note').exists()).toBe(false)
   })
 
   it('hides the spinner from assistive technology, since the status message speaks', () => {

@@ -74,8 +74,12 @@ const props = withDefaults(
     refScopes?: ReferenceScopes
     /** The turn in progress, for the indicator above the compose box: the app's phase words and the
      *  moments it recorded on the page's clock (`Date.now()`). `awaitsApi` says the API is the party
-     *  being waited for, which is when a quiet spell counts. Null when no turn runs. Assistant only. */
-    activity?: { since: number; phase: string; heardAt?: number; awaitsApi?: boolean } | null
+     *  being waited for, which is when a quiet spell counts. `heardAt` is the last moment the API sent
+     *  anything, or the request went out: the app sets it at send, at each `waiting` phase the loop
+     *  reports, and at each `heard()` report, and the quiet notice counts from it. `note` is thinking
+     *  text the app has already withheld for display; the panel shows it under the row, three lines at
+     *  most, and adds no numeral rule of its own. Null when no turn runs. Assistant only. */
+    activity?: { since: number; phase: string; heardAt?: number; awaitsApi?: boolean; note?: string } | null
     /** The words of the quiet notice, given the whole seconds since the API last sent anything. Absent,
      *  there is no notice. Assistant only. */
     quietText?: (seconds: number) => string
@@ -507,6 +511,7 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
       <span class="aether-chat__activity-phase">{{ activity.phase }}</span>
       <span class="aether-chat__activity-time" aria-hidden="true">{{ elapsed }}</span>
       <span v-if="quiet" class="aether-chat__activity-quiet">{{ quiet }}</span>
+      <p v-if="activity.note" class="aether-chat__activity-note">{{ activity.note }}</p>
     </div>
     <div class="aether-chat__compose">
       <textarea
@@ -553,6 +558,18 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
 }
 .aether-chat__activity-time {
   font-variant-numeric: tabular-nums;
+}
+/* The thinking note takes a row of its own under the phase, and stops at three lines. */
+.aether-chat__activity-note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.85em;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 /* The relay hosts' rules live in ui-kit.css. Everything here belongs to the assistant half, and its
    CSS is scoped to this component. */

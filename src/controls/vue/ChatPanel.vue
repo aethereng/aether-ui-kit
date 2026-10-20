@@ -25,9 +25,10 @@
  * numeral is bare, or stop a stream. It renders what it is given and emits what was asked.
  * `resolveRef` is called while rendering, once per reference per update, so it should be a
  * lookup. */
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, h, nextTick, onBeforeUnmount, ref, watch, type VNodeChild } from 'vue'
 import { formatElapsed, quietSeconds } from '../core/activity'
 import { describeRef, isTextMessage, splitReferences, STREAM_FOLLOW_THRESHOLD } from '../core/chat'
+import { markdownBlocks, type MdBlock, type MdInline, usableMarks } from '../core/markdown'
 import { DEFAULT_REFERENCE_SCOPES, type ReferenceScopes } from '../core/refs'
 import type {
   ChatEntry,
@@ -227,28 +228,8 @@ function segmentsOf(m: ChatMessage): ChatSegment[] {
   return m.text ? [{ kind: 'text', text: m.text, start: 0, end: m.text.length }] : []
 }
 
-/* The marks that can be drawn: whole spans inside the text, in order, none overlapping. The app's
-   gate decides what to mark; a malformed span is dropped here rather than thrown, so one bad
-   offset cannot blank a reply. */
-function usableMarks(m: ChatMessage) {
-  const sorted = (m.marks ?? [])
-    .filter(
-      (k) =>
-        Number.isInteger(k.start) && Number.isInteger(k.end) && k.start >= 0 && k.start < k.end && k.end <= m.text.length,
-    )
-    .sort((a, b) => a.start - b.start)
-  const out: typeof sorted = []
-  let edge = 0
-  for (const k of sorted) {
-    if (k.start < edge) continue
-    out.push(k)
-    edge = k.end
-  }
-  return out
-}
-
 function partsOf(m: ChatMessage): Part[] {
-  const marks = usableMarks(m)
+  const marks = usableMarks(m.text, m.marks)
   const parts: Part[] = []
   for (const seg of segmentsOf(m)) {
     if (seg.kind === 'ref') {
@@ -270,6 +251,42 @@ function partsOf(m: ChatMessage): Part[] {
 }
 
 const resolve = (ref: string): RefChipData | null => props.resolveRef?.(ref) ?? null
+
+/* An agent reply is read as markdown (see core/markdown.ts). These draw its pieces: text as text, a
+   mark as the panel draws every mark, a reference as its chip, a line break as a break, and a formatted
+   span as its element around its children. Every string reaches the page as a text node. */
+function inlineVNodes(nodes: readonly MdInline[]): VNodeChild[] {
+  return nodes.flatMap((n): VNodeChild[] => {
+    if (n.kind === 'text') {
+      return n.mark === null
+        ? [n.text]
+        : [h('mark', { class: 'aether-chat__mark', title: n.mark }, [h('span', { class: 'aether-chat__sr' }, n.mark + ': '), n.text])]
+    }
+    if (n.kind === 'ref') {
+      return [h(ChatRefChip, { reference: n.ref, data: resolve(n.ref), onOpen: (r: string) => emit('open-ref', r) })]
+    }
+    if (n.kind === 'br') return [h('br')]
+    return [h(n.kind, inlineVNodes(n.children))]
+  })
+}
+const MdNodes = (p: { nodes: readonly MdInline[] }) => inlineVNodes(p.nodes)
+function blocksOf(m: ChatMessage): MdBlock[] {
+  return markdownBlocks(m.text, m.marks, props.refScopes)
+}
+/* The words a screen reader is given for a reply: the same text the markdown draws, with each
+   reference as its chip's accessible name and a line break as a newline. */
+function spokenInline(nodes: readonly MdInline[]): string {
+  return nodes
+    .map((n) =>
+      n.kind === 'text' ? n.text : n.kind === 'ref' ? describeRef(n.ref, resolve(n.ref)).name : n.kind === 'br' ? '\n' : spokenInline(n.children),
+    )
+    .join('')
+}
+function spokenBlocks(blocks: MdBlock[]): string {
+  return blocks
+    .map((b) => (b.kind === 'p' ? spokenInline(b.children) : b.items.map(spokenInline).join('\n')))
+    .join('\n\n')
+}
 
 /* ---- the log: following it, and announcing a reply once ---- */
 
@@ -300,9 +317,12 @@ const announcement = ref('')
 const posts = ref(0)
 
 function announce(m: ChatMessage) {
-  announcement.value = segmentsOf(m)
-    .map((s) => (s.kind === 'ref' ? describeRef(s.ref, resolve(s.ref)).name : s.text))
-    .join('')
+  announcement.value =
+    m.role === 'agent'
+      ? spokenBlocks(blocksOf(m))
+      : segmentsOf(m)
+          .map((s) => (s.kind === 'ref' ? describeRef(s.ref, resolve(s.ref)).name : s.text))
+          .join('')
   posts.value++
 }
 
@@ -375,7 +395,19 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
           :aria-busy="assistant && m.streaming ? 'true' : undefined"
         >
           <span class="aether-chat__who">{{ roleLabel(m.role) }}{{ m.queued ? ' · queued' : '' }}</span>
-          <span class="aether-chat__txt"
+          <div v-if="assistant && m.role === 'agent'" class="aether-chat__txt aether-chat__md">
+            <template v-for="(b, k) in blocksOf(m)" :key="k">
+              <p v-if="b.kind === 'p'"><MdNodes :nodes="b.children" /></p>
+              <ul v-else-if="!b.ordered">
+                <li v-for="(item, j) in b.items" :key="j"><MdNodes :nodes="item" /></li>
+              </ul>
+              <ol v-else :start="b.start">
+                <li v-for="(item, j) in b.items" :key="j"><MdNodes :nodes="item" /></li>
+              </ol>
+            </template>
+            <span v-if="m.streaming" class="aether-chat__caret" aria-hidden="true"></span>
+          </div>
+          <span v-else class="aether-chat__txt"
             ><template v-if="!assistant">{{ m.text }}</template
             ><template v-else
               ><template v-for="(p, k) in partsOf(m)" :key="k"
@@ -599,6 +631,28 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
 }
 
 /* ---- text ---- */
+/* An agent reply's markdown. Its line breaks are elements, so the text's pre-wrap rule does not
+   apply to it; its paragraphs and lists keep the message's spacing. */
+.aether-chat__md {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.aether-chat__md p,
+.aether-chat__md ul,
+.aether-chat__md ol {
+  margin: 0 0 6px;
+}
+.aether-chat__md ul,
+.aether-chat__md ol {
+  padding-left: 1.4em;
+}
+.aether-chat__md code {
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--aether-panel);
+  font-family: var(--aether-font-mono);
+  font-size: 0.92em;
+}
 /* A highlight is a box AND a wavy underline: the underline survives a greyscale print and a
    colour-blind reader, the tone is for everyone else. */
 .aether-chat__mark {

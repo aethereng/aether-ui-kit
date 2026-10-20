@@ -48,6 +48,7 @@ function recorder(): LoopView & { log: string[]; texts: Map<number, string>; usa
     thinkingDropped: (b) => log.push(`thinkingDropped ${b.path} ${b.reason}`),
     otherThinking: (m) => log.push(`otherThinking ${m}`),
     usage: (u, m) => usages.push(`usage ${m} ${u.input_tokens}`),
+    stoppedUsage: (c, m) => log.push(`stoppedUsage ${m} ${c.tokens.input} ${c.lowerBound}`),
     stoppedFor: (r) => log.push(`stoppedFor ${r}`),
     thinkingDelta: (t) => thoughts.push(t),
     phase: (p) => phases.push(p),

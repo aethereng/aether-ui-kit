@@ -1,4 +1,4 @@
-import { type Effort, type ModelId, type UsageLike } from './models';
+import { type Effort, type ModelId, type Tokens, type UsageLike } from './models';
 export interface TextBlock {
     type: 'text';
     text: string;
@@ -44,6 +44,21 @@ export interface StreamEvent {
         text?: string;
         thinking?: string;
     };
+    /** On `message_start`: the response's usage so far, its input and cache counts and a first output count. */
+    message?: {
+        usage?: UsageLike;
+    };
+    /** On `message_delta`: the output count so far. */
+    usage?: {
+        output_tokens?: number;
+    };
+}
+/** A response a Stop cut short, counted from what the API had reported of it before the stop: the input
+ *  and cache counts of `message_start`, and the output count of the last `message_delta`. With no
+ *  `message_delta` the output count is a lower bound. A response that finished is counted by `usage`. */
+export interface StoppedCount {
+    tokens: Tokens;
+    lowerBound: boolean;
 }
 /** A change the API made to a request's history on its way in. */
 export interface InputTransformation {
@@ -166,6 +181,9 @@ export interface LoopView {
     otherThinking(model: ModelId): void;
     /** One response's token counts, exactly as its `usage` reports them. */
     usage(usage: UsageLike, model: ModelId): void;
+    /** A response a Stop cut short, as the API had reported it (see `StoppedCount`). Not called when the API
+     *  had reported nothing of the response. */
+    stoppedUsage(count: StoppedCount, model: ModelId): void;
     /** The model stopped for a reason the panel does not act on. */
     stoppedFor(reason: string): void;
     /** The turn moved to another phase. The loop reports `waiting` just before each request is sent. */

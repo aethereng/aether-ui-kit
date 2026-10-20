@@ -11,7 +11,7 @@
  * the tool definitions and handlers, and the request settings as a LoopConfig. The types below are
  * the parts of the SDK's shapes this loop reads or writes; the app casts its client to them, so the
  * kit imports no SDK. */
-import { EFFORT, type Effort, type ModelId, type UsageLike } from './models'
+import { EFFORT, tokensOf, type Effort, type ModelId, type Tokens, type UsageLike } from './models'
 
 // ---- the shapes the loop reads and writes -------------------------------------------------------
 
@@ -59,6 +59,18 @@ export interface StreamEvent {
   index?: number
   content_block?: { type: string; id?: string; name?: string }
   delta?: { type: string; text?: string; thinking?: string }
+  /** On `message_start`: the response's usage so far, its input and cache counts and a first output count. */
+  message?: { usage?: UsageLike }
+  /** On `message_delta`: the output count so far. */
+  usage?: { output_tokens?: number }
+}
+
+/** A response a Stop cut short, counted from what the API had reported of it before the stop: the input
+ *  and cache counts of `message_start`, and the output count of the last `message_delta`. With no
+ *  `message_delta` the output count is a lower bound. A response that finished is counted by `usage`. */
+export interface StoppedCount {
+  tokens: Tokens
+  lowerBound: boolean
 }
 
 /** A change the API made to a request's history on its way in. */
@@ -168,6 +180,9 @@ export interface LoopView {
   otherThinking(model: ModelId): void
   /** One response's token counts, exactly as its `usage` reports them. */
   usage(usage: UsageLike, model: ModelId): void
+  /** A response a Stop cut short, as the API had reported it (see `StoppedCount`). Not called when the API
+   *  had reported nothing of the response. */
+  stoppedUsage(count: StoppedCount, model: ModelId): void
   /** The model stopped for a reason the panel does not act on. */
   stoppedFor(reason: string): void
   /** The turn moved to another phase. The loop reports `waiting` just before each request is sent. */
@@ -262,6 +277,9 @@ export function currentView(view: LoopView, isCurrent: () => boolean): LoopView 
     usage: (usage, model) => {
       if (isCurrent()) view.usage(usage, model)
     },
+    stoppedUsage: (count, model) => {
+      if (isCurrent()) view.stoppedUsage(count, model)
+    },
     stoppedFor: (reason) => {
       if (isCurrent()) view.stoppedFor(reason)
     },
@@ -350,12 +368,17 @@ export async function runTurn<Tool>(text: string, turn: Turn<Tool>): Promise<voi
     let stream: StreamLike | null = null
     const onAbort = () => stream?.abort()
     signal.addEventListener('abort', onAbort)
+    // What the API has reported of this response so far, read from the events as they pass (see StoppedCount).
+    let started: Tokens | null = null
+    let output: number | null = null
     try {
       // inside the try, so a client that throws as the request is made fails the request
       view.phase({ kind: 'waiting' })
       stream = api.stream(requestParams(turn.request, turn.model, history, turn.effort, producers))
       for await (const event of stream) {
         view.heard()
+        if (event.type === 'message_start' && event.message?.usage) started = tokensOf(event.message.usage)
+        else if (event.type === 'message_delta' && typeof event.usage?.output_tokens === 'number') output = event.usage.output_tokens
         if (event.type === 'content_block_start' && event.content_block) {
           const block = event.content_block
           if (block.type === 'text') {
@@ -374,7 +397,10 @@ export async function runTurn<Tool>(text: string, turn: Turn<Tool>): Promise<voi
       message = await stream.finalMessage()
     } catch (e) {
       closeOpened(signal.aborted ? ABORTED : NOT_RUN)
-      if (signal.aborted) return view.stopped()
+      if (signal.aborted) {
+        if (started) view.stoppedUsage({ tokens: { ...started, output: output ?? started.output }, lowerBound: output === null }, turn.model)
+        return view.stopped()
+      }
       return view.requestFailed(e instanceof Error ? e.message : String(e))
     } finally {
       signal.removeEventListener('abort', onAbort)

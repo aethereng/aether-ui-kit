@@ -325,7 +325,7 @@ describe('describeRef', () => {
   it.each([
     ['capabilities', '1.37 · build 9c04e2d'],
     ['schema', '1.37 · build 9c04e2d'],
-  ] as const)('reads a %s value with the viewer build and no id', (kind, shown) => {
+  ] as const)('reads a %s value as a build with no id', (kind, shown) => {
     const t = resolved({
       value: '1.37',
       unit: null,
@@ -353,8 +353,25 @@ describe('describeRef', () => {
     expect(hover('run')).toContain('engine build')
     expect(hover('model')).toContain('input hash')
     expect(hover('proposal')).toContain('proposal hash')
-    expect(hover('capabilities')).toContain('viewer build')
-    expect(hover('schema')).toContain('viewer build')
+    expect(hover('capabilities')).toContain('build ffffffff')
+    expect(hover('schema')).toContain('build ffffffff')
+  })
+
+  it('takes the noun for a capabilities or schema build from the app, and says "build" alone without one', () => {
+    const hashLine = (kind: 'capabilities' | 'schema', buildNoun?: string | null) =>
+      resolved({ ...run, buildNoun, source: { kind, id: null, hash: 'ffffffff' } }).hover.split(NL)
+    expect(hashLine('capabilities', 'Acme')).toContain('Acme build ffffffff')
+    expect(hashLine('schema', 'Acme')).toContain('Acme build ffffffff')
+    expect(hashLine('capabilities', null)).toContain('build ffffffff')
+    expect(hashLine('capabilities')).not.toContain('Acme build ffffffff')
+  })
+
+  it('leaves the noun out of every other kind, which keep their own hover words', () => {
+    const hover = (kind: RefChipData['source']['kind']) =>
+      resolved({ ...run, buildNoun: 'Acme', source: { kind, id: null, hash: 'ffffffff' } }).hover
+    expect(hover('run')).toContain('engine build ffffffff')
+    expect(hover('findings')).toContain('build ffffffff')
+    expect(hover('findings')).not.toContain('Acme')
   })
 
   it('leaves the provenance line out of the hover when there is none', () => {

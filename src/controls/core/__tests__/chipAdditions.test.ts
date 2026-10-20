@@ -35,7 +35,7 @@ describe('the chip additions', () => {
     )
   })
 
-  it('shows a capabilities tag as the viewer build with no id', () => {
+  it('shows a capabilities tag as a build with no id', () => {
     expect(resolved(describeRef('{{c:the-checks.en-1993.record.status.n1}}', chip({ source: { kind: 'capabilities', id: null, hash: '9c04e2d1ff' } }))).tag).toBe(
       'build 9c04e2d',
     )

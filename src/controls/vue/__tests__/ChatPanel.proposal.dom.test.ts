@@ -83,8 +83,13 @@ describe('the proposal basis column', () => {
         rows: [row('a', { kind: 'person', text: 'from the engineer' }), row('b', { kind: 'suggestion', text: '2.5 mm' })],
       }),
     ])
-    expect(w.find('[data-basis="person"]').text()).toBe('person: from the engineer')
+    expect(w.find('[data-basis="person"]').text()).toBe('your words: from the engineer')
     expect(w.find('[data-basis="suggestion"]').text()).toBe("assistant's suggestion: 2.5 mm")
+  })
+
+  it('shows a basis with no text as its label alone, with no colon after it', () => {
+    const w = mountPanel([card({ rows: [row('a', { kind: 'person', text: '' })] })])
+    expect(w.find('[data-basis="person"]').text()).toBe('your words')
   })
 })
 
@@ -93,7 +98,7 @@ describe('a destructive proposal', () => {
     const w = mountPanel([card({ destructive: true })])
     expect(w.text()).toContain('Accepting this proposal deletes items.')
     expect(buttonByText(w, 'Accept')).toBeUndefined()
-    await buttonByText(w, 'Accept deletion')!.trigger('click')
+    await buttonByText(w, 'Accept and delete')!.trigger('click')
     expect(w.emitted('accept')?.[0]).toEqual(['p1'])
   })
 

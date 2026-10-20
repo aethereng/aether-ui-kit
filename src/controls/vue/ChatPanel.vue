@@ -111,11 +111,11 @@ defineSlots<{
 const TEXT = {
   stop: 'Stop',
   accept: 'Accept',
-  acceptDelete: 'Accept deletion',
+  acceptDelete: 'Accept and delete',
   discard: 'Discard',
   loadAgain: 'Load again',
   destructive: 'Accepting this proposal deletes items.',
-  basis: { person: 'person', file: 'file', list: 'list', suggestion: "assistant's suggestion" },
+  basis: { person: 'your words', file: 'file', list: 'list', suggestion: "assistant's suggestion" },
   details: 'Details',
   refusedBy: { engine: 'refused by the engine', api: 'refused by the API' },
   glyph: { running: '…', done: '✓', refused: '⊘', failed: '✕' },
@@ -138,6 +138,11 @@ function rowsHaveBasis(rows: ChatProposalRow[]): boolean {
 
 function basisLabel(basis: ChatProposalBasis): string {
   return TEXT.basis[basis.kind]
+}
+// The label, then the text after a colon. A basis with no text shows its label alone: a colon with
+// nothing after it reads as a broken row.
+function basisText(basis: ChatProposalBasis): string {
+  return basis.text ? basisLabel(basis) + ': ' + basis.text : basisLabel(basis)
 }
 
 function acceptLabel(m: ChatProposalMessage): string {
@@ -408,7 +413,7 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
                   </td>
                   <td v-if="rowsHaveBasis(m.rows)">
                     <span v-if="r.basis" class="aether-chat__basis" :data-basis="r.basis.kind"
-                      >{{ basisLabel(r.basis) }}: {{ r.basis.text }}</span
+                      >{{ basisText(r.basis) }}</span
                     >
                   </td>
                 </tr>

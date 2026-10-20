@@ -90,7 +90,7 @@ export interface RefChipData {
         id: string | null;
         /** The hash the tag shows, by kind: the engine build for a run, the input hash for a model, the
          *  proposal hash for a proposal, the building result hash for a verification, the build for a
-         *  findings or registry entry, the viewer build for capabilities and schema. Shown shortened; full on hover. */
+         *  findings, registry, capabilities or schema entry. Shown shortened; full on hover. */
         hash: string;
     };
     path: string;
@@ -100,6 +100,9 @@ export interface RefChipData {
     reduced?: boolean;
     /** A mark drawn after the value, such as `(lower bound)` for a value that bounds the true one. */
     mark?: string | null;
+    /** The word the hover puts before "build" for a capabilities or schema value, in the app's words:
+     *  the hover reads `<buildNoun> build <hash>`. Absent or null, it reads `build <hash>`. */
+    buildNoun?: string | null;
 }
 /** Characters of a hash shown in the chip's tag. */
 export declare const REF_HASH_LENGTH = 7;
@@ -121,7 +124,7 @@ export type RefChipText = {
     resolved: true;
     /** Value and unit as shown: `0.0123 m`. */
     quantity: string;
-    /** The source tag as shown: `r1 · 3b1f2c9`, or `build 9c04e2d` for a viewer build. */
+    /** The source tag as shown: `r1 · 3b1f2c9`, or `build 9c04e2d` for a capabilities or schema value. */
     tag: string;
     /** The chip's accessible name: path, value, unit and tag. */
     name: string;

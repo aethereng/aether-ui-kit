@@ -47,6 +47,17 @@ describe('an identifier of several words is read as one phrase', () => {
     expect(found('_Table 3.1_', [])).toEqual(['3.1'])
   })
 
+  it('negative arm: a phrase with a word glued to its markup is not found, so its digits are flagged', () => {
+    expect(found('foo_Table 3.1', ['Table 3.1'])).toEqual(['3.1'])
+    expect(found('x*Table 3.1', ['Table 3.1'])).toEqual(['3.1'])
+    expect(found('Table 3.1_x', ['Table 3.1'])).toEqual(['3.1_x'])
+  })
+
+  it('a phrase followed by a possessive, or by markup and punctuation, stands', () => {
+    expect(found("Table 3.1's", ['Table 3.1'])).toEqual([])
+    expect(found('_Table 3.1_.', ['Table 3.1'])).toEqual([])
+  })
+
   it('reads a phrase that is a prefix of a longer one only as far as its own words', () => {
     expect(found('EN 1993-1-1 here', ['EN 1993'])).toEqual(['1993-1-1'])
   })

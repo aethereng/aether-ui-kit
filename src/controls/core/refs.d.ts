@@ -55,7 +55,8 @@ export interface BareNumeralSpan {
  *  trailing strip repeats until nothing more comes off, so `J12.`, `(J12)`, `J12's`, `(J12's).`
  *  and `J12's's` all compare as `J12`. The comparison is exact and case-sensitive. A backtick, an
  *  asterisk and an underscore strip like the rest, so `` `J12` ``, `**J12**`, `_J12_` and `(`J12`)` all
- *  compare as `J12`: the markup stays in the text, and a violation's span covers the digits only.
+ *  compare as `J12`: the markup stays in the text, and a violation's span covers the stripped core, so
+ *  `J13` in backticks spans `J13`, not the backticks around it.
  *
  *  A token is a VIOLATION when, stripped, it holds a digit and does not equal an admitted
  *  identifier, unless it opens a list item the parser reads (`opensListItem`: an ordered marker after
@@ -72,8 +73,8 @@ export interface BareNumeralSpan {
  *  admitted as written; the digits of an admitted phrase are not violations where the whole phrase
  *  stands between token edges, a line break between its words included. A digit outside any such phrase
  *  is still a violation: `3.1` alone is flagged while `Table 3.1` stands. A phrase is not read across a
- *  reference, and a phrase glued to a letter or a bold marker does not stand, so its digits are read as
- *  before.
+ *  reference. A phrase with a word glued to its markup (`foo_Table 3.1`) does not stand, so its digits are
+ *  read as before; markup that is the token's own (`**Table 3.1**`, `Table 3.1's`) stands.
  *
  *  Not a markdown parser: it does not know a fenced block from a sentence. */
 export declare function findBareNumerals(text: string, admittedIds: Iterable<string>, scopes?: ReferenceScopes): BareNumeralSpan[];

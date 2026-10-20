@@ -3,7 +3,7 @@
  *
  * WHAT IT READS. Paragraphs (the text between blank lines), line breaks inside a paragraph, bullet
  * and numbered lists, headings of one to four `#` (drawn as one bold line of the reply's own size),
- * block quotes (nested, to MAX_QUOTE_DEPTH in refs.ts; a `>` past that is text), fenced code blocks of
+ * block quotes (nested, to MAX_QUOTE_DEPTH in markup.ts; a `>` past that is text), fenced code blocks of
  * backticks or tildes (the language word is not drawn, and nothing inside the block is read as markup),
  * bold (`**` or `__`), emphasis (`*` or `_`), inline code, and links. A link renders as its label. Its
  * target is dropped, so no reply can become a live link.
@@ -347,7 +347,8 @@ function canOpen(ctx: Ctx, at: number, to: number, n: number, c: string): boolea
  *  paragraph is scanned once per closer, not once per opener. The answer from a position is the same for
  *  every scan that reaches it: the only check that depends on where a scan began (a closer must follow
  *  its opener) can only fail at that first character, and a closer there would already have been found
- *  by the scan that first visited it. */
+ *  by the scan that first visited it. That holds because every scan starts after a maximal opener run
+ *  (runLength), so its first character is never the run's own character. */
 function deadEnds(ctx: Ctx, key: string): Set<number> {
   let set = ctx.dead.get(key)
   if (set === undefined) {

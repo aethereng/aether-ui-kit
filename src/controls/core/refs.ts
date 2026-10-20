@@ -140,14 +140,30 @@ const STRIP = '.,;:!?()[]{}"' + APOSTROPHES + '`*_'
 /* The characters a pattern must escape when a phrase is written into one. */
 const PATTERN_SYNTAX = /[\\^$.*+?()[\]{}|]/g
 
-/* A token edge: the start or end of the text, whitespace, or a character of the strip set. */
-function isEdge(ch: string): boolean {
-  return ch === '' || /\s/.test(ch) || STRIP.includes(ch)
+/* The token before a phrase's first word holds only markup: the whitespace or the text start comes
+ * before the phrase, and every character between them is a strip character. `_Table 3.1` and
+ * `**Table 3.1` pass; `foo_Table 3.1` does not, because `foo` is part of the token. */
+function leadsWithMarkup(text: string, at: number): boolean {
+  let i = at
+  while (i > 0 && !/\s/.test(text[i - 1]!)) i--
+  return [...text.slice(i, at)].every((ch) => STRIP.includes(ch))
+}
+
+/* The token after a phrase's last word holds only markup, up to whitespace or the text end. A `'s`
+ * after the phrase is the token rule's possessive, so `Table 3.1's` passes; `Table 3.1x` does not. */
+function trailsWithMarkup(text: string, at: number): boolean {
+  let i = at
+  while (i < text.length && !/\s/.test(text[i]!)) {
+    if (APOSTROPHES.includes(text[i]!) && text[i + 1] === 's') i += 2
+    else if (STRIP.includes(text[i]!)) i++
+    else return false
+  }
+  return true
 }
 
 /* Where each admitted phrase stands in `text`, in its offsets. A phrase's spaces match any run of
- * whitespace, a line break included. A phrase counts only where a token edge stands on both sides, so
- * one glued to a letter, or to a bold marker, is not found. */
+ * whitespace, a line break included. A phrase counts only where its token has no word beside it: the
+ * markup on either side is the token's own, so one glued to a letter is not found. */
 function phraseSpans(text: string, phrases: readonly string[]): BareNumeralSpan[] {
   const found: BareNumeralSpan[] = []
   for (const id of phrases) {
@@ -155,9 +171,7 @@ function phraseSpans(text: string, phrases: readonly string[]): BareNumeralSpan[
     const pattern = new RegExp(words.join('\\s+'), 'gu')
     for (let m = pattern.exec(text); m !== null; m = pattern.exec(text)) {
       const end = m.index + m[0].length
-      const before = m.index === 0 ? '' : text[m.index - 1]!
-      const after = end === text.length ? '' : text[end]!
-      if (isEdge(before) && isEdge(after)) found.push({ start: m.index, end })
+      if (leadsWithMarkup(text, m.index) && trailsWithMarkup(text, end)) found.push({ start: m.index, end })
       else pattern.lastIndex = m.index + 1
     }
   }
@@ -174,7 +188,8 @@ function phraseSpans(text: string, phrases: readonly string[]): BareNumeralSpan[
  *  trailing strip repeats until nothing more comes off, so `J12.`, `(J12)`, `J12's`, `(J12's).`
  *  and `J12's's` all compare as `J12`. The comparison is exact and case-sensitive. A backtick, an
  *  asterisk and an underscore strip like the rest, so `` `J12` ``, `**J12**`, `_J12_` and `(`J12`)` all
- *  compare as `J12`: the markup stays in the text, and a violation's span covers the digits only.
+ *  compare as `J12`: the markup stays in the text, and a violation's span covers the stripped core, so
+ *  `J13` in backticks spans `J13`, not the backticks around it.
  *
  *  A token is a VIOLATION when, stripped, it holds a digit and does not equal an admitted
  *  identifier, unless it opens a list item the parser reads (`opensListItem`: an ordered marker after
@@ -191,8 +206,8 @@ function phraseSpans(text: string, phrases: readonly string[]): BareNumeralSpan[
  *  admitted as written; the digits of an admitted phrase are not violations where the whole phrase
  *  stands between token edges, a line break between its words included. A digit outside any such phrase
  *  is still a violation: `3.1` alone is flagged while `Table 3.1` stands. A phrase is not read across a
- *  reference, and a phrase glued to a letter or a bold marker does not stand, so its digits are read as
- *  before.
+ *  reference. A phrase with a word glued to its markup (`foo_Table 3.1`) does not stand, so its digits are
+ *  read as before; markup that is the token's own (`**Table 3.1**`, `Table 3.1's`) stands.
  *
  *  Not a markdown parser: it does not know a fenced block from a sentence. */
 export function findBareNumerals(

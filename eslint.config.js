@@ -3,6 +3,7 @@ import pluginVue from 'eslint-plugin-vue'
 import pluginA11y from 'eslint-plugin-vuejs-accessibility'
 import tseslint from 'typescript-eslint'
 import prettier from 'eslint-config-prettier'
+import globals from 'globals'
 
 // __KIT_VERSION__ is injected by vite.config.ts `define` from package.json, so it exists at
 // runtime but not to eslint's scope analysis.
@@ -20,7 +21,9 @@ export default tseslint.config(
      * committed -- lint is not one of the CI steps, so nothing ever surfaced it. */
     ignores: ['dist', 'node_modules', 'src/**/*.d.ts'],
   },
-  { languageOptions: { globals: buildTimeGlobals } },
+  // The kit is browser code. eslint-plugin-vue's base config does not declare the browser globals,
+  // so they are declared here for every file.
+  { languageOptions: { globals: { ...globals.browser, ...buildTimeGlobals } } },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/recommended'],

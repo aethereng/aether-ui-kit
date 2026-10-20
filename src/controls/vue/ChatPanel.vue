@@ -130,8 +130,8 @@ const visible = computed(() => props.messages.slice(-props.historyLimit))
 function roleLabel(role: ChatMessage['role']) {
   return role === 'you' ? 'you' : role === 'agent' ? 'agent' : 'note'
 }
-// A proposal's basis column shows only when some row has a basis; a proposal without one keeps the
-// three-column table it always had.
+// A proposal's basis column shows only when some row has a basis; a proposal with no basis is a
+// three-column table.
 function rowsHaveBasis(rows: ChatProposalRow[]): boolean {
   return rows.some((r) => r.basis != null)
 }

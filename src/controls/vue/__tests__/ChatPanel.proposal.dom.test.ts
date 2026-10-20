@@ -4,8 +4,8 @@ import ChatPanel from '../ChatPanel.vue'
 import type { ChatEntry, ChatProposalBasis, ChatProposalMessage, ChatProposalRow, RefChipData } from '../../core'
 
 /* The proposal card's basis column, its destructive wording and its later action, and the chips a
- * reply draws with the scope list the panel is given. The relay contract stays in ChatPanel.dom.test.ts,
- * and the assistant's own rendering in ChatPanel.assistant.dom.test.ts; neither changes here. */
+ * reply draws with the scope list the panel is given. The relay contract is in ChatPanel.dom.test.ts,
+ * and the assistant's own rendering is in ChatPanel.assistant.dom.test.ts. */
 
 const row = (path: string, basis?: ChatProposalBasis): ChatProposalRow => ({
   path,
@@ -68,7 +68,7 @@ function mountPanel(messages: ChatEntry[], extra: Record<string, unknown> = {}) 
 
 const buttonByText = (w: VueWrapper, text: string) => w.findAll('button').find((b) => b.text() === text)
 
-describe('K8: the proposal basis column', () => {
+describe('the proposal basis column', () => {
   it('shows a basis column only when a row carries a basis', () => {
     const plain = mountPanel([card({ rows: [row('a')] })])
     expect(plain.findAll('th').map((t) => t.text())).not.toContain('basis')
@@ -88,7 +88,7 @@ describe('K8: the proposal basis column', () => {
   })
 })
 
-describe('K8: a destructive proposal', () => {
+describe('a destructive proposal', () => {
   it('says so in text and labels Accept for the deletion, and Accept emits with the id', async () => {
     const w = mountPanel([card({ destructive: true })])
     expect(w.text()).toContain('Accepting this proposal deletes items.')
@@ -104,7 +104,7 @@ describe('K8: a destructive proposal', () => {
   })
 })
 
-describe('K8: the later action', () => {
+describe('the later action', () => {
   it('offers Accept on a superseded card and emits accept with its id', async () => {
     const w = mountPanel([card({ id: 'p2', status: 'superseded', later: 'accept' })])
     await buttonByText(w, 'Accept')!.trigger('click')
@@ -125,7 +125,7 @@ describe('K8: the later action', () => {
   })
 })
 
-describe('K8: the chips a reply draws', () => {
+describe('the chips a reply draws', () => {
   const reply = (text: string): ChatEntry => ({ role: 'agent', text })
 
   it('draws a string verdict with no unit, and names it in the accessible name', () => {

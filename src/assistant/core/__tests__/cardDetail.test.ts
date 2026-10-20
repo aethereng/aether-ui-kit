@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { cardDetail, DETAIL_CAP, NUMBER_WITHHELD, NUMERAL_WITHHELD, withholdBare } from '../cardDetail'
 
-describe('K6: the digit walker on a tool card', () => {
+describe('the digit walker on a tool card', () => {
   it('shows a number with no reference as withheld', () => {
     const shown = cardDetail({ count: 5 })
     expect(shown).toContain(NUMBER_WITHHELD)

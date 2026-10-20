@@ -31,8 +31,8 @@ describe('the reference index (2.7)', () => {
   it('refuses a scope the list does not hold, and mints it under a list that does', () => {
     const ri = new ReferenceIndex(DEFAULT_REFERENCE_SCOPES)
     expect(() => ri.mint('v1', 'summary.checked', 4, null, { kind: 'run', id: 'v1', hash: 'x' }, 'read_verification')).toThrow(RangeError)
-    const etere = new ReferenceIndex(SECOND_LIST)
-    expect(etere.mint('v1', 'summary.checked', 4, null, { kind: 'run', id: 'v1', hash: 'x' }, 'read_verification')).toBe('{{v1:summary.checked}}')
+    const second = new ReferenceIndex(SECOND_LIST)
+    expect(second.mint('v1', 'summary.checked', 4, null, { kind: 'run', id: 'v1', hash: 'x' }, 'read_verification')).toBe('{{v1:summary.checked}}')
   })
 
   it('admits identifiers for the gate, and clears both maps', () => {

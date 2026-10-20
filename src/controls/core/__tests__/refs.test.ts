@@ -21,13 +21,12 @@ import {
 const NONE = (): boolean => false
 const NL = String.fromCharCode(10)
 
-// The scope list of the first consumer (the default), and a second list in which `v` and `f` are
-// indexed scopes and `g` a bare one, as the Etere panel writes them.
+// The default scope list, and a second list in which `v` and `f` are indexed scopes and `g` a bare one.
 const SECOND_LIST: ReferenceScopes = { indexed: ['m', 'p', 'r', 'v', 'f'], bare: ['c', 'g'] }
 const VERBATIM: PathRules = { verbatimBracketIds: true }
 
 describe('numeral gate', () => {
-  it('SEEDED: finds the one bare quantity beside an admitted id, at its offsets', () => {
+  it('finds the one bare quantity beside an admitted id, at its offsets', () => {
     const text = 'The deflection is 12.5 mm at J12.'
     const found = numeralGate(text, ['J12'], NONE)
     expect(found).toEqual([{ token: '12.5', start: 18, end: 22, kind: 'bare_numeral' }])
@@ -77,7 +76,7 @@ describe('numeral gate', () => {
   })
 })
 
-describe('K1: the reference grammar with a scope list', () => {
+describe('the reference grammar with a scope list', () => {
   it('resolves v1 as a reference under the second list and as plain text under the default list', () => {
     const text = 'Member {{v1:members[e103].status}} holds.'
     expect(referencesIn(text, SECOND_LIST)).toEqual(['{{v1:members[e103].status}}'])
@@ -111,6 +110,17 @@ describe('K1: the reference grammar with a scope list', () => {
     expect(() => splitReferences('x', { indexed: ['mm'], bare: [] })).toThrow(RangeError)
   })
 
+  it('refuses the letters m and p run together as one scope after the same letters were listed apart', () => {
+    splitReferences('x', { indexed: ['m', 'p'], bare: [] })
+    expect(() => splitReferences('x', { indexed: ['mp'], bare: [] })).toThrow(RangeError)
+  })
+
+  it('gives the same segments for a text whichever text was split before it with the same list', () => {
+    const first = splitReferences('a {{m1:x}} b', DEFAULT_REFERENCE_SCOPES)
+    splitReferences('{{m2:y}} {{m3:z}}', DEFAULT_REFERENCE_SCOPES)
+    expect(splitReferences('a {{m1:x}} b', DEFAULT_REFERENCE_SCOPES)).toEqual(first)
+  })
+
   it('reads a bracketed id verbatim to the first ] with the option on, and refuses its dot with the option off', () => {
     expect(parsePath('loads[a12.force].value', VERBATIM)?.steps).toEqual([{ key: 'loads' }, { id: 'a12.force' }, { key: 'value' }])
     expect(parsePath('loads[a12.force].value')).toBeNull()
@@ -127,7 +137,7 @@ describe('K1: the reference grammar with a scope list', () => {
   })
 })
 
-describe('test 16: the path grammar over the verbatim-bracket rule', () => {
+describe('the path grammar over the verbatim-bracket rule', () => {
   it('resolves loads[a12.force] with the option on', () => {
     const model = { loads: [{ id: 'a12.force', value: 7 }] }
     expect(resolvePath(model, parsePath('loads[a12.force].value', VERBATIM)!.steps)).toBe(7)

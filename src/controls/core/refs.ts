@@ -20,27 +20,28 @@ export interface ReferenceScopes {
   readonly bare: readonly string[]
 }
 
-/** The scopes the first consumer's panel mints: models, proposals and runs by index, and the
- *  capability and schema documents bare. */
+/** The default scope list: runs, models and proposals by index, and capability and schema documents
+ *  bare. */
 export const DEFAULT_REFERENCE_SCOPES: ReferenceScopes = { indexed: ['m', 'p', 'r'], bare: ['c', 's'] }
 
 const SCOPE_LETTER = /^[a-z]$/
 
 /* One pattern per scope list, built on first use. A list that names no scope, a name that is not one
  * lower-case letter, or a letter named twice is refused: a pattern built from it would match a
- * reference no caller meant to admit. */
+ * reference no caller meant to admit. The check runs before the cache is read, and the cache key
+ * encodes the two lists as JSON so that no two lists share a key. */
 const patterns = new Map<string, RegExp>()
 
 function referencePattern(scopes: ReferenceScopes): RegExp {
-  const key = scopes.indexed.join('') + '|' + scopes.bare.join('')
-  const known = patterns.get(key)
-  if (known) return known
   const letters = [...scopes.indexed, ...scopes.bare]
   if (letters.length === 0) throw new RangeError('a reference scope list names at least one scope')
   for (const letter of letters) {
     if (!SCOPE_LETTER.test(letter)) throw new RangeError(`a reference scope must be one lower-case letter; got ${JSON.stringify(letter)}`)
   }
   if (new Set(letters).size !== letters.length) throw new RangeError('a reference scope is named twice')
+  const key = JSON.stringify([scopes.indexed, scopes.bare])
+  const known = patterns.get(key)
+  if (known) return known
   const alternatives = [...scopes.indexed.map((s) => s + '[1-9][0-9]*'), ...scopes.bare]
   const pattern = new RegExp('\\{\\{(' + alternatives.join('|') + '):([^{}\\s]+)\\}\\}', 'g')
   patterns.set(key, pattern)
@@ -164,8 +165,8 @@ function startsLine(text: string, at: number): boolean {
  *  violation. The span covers the stripped token, without the punctuation around it.
  *
  *  UNRESOLVED REFERENCES ARE LEFT TO THE CALLER. A reference is skipped whatever its scope id,
- *  because this function is handed the identifiers admitted in the text, with no view of the app's index of run,
- *  model and proposal ids; it cannot know that `{{r999:x}}` points at nothing. The caller asks its
+ *  because this function is handed the admitted identifiers and has no view of the app's index of
+ *  minted references; it cannot know that `{{r999:x}}` points at nothing. The caller asks its
  *  own index and reports an unresolved reference itself. A reference still being typed is not yet a
  *  reference, so it is plain text here and its digit is a violation.
  *

@@ -5,8 +5,8 @@ export interface ReferenceScopes {
     readonly indexed: readonly string[];
     readonly bare: readonly string[];
 }
-/** The scopes the first consumer's panel mints: models, proposals and runs by index, and the
- *  capability and schema documents bare. */
+/** The default scope list: runs, models and proposals by index, and capability and schema documents
+ *  bare. */
 export declare const DEFAULT_REFERENCE_SCOPES: ReferenceScopes;
 /** A span of text, or one reference, in the order it appears. A reference segment keeps its braces
  *  in `text`; `ref` is `scope:path` without them. */
@@ -63,8 +63,8 @@ export interface BareNumeralSpan {
  *  violation. The span covers the stripped token, without the punctuation around it.
  *
  *  UNRESOLVED REFERENCES ARE LEFT TO THE CALLER. A reference is skipped whatever its scope id,
- *  because this function is handed the identifiers admitted in the text, with no view of the app's index of run,
- *  model and proposal ids; it cannot know that `{{r999:x}}` points at nothing. The caller asks its
+ *  because this function is handed the admitted identifiers and has no view of the app's index of
+ *  minted references; it cannot know that `{{r999:x}}` points at nothing. The caller asks its
  *  own index and reports an unresolved reference itself. A reference still being typed is not yet a
  *  reference, so it is plain text here and its digit is a violation.
  *

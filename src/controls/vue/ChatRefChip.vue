@@ -5,7 +5,9 @@
  * flags, and one component keeps those two from drifting.
  *
  * Every chip is a <button>. A click says "open this reference" and the app decides what that
- * means; the chip never navigates and never resolves anything. The words come from the core's
+ * means; the chip never navigates and never resolves anything. The whole text of a chip is in its
+ * accessible name, and in its hover when it resolved. A click carries only the reference, so showing
+ * the whole text when the chip is opened is the app's open-ref handler's job. The words come from the core's
  * `describeRef`, the same function the panel uses to announce a settled reply, so what a sighted
  * reader sees and what a screen reader is told cannot disagree.
  *

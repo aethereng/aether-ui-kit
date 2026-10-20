@@ -87,6 +87,35 @@ export {
   STREAM_FOLLOW_THRESHOLD,
 } from './chat'
 
+// The reference grammar: the scope list, the numeral gate and the path rules. An app that mints or
+// resolves references runs these, so its gate and the panel's chips read one vocabulary.
+export {
+  DEFAULT_REFERENCE_SCOPES,
+  DEFAULT_PATH_RULES,
+  numeralGate,
+  referencesIn,
+  hasReservedCharacter,
+  reservedCharactersOf,
+  idsIn,
+  slug,
+  parsePath,
+  formatPath,
+  resolvePath,
+  modelLeaves,
+} from './refs'
+export type {
+  ReferenceScopes,
+  Violation,
+  ViolationKind,
+  PathRules,
+  PathStep,
+  ParsedPath,
+  Reduction,
+  TupleTable,
+  Leaf,
+  LeafOptions,
+} from './refs'
+
 // The Tree core: the row model and the whole keyboard contract, framework-free. Public because a
 // caller types its own node data against TreeNode<T> and may drive the same key handling itself.
 export { visibleRows, treeKey, typeahead, ancestorIds, isExpandable } from './tree'

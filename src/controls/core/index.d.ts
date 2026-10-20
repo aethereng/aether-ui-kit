@@ -6,5 +6,7 @@ export { DEFAULT_SPEEDS, cycleSpeed, isAtEnd, beginScrub, endScrub } from './tra
 export type { ScrubHandle } from './transport';
 export type { ChatMessage, ChatMark, ChatToolMessage, ChatToolStatus, ChatRefusalMessage, ChatProposalMessage, ChatProposalRow, ChatProposalFlag, ChatProposalStatus, ChatCardMessage, ChatEntry, ChatSegment, BareNumeralSpan, RefSourceKind, RefChipData, RefChipText, } from './chat';
 export { isTextMessage, splitReferences, findBareNumerals, describeRef, REF_HASH_LENGTH, UNRESOLVED_TEXT, REDUCED_TEXT, STREAM_FOLLOW_THRESHOLD, } from './chat';
+export { DEFAULT_REFERENCE_SCOPES, DEFAULT_PATH_RULES, numeralGate, referencesIn, hasReservedCharacter, reservedCharactersOf, idsIn, slug, parsePath, formatPath, resolvePath, modelLeaves, } from './refs';
+export type { ReferenceScopes, Violation, ViolationKind, PathRules, PathStep, ParsedPath, Reduction, TupleTable, Leaf, LeafOptions, } from './refs';
 export { visibleRows, treeKey, typeahead, ancestorIds, isExpandable } from './tree';
 export type { TreeNode, TreeRow, TreeKeyResult } from './tree';

@@ -62,64 +62,8 @@ export interface ChatCardMessage {
 }
 export type ChatEntry = ChatMessage | ChatToolMessage | ChatRefusalMessage | ChatProposalMessage | ChatCardMessage;
 export declare function isTextMessage(m: ChatEntry): m is ChatMessage;
-export type ChatSegment = {
-    kind: 'text';
-    text: string;
-    start: number;
-    end: number;
-} | {
-    kind: 'ref';
-    /** The token as written, braces included. */
-    text: string;
-    /** `scope:path`: what `resolveRef` is asked for and what `open-ref` carries. */
-    ref: string;
-    scope: string;
-    path: string;
-    start: number;
-    end: number;
-};
-/** Split `text` into alternating text and reference segments, in order, with nothing lost: the
- *  segments' `text` concatenates back to the input, and `start`/`end` are UTF-16 offsets into it.
- *  No empty text segment is emitted, so the empty string yields no segments.
- *
- *  Malformed input is plain text, each case whole: an opening pair with no closing pair, a closing
- *  pair with no opening pair, `{{}}`, a scope outside the grammar, whitespace inside the braces.
- *  A reference whose closing braces have not arrived is therefore plain text until they do, which is
- *  what a streaming message needs.
- *
- *  A NESTED opening pair makes the outer pair plain text; a valid reference inside it is still a
- *  reference. `{{r1:{{r2:x}}}}` is text `{{r1:`, the reference `r2:x`, text `}}`: the leftmost
- *  complete reference wins and the leftover braces are not consumed. */
-export declare function splitReferences(text: string): ChatSegment[];
-export interface BareNumeralSpan {
-    start: number;
-    end: number;
-}
-/** The spans of `text` holding a digit that is not an admitted identifier, in UTF-16 code units,
- *  ascending.
- *
- *  A TOKEN is a maximal run of non-whitespace characters in the text between references (a
- *  reference is a token boundary, and is never read). Leading and trailing punctuation is stripped
- *  before comparing, namely `. , ; : ! ? ( ) [ ] { } "`, the apostrophe `'` and the typographic
- *  single quotes U+2018 and U+2019, and a trailing apostrophe-s (`'s`, in any of the three). The
- *  trailing strip repeats until nothing more comes off, so `J12.`, `(J12)`, `J12's`, `(J12's).`
- *  and `J12's's` all compare as `J12`. The comparison is exact and case-sensitive. A backtick and
- *  an asterisk are not in the strip set, so a code span or bold text around an identifier makes it
- *  a violation, and a code span is read like any other text.
- *
- *  A token is a VIOLATION when, stripped, it holds a digit and does not equal an admitted
- *  identifier, unless it is an ordered-list marker (ASCII digits then `.` or `)`) that starts its
- *  line after optional indentation. A token is the whole run, so `J12,J13` is one token and a
- *  violation. The span covers the stripped token, without the punctuation around it.
- *
- *  UNRESOLVED REFERENCES ARE LEFT TO THE CALLER. A reference is skipped whatever its scope id,
- *  because this function is handed the identifiers admitted in text and not the app's index of run,
- *  model and proposal ids; it cannot know that `{{r999:x}}` points at nothing. The caller asks its
- *  own index and reports an unresolved reference itself. A reference still being typed is not yet a
- *  reference, so it is plain text here and its digit is a violation.
- *
- *  Not a markdown parser: it does not know a fenced block from a sentence. */
-export declare function findBareNumerals(text: string, admittedIds: Iterable<string>): BareNumeralSpan[];
+export { findBareNumerals, referencesIn, splitReferences } from './refs';
+export type { BareNumeralSpan, ChatSegment, ReferenceScopes } from './refs';
 export type RefSourceKind = 'run' | 'model' | 'proposal' | 'capabilities' | 'schema';
 /** What the app's `resolveRef` returns for a reference it can answer. The kit shows these fields
  *  and decides nothing about them. */

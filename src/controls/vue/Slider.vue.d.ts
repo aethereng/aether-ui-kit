@@ -17,10 +17,10 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     "onUpdate:modelValue"?: ((value: number) => any) | undefined;
 }>, {
+    max: number;
+    min: number;
     disabled: boolean;
     step: number;
-    min: number;
-    max: number;
     suffix: string;
     format: (value: number) => string;
     ticks: SliderTick[];

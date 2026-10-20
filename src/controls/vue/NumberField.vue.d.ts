@@ -15,12 +15,12 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     "onUpdate:modelValue"?: ((value: number | undefined) => any) | undefined;
 }>, {
+    max: number;
+    min: number;
     disabled: boolean;
     step: number;
     precision: number;
     placeholder: string;
-    min: number;
-    max: number;
     suffix: string;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

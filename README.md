@@ -61,7 +61,7 @@ Not on a public registry. Depend on it by git ref, pinned to a tag:
 ```json
 {
   "dependencies": {
-    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.21.0"
+    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.23.0"
   }
 }
 ```

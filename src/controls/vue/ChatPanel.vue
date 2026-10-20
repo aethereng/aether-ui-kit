@@ -26,7 +26,7 @@
  * `resolveRef` is called while rendering, once per reference per update, so it should be a
  * lookup. */
 import { computed, h, nextTick, onBeforeUnmount, ref, watch, type VNodeChild } from 'vue'
-import { formatElapsed, quietSeconds } from '../core/activity'
+import { formatElapsed, quietSeconds, reasoningLine } from '../core/activity'
 import { describeRef, isTextMessage, splitReferences, STREAM_FOLLOW_THRESHOLD } from '../core/chat'
 import { markdownBlocks, type MdBlock, type MdInline, usableMarks } from '../core/markdown'
 import { DEFAULT_REFERENCE_SCOPES, type ReferenceScopes } from '../core/refs'
@@ -77,10 +77,19 @@ const props = withDefaults(
      *  moments it recorded on the page's clock (`Date.now()`). `awaitsApi` says the API is the party
      *  being waited for, which is when a quiet spell counts. `heardAt` is the last moment the API sent
      *  anything, or the request went out: the app sets it at send, at each `waiting` phase the loop
-     *  reports, and at each `heard()` report, and the quiet notice counts from it. `note` is thinking
-     *  text the app has already withheld for display; the panel shows it under the row, three lines at
-     *  most, and adds no numeral rule of its own. Null when no turn runs. Assistant only. */
-    activity?: { since: number; phase: string; heardAt?: number; awaitsApi?: boolean; note?: string } | null
+     *  reports, and at each `heard()` report, and the quiet notice counts from it. `reasoning` is the
+     *  thinking so far, as text: the panel shows its first sentence beside the clock (see `reasoningLine`)
+     *  and the whole text behind "Show reasoning". `note` is a line the app has already chosen; the panel
+     *  shows it beside the clock when no `reasoning` gives one, and adds no numeral rule of its own. Null
+     *  when no turn runs. Assistant only. */
+    activity?: {
+      since: number
+      phase: string
+      heardAt?: number
+      awaitsApi?: boolean
+      reasoning?: string
+      note?: string
+    } | null
     /** The words of the quiet notice, given the whole seconds since the API last sent anything. Absent,
      *  there is no notice. Assistant only. */
     quietText?: (seconds: number) => string
@@ -130,6 +139,9 @@ const TEXT = {
   loadAgain: 'Load again',
   destructive: 'Accepting this proposal deletes items.',
   done: 'Done',
+  reasoning: 'Reasoning',
+  reasoningSoFar: 'Reasoning so far',
+  showReasoning: 'Show reasoning',
   basis: { person: 'your words', file: 'file', list: 'list', suggestion: "assistant's suggestion" },
   details: 'Details',
   refusedBy: { engine: 'refused by the engine', api: 'refused by the API' },
@@ -172,6 +184,34 @@ const quiet = computed(() => {
   const seconds = quietSeconds(a.heardAt, clockNow.value)
   return seconds === null ? '' : props.quietText(seconds)
 })
+/* The line beside the clock: the reasoning's first sentence when the app gives reasoning, else its note.
+   The line is not in the status region, so it does not repeat as the phase changes. */
+const thinkingLine = computed(() => {
+  const a = props.activity
+  if (!a) return ''
+  return (a.reasoning ? reasoningLine(a.reasoning) : '') || (a.note ?? '')
+})
+/* The reasoning box follows new text only while the reader is at its bottom, measured before the render
+   that grows it, as the log's rule is. A box that is not yet drawn counts as at the bottom. */
+const reasoningEl = ref<HTMLElement | null>(null)
+function scrollReasoningToBottom() {
+  return nextTick(() => {
+    if (reasoningEl.value) reasoningEl.value.scrollTop = reasoningEl.value.scrollHeight
+  })
+}
+watch(
+  () => props.activity?.reasoning,
+  () => {
+    const el = reasoningEl.value
+    const atBottom = !el || el.scrollHeight - el.scrollTop - el.clientHeight <= STREAM_FOLLOW_THRESHOLD
+    if (atBottom) scrollReasoningToBottom()
+  },
+  { flush: 'pre' },
+)
+// Opening the box shows the newest text, as a reader expects of a log.
+function onReasoningToggle(e: Event) {
+  if ((e.target as HTMLDetailsElement).open) scrollReasoningToBottom()
+}
 function say(text: string) {
   announcement.value = text
   posts.value++
@@ -425,6 +465,10 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
             ></template>
           </span>
           <div v-if="m.refs?.length" class="aether-chat__ref">{{ refsLabel(m.refs) }}</div>
+          <details v-if="assistant && m.role === 'agent' && m.reasoning" class="aether-chat__reasoning">
+            <summary>{{ TEXT.reasoning }}</summary>
+            <pre class="aether-chat__reasoning-box" role="group" tabindex="0" :aria-label="TEXT.reasoning">{{ m.reasoning }}</pre>
+          </details>
           <p v-if="assistant && fixedLine && m.role === 'agent'" class="aether-chat__fixed">{{ fixedLine }}</p>
           <slot v-if="assistant" name="message-extra" :message="m" />
         </div>
@@ -542,8 +586,22 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
       <Spinner class="aether-chat__activity-spinner" :size="14" />
       <span class="aether-chat__activity-phase">{{ activity.phase }}</span>
       <span class="aether-chat__activity-time" aria-hidden="true">{{ elapsed }}</span>
+      <p v-if="thinkingLine" class="aether-chat__activity-note">{{ thinkingLine }}</p>
       <span v-if="quiet" class="aether-chat__activity-quiet">{{ quiet }}</span>
-      <p v-if="activity.note" class="aether-chat__activity-note">{{ activity.note }}</p>
+      <details
+        v-if="activity.reasoning"
+        class="aether-chat__activity-reasoning"
+        @toggle="onReasoningToggle"
+      >
+        <summary>{{ TEXT.showReasoning }}</summary>
+        <pre
+          ref="reasoningEl"
+          class="aether-chat__reasoning-box"
+          role="group"
+          tabindex="0"
+          :aria-label="TEXT.reasoningSoFar"
+        >{{ activity.reasoning }}</pre>
+      </details>
     </div>
     <div class="aether-chat__compose">
       <textarea
@@ -591,21 +649,49 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
 .aether-chat__activity-time {
   font-variant-numeric: tabular-nums;
 }
-/* The quiet notice takes a row of its own under the phase, as the thinking note does. */
+/* The quiet notice takes a row of its own under the phase. */
 .aether-chat__activity-quiet {
   flex-basis: 100%;
 }
-/* The thinking note takes a row of its own under the phase, and stops at three lines. */
+/* The thinking line sits beside the clock, on the phase's row, and is one line: a longer one is cut
+   with an ellipsis, and the whole text is behind "Show reasoning". */
 .aether-chat__activity-note {
-  flex-basis: 100%;
+  flex: 1 1 0;
+  min-width: 0;
   margin: 0;
   font-size: 0.85em;
   line-height: 1.4;
+  white-space: nowrap;
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  text-overflow: ellipsis;
+}
+.aether-chat__activity-reasoning {
+  flex-basis: 100%;
+  font-size: 0.85em;
+}
+.aether-chat__activity-reasoning > summary,
+.aether-chat__reasoning > summary {
+  cursor: pointer;
+  color: var(--aether-ink-soft);
+}
+/* The box holds the whole reasoning and scrolls; it is a named tab stop, as the tool detail is. */
+.aether-chat__reasoning-box {
+  max-height: 12em;
+  margin: 4px 0 0;
+  overflow: auto;
+  font-family: var(--aether-font-mono);
+  font-size: 11.5px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.aether-chat__reasoning-box:focus-visible {
+  outline: 2px solid var(--aether-cool);
+  outline-offset: 1px;
+}
+/* The reasoning kept under a settled reply: folded, and small beside the reply's own text. */
+.aether-chat__reasoning {
+  margin-top: 6px;
+  font-size: 0.85em;
 }
 /* The relay hosts' rules live in ui-kit.css. Everything here belongs to the assistant half, and its
    CSS is scoped to this component. */

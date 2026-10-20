@@ -22,3 +22,19 @@ export function quietSeconds(heardAt: number, now: number): number | null {
   const seconds = Math.floor((now - heardAt) / 1000)
   return seconds >= QUIET_AFTER_SECONDS ? seconds : null
 }
+
+/** The line the activity shows for the reasoning so far: the first sentence of the last paragraph that
+ *  has text. A paragraph is the text between blank lines, and a sentence ends at `.`, `!` or `?` followed
+ *  by a space or the end of the text. While that sentence is unfinished the line is what is there so far.
+ *  Once its end mark is written the line holds, so it changes only when a new paragraph starts. A blank
+ *  break that opens an empty paragraph changes nothing until that paragraph has text. */
+export function reasoningLine(reasoning: string): string {
+  const paragraphs = reasoning
+    .split(/\n\s*\n/)
+    .map((p) => p.replace(/\s+/g, ' ').trim())
+    .filter((p) => p !== '')
+  const last = paragraphs[paragraphs.length - 1]
+  if (last === undefined) return ''
+  const end = /[.!?](?=\s|$)/.exec(last)
+  return end ? last.slice(0, end.index + 1) : last
+}

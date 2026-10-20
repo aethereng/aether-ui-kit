@@ -30,14 +30,17 @@ type __VLS_Props = {
      *  moments it recorded on the page's clock (`Date.now()`). `awaitsApi` says the API is the party
      *  being waited for, which is when a quiet spell counts. `heardAt` is the last moment the API sent
      *  anything, or the request went out: the app sets it at send, at each `waiting` phase the loop
-     *  reports, and at each `heard()` report, and the quiet notice counts from it. `note` is thinking
-     *  text the app has already withheld for display; the panel shows it under the row, three lines at
-     *  most, and adds no numeral rule of its own. Null when no turn runs. Assistant only. */
+     *  reports, and at each `heard()` report, and the quiet notice counts from it. `reasoning` is the
+     *  thinking so far, as text: the panel shows its first sentence beside the clock (see `reasoningLine`)
+     *  and the whole text behind "Show reasoning". `note` is a line the app has already chosen; the panel
+     *  shows it beside the clock when no `reasoning` gives one, and adds no numeral rule of its own. Null
+     *  when no turn runs. Assistant only. */
     activity?: {
         since: number;
         phase: string;
         heardAt?: number;
         awaitsApi?: boolean;
+        reasoning?: string;
         note?: string;
     } | null;
     /** The words of the quiet notice, given the whole seconds since the API last sent anything. Absent,

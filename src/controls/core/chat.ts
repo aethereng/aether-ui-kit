@@ -38,6 +38,9 @@ export interface ChatMessage {
   /** Spans to highlight; offsets index into `text`. A mark that is out of range, empty, inverted or
    *  overlapping an earlier one is dropped, and of two overlapping marks the first wins. */
   marks?: ChatMark[]
+  /** The reasoning behind this reply, kept under its turn once the reply settles and shown folded.
+   *  Read under `actions="assistant"` only, and only on an agent message. */
+  reasoning?: string
 }
 
 export type ChatToolStatus = 'running' | 'done' | 'refused' | 'failed'

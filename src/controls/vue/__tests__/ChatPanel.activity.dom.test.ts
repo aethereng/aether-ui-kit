@@ -121,7 +121,7 @@ describe('the activity indicator', () => {
     expect(w.find('.aether-chat__activity-note').exists()).toBe(false)
   })
 
-  it('hides the spinner from assistive technology, since the status message speaks', () => {
+  it('hides the spinner from assistive technology, since a screen reader is given the status message', () => {
     vi.useFakeTimers()
     const w = mountPanel({ since: Date.now(), phase: 'Waiting for the API' })
     expect(w.find('.aether-chat__activity-spinner').attributes('aria-hidden')).toBe('true')

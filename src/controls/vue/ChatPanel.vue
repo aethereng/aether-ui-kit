@@ -144,7 +144,7 @@ const visible = computed(() => props.messages.slice(-props.historyLimit))
 
 /* ---- the activity indicator (assistant only) ----
  * The clock ticks once a second while a turn runs and stops when it ends. A tick moves only `now`,
- * so it posts nothing: the status region hears one message when the phase changes and one when the
+ * so it posts nothing: the status region receives one message when the phase changes and one when the
  * turn ends. */
 const now = ref(Date.now())
 let clock: ReturnType<typeof setInterval> | null = null
@@ -539,9 +539,9 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
 </template>
 
 <style scoped>
-/* The indicator above the compose box. Its spinner stands still under reduced motion, as the panel's
-   ruling asks: the spinner keeps turning, slower, for the other callers, and this rule touches none of
-   them. The phase text and the time stay. */
+/* The indicator above the compose box. The spinner stands still under reduced motion. The Spinner
+   component keeps turning, more slowly, for its other callers, and this rule does not touch them.
+   The phase text and the time stay. */
 .aether-chat__activity {
   display: flex;
   align-items: center;

@@ -78,7 +78,7 @@ describe('the question an Accept asks', () => {
 })
 
 describe('an Accept and what it records', () => {
-  it('marks the proposal accepted by the person, at the time the ledger reads', () => {
+  it('marks the proposal accepted by the person, at the time the ledger was given', () => {
     const f = fakeHost(null)
     const ledger = new Ledger(f.host, () => NOW)
     const p = proposal('p1', null)

@@ -122,7 +122,7 @@ describe('a turn', () => {
     expect(view.log).toEqual(['textStart 0', 'textEnd 0 whole', 'cutShort'])
   })
 
-  it('shows the API declining as the API’s refusal with its category, runs no tool and closes its card', async () => {
+  it("shows the API declining as the API's refusal with its category, runs no tool and closes its card", async () => {
     const { api } = scriptedApi([respond([{ type: 'tool_use', id: 'c1', name: 'solve', input: {} }], 'refusal', 'cyber')])
     const view = recorder()
     const solve = vi.fn<ToolHandler>(async () => ({ status: 'solved' }))
@@ -220,7 +220,7 @@ describe('Stop between the calls of a step, and a stop reason the panel does not
 describe('a change of model or effort in the middle of a conversation', () => {
   const thinking = { type: 'thinking' as const, thinking: '', signature: 'sig' }
 
-  it('requests that another model’s thinking be dropped, shows a notice before the request, and carries the conversation on', async () => {
+  it("requests that another model's thinking be dropped, shows a notice before the request, and carries the conversation on", async () => {
     const { api, requests } = scriptedApi([respond([thinking, { type: 'text', text: 'One.' }], 'end_turn'), respond([{ type: 'text', text: 'Two.' }], 'end_turn'), respond([{ type: 'text', text: 'Three.' }], 'end_turn')])
     const history: MessageParam[] = []
     const producers: Producers = new WeakMap()
@@ -252,7 +252,7 @@ describe('a change of model or effort in the middle of a conversation', () => {
     expect(requestParams(CONFIG, 'claude-opus-5-5', [mine], 'low', producers).thinking).toMatchObject({ block_binding: { prefix_mismatch_behavior: 'error' } })
   })
 
-  it('reports each response’s usage with the model that answered', async () => {
+  it("reports each response's usage with the model that answered", async () => {
     const { api } = scriptedApi([respond([{ type: 'text', text: 'One.' }], 'end_turn')])
     const view = recorder()
     await runTurn('Hi.', { api, model: 'claude-fable-5-1', request: CONFIG, history: [], tools: NO_TOOLS, view, signal: new AbortController().signal })

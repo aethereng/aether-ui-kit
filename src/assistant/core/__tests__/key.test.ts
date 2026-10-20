@@ -103,7 +103,7 @@ describe('the shape of a key', () => {
     expect(keyShapeRule(`acme-${'a'.repeat(60)}`, RULES)).toBe('long')
   })
 
-  it('reads the prefix from the rules the caller gives, not from a fixed one', () => {
+  it('reads the prefix from the rules the caller gives', () => {
     expect(keyShapeRule(KEY, { prefix: 'other-', minLength: 20, maxLength: 60 })).toBe('prefix')
   })
 })

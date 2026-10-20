@@ -155,7 +155,8 @@ export interface LoopView {
     cutShort(): void;
     /** The API declined; `category` is `stop_details.category` when the response carries one. */
     apiRefusal(category: string | null): void;
-    /** The request itself failed: the network, the key, the API. */
+    /** The request itself failed: the network, the key, the API. The text is the error's own message,
+     *  unredacted: the view removes the key from it before it shows the text. */
     requestFailed(text: string): void;
     /** The person pressed Stop. */
     stopped(): void;
@@ -167,8 +168,11 @@ export interface LoopView {
     usage(usage: UsageLike, model: ModelId): void;
     /** The model stopped for a reason the panel does not act on. */
     stoppedFor(reason: string): void;
+    /** The turn moved to another phase. The loop reports `waiting` just before each request is sent. */
     phase(phase: Phase): void;
-    /** The API sent something: any event of the stream, a ping included. */
+    /** The API sent something: any event of the stream, a ping included. The app sets the panel's
+     *  `heardAt` at the send, at each `waiting` phase and at each of these reports; the quiet notice
+     *  counts from it. */
     heard(): void;
     /** A piece of the text of the thinking block now open, as the API streams it. */
     thinkingDelta(text: string): void;

@@ -63,7 +63,7 @@ export interface ChatRefusalMessage {
 }
 
 /** Where a proposed value came from. `suggestion` is a value the assistant chose itself; the panel
- *  marks it as the assistant's suggestion. The kit judges nothing about the value. */
+ *  marks it as the assistant's suggestion. Nothing about the value is checked here. */
 export interface ChatProposalBasis {
   kind: 'person' | 'file' | 'list' | 'suggestion'
   text: string
@@ -138,16 +138,17 @@ export interface RefChipData {
   unit: string | null
   source: {
     kind: RefSourceKind
-    /** `r1`, `m1`, `p2`; null for capabilities and schema. */
+    /** `r1`, `m1`, `p2`, `v1`, `f1`; null for a bare scope (`c`, `s`, `g`) and for capabilities and schema. */
     id: string | null
-    /** The engine build for a run, the input or proposal hash for a model or proposal, the
-     *  viewer build for capabilities and schema. Shown shortened; full on hover. */
+    /** The hash the tag shows, by kind: the engine build for a run, the input hash for a model, the
+     *  proposal hash for a proposal, the building result hash for a verification, the build for a
+     *  findings or registry entry, the viewer build for capabilities and schema. Shown shortened; full on hover. */
     hash: string
   }
   path: string
   /** The provenance line as text. */
   provenance: string | null
-  /** True when the viewer reduced the value. */
+  /** True when the value is a reduction of its source. The tag and hover say so; `mark` names it in the app's words. */
   reduced?: boolean
   /** A mark drawn after the value, such as `(lower bound)` for a value that bounds the true one. */
   mark?: string | null
@@ -157,7 +158,9 @@ export interface RefChipData {
 export const REF_HASH_LENGTH = 7
 /** The word on a chip whose reference the app could not resolve. */
 export const UNRESOLVED_TEXT = 'unresolved'
-export const REDUCED_TEXT = 'reduced by the viewer'
+/** The word a reduced value carries in its tag, its name and its hover. An app that names the reduction
+ *  in its own words sets `mark` and leaves `reduced` unset. */
+export const REDUCED_TEXT = 'reduced'
 
 /** How far from the bottom, in px, a log still counts as AT the bottom for the rule that follows a
  *  stream. The rule has two triggers, the stream's growth and an entry appended during it, and
@@ -177,7 +180,7 @@ const HASH_LABEL: Record<RefSourceKind, string> = {
   registry: 'build',
 }
 
-/** The kinds whose tag names the build a value came from, rather than an id and a hash. */
+/** The kinds whose tag names the build a value came from. The others name an id and a hash. */
 const BUILD_KINDS: ReadonlySet<RefSourceKind> = new Set(['capabilities', 'schema', 'findings', 'registry'])
 
 /** Characters of a value a chip shows before it is shortened. The full text stays in the hover and

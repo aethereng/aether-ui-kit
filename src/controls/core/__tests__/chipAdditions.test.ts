@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CHIP_TEXT_LIMIT, describeRef, type RefChipData, type RefChipText } from '../chat'
+import { CHIP_TEXT_LIMIT, describeRef, REDUCED_TEXT, type RefChipData, type RefChipText } from '../chat'
 
 const chip = (over: Partial<RefChipData>): RefChipData => ({
   value: '1',
@@ -15,7 +15,7 @@ function resolved(t: RefChipText) {
   return t
 }
 
-describe('K8: the chip additions', () => {
+describe('the chip additions', () => {
   it('tags a verification by its id and the first seven characters of its building result hash', () => {
     const t = resolved(
       describeRef(
@@ -35,7 +35,7 @@ describe('K8: the chip additions', () => {
     )
   })
 
-  it('leaves a capabilities tag as it was: the viewer build, with no id', () => {
+  it('shows a capabilities tag as the viewer build with no id', () => {
     expect(resolved(describeRef('{{c:the-checks.en-1993.record.status.n1}}', chip({ source: { kind: 'capabilities', id: null, hash: '9c04e2d1ff' } }))).tag).toBe(
       'build 9c04e2d',
     )
@@ -77,10 +77,17 @@ describe('K8: the chip additions', () => {
     expect(plain.name).not.toContain('(')
   })
 
-  it('keeps the viewer reduction as a tag, as it was before the mark existed', () => {
+  it('shows a reduced value with the reduced tag and no mark unless the app gives one', () => {
     const t = resolved(describeRef('{{r1:summary.x}}', chip({ value: '3', unit: 'mm', reduced: true })))
-    expect(t.tag).toContain('reduced by the viewer')
+    expect(t.tag).toContain(REDUCED_TEXT)
     expect(t.quantity).toBe('3 mm')
+  })
+
+  it('shows a reduced value with the mark the app gives it, in its name and its quantity', () => {
+    const t = resolved(describeRef('{{r1:summary.x}}', chip({ value: '3', unit: 'mm', reduced: true, mark: 'cut by the reviewer' })))
+    expect(t.quantity).toBe('3 mm cut by the reviewer')
+    expect(t.name).toContain('cut by the reviewer')
+    expect(t.tag).toContain(REDUCED_TEXT)
   })
 
   it('describes an unresolved reference with the word and the reference', () => {

@@ -386,9 +386,9 @@ describe('describeRef', () => {
     expect(resolved({ ...bare, source: { ...run.source, hash: '' }, reduced: true }).name).toBe('r1, ' + REDUCED_TEXT)
   })
 
-  it('adds "reduced by the viewer" to the tag, the name and the hover, only when reduced', () => {
+  it('adds the reduced word to the tag, the name and the hover, only when reduced', () => {
     const reduced = resolved({ ...run, reduced: true })
-    expect(REDUCED_TEXT).toBe('reduced by the viewer')
+    expect(REDUCED_TEXT).toBe('reduced')
     for (const text of [reduced.tag, reduced.name, reduced.hover]) expect(text).toContain(REDUCED_TEXT)
     const plain = resolved(run)
     for (const text of [plain.tag, plain.name, plain.hover]) expect(text).not.toContain(REDUCED_TEXT)

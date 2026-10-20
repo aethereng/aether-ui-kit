@@ -286,13 +286,13 @@ describe('reference chips', () => {
     expect(w.emitted('open-ref')).toEqual([['r1:summary.max_abs_displacement'], ['r9:no.such.path']])
   })
 
-  it('a reduced reference carries "reduced by the viewer" in its tag and on hover', () => {
+  it('a reduced reference carries the reduced word in its tag and on hover', () => {
     const w = mountPanel([agent('{{r1:summary.reduced}} ' + REF)])
     const [reduced, plain] = chips(w)
-    expect(reduced!.find('.aether-chat-chip__tag').text()).toContain('reduced by the viewer')
-    expect(reduced!.attributes('title')).toContain('reduced by the viewer')
-    expect(plain!.element.textContent).not.toContain('reduced by the viewer')
-    expect(plain!.attributes('title')).not.toContain('reduced by the viewer')
+    expect(reduced!.find('.aether-chat-chip__tag').text()).toContain('reduced')
+    expect(reduced!.attributes('title')).toContain('reduced')
+    expect(plain!.find('.aether-chat-chip__tag').text()).not.toContain('reduced')
+    expect(plain!.attributes('title')).not.toContain('reduced')
   })
 
   it('a reference with no closing braces yet stays plain text, and becomes a chip once they arrive', async () => {

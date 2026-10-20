@@ -730,10 +730,10 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
 }
 
 /* ---- text ---- */
-/* An agent reply's markdown. Its line breaks are elements, so the text's pre-wrap rule does not
-   apply to it; its paragraphs and lists keep the message's spacing. */
+/* An agent reply's markdown. Its line breaks are elements, and no text node holds one, so pre-wrap keeps
+   the spacing of a plain line (runs of blanks, leading indentation) as the message's own rule does. */
 .aether-chat__md {
-  white-space: normal;
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 .aether-chat__md p,

@@ -71,3 +71,35 @@ describe('an identifier of several words is read as one phrase', () => {
     expect(violations.map((v) => v.kind)).toEqual(['unresolved_reference'])
   })
 })
+
+describe('a list marker is read by the parser\'s rule, quotes included', () => {
+  it('a numbered item inside a quote is a list marker, not a numeral', () => {
+    expect(found('> 1. x', [])).toEqual([])
+  })
+
+  it('negative arm: a numeral that is not a marker is flagged inside a quote too', () => {
+    expect(found('> 1.5 x', [])).toEqual(['1.5'])
+  })
+
+  it('a marker is read after up to eight quote levels; a ninth `>` makes it text', () => {
+    expect(found('>'.repeat(8) + ' 1. x', [])).toEqual([])
+    expect(found('>'.repeat(9) + ' 1. x', [])).toEqual(['1'])
+  })
+
+  it('a marker of nine digits is a list marker, and ten are text', () => {
+    expect(found('123456789. x', [])).toEqual([])
+    expect(found('1234567890. x', [])).toEqual(['1234567890'])
+  })
+
+  it('negative arm: four spaces of indentation is text, not a marker', () => {
+    expect(found('    1. x', [])).toEqual(['1'])
+  })
+
+  it('a marker whose line ends with a carriage return and a line break is a marker', () => {
+    expect(found('1.' + String.fromCharCode(13) + NL + 'x', [])).toEqual([])
+  })
+
+  it('negative arm: a marker glued to a reference is not a marker, so its numeral is flagged', () => {
+    expect(found('1.{{m1:x}}', [])).toEqual(['1'])
+  })
+})

@@ -142,3 +142,107 @@ describe('fenced code blocks', () => {
     expect(read('``')).toEqual(['``'])
   })
 })
+
+describe('the quote depth cap', () => {
+  it('draws three nested quotes for three levels of `>`', () => {
+    expect(read('> > > x')).toEqual(['> [> [> [x]]]'])
+  })
+
+  it('a `>` past the cap is text: eight levels draw, and the ninth `>` is read as text', () => {
+    expect(read('>'.repeat(9) + ' x')).toEqual(['> ['.repeat(8) + '> x' + ']'.repeat(8)])
+  })
+
+  it('a line of 5,000 `>` reads without throwing, the cap holding the nesting to eight quotes', () => {
+    expect(read('>'.repeat(5000) + ' x')).toEqual(['> ['.repeat(8) + '>'.repeat(4992) + ' x' + ']'.repeat(8)])
+  })
+})
+
+describe('markup a mark or a reference sits inside', () => {
+  it('a numbered item inside a quote is a list, its number not drawn as text', () => {
+    expect(read('> 1. x')).toEqual(['> [ol:x]'])
+  })
+
+  it('a mark in a fence info string is drawn on the first line, and the language word is not drawn', () => {
+    const text = '```3.1' + NL + 'x' + NL + '```'
+    const at = text.indexOf('3.1')
+    expect(read(text, [{ start: at, end: at + 3, kind: 'gate' }])).toEqual(['```[[3.1|gate]' + NL + 'x]'])
+  })
+
+  it('a reference in a fence info string is drawn as its chip on the first line', () => {
+    expect(read('```{{m1:x}}' + NL + 'x' + NL + '```')).toEqual(['```[{{m1:x}}' + NL + 'x]'])
+  })
+
+  it('negative arm: a plain language word in a fence info string is not drawn', () => {
+    expect(read('```python' + NL + 'x' + NL + '```')).toEqual(['```[x]'])
+  })
+
+  it('a mark over a link target is drawn over the label, which is all that is drawn of the link', () => {
+    const text = '[docs](https://x/3.1)'
+    const at = text.indexOf('3.1')
+    expect(read(text, [{ start: at, end: at + 3, kind: 'gate' }])).toEqual(['[docs|gate]'])
+  })
+
+  it('a mark over a target that starts its own token is drawn over the label too', () => {
+    const text = '[docs]( https://x/3.1)'
+    const at = text.indexOf('3.1')
+    expect(read(text, [{ start: at, end: at + 3, kind: 'gate' }])).toEqual(['[docs|gate]'])
+  })
+
+  it('negative arm: a link with no mark over it is its label, unmarked', () => {
+    expect(read('[docs](https://x/3.1)')).toEqual(['docs'])
+  })
+
+  it('keeps the spaces of a plain reply: a run of three stays three in the text', () => {
+    expect(read('a   b')).toEqual(['a   b'])
+  })
+})
+
+describe('headings with runs of blanks', () => {
+  it('drops the closing hashes and the blanks before them, as before', () => {
+    expect(read('# a  ##')).toEqual(['# a'])
+  })
+
+  it('a long run of blanks in a heading is read in linear time', () => {
+    const text = '# x' + ' '.repeat(20000) + 'y'
+    const started = Date.now()
+    expect(read(text)).toEqual(['# x' + ' '.repeat(20000) + 'y'])
+    expect(Date.now() - started).toBeLessThan(2000)
+  })
+})
+
+describe('openers with no closer are read in linear time', () => {
+  it('a paragraph of 20,000 emphasis openers with no closer', () => {
+    const started = Date.now()
+    read('*a '.repeat(20000))
+    read('_a '.repeat(20000))
+    expect(Date.now() - started).toBeLessThan(2000)
+  })
+
+  it('a paragraph of 20,000 link openers with no closing bracket', () => {
+    const started = Date.now()
+    read('[x '.repeat(20000))
+    expect(Date.now() - started).toBeLessThan(2000)
+  })
+
+  it('a paragraph of 20,000 link targets with no closing parenthesis', () => {
+    const started = Date.now()
+    read('[a](b '.repeat(20000))
+    expect(Date.now() - started).toBeLessThan(2000)
+  })
+})
+
+describe('a link target closes at the parenthesis that balances it', () => {
+  it('a target holding a balanced pair closes at its own `)`', () => {
+    expect(read('[a](b(c)d) x')).toEqual(['a x'])
+  })
+
+  it('a later link in the same paragraph closes at its own `)`, past the first', () => {
+    expect(read('[a](b) [c](d)')).toEqual(['a c'])
+    expect(read('[a](b(c)) [d](e)')).toEqual(['a d'])
+  })
+
+  it('negative arm: a target that never closes is text, and so is the `[` that opens it', () => {
+    expect(read('[a](b(c) x')).toEqual(['[a](b(c) x'])
+    expect(read('[a](b) [c](d(e)')).toEqual(['a [c](d(e)'])
+  })
+})

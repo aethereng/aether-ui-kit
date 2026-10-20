@@ -58,8 +58,8 @@ export interface BareNumeralSpan {
  *  a violation, and a code span is read like any other text.
  *
  *  A token is a VIOLATION when, stripped, it holds a digit and does not equal an admitted
- *  identifier, unless it is an ordered-list marker (ASCII digits then `.` or `)`) that starts its
- *  line after optional indentation. A token is the whole run, so `J12,J13` is one token and a
+ *  identifier, unless it opens a list item the parser reads (`opensListItem`: an ordered marker after
+ *  optional indentation and any quote prefixes). A token is the whole run, so `J12,J13` is one token and a
  *  violation. The span covers the stripped token, without the punctuation around it.
  *
  *  UNRESOLVED REFERENCES ARE LEFT TO THE CALLER. A reference is skipped whatever its scope id,

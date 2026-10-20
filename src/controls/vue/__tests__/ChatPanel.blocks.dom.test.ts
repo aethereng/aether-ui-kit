@@ -1,4 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import ChatPanel from '../ChatPanel.vue'
 import type { ChatEntry, RefChipData } from '../../core'
@@ -41,7 +43,7 @@ describe('a heading is one bold line of the reply', () => {
     expect(md(w).find('h1, h2, h3, h4, h5, h6').exists()).toBe(false)
   })
 
-  it('negative arm: five hashes is text, not a heading', () => {
+  it('negative arm: five hashes are text, not a heading', () => {
     const w = mountPanel([reply('##### five')])
     expect(md(w).find('.aether-chat__md-heading').exists()).toBe(false)
     expect(md(w).text()).toBe('##### five')
@@ -122,5 +124,36 @@ describe('the words a screen reader is given for these blocks', () => {
     const w = mountPanel([reply('## Result', { streaming: true })])
     await w.setProps({ messages: [reply('## Result' + NL + '> quoted' + NL + '```' + NL + 'x = 1' + NL + '```', { streaming: false })] })
     expect(status(w)).toBe('Result' + NL + NL + 'quoted' + NL + NL + 'x = 1')
+  })
+})
+
+describe('a plain reply keeps the spacing of its lines', () => {
+  it('the reply markdown is drawn pre-wrap, so a run of blanks stays a run', () => {
+    const source = readFileSync(resolve(__dirname, '../ChatPanel.vue'), 'utf8')
+    expect(source).toMatch(/\.aether-chat__md \{\s*white-space: pre-wrap;/)
+  })
+
+  it('negative arm: the rule is not left at normal, which collapses the blanks', () => {
+    const source = readFileSync(resolve(__dirname, '../ChatPanel.vue'), 'utf8')
+    expect(source).not.toMatch(/\.aether-chat__md \{\s*white-space: normal;/)
+  })
+})
+
+describe('a line of many quote markers does not blank the panel', () => {
+  it('draws a reply of 5,000 `>` without throwing, and the text after them', () => {
+    const w = mountPanel([reply('>'.repeat(5000) + ' after')])
+    expect(md(w).text()).toContain('after')
+    expect(md(w).findAll('blockquote')).toHaveLength(8)
+  })
+
+  it('draws three levels of quote as three nested quotes', () => {
+    const w = mountPanel([reply('> > > x')])
+    expect(md(w).findAll('blockquote')).toHaveLength(3)
+  })
+
+  it('negative arm: a ninth `>` is text, and the eight quotes above it still draw', () => {
+    const w = mountPanel([reply('>'.repeat(9) + ' x')])
+    expect(md(w).findAll('blockquote')).toHaveLength(8)
+    expect(md(w).text()).toContain('> x')
   })
 })

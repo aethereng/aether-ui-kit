@@ -10,6 +10,8 @@
  * What stays with the app: the values behind a path, the artefacts a scope names, the tuple table
  * for its results, and the decision that a numeral is a violation worth reporting. */
 
+import { opensListItem } from './markup'
+
 // ---- scopes ------------------------------------------------------------------------------------
 
 /** The scopes a reference may name. An `indexed` scope is a letter and a positive number written
@@ -134,18 +136,6 @@ const TOKEN = /\S+/gu
 /* The ASCII apostrophe and the typographic single quotes U+2018 and U+2019, by code point. */
 const APOSTROPHES = String.fromCharCode(0x27, 0x2018, 0x2019)
 const STRIP = '.,;:!?()[]{}"' + APOSTROPHES
-const LIST_MARKER = /^[0-9]+[.)]$/
-
-const isLineBreak = (code: number) => code === 10 || code === 13
-
-// True when only whitespace sits between `at` and the start of its line.
-function startsLine(text: string, at: number): boolean {
-  for (let k = at - 1; k >= 0; k--) {
-    if (isLineBreak(text.charCodeAt(k))) return true
-    if (!/\s/.test(text[k]!)) return false
-  }
-  return true
-}
 
 /* The characters a pattern must escape when a phrase is written into one. */
 const PATTERN_SYNTAX = /[\\^$.*+?()[\]{}|]/g
@@ -187,8 +177,8 @@ function phraseSpans(text: string, phrases: readonly string[]): BareNumeralSpan[
  *  a violation, and a code span is read like any other text.
  *
  *  A token is a VIOLATION when, stripped, it holds a digit and does not equal an admitted
- *  identifier, unless it is an ordered-list marker (ASCII digits then `.` or `)`) that starts its
- *  line after optional indentation. A token is the whole run, so `J12,J13` is one token and a
+ *  identifier, unless it opens a list item the parser reads (`opensListItem`: an ordered marker after
+ *  optional indentation and any quote prefixes). A token is the whole run, so `J12,J13` is one token and a
  *  violation. The span covers the stripped token, without the punctuation around it.
  *
  *  UNRESOLVED REFERENCES ARE LEFT TO THE CALLER. A reference is skipped whatever its scope id,
@@ -219,7 +209,7 @@ export function findBareNumerals(
     for (const m of seg.text.matchAll(TOKEN)) {
       const raw = m[0]
       const at = seg.start + m.index
-      if (LIST_MARKER.test(raw) && startsLine(text, at)) continue
+      if (opensListItem(text, at, raw)) continue
       let lo = 0
       let hi = raw.length
       while (lo < hi && STRIP.includes(raw[lo]!)) lo++

@@ -60,6 +60,7 @@ describe('the key store', () => {
   })
 
   it('reads as absent, and does not throw, when a storage throws on access', () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage')
     Object.defineProperty(globalThis, 'sessionStorage', {
       configurable: true,
       get() {
@@ -70,8 +71,13 @@ describe('the key store', () => {
       expect(() => keyStore(NAME).save(KEY, 'session')).not.toThrow()
       expect(keyStore(NAME).load()).toBeNull()
     } finally {
-      globalThis.sessionStorage = memoryStorage()
+      // the accessor above has no setter, so the saved descriptor is put back rather than assigned over
+      if (original) Object.defineProperty(globalThis, 'sessionStorage', original)
+      else Reflect.deleteProperty(globalThis, 'sessionStorage')
     }
+    // the storage is whole again: a save and a load reach it
+    keyStore(NAME).save(KEY, 'session')
+    expect(keyStore(NAME).load()).toEqual({ key: KEY, storage: 'session' })
   })
 })
 

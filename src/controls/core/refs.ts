@@ -147,6 +147,33 @@ function startsLine(text: string, at: number): boolean {
   return true
 }
 
+/* The characters a pattern must escape when a phrase is written into one. */
+const PATTERN_SYNTAX = /[\\^$.*+?()[\]{}|]/g
+
+/* A token edge: the start or end of the text, whitespace, or a character of the strip set. */
+function isEdge(ch: string): boolean {
+  return ch === '' || /\s/.test(ch) || STRIP.includes(ch)
+}
+
+/* Where each admitted phrase stands in `text`, in its offsets. A phrase's spaces match any run of
+ * whitespace, a line break included. A phrase counts only where a token edge stands on both sides, so
+ * one glued to a letter, or to a bold marker, is not found. */
+function phraseSpans(text: string, phrases: readonly string[]): BareNumeralSpan[] {
+  const found: BareNumeralSpan[] = []
+  for (const id of phrases) {
+    const words = id.trim().split(/\s+/).map((w) => w.replace(PATTERN_SYNTAX, '\\$&'))
+    const pattern = new RegExp(words.join('\\s+'), 'gu')
+    for (let m = pattern.exec(text); m !== null; m = pattern.exec(text)) {
+      const end = m.index + m[0].length
+      const before = m.index === 0 ? '' : text[m.index - 1]!
+      const after = end === text.length ? '' : text[end]!
+      if (isEdge(before) && isEdge(after)) found.push({ start: m.index, end })
+      else pattern.lastIndex = m.index + 1
+    }
+  }
+  return found
+}
+
 /** The spans of `text` holding a digit that is not an admitted identifier, in UTF-16 code units,
  *  ascending.
  *
@@ -170,6 +197,13 @@ function startsLine(text: string, at: number): boolean {
  *  own index and reports an unresolved reference itself. A reference still being typed is not yet a
  *  reference, so it is plain text here and its digit is a violation.
  *
+ *  AN IDENTIFIER OF SEVERAL WORDS is read as one phrase. `Table 3.1`, `EN 1993-1-1` and `A572 Gr 50` are
+ *  admitted as written; the digits of an admitted phrase are not violations where the whole phrase
+ *  stands between token edges, a line break between its words included. A digit outside any such phrase
+ *  is still a violation: `3.1` alone is flagged while `Table 3.1` stands. A phrase is not read across a
+ *  reference, and a phrase glued to a letter or a bold marker does not stand, so its digits are read as
+ *  before.
+ *
  *  Not a markdown parser: it does not know a fenced block from a sentence. */
 export function findBareNumerals(
   text: string,
@@ -177,9 +211,11 @@ export function findBareNumerals(
   scopes: ReferenceScopes = DEFAULT_REFERENCE_SCOPES,
 ): BareNumeralSpan[] {
   const admitted = new Set(admittedIds)
+  const phrases = [...admitted].filter((id) => /\s/.test(id.trim()))
   const spans: BareNumeralSpan[] = []
   for (const seg of splitReferences(text, scopes)) {
     if (seg.kind !== 'text') continue
+    const whole = phraseSpans(seg.text, phrases)
     for (const m of seg.text.matchAll(TOKEN)) {
       const raw = m[0]
       const at = seg.start + m.index
@@ -194,6 +230,9 @@ export function findBareNumerals(
       }
       const core = raw.slice(lo, hi)
       if (!hasDigit(core) || admitted.has(core)) continue
+      const coreStart = m.index + lo
+      const coreEnd = m.index + hi
+      if (whole.some((w) => coreStart >= w.start && coreEnd <= w.end)) continue
       spans.push({ start: at + lo, end: at + hi })
     }
   }

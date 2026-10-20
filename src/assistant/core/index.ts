@@ -54,9 +54,14 @@ export class ReferenceIndex {
     return this.index.has(ref)
   }
 
-  /** Admit identifiers the numeral gate may read bare. */
+  /** Admit identifiers the numeral gate may read bare. An identifier of several words (`Table 3.1`) is
+   *  kept as one phrase, with its whitespace collapsed to single spaces; the gate matches a line break
+   *  between its words as well. An empty identifier is not admitted. */
   admit(ids: Iterable<string>): void {
-    for (const id of ids) this.admitted.add(id)
+    for (const id of ids) {
+      const phrase = id.trim().replace(/\s+/g, ' ')
+      if (phrase !== '') this.admitted.add(phrase)
+    }
   }
 
   clear(): void {

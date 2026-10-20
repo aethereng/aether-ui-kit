@@ -68,6 +68,13 @@ export interface BareNumeralSpan {
  *  own index and reports an unresolved reference itself. A reference still being typed is not yet a
  *  reference, so it is plain text here and its digit is a violation.
  *
+ *  AN IDENTIFIER OF SEVERAL WORDS is read as one phrase. `Table 3.1`, `EN 1993-1-1` and `A572 Gr 50` are
+ *  admitted as written; the digits of an admitted phrase are not violations where the whole phrase
+ *  stands between token edges, a line break between its words included. A digit outside any such phrase
+ *  is still a violation: `3.1` alone is flagged while `Table 3.1` stands. A phrase is not read across a
+ *  reference, and a phrase glued to a letter or a bold marker does not stand, so its digits are read as
+ *  before.
+ *
  *  Not a markdown parser: it does not know a fenced block from a sentence. */
 export declare function findBareNumerals(text: string, admittedIds: Iterable<string>, scopes?: ReferenceScopes): BareNumeralSpan[];
 /** `bare_numeral`: a token holding a digit that is no admitted identifier. `unresolved_reference`:

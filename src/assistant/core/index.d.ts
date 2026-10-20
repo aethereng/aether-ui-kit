@@ -22,7 +22,9 @@ export declare class ReferenceIndex {
     mint(scope: string, path: string, value: unknown, unit: string | null, source: RefChipData['source'], mintedBy: string, provenance?: string | null, reduced?: boolean): string;
     /** Whether the conversation minted `ref`, braces included. */
     holds(ref: string): boolean;
-    /** Admit identifiers the numeral gate may read bare. */
+    /** Admit identifiers the numeral gate may read bare. An identifier of several words (`Table 3.1`) is
+     *  kept as one phrase, with its whitespace collapsed to single spaces; the gate matches a line break
+     *  between its words as well. An empty identifier is not admitted. */
     admit(ids: Iterable<string>): void;
     clear(): void;
 }

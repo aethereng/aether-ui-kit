@@ -559,6 +559,10 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
 .aether-chat__activity-time {
   font-variant-numeric: tabular-nums;
 }
+/* The quiet notice takes a row of its own under the phase, as the thinking note does. */
+.aether-chat__activity-quiet {
+  flex-basis: 100%;
+}
 /* The thinking note takes a row of its own under the phase, and stops at three lines. */
 .aether-chat__activity-note {
   flex-basis: 100%;

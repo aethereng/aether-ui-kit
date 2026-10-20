@@ -187,7 +187,8 @@
     "test:unit": "vitest",
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
-    "check:exports": "node scripts/check-exports.mjs"
+    "check:exports": "node scripts/check-exports.mjs",
+    "tag:check": "node scripts/check-tag-version.mjs"
   },
   "peerDependencies": {
     "vue": "^3.5.0"

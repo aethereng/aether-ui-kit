@@ -42,6 +42,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # The first step on a tag push: a tag that names another version than package.json states is refused
+      # before anything is built. It still runs after the tag exists, so it stops the publish, not the tag;
+      # `npm run tag:check -- vX.Y.Z` is the check to run before the tag is cut.
+      - name: The tag names package.json's version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: node scripts/check-tag-version.mjs "${GITHUB_REF_NAME}"
+
       - uses: actions/setup-node@v5
         with:
           # Keep in step with .nvmrc. Do NOT lower this: jsdom 30 requires

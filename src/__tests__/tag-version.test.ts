@@ -32,3 +32,37 @@ describe('the tag step names a tag only as the package version', () => {
     expect(run().status).toBe(3)
   })
 })
+
+describe('the release workflow runs the same check before anything is built', () => {
+  const WORKFLOW = readFileSync(resolve(__dirname, '../../.github/workflows/deploy-gallery.yml'), 'utf8')
+
+  /* The guard step runs the script on a tag push, and no install or build step comes before it. */
+  const guardFirst = (text: string) => {
+    const guard = text.indexOf('run: node scripts/check-tag-version.mjs')
+    return (
+      guard > -1 &&
+      text.slice(0, guard).includes("if: startsWith(github.ref, 'refs/tags/')") &&
+      text.indexOf('- run: npm ci') > guard &&
+      text.indexOf('run: npm run build') > guard
+    )
+  }
+
+  it('the package script names the same check, so the tag step can run it before cutting a tag', () => {
+    const scripts = (PACKAGE as { scripts?: Record<string, string> }).scripts ?? {}
+    expect(scripts['tag:check']).toBe('node scripts/check-tag-version.mjs')
+  })
+
+  it('the first step on a tag push runs the check, before the install and the build', () => {
+    expect(guardFirst(WORKFLOW)).toBe(true)
+  })
+
+  it('negative arm: a workflow whose check is not the first step, or is not limited to tags, fails the pin', () => {
+    expect(guardFirst(WORKFLOW.replace('run: node scripts/check-tag-version.mjs', 'run: echo skipped'))).toBe(false)
+    expect(guardFirst(WORKFLOW.replace("if: startsWith(github.ref, 'refs/tags/')", 'if: always()'))).toBe(false)
+    const moved = WORKFLOW.replace('run: node scripts/check-tag-version.mjs "${GITHUB_REF_NAME}"', 'run: echo skipped').replace(
+      '- run: npm ci',
+      '- run: npm ci\n      - run: node scripts/check-tag-version.mjs "${GITHUB_REF_NAME}"',
+    )
+    expect(guardFirst(moved)).toBe(false)
+  })
+})

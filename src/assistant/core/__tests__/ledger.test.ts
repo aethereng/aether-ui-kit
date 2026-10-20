@@ -66,7 +66,7 @@ describe('the question an Accept asks', () => {
     expect(f.loads).toEqual(['p1-model'])
   })
 
-  it('loads once the person confirms the question, and not before', () => {
+  it('loads only after the person confirms the question', () => {
     const f = fakeHost({ key: 'same', json: { v: 'edited' }, label: 'Shown' })
     const ledger = new Ledger(f.host, () => NOW)
     const p = proposal('p1', { v: 'original' })

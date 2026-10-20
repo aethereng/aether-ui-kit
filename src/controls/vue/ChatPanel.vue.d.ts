@@ -26,6 +26,18 @@ type __VLS_Props = {
     /** The reference scopes drawn as chips: what a `{{scope:path}}` may name. Assistant only. A
      *  scope outside this list is plain text. */
     refScopes?: ReferenceScopes;
+    /** The turn in progress, for the indicator above the compose box: the app's phase words and the
+     *  moments it recorded on the page's clock (`Date.now()`). `awaitsApi` says the API is the party
+     *  being waited for, which is when a quiet spell counts. Null when no turn runs. Assistant only. */
+    activity?: {
+        since: number;
+        phase: string;
+        heardAt?: number;
+        awaitsApi?: boolean;
+    } | null;
+    /** The words of the quiet notice, given the whole seconds since the API last sent anything. Absent,
+     *  there is no notice. Assistant only. */
+    quietText?: (seconds: number) => string;
 };
 type __VLS_Slots = {
     /** The caller's copy for an empty log. */

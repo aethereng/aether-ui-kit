@@ -25,7 +25,8 @@
  * numeral is bare, or stop a stream. It renders what it is given and emits what was asked.
  * `resolveRef` is called while rendering, once per reference per update, so it should be a
  * lookup. */
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { formatElapsed, quietSeconds } from '../core/activity'
 import { describeRef, isTextMessage, splitReferences, STREAM_FOLLOW_THRESHOLD } from '../core/chat'
 import { DEFAULT_REFERENCE_SCOPES, type ReferenceScopes } from '../core/refs'
 import type {
@@ -41,6 +42,7 @@ import Callout from './Callout.vue'
 import Card from './Card.vue'
 import ChatRefChip from './ChatRefChip.vue'
 import Disclosure from './Disclosure.vue'
+import Spinner from './Spinner.vue'
 import Tool from './Tool.vue'
 
 const props = withDefaults(
@@ -70,6 +72,13 @@ const props = withDefaults(
     /** The reference scopes drawn as chips: what a `{{scope:path}}` may name. Assistant only. A
      *  scope outside this list is plain text. */
     refScopes?: ReferenceScopes
+    /** The turn in progress, for the indicator above the compose box: the app's phase words and the
+     *  moments it recorded on the page's clock (`Date.now()`). `awaitsApi` says the API is the party
+     *  being waited for, which is when a quiet spell counts. Null when no turn runs. Assistant only. */
+    activity?: { since: number; phase: string; heardAt?: number; awaitsApi?: boolean } | null
+    /** The words of the quiet notice, given the whole seconds since the API last sent anything. Absent,
+     *  there is no notice. Assistant only. */
+    quietText?: (seconds: number) => string
   }>(),
   {
     placeholder: 'Message…',
@@ -115,6 +124,7 @@ const TEXT = {
   discard: 'Discard',
   loadAgain: 'Load again',
   destructive: 'Accepting this proposal deletes items.',
+  done: 'Done',
   basis: { person: 'your words', file: 'file', list: 'list', suggestion: "assistant's suggestion" },
   details: 'Details',
   refusedBy: { engine: 'refused by the engine', api: 'refused by the API' },
@@ -127,6 +137,52 @@ const pending = computed(
   () => props.messages.filter((m) => isTextMessage(m) && m.role === 'you' && m.queued).length,
 )
 const visible = computed(() => props.messages.slice(-props.historyLimit))
+
+/* ---- the activity indicator (assistant only) ----
+ * The clock ticks once a second while a turn runs and stops when it ends. A tick moves only `now`,
+ * so it posts nothing: the status region hears one message when the phase changes and one when the
+ * turn ends. */
+const now = ref(Date.now())
+let clock: ReturnType<typeof setInterval> | null = null
+watch(
+  () => assistant.value && props.activity != null,
+  (running) => {
+    if (running) {
+      now.value = Date.now()
+      clock = setInterval(() => (now.value = Date.now()), 1000)
+    } else if (clock !== null) {
+      clearInterval(clock)
+      clock = null
+    }
+  },
+  { immediate: true },
+)
+onBeforeUnmount(() => {
+  if (clock !== null) clearInterval(clock)
+})
+const elapsed = computed(() => (props.activity ? formatElapsed(now.value - props.activity.since) : ''))
+const quiet = computed(() => {
+  const a = props.activity
+  if (!a || !a.awaitsApi || a.heardAt === undefined || !props.quietText) return ''
+  const seconds = quietSeconds(a.heardAt, now.value)
+  return seconds === null ? '' : props.quietText(seconds)
+})
+function say(text: string) {
+  announcement.value = text
+  posts.value++
+}
+watch(
+  () => props.activity?.phase,
+  (phase, was) => {
+    if (phase !== undefined && phase !== was) say(phase)
+  },
+)
+watch(
+  () => props.activity == null,
+  (ended, wasEnded) => {
+    if (ended && !wasEnded) say(TEXT.done)
+  },
+)
 function roleLabel(role: ChatMessage['role']) {
   return role === 'you' ? 'you' : role === 'agent' ? 'agent' : 'note'
 }
@@ -446,6 +502,12 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
       <!-- Assistant only, and present from the first render: see `announcement`. -->
       <div v-if="assistant" class="aether-chat__sr" role="status"><span :key="posts">{{ announcement }}</span></div>
     </div>
+    <div v-if="assistant && activity" class="aether-chat__activity">
+      <Spinner class="aether-chat__activity-spinner" :size="14" />
+      <span class="aether-chat__activity-phase">{{ activity.phase }}</span>
+      <span class="aether-chat__activity-time" aria-hidden="true">{{ elapsed }}</span>
+      <span v-if="quiet" class="aether-chat__activity-quiet">{{ quiet }}</span>
+    </div>
     <div class="aether-chat__compose">
       <textarea
         ref="textareaEl"
@@ -472,6 +534,26 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
 </template>
 
 <style scoped>
+/* The indicator above the compose box. Its spinner stands still under reduced motion, as the panel's
+   ruling asks: the spinner keeps turning, slower, for the other callers, and this rule touches none of
+   them. The phase text and the time stay. */
+.aether-chat__activity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px 0;
+  color: var(--aether-ink-soft);
+  font-size: 0.92em;
+  flex-wrap: wrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .aether-chat__activity .aether-spinner {
+    animation: none;
+  }
+}
+.aether-chat__activity-time {
+  font-variant-numeric: tabular-nums;
+}
 /* The relay hosts' rules live in ui-kit.css. Everything here belongs to the assistant half, and its
    CSS is scoped to this component. */
 

@@ -13,7 +13,7 @@ describe('formatElapsed', () => {
     expect(formatElapsed(125_000)).toBe('2 min 05 s')
   })
 
-  it('reads a negative span as zero, not as a negative time', () => {
+  it('reads a negative span as zero', () => {
     expect(formatElapsed(-4_000)).toBe('0 s')
   })
 })

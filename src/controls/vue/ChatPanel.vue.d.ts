@@ -1,5 +1,5 @@
 import { type ReferenceScopes } from '../core/refs';
-import type { ChatEntry, RefChipData } from '../core/chat';
+import type { ChatEntry, ChatProposalDecision, RefChipData } from '../core/chat';
 type __VLS_Props = {
     messages: ChatEntry[];
     modelValue: string;
@@ -58,24 +58,26 @@ type __VLS_Slots = {
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {
     focus: () => void | undefined;
 }, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    accept: (proposalId: string) => any;
+    accept: (proposalId: string, decision: ChatProposalDecision) => any;
     "load-again": (proposalId: string) => any;
     stop: () => any;
     "update:modelValue": (value: string) => any;
     queue: () => any;
     send: () => any;
-    discard: (proposalId: string) => any;
+    "accept-all": (proposalId: string, decision: ChatProposalDecision) => any;
+    discard: (proposalId: string, decision: ChatProposalDecision) => any;
     "open-ref": (ref: string) => any;
     "toggle-tool": (callId: string) => any;
     "apply-reply": () => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
-    onAccept?: ((proposalId: string) => any) | undefined;
+    onAccept?: ((proposalId: string, decision: ChatProposalDecision) => any) | undefined;
     "onLoad-again"?: ((proposalId: string) => any) | undefined;
     onStop?: (() => any) | undefined;
     "onUpdate:modelValue"?: ((value: string) => any) | undefined;
     onQueue?: (() => any) | undefined;
     onSend?: (() => any) | undefined;
-    onDiscard?: ((proposalId: string) => any) | undefined;
+    "onAccept-all"?: ((proposalId: string, decision: ChatProposalDecision) => any) | undefined;
+    onDiscard?: ((proposalId: string, decision: ChatProposalDecision) => any) | undefined;
     "onOpen-ref"?: ((ref: string) => any) | undefined;
     "onToggle-tool"?: ((callId: string) => any) | undefined;
     "onApply-reply"?: (() => any) | undefined;

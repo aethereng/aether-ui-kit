@@ -29,8 +29,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     disabled: boolean;
     placeholder: string;
     autogrow: boolean;
-    multiline: boolean;
     rows: number;
+    multiline: boolean;
     maxRows: number;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

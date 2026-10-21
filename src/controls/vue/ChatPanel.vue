@@ -25,7 +25,7 @@
  * numeral is bare, or stop a stream. It renders what it is given and emits what was asked.
  * `resolveRef` is called while rendering, once per reference per update, so it should be a
  * lookup. */
-import { computed, h, nextTick, onBeforeUnmount, ref, watch, type VNodeChild } from 'vue'
+import { computed, h, nextTick, onBeforeUnmount, reactive, ref, watch, type VNodeChild } from 'vue'
 import { formatElapsed, quietSeconds, reasoningLine } from '../core/activity'
 import { describeRef, isTextMessage, splitReferences, STREAM_FOLLOW_THRESHOLD } from '../core/chat'
 import { markdownBlocks, type MdBlock, type MdInline, usableMarks } from '../core/markdown'
@@ -34,6 +34,8 @@ import type {
   ChatEntry,
   ChatMessage,
   ChatProposalBasis,
+  ChatProposalCell,
+  ChatProposalDecision,
   ChatProposalMessage,
   ChatProposalRow,
   ChatSegment,
@@ -114,8 +116,9 @@ const emit = defineEmits<{
   queue: []
   send: []
   stop: []
-  accept: [proposalId: string]
-  discard: [proposalId: string]
+  accept: [proposalId: string, decision: ChatProposalDecision]
+  'accept-all': [proposalId: string, decision: ChatProposalDecision]
+  discard: [proposalId: string, decision: ChatProposalDecision]
   'load-again': [proposalId: string]
   'open-ref': [ref: string]
   'toggle-tool': [callId: string]
@@ -135,8 +138,12 @@ const TEXT = {
   stop: 'Stop',
   accept: 'Accept',
   acceptDelete: 'Accept and delete',
+  acceptAll: 'Accept all',
+  acceptAllDelete: 'Accept all and delete',
   discard: 'Discard',
+  discardAll: 'Discard all',
   loadAgain: 'Load again',
+  note: 'Note',
   destructive: 'Accepting this proposal deletes items.',
   done: 'Done',
   reasoning: 'Reasoning',
@@ -249,6 +256,52 @@ function basisText(basis: ChatProposalBasis): string {
 
 function acceptLabel(m: ChatProposalMessage): string {
   return m.destructive ? TEXT.acceptDelete : TEXT.accept
+}
+
+function acceptAllLabel(m: ChatProposalMessage): string {
+  return m.destructive ? TEXT.acceptAllDelete : TEXT.acceptAll
+}
+
+/* A card's ticks and note belong to the reader, so the panel holds them. Every selectable row starts
+ * ticked; `unticked` holds the rows the reader has taken the tick off. */
+const unticked = reactive(new Map<string, Set<number>>())
+const notes = reactive(new Map<string, string>())
+
+function rowsSelectable(rows: ChatProposalRow[]): boolean {
+  return rows.some((r) => r.selectable === true)
+}
+
+function isTicked(id: string, k: number): boolean {
+  return !unticked.get(id)?.has(k)
+}
+
+function onTick(id: string, k: number, e: Event) {
+  const on = (e.target as HTMLInputElement).checked
+  let off = unticked.get(id)
+  if (!off) {
+    off = new Set()
+    unticked.set(id, off)
+  }
+  if (on) off.delete(k)
+  else off.add(k)
+}
+
+function onNote(id: string, e: Event) {
+  notes.set(id, (e.target as HTMLTextAreaElement).value)
+}
+
+/* The decision an action emits. `ticked` takes the rows the reader left ticked, and every row the app
+ * did not mark selectable (so a card that asks for no selection takes all of its rows); `all` takes
+ * every row; `none` takes none. */
+function decisionOf(m: ChatProposalMessage, take: 'ticked' | 'all' | 'none'): ChatProposalDecision {
+  const rows = m.rows.flatMap((r, k) => (take === 'none' || (take === 'ticked' && r.selectable && !isTicked(m.id, k)) ? [] : [k]))
+  return { rows, note: notes.get(m.id) ?? '' }
+}
+
+/* A plain-string cell draws as text, as every cell did before. A cell object draws as a reply's text
+ * does: its marks, and its references as chips. */
+function cellParts(cell: string | ChatProposalCell): Part[] {
+  return typeof cell === 'string' ? [] : partsOf({ role: 'agent', text: cell.text, marks: cell.marks })
 }
 
 function refsLabel(refs: string[]) {
@@ -543,6 +596,7 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
             <table class="aether-chat__diff">
               <thead>
                 <tr>
+                  <th v-if="rowsSelectable(m.rows)" scope="col">take</th>
                   <th scope="col">path</th>
                   <th scope="col">before</th>
                   <th scope="col">after</th>
@@ -551,13 +605,50 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
               </thead>
               <tbody>
                 <tr v-for="(r, k) in m.rows" :key="k">
+                  <td v-if="rowsSelectable(m.rows)">
+                    <input
+                      v-if="r.selectable"
+                      type="checkbox"
+                      class="aether-chat__tick"
+                      :checked="isTicked(m.id, k)"
+                      :aria-label="'take ' + r.path"
+                      @change="onTick(m.id, k, $event)"
+                    />
+                  </td>
                   <th scope="row">{{ r.path }}</th>
                   <td>
-                    <del class="aether-chat__before">{{ r.before }}</del>
+                    <del class="aether-chat__before"><template v-if="typeof r.before === 'string'">{{ r.before }}</template
+                      ><template v-else
+                        ><template v-for="(p, n) in cellParts(r.before)" :key="n"
+                          ><ChatRefChip
+                            v-if="p.type === 'ref'"
+                            :reference="p.ref"
+                            :data="resolve(p.ref)"
+                            @open="emit('open-ref', $event)" /><mark
+                            v-else-if="p.type === 'mark'"
+                            class="aether-chat__mark"
+                            :title="p.kind"
+                            ><span class="aether-chat__sr">{{ p.kind }}: </span>{{ p.text }}</mark
+                          ><template v-else>{{ p.text }}</template></template
+                        ></template></del>
                   </td>
                   <td>
                     <ins class="aether-chat__after"
-                      ><span class="aether-chat__proposed">proposed</span>{{ r.after }}</ins
+                      ><span class="aether-chat__proposed">proposed</span
+                      ><template v-if="typeof r.after === 'string'">{{ r.after }}</template
+                      ><template v-else
+                        ><template v-for="(p, n) in cellParts(r.after)" :key="n"
+                          ><ChatRefChip
+                            v-if="p.type === 'ref'"
+                            :reference="p.ref"
+                            :data="resolve(p.ref)"
+                            @open="emit('open-ref', $event)" /><mark
+                            v-else-if="p.type === 'mark'"
+                            class="aether-chat__mark"
+                            :title="p.kind"
+                            ><span class="aether-chat__sr">{{ p.kind }}: </span>{{ p.text }}</mark
+                          ><template v-else>{{ p.text }}</template></template
+                        ></template></ins
                     >
                   </td>
                   <td v-if="rowsHaveBasis(m.rows)">
@@ -574,12 +665,27 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
             <ChatRefChip :reference="f.reference" :data="resolve(f.reference)" @open="emit('open-ref', $event)" />
           </Callout>
           <p v-if="proposalLine" class="aether-chat__proposal-line">{{ proposalLine }}</p>
-          <div v-if="m.status === 'pending'" class="aether-chat__proposal-actions">
-            <Tool :label="acceptLabel(m)" hot @click="emit('accept', m.id)" />
-            <Tool :label="TEXT.discard" @click="emit('discard', m.id)" />
+          <label v-if="m.note" class="aether-chat__proposal-note">
+            <span>{{ TEXT.note }}</span>
+            <textarea
+              rows="2"
+              :value="notes.get(m.id) ?? ''"
+              :disabled="m.status !== 'pending'"
+              :aria-label="m.title + ' note'"
+              @input="onNote(m.id, $event)"
+            ></textarea>
+          </label>
+          <div v-if="m.status === 'pending' && rowsSelectable(m.rows)" class="aether-chat__proposal-actions">
+            <Tool :label="acceptLabel(m)" hot :disabled="!decisionOf(m, 'ticked').rows.length" @click="emit('accept', m.id, decisionOf(m, 'ticked'))" />
+            <Tool :label="acceptAllLabel(m)" @click="emit('accept-all', m.id, decisionOf(m, 'all'))" />
+            <Tool :label="TEXT.discardAll" @click="emit('discard', m.id, decisionOf(m, 'none'))" />
+          </div>
+          <div v-else-if="m.status === 'pending'" class="aether-chat__proposal-actions">
+            <Tool :label="acceptLabel(m)" hot @click="emit('accept', m.id, decisionOf(m, 'ticked'))" />
+            <Tool :label="TEXT.discard" @click="emit('discard', m.id, decisionOf(m, 'none'))" />
           </div>
           <div v-else-if="m.later" class="aether-chat__proposal-actions">
-            <Tool v-if="m.later === 'accept'" :label="acceptLabel(m)" hot @click="emit('accept', m.id)" />
+            <Tool v-if="m.later === 'accept'" :label="acceptLabel(m)" hot @click="emit('accept', m.id, decisionOf(m, 'ticked'))" />
             <Tool v-else :label="TEXT.loadAgain" @click="emit('load-again', m.id)" />
           </div>
           <slot name="message-extra" :message="m" />
@@ -999,6 +1105,27 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
   display: flex;
   gap: 7px;
   margin-top: 8px;
+}
+.aether-chat__tick {
+  margin: 0;
+}
+.aether-chat__proposal-note {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  color: var(--aether-ink-soft);
+  font-size: 11.5px;
+}
+.aether-chat__proposal-note textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 4px 6px;
+  font: inherit;
+  color: var(--aether-ink);
+  background: var(--aether-panel);
+  border: 1px solid var(--aether-line);
+  border-radius: var(--aether-radius);
+  resize: vertical;
 }
 
 /* ---- card ---- */

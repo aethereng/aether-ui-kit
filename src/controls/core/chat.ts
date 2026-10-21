@@ -72,12 +72,22 @@ export interface ChatProposalBasis {
   text: string
 }
 
+/** A cell that carries the parts a reply's text carries: `marks` are highlighted and `{{scope:path}}`
+ *  references in `text` are chips, drawn as the reply draws them. A plain string cell is plain text. */
+export interface ChatProposalCell {
+  text: string
+  marks?: ChatMark[]
+}
+
 export interface ChatProposalRow {
   path: string
-  before: string
-  after: string
+  before: string | ChatProposalCell
+  after: string | ChatProposalCell
   /** Shown in its own column when any row of the proposal has a basis. */
   basis?: ChatProposalBasis | null
+  /** The reader may take or leave this row: it draws a tick, on by default. A proposal with a selectable
+   *  row asks for selection, and its card's actions say so. */
+  selectable?: boolean
 }
 
 export interface ChatProposalFlag {
@@ -101,6 +111,16 @@ export interface ChatProposalMessage {
   /** A card that can still be taken up after its status has moved on: `accept` for a superseded or
    *  discarded card, `load-again` for an accepted one. Absent or null shows neither. */
   later?: 'accept' | 'load-again' | null
+  /** The card carries a note field. What the reader writes goes out with each decision. */
+  note?: boolean
+}
+
+/** What the reader decided on a proposal card, as its events carry it. `rows` are indexes into the
+ *  card's `rows`: the ticked rows and every row the app did not mark selectable for Accept, all of them
+ *  for Accept all, and none for Discard. `note` is the note field's text, empty when there is none. */
+export interface ChatProposalDecision {
+  rows: number[]
+  note: string
 }
 
 export interface ChatCardMessage {

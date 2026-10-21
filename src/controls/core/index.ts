@@ -66,6 +66,8 @@ export type {
   ChatRefusalMessage,
   ChatProposalMessage,
   ChatProposalRow,
+  ChatProposalCell,
+  ChatProposalDecision,
   ChatProposalBasis,
   ChatProposalFlag,
   ChatProposalStatus,

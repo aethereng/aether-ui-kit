@@ -444,7 +444,7 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
 <template>
   <div class="aether-chat">
     <div ref="logEl" class="aether-chat__log" :class="{ 'aether-chat__log--assistant': assistant }">
-      <div v-if="!messages.length" class="aether-chat__msg aether-chat__msg--sys">
+      <div v-if="!messages.length && $slots.empty" class="aether-chat__msg aether-chat__msg--sys">
         <span class="aether-chat__who">how this works</span>
         <slot name="empty" />
       </div>

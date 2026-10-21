@@ -72,6 +72,7 @@ describe('ChatPanel renders what it is given', () => {
       slots: { empty: '<i>how this works</i>' },
     })
     expect(empty.find('.aether-chat__msg--sys').html()).toContain('how this works')
+    expect(empty.find('.aether-chat__who').text()).toBe('how this works')
     expect(empty.findAll('.aether-chat__msg').length).toBe(1)
 
     // msgs() itself includes a real 'sys'-role message, so the presence of ANY --sys row
@@ -79,6 +80,13 @@ describe('ChatPanel renders what it is given', () => {
     // messages, no extra placeholder row sitting alongside them
     const full = mountPanel()
     expect(full.findAll('.aether-chat__msg').length).toBe(3)
+  })
+
+  it('draws no heading over an empty log when the host fills no empty slot', () => {
+    const bare = mount(ChatPanel, { props: { messages: [], modelValue: '' } })
+    expect(bare.find('.aether-chat__msg--sys').exists()).toBe(false)
+    expect(bare.text()).not.toContain('how this works')
+    expect(bare.findAll('.aether-chat__msg').length).toBe(0)
   })
 
   it('caps the rendered log at historyLimit, keeping the most recent', () => {

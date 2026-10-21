@@ -10,7 +10,7 @@
  * What stays with the app: the values behind a path, the artefacts a scope names, the tuple table
  * for its results, and the decision that a numeral is a violation worth reporting. */
 
-import { opensListItem } from './markup'
+import { MAX_QUOTE_DEPTH, QUOTE_LINE, opensListItem } from './markup'
 
 // ---- scopes ------------------------------------------------------------------------------------
 
@@ -137,6 +137,24 @@ const TOKEN = /\S+/gu
 const APOSTROPHES = String.fromCharCode(0x27, 0x2018, 0x2019)
 const STRIP = '.,;:!?()[]{}"' + APOSTROPHES + '`*_'
 
+/* A `>` that opens the line's quote is the quote's marker, and the parser reads it so: `>J12` is a quote of
+ * `J12`. Only the quote prefixes at the start of the line count, up to the depth the parser reads; a `>`
+ * after other text, or past that depth, is text of the token. Returns how many leading `>` are markers. */
+function quoteMarkers(text: string, at: number, raw: string): number {
+  let ls = at
+  while (ls > 0 && text.charCodeAt(ls - 1) !== 10) ls--
+  let rest = text.slice(ls, at)
+  let depth = 0
+  for (let quote = QUOTE_LINE.exec(rest); quote !== null && depth < MAX_QUOTE_DEPTH; quote = QUOTE_LINE.exec(rest)) {
+    rest = rest.slice(quote[0].length)
+    depth++
+  }
+  if (!/^[ \t]{0,3}$/.test(rest)) return 0
+  let n = 0
+  while (n < raw.length && raw[n] === '>' && depth + n < MAX_QUOTE_DEPTH) n++
+  return n
+}
+
 /* The characters a pattern must escape when a phrase is written into one. */
 const PATTERN_SYNTAX = /[\\^$.*+?()[\]{}|]/g
 
@@ -190,6 +208,8 @@ function phraseSpans(text: string, phrases: readonly string[]): BareNumeralSpan[
  *  asterisk and an underscore strip like the rest, so `` `J12` ``, `**J12**`, `_J12_` and `(`J12`)` all
  *  compare as `J12`: the markup stays in the text, and a violation's span covers the stripped core, so
  *  `J13` in backticks spans `J13`, not the backticks around it.
+ *  An admitted identifier wrapped in that markup or punctuation passes by design, because the comparison
+ *  is made on the stripped core.
  *
  *  A token is a VIOLATION when, stripped, it holds a digit and does not equal an admitted
  *  identifier, unless it opens a list item the parser reads (`opensListItem`: an ordered marker after
@@ -222,8 +242,10 @@ export function findBareNumerals(
     if (seg.kind !== 'text') continue
     const whole = phraseSpans(seg.text, phrases)
     for (const m of seg.text.matchAll(TOKEN)) {
-      const raw = m[0]
-      const at = seg.start + m.index
+      const q = m[0][0] === '>' ? quoteMarkers(text, seg.start + m.index, m[0]) : 0
+      const idx = m.index + q
+      const raw = m[0].slice(q)
+      const at = seg.start + idx
       if (opensListItem(text, at, raw)) continue
       let lo = 0
       let hi = raw.length
@@ -235,9 +257,9 @@ export function findBareNumerals(
       }
       const core = raw.slice(lo, hi)
       // An identifier admitted as written passes too, even where its own edge is a strip character.
-      if (!hasDigit(core) || admitted.has(core) || admitted.has(raw)) continue
-      const coreStart = m.index + lo
-      const coreEnd = m.index + hi
+      if (!hasDigit(core) || admitted.has(core) || admitted.has(raw) || admitted.has(m[0])) continue
+      const coreStart = idx + lo
+      const coreEnd = idx + hi
       if (whole.some((w) => coreStart >= w.start && coreEnd <= w.end)) continue
       spans.push({ start: at + lo, end: at + hi })
     }

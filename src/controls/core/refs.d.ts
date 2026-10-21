@@ -57,6 +57,8 @@ export interface BareNumeralSpan {
  *  asterisk and an underscore strip like the rest, so `` `J12` ``, `**J12**`, `_J12_` and `(`J12`)` all
  *  compare as `J12`: the markup stays in the text, and a violation's span covers the stripped core, so
  *  `J13` in backticks spans `J13`, not the backticks around it.
+ *  An admitted identifier wrapped in that markup or punctuation passes by design, because the comparison
+ *  is made on the stripped core.
  *
  *  A token is a VIOLATION when, stripped, it holds a digit and does not equal an admitted
  *  identifier, unless it opens a list item the parser reads (`opensListItem`: an ordered marker after

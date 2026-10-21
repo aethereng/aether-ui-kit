@@ -144,4 +144,22 @@ describe('a list marker is read by the parser\'s rule, quotes included', () => {
   it('negative arm: a marker glued to a reference is not a marker, so its numeral is flagged', () => {
     expect(found('1.{{m1:x}}', [])).toEqual(['1'])
   })
+
+  it('a `>` that opens the line is the quote marker, so the identifier it touches passes', () => {
+    expect(found('>J12', ['J12'])).toEqual([])
+    expect(found('>>J12', ['J12'])).toEqual([])
+    expect(found('>'.repeat(8) + 'J12', ['J12'])).toEqual([])
+  })
+
+  it('a marker glued to a quote is read by the marker rule, so `>1. x` is a list item', () => {
+    expect(found('>1. x', [])).toEqual([])
+  })
+
+  it('negative arm: a ninth `>` is text, so the token it touches is flagged', () => {
+    expect(found('>'.repeat(9) + 'J12', ['J12'])).toEqual(['>J12'])
+  })
+
+  it('negative arm: a `>` that does not open the line is text, so the identifier glued to it is flagged', () => {
+    expect(found('see >J12 here', ['J12'])).toEqual(['>J12'])
+  })
 })

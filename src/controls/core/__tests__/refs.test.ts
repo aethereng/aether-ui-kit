@@ -53,7 +53,7 @@ describe('numeral gate', () => {
     expect(numeralGate('The joint `J12` holds', ['J12'], NONE)).toEqual([])
   })
 
-  it('negative arm: an identifier in a code span that is not admitted is flagged at its digits', () => {
+  it('negative arm: an identifier in a code span that is not admitted is flagged with the identifier as its span', () => {
     expect(numeralGate('The joint `J13` holds', ['J12'], NONE)).toEqual([{ token: 'J13', start: 11, end: 14, kind: 'bare_numeral' }])
   })
 

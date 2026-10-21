@@ -99,7 +99,7 @@ describe('an identifier written in markup reads as the identifier', () => {
     expect(found('(`J12`)', ['J12'])).toEqual([])
   })
 
-  it('negative arm: the same markup around an identifier that is not admitted flags its digits', () => {
+  it('negative arm: the same markup around an identifier that is not admitted flags the identifier', () => {
     expect(found('`J13`', ['J12'])).toEqual(['J13'])
     expect(found('**J13**', ['J12'])).toEqual(['J13'])
     expect(found('_J13_', ['J12'])).toEqual(['J13'])
@@ -109,7 +109,7 @@ describe('an identifier written in markup reads as the identifier', () => {
     expect(found('see _v2 here', ['_v2'])).toEqual([])
   })
 
-  it('negative arm: the same identifier not admitted is flagged at its digits', () => {
+  it('negative arm: the same identifier not admitted is flagged with the identifier as its span', () => {
     expect(found('see _v2 here', [])).toEqual(['v2'])
   })
 })

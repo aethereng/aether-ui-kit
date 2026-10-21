@@ -19,7 +19,7 @@ const props = withDefaults(
      *  keyboard and invisible to touch. Anything interactive belongs in a Menu or a Dialog. */
     text: string
     placement?: 'top' | 'bottom' | 'left' | 'right'
-    /** Dwell before showing on hover, in ms. Pointer only: focus shows immediately, because a
+    /** Dwell before showing on hover, in ms. Pointer only: keyboard focus shows immediately, because a
      *  keyboard user has already committed by landing on the control. */
     delay?: number
     disabled?: boolean
@@ -72,6 +72,21 @@ function hide() {
 function showAfterDelay() {
   clear()
   timer = setTimeout(show, props.delay)
+}
+
+/* Keyboard focus shows the tip, and only that: the browser's own :focus-visible says whether the
+   focus came from the keyboard. A pointer that focuses the trigger, and a script that returns focus
+   to it when a Dialog closes, do not match, so they open nothing. Where the selector is not
+   understood the question has no answer, and no tip is shown. */
+function onFocusIn(e: FocusEvent) {
+  const el = e.target as HTMLElement | null
+  let keyboard = false
+  try {
+    keyboard = el?.matches(':focus-visible') === true
+  } catch {
+    keyboard = false
+  }
+  if (keyboard) show()
 }
 
 /* Only runs where CSS anchor positioning is missing. Deliberately one-shot rather than tracked on
@@ -147,7 +162,8 @@ onBeforeUnmount(() => {
     class="aether-tooltip__anchor"
     @pointerenter="showAfterDelay"
     @pointerleave="hide"
-    @focusin="show"
+    @pointerdown="hide"
+    @focusin="onFocusIn"
     @focusout="hide"
     @keydown="onKey"
   >

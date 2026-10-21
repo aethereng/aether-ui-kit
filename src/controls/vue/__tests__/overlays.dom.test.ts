@@ -45,7 +45,9 @@ describe('the overlays degrade instead of throwing where the platform APIs are a
       slots: { default: '<button aria-label="Suppress">x</button>' },
       attachTo: document.body,
     })
-    await w.get('span').trigger('focusin')
+    // Keyboard focus on the trigger: jsdom answers :focus-visible as true for a focused element.
+    w.get('button').element.focus()
+    await w.vm.$nextTick()
     // Visibility falls to the class, since the popover attribute is inert here.
     expect(w.get('[role="tooltip"]').classes()).toContain('is-open')
     w.unmount()

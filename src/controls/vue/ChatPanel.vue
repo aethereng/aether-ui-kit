@@ -611,6 +611,7 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
                       type="checkbox"
                       class="aether-chat__tick"
                       :checked="isTicked(m.id, k)"
+                      :disabled="m.status !== 'pending'"
                       :aria-label="'take ' + r.path"
                       @change="onTick(m.id, k, $event)"
                     />
@@ -685,7 +686,13 @@ defineExpose({ focus: () => textareaEl.value?.focus() })
             <Tool :label="TEXT.discard" @click="emit('discard', m.id, decisionOf(m, 'none'))" />
           </div>
           <div v-else-if="m.later" class="aether-chat__proposal-actions">
-            <Tool v-if="m.later === 'accept'" :label="acceptLabel(m)" hot @click="emit('accept', m.id, decisionOf(m, 'ticked'))" />
+            <Tool
+              v-if="m.later === 'accept'"
+              :label="acceptLabel(m)"
+              hot
+              :disabled="!decisionOf(m, 'ticked').rows.length"
+              @click="emit('accept', m.id, decisionOf(m, 'ticked'))"
+            />
             <Tool v-else :label="TEXT.loadAgain" @click="emit('load-again', m.id)" />
           </div>
           <slot name="message-extra" :message="m" />

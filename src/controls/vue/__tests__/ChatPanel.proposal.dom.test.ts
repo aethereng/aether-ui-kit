@@ -214,6 +214,40 @@ describe('a proposal card that asks for selection', () => {
     wrapper?.unmount()
     expect(mountPanel([card({})]).find('.aether-chat__proposal-note textarea').exists()).toBe(false)
   })
+
+  it('takes the ticks and the note off a card that has left pending, and leaves them live while pending', async () => {
+    const rows = [sel('a'), row('b'), sel('c')]
+    const w = mountPanel([card({ note: true, rows })])
+    expect(ticks(w).map((t) => (t.element as HTMLInputElement).disabled)).toEqual([false, false])
+    expect(w.get('.aether-chat__proposal-note textarea').attributes('disabled')).toBeUndefined()
+    await w.setProps({ messages: [card({ note: true, rows, status: 'superseded', later: 'accept' })] })
+    expect(ticks(w).map((t) => (t.element as HTMLInputElement).disabled)).toEqual([true, true])
+    expect(w.get('.aether-chat__proposal-note textarea').attributes('disabled')).toBeDefined()
+  })
+
+  it.each(['superseded', 'discarded'] as const)(
+    'guards the later Accept of a %s card: disabled when no row is left ticked, and emits nothing',
+    async (status) => {
+      const rows = [sel('a'), sel('b')]
+      const w = mountPanel([card({ rows })])
+      await ticks(w)[0]!.setValue(false)
+      await ticks(w)[1]!.setValue(false)
+      await w.setProps({ messages: [card({ status, later: 'accept', rows })] })
+      expect(buttonByText(w, 'Accept')!.attributes('disabled')).toBeDefined()
+      await buttonByText(w, 'Accept')!.trigger('click')
+      expect(w.emitted('accept')).toBeUndefined()
+    },
+  )
+
+  it('positive arm: a later Accept with one row still ticked is enabled and emits that row', async () => {
+    const rows = [sel('a'), sel('b')]
+    const w = mountPanel([card({ rows })])
+    await ticks(w)[0]!.setValue(false)
+    await w.setProps({ messages: [card({ status: 'superseded', later: 'accept', rows })] })
+    expect(buttonByText(w, 'Accept')!.attributes('disabled')).toBeUndefined()
+    await buttonByText(w, 'Accept')!.trigger('click')
+    expect(w.emitted('accept')?.[0]).toEqual(['p1', { rows: [1], note: '' }])
+  })
 })
 
 describe('the cells of a proposal row', () => {

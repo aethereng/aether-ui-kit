@@ -11,7 +11,7 @@
  * resize itself: no listeners, no measuring loop. `position-try-fallbacks` does the collision flip.
  * Where anchor positioning is unsupported the popover still reaches the top layer (that half is
  * broadly available), and a small rect-based fallback places it. */
-import { onBeforeUnmount, ref, useId, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -33,6 +33,9 @@ const id = `aether-tip-${useId()}`
 const anchorName = `--${id}`
 const shown = ref(false)
 let timer: ReturnType<typeof setTimeout> | null = null
+// True while keyboard focus opened the tip. Only such a tip answers to focus changes.
+let fromFocus = false
+let watcher: MutationObserver | null = null
 
 const supportsAnchor =
   typeof CSS !== 'undefined' && CSS.supports?.('position-anchor: --a') === true
@@ -63,6 +66,7 @@ function show() {
 
 function hide() {
   clear()
+  fromFocus = false
   const el = tip.value
   if (!el || !shown.value) return
   if (supportsPopover) el.hidePopover()
@@ -86,7 +90,23 @@ function onFocusIn(e: FocusEvent) {
   } catch {
     keyboard = false
   }
-  if (keyboard) show()
+  if (keyboard) {
+    show()
+    fromFocus = shown.value
+  }
+}
+
+/* A trigger removed or disabled while it holds focus can fire no focusout, so the listeners above never
+   hear it go. What is left is the anchor's own change: a tip that keyboard focus opened hides once focus
+   is no longer on an enabled control inside the anchor. */
+function holdsFocus(): boolean {
+  const a = anchor.value
+  const f = document.activeElement
+  return !!a && !!f && a.contains(f) && !f.matches(':disabled')
+}
+
+function onAnchorChange() {
+  if (fromFocus && shown.value && !holdsFocus()) hide()
 }
 
 /* Only runs where CSS anchor positioning is missing. Deliberately one-shot rather than tracked on
@@ -144,8 +164,15 @@ function onKey(e: KeyboardEvent) {
   if (e.key === 'Escape' && shown.value) hide()
 }
 
+onMounted(() => {
+  if (!anchor.value) return
+  watcher = new MutationObserver(onAnchorChange)
+  watcher.observe(anchor.value, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled'] })
+})
+
 onBeforeUnmount(() => {
   clear()
+  watcher?.disconnect()
   // A popover left open while its element is removed leaves a stranded surface in the top layer.
   if (shown.value && supportsPopover) tip.value?.hidePopover()
 })

@@ -36,14 +36,21 @@ describe('the tag step names a tag only as the package version', () => {
 describe('the release workflow runs the same check before anything is built', () => {
   const WORKFLOW = readFileSync(resolve(__dirname, '../../.github/workflows/deploy-gallery.yml'), 'utf8')
 
-  /* The guard step runs the script on a tag push, and no install or build step comes before it. */
+  /* The steps of the build job, each block running from one step's dash to the next. A `run:` or `if:`
+   * counts only where it opens a line, so a comment that names the same command is not a step. */
+  const stepsOf = (text: string) => text.slice(text.indexOf('\n    steps:')).split(/\n(?= {6}- )/).slice(1)
+
+  /* The guard is a step limited to tag pushes, and the install and the build come after it, in step order. */
   const guardFirst = (text: string) => {
-    const guard = text.indexOf('run: node scripts/check-tag-version.mjs')
+    const steps = stepsOf(text)
+    const guard = steps.findIndex((s) => /^ *(- )?run: node scripts\/check-tag-version\.mjs/m.test(s))
+    const install = steps.findIndex((s) => /^ *(- )?run: npm ci$/m.test(s))
+    const build = steps.findIndex((s) => /^ *(- )?run: npm run build$/m.test(s))
     return (
       guard > -1 &&
-      text.slice(0, guard).includes("if: startsWith(github.ref, 'refs/tags/')") &&
-      text.indexOf('- run: npm ci') > guard &&
-      text.indexOf('run: npm run build') > guard
+      /^ +if: startsWith\(github\.ref, 'refs\/tags\/'\)$/m.test(steps[guard]!) &&
+      install > guard &&
+      build > guard
     )
   }
 
@@ -64,5 +71,13 @@ describe('the release workflow runs the same check before anything is built', ()
       '- run: npm ci\n      - run: node scripts/check-tag-version.mjs "${GITHUB_REF_NAME}"',
     )
     expect(guardFirst(moved)).toBe(false)
+  })
+
+  it('negative arm: a guard named only in a comment, with the real step gone, is not a step', () => {
+    const commented = WORKFLOW.replace('run: node scripts/check-tag-version.mjs "${GITHUB_REF_NAME}"', 'run: echo skipped').replace(
+      '      - run: npm ci',
+      '      # run: node scripts/check-tag-version.mjs "${GITHUB_REF_NAME}"\n      - run: npm ci',
+    )
+    expect(guardFirst(commented)).toBe(false)
   })
 })

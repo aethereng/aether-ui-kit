@@ -607,7 +607,7 @@ describe('the proposal card', () => {
     const before = w.html()
     await buttonByText(w, 'Accept')!.trigger('click')
     await buttonByText(w, 'Discard')!.trigger('click')
-    expect(w.emitted('accept')).toEqual([['prop-7', expect.objectContaining({ note: '' })]])
+    expect(w.emitted('accept')).toEqual([['prop-7', { rows: [0, 1, 2], note: '' }]])
     expect(w.emitted('discard')).toEqual([['prop-7', { rows: [], note: '' }]])
     expect(w.html()).toBe(before)
   })

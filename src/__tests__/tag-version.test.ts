@@ -1,5 +1,5 @@
-// The tag step runs scripts/check-tag-version.mjs before it cuts a tag. These run the script as the tag step
-// does, as a child process, and read its exit code. No test here tags anything.
+// The release procedure, which lives outside this repo, runs scripts/check-tag-version.mjs before it cuts a tag.
+// These run the script as a child process, as that procedure does, and read its exit code. No test here tags anything.
 import { describe, expect, it } from 'vitest'
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
@@ -47,7 +47,7 @@ describe('the release workflow runs the same check before anything is built', ()
     )
   }
 
-  it('the package script names the same check, so the tag step can run it before cutting a tag', () => {
+  it('the package script names the same check, so the release procedure can run it before cutting a tag', () => {
     const scripts = (PACKAGE as { scripts?: Record<string, string> }).scripts ?? {}
     expect(scripts['tag:check']).toBe('node scripts/check-tag-version.mjs')
   })

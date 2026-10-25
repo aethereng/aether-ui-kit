@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-/* Refuse a release tag that names another version than package.json states. The tag step runs this
- * before it cuts the tag, so no tag sits on a commit whose package.json says a different version: a
- * consumer pins the tag, and the version it reads from the package is the one the tag names.
+/* Refuse a release tag that names another version than package.json states. The release procedure,
+ * which lives outside this repo, runs this before it cuts the tag (`npm run tag:check -- vX.Y.Z`), so no
+ * tag sits on a commit whose package.json says a different version: a consumer pins the tag, and the
+ * version it reads from the package is the one the tag names.
  *
  * usage: node scripts/check-tag-version.mjs v0.23.0
  *   0 the tag is the package's version · 1 the tag names another version · 3 could not run

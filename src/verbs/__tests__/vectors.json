@@ -1,0 +1,575 @@
+{
+  "about": "Golden vectors for the verb machinery, written by hand from sections 4 and 11 of the definition and run against the toy vocabulary of toy.ts. A record is as 4.3 gives it. Its seq counts every record the store has written, undo and redo included, from 0. Its batch is the number of the step it belongs to, from 1, and a batch that is refused or changes nothing takes none. An undo or redo record is the original with before and after exchanged (and the op of an add and a remove exchanged with them), its seq renumbered. A remove carries the position the entity held among the ids of its kind, and the add that undoes it carries the same. A gesture replaces each of its moves by the next, so the step it ends as holds the records of its last move alone, numbered from the seq the gesture began at as if that move had run by itself, and a gesture that ends where it began takes no seq, no batch number and no log entry. The hashes of E1 are not here yet: a hash is named by a mark and compared with another.",
+  "base": {
+    "entities": {
+      "box": {
+        "b1": { "Name": "Alpha", "Dims": { "w": 10, "h": 20 } },
+        "b2": { "Name": "Beta", "Dims": { "w": 30, "h": 40 } }
+      },
+      "label": {
+        "l1": { "On": { "kind": "box", "id": "b1" }, "Text": "first" }
+      }
+    },
+    "counters": { "box": 2, "label": 1 }
+  },
+  "vectors": [
+    {
+      "name": "three valid verbs are one undo step, and undo and redo return the hash",
+      "section": "11.2",
+      "steps": [
+        { "do": "mark", "name": "start" },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [
+            { "verb": "box.rename", "input": { "id": "b1", "name": "A2" } },
+            { "verb": "box.resize", "input": { "id": "b2", "w": 5 } },
+            { "verb": "box.create", "input": { "name": "Gamma", "w": 10, "h": 10 }, "as": "g" }
+          ],
+          "expect": {
+            "ok": true, "changed": true, "batch": 1, "ids": { "g": "b3" },
+            "records": [
+              { "seq": 0, "batch": 1, "verb": "box.rename", "cause": "box.rename", "op": "set", "kind": "box", "id": "b1", "component": "Name", "before": "Alpha", "after": "A2" },
+              { "seq": 1, "batch": 1, "verb": "box.resize", "cause": "box.resize", "op": "set", "kind": "box", "id": "b2", "component": "Dims", "field": "w", "before": 30, "after": 5 },
+              { "seq": 2, "batch": 1, "verb": "box.create", "cause": "box.create", "op": "add", "kind": "box", "id": "b3", "after": { "Name": "Gamma", "Dims": { "w": 10, "h": 10 } } }
+            ]
+          },
+          "after": { "undoDepth": 1, "redoDepth": 0, "log": 3, "ids": { "box": ["b1", "b2", "b3"] }, "hash": { "differs": "start", "mark": "after" } }
+        },
+        {
+          "do": "undo",
+          "expect": {
+            "ok": true, "changed": true, "batch": 1,
+            "records": [
+              { "seq": 3, "batch": 1, "verb": "box.create", "cause": "box.create", "op": "remove", "kind": "box", "id": "b3", "before": { "Name": "Gamma", "Dims": { "w": 10, "h": 10 } } },
+              { "seq": 4, "batch": 1, "verb": "box.resize", "cause": "box.resize", "op": "set", "kind": "box", "id": "b2", "component": "Dims", "field": "w", "before": 5, "after": 30 },
+              { "seq": 5, "batch": 1, "verb": "box.rename", "cause": "box.rename", "op": "set", "kind": "box", "id": "b1", "component": "Name", "before": "A2", "after": "Alpha" }
+            ]
+          },
+          "after": { "undoDepth": 0, "redoDepth": 1, "log": 4, "ids": { "box": ["b1", "b2"] }, "hash": { "equals": "start" } }
+        },
+        {
+          "do": "redo",
+          "expect": {
+            "ok": true, "changed": true, "batch": 1,
+            "records": [
+              { "seq": 6, "batch": 1, "verb": "box.rename", "cause": "box.rename", "op": "set", "kind": "box", "id": "b1", "component": "Name", "before": "Alpha", "after": "A2" },
+              { "seq": 7, "batch": 1, "verb": "box.resize", "cause": "box.resize", "op": "set", "kind": "box", "id": "b2", "component": "Dims", "field": "w", "before": 30, "after": 5 },
+              { "seq": 8, "batch": 1, "verb": "box.create", "cause": "box.create", "op": "add", "kind": "box", "id": "b3", "after": { "Name": "Gamma", "Dims": { "w": 10, "h": 10 } } }
+            ]
+          },
+          "after": { "undoDepth": 1, "redoDepth": 0, "log": 5, "ids": { "box": ["b1", "b2", "b3"] }, "hash": { "equals": "after" } }
+        }
+      ]
+    },
+    {
+      "name": "a batch whose third verb is invalid changes the store, the stack and the log by nothing",
+      "section": "11.2",
+      "steps": [
+        { "do": "mark", "name": "start" },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [
+            { "verb": "box.rename", "input": { "id": "b1", "name": "A2" } },
+            { "verb": "box.create", "input": { "name": "Gamma", "w": 10, "h": 10 }, "as": "g" },
+            { "verb": "box.resize", "input": { "id": "b2", "w": 500 } }
+          ],
+          "expect": { "ok": false, "reason": "input", "at": 2, "message": "/w is above 100" },
+          "after": { "undoDepth": 0, "redoDepth": 0, "log": 0, "ids": { "box": ["b1", "b2"] }, "hash": { "equals": "start" } }
+        }
+      ]
+    },
+    {
+      "name": "an input that changes nothing leaves no step, no batch number and no log entry",
+      "section": "11.2",
+      "steps": [
+        { "do": "mark", "name": "start" },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [
+            { "verb": "box.rename", "input": { "id": "b1", "name": "Alpha" } },
+            { "verb": "box.resize", "input": { "id": "b2", "w": 30, "h": 40 } }
+          ],
+          "expect": { "ok": true, "changed": false, "noBatch": true, "records": [] },
+          "after": { "undoDepth": 0, "redoDepth": 0, "log": 0, "hash": { "equals": "start" } }
+        },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.rename", "input": { "id": "b1", "name": "X" } }],
+          "expect": {
+            "ok": true, "changed": true, "batch": 1,
+            "records": [
+              { "seq": 0, "batch": 1, "verb": "box.rename", "cause": "box.rename", "op": "set", "kind": "box", "id": "b1", "component": "Name", "before": "Alpha", "after": "X" }
+            ]
+          },
+          "after": { "undoDepth": 1, "log": 1 }
+        }
+      ]
+    },
+    {
+      "name": "a batch whose writes cancel is no change, and the redo tail stays",
+      "section": "11.2",
+      "steps": [
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.rename", "input": { "id": "b1", "name": "X" } }],
+          "expect": {
+            "ok": true, "changed": true, "batch": 1,
+            "records": [
+              { "seq": 0, "batch": 1, "verb": "box.rename", "cause": "box.rename", "op": "set", "kind": "box", "id": "b1", "component": "Name", "before": "Alpha", "after": "X" }
+            ]
+          },
+          "after": { "undoDepth": 1, "redoDepth": 0, "log": 1, "hash": { "mark": "x" } }
+        },
+        {
+          "do": "undo",
+          "expect": {
+            "ok": true, "changed": true, "batch": 1,
+            "records": [
+              { "seq": 1, "batch": 1, "verb": "box.rename", "cause": "box.rename", "op": "set", "kind": "box", "id": "b1", "component": "Name", "before": "X", "after": "Alpha" }
+            ]
+          },
+          "after": { "undoDepth": 0, "redoDepth": 1, "log": 2, "hash": { "mark": "base" } }
+        },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [
+            { "verb": "box.rename", "input": { "id": "b1", "name": "Z" } },
+            { "verb": "box.rename", "input": { "id": "b1", "name": "Alpha" } }
+          ],
+          "expect": { "ok": true, "changed": false, "noBatch": true, "records": [] },
+          "after": { "undoDepth": 0, "redoDepth": 1, "log": 2, "hash": { "equals": "base" } }
+        },
+        {
+          "do": "redo",
+          "expect": {
+            "ok": true, "changed": true, "batch": 1,
+            "records": [
+              { "seq": 2, "batch": 1, "verb": "box.rename", "cause": "box.rename", "op": "set", "kind": "box", "id": "b1", "component": "Name", "before": "Alpha", "after": "X" }
+            ]
+          },
+          "after": { "undoDepth": 1, "redoDepth": 0, "log": 3, "hash": { "equals": "x" } }
+        },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.rename", "input": { "id": "b1", "name": "Y" } }],
+          "expect": {
+            "ok": true, "changed": true, "batch": 2,
+            "records": [
+              { "seq": 3, "batch": 2, "verb": "box.rename", "cause": "box.rename", "op": "set", "kind": "box", "id": "b1", "component": "Name", "before": "X", "after": "Y" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a resize and its reverse on a box a label sits on is no change, and the system that marks the label stale does not run",
+      "section": "4.2",
+      "steps": [
+        { "do": "mark", "name": "start" },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [
+            { "verb": "box.resize", "input": { "id": "b1", "w": 11 } },
+            { "verb": "box.resize", "input": { "id": "b1", "w": 10 } }
+          ],
+          "expect": { "ok": true, "changed": false, "noBatch": true, "records": [] },
+          "after": { "undoDepth": 0, "redoDepth": 0, "log": 0, "hash": { "equals": "start" } }
+        },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.resize", "input": { "id": "b1", "w": 11 } }],
+          "expect": {
+            "ok": true,
+            "changed": true,
+            "batch": 1,
+            "records": [
+              { "seq": 0, "batch": 1, "verb": "box.resize", "cause": "box.resize", "op": "set", "kind": "box", "id": "b1", "component": "Dims", "field": "w", "before": 10, "after": 11 },
+              { "seq": 1, "batch": 1, "verb": "box.resize", "cause": "system:stale", "op": "set", "kind": "label", "id": "l1", "component": "Stale", "after": true }
+            ]
+          },
+          "after": { "undoDepth": 1, "log": 1 }
+        }
+      ]
+    },
+    {
+      "name": "a drag of five moves is one undo step and one log entry, numbered as its last move alone",
+      "section": "4.5",
+      "steps": [
+        { "do": "mark", "name": "start" },
+        {
+          "do": "gesture",
+          "actor": "person",
+          "moves": [
+            { "calls": [{ "verb": "box.resize", "input": { "id": "b1", "w": 11 } }] },
+            { "calls": [{ "verb": "box.resize", "input": { "id": "b1", "w": 12 } }] },
+            { "calls": [{ "verb": "box.resize", "input": { "id": "b1", "w": 13 } }] },
+            { "calls": [{ "verb": "box.resize", "input": { "id": "b1", "w": 14 } }] },
+            { "calls": [{ "verb": "box.resize", "input": { "id": "b1", "w": 15 } }] }
+          ],
+          "finish": "end",
+          "expect": {
+            "ok": true,
+            "changed": true,
+            "batch": 1,
+            "records": [
+              { "seq": 0, "batch": 1, "verb": "box.resize", "cause": "box.resize", "op": "set", "kind": "box", "id": "b1", "component": "Dims", "field": "w", "before": 10, "after": 15 },
+              { "seq": 1, "batch": 1, "verb": "box.resize", "cause": "system:stale", "op": "set", "kind": "label", "id": "l1", "component": "Stale", "after": true }
+            ]
+          },
+          "after": {
+            "undoDepth": 1,
+            "redoDepth": 0,
+            "log": 1,
+            "logTail": [{ "verb": "box.resize", "input": { "id": "b1", "w": 15 }, "actor": "person" }],
+            "hash": { "differs": "start", "mark": "end" }
+          }
+        },
+        {
+          "do": "undo",
+          "expect": {
+            "ok": true,
+            "changed": true,
+            "batch": 1,
+            "records": [
+              { "seq": 2, "batch": 1, "verb": "box.resize", "cause": "system:stale", "op": "set", "kind": "label", "id": "l1", "component": "Stale", "before": true },
+              { "seq": 3, "batch": 1, "verb": "box.resize", "cause": "box.resize", "op": "set", "kind": "box", "id": "b1", "component": "Dims", "field": "w", "before": 15, "after": 10 }
+            ]
+          },
+          "after": { "undoDepth": 0, "redoDepth": 1, "log": 2, "hash": { "equals": "start" } }
+        },
+        { "do": "redo", "expect": { "ok": true, "changed": true, "batch": 1 }, "after": { "undoDepth": 1, "redoDepth": 0, "log": 3, "hash": { "equals": "end" } } },
+        { "do": "replay" }
+      ]
+    },
+    {
+      "name": "a drag that ends where it began leaves no step, no log entry, no batch number and no seq, and keeps the redo tail",
+      "section": "4.5",
+      "steps": [
+        { "do": "mark", "name": "start" },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.rename", "input": { "id": "b2", "name": "X" } }],
+          "expect": { "ok": true, "changed": true, "batch": 1 }
+        },
+        { "do": "undo", "expect": { "ok": true, "changed": true, "batch": 1 }, "after": { "undoDepth": 0, "redoDepth": 1, "log": 2, "hash": { "equals": "start" } } },
+        {
+          "do": "gesture",
+          "actor": "person",
+          "moves": [
+            { "calls": [{ "verb": "box.resize", "input": { "id": "b1", "w": 12 } }] },
+            { "calls": [{ "verb": "box.resize", "input": { "id": "b1", "w": 15 } }] },
+            {
+              "calls": [
+                { "verb": "box.resize", "input": { "id": "b1", "w": 12 } },
+                { "verb": "box.resize", "input": { "id": "b1", "w": 10 } }
+              ],
+              "expect": { "ok": true, "changed": false }
+            }
+          ],
+          "finish": "end",
+          "expect": { "ok": true, "changed": false, "noBatch": true, "records": [] },
+          "after": { "undoDepth": 0, "redoDepth": 1, "log": 2, "hash": { "equals": "start" } }
+        },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.rename", "input": { "id": "b2", "name": "Y" } }],
+          "expect": {
+            "ok": true,
+            "changed": true,
+            "batch": 2,
+            "records": [
+              { "seq": 2, "batch": 2, "verb": "box.rename", "cause": "box.rename", "op": "set", "kind": "box", "id": "b2", "component": "Name", "before": "Beta", "after": "Y" }
+            ]
+          },
+          "after": { "undoDepth": 1, "redoDepth": 0, "log": 3 }
+        }
+      ]
+    },
+    {
+      "name": "create, delete, create never yields one id twice",
+      "section": "11.3",
+      "steps": [
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.create", "input": { "name": "a", "w": 1, "h": 1 }, "as": "x" }],
+          "expect": {
+            "ok": true, "changed": true, "batch": 1, "ids": { "x": "b3" },
+            "records": [
+              { "seq": 0, "batch": 1, "verb": "box.create", "cause": "box.create", "op": "add", "kind": "box", "id": "b3", "after": { "Name": "a", "Dims": { "w": 1, "h": 1 } } }
+            ]
+          }
+        },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.delete", "input": { "id": "b3" } }],
+          "expect": {
+            "ok": true, "changed": true, "batch": 2,
+            "records": [
+              { "seq": 1, "batch": 2, "verb": "box.delete", "cause": "box.delete", "op": "remove", "kind": "box", "id": "b3", "before": { "Name": "a", "Dims": { "w": 1, "h": 1 } }, "position": 2 }
+            ]
+          },
+          "after": { "ids": { "box": ["b1", "b2"] } }
+        },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.create", "input": { "name": "b", "w": 1, "h": 1 }, "as": "y" }],
+          "expect": {
+            "ok": true, "changed": true, "batch": 3, "ids": { "y": "b4" },
+            "records": [
+              { "seq": 2, "batch": 3, "verb": "box.create", "cause": "box.create", "op": "add", "kind": "box", "id": "b4", "after": { "Name": "b", "Dims": { "w": 1, "h": 1 } } }
+            ]
+          },
+          "after": { "ids": { "box": ["b1", "b2", "b4"] } }
+        }
+      ]
+    },
+    {
+      "name": "a handle resolves to the id the layer minted, and the log holds ids and no handle",
+      "section": "4.2",
+      "steps": [
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [
+            { "verb": "box.create", "input": { "name": "g", "w": 1, "h": 1 }, "as": "n" },
+            { "verb": "label.create", "input": { "on": { "handle": "n" }, "text": "t" } }
+          ],
+          "expect": {
+            "ok": true, "changed": true, "batch": 1, "ids": { "n": "b3" },
+            "records": [
+              { "seq": 0, "batch": 1, "verb": "box.create", "cause": "box.create", "op": "add", "kind": "box", "id": "b3", "after": { "Name": "g", "Dims": { "w": 1, "h": 1 } } },
+              { "seq": 1, "batch": 1, "verb": "label.create", "cause": "label.create", "op": "add", "kind": "label", "id": "l2", "after": { "On": { "kind": "box", "id": "b3" }, "Text": "t" } }
+            ]
+          },
+          "after": {
+            "log": 2,
+            "ids": { "box": ["b1", "b2", "b3"], "label": ["l1", "l2"] },
+            "logTail": [
+              { "verb": "box.create", "input": { "name": "g", "w": 1, "h": 1, "id": "b3" }, "actor": "person" },
+              { "verb": "label.create", "input": { "on": "b3", "text": "t", "id": "l2" }, "actor": "person" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "undo of a cascade delete puts each entity back where it was",
+      "section": "4.3",
+      "steps": [
+        { "do": "mark", "name": "start" },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.delete", "input": { "id": "b1", "cascade": true } }],
+          "expect": {
+            "ok": true, "changed": true, "batch": 1,
+            "records": [
+              { "seq": 0, "batch": 1, "verb": "box.delete", "cause": "box.delete", "op": "remove", "kind": "label", "id": "l1", "before": { "On": { "kind": "box", "id": "b1" }, "Text": "first" }, "position": 0 },
+              { "seq": 1, "batch": 1, "verb": "box.delete", "cause": "box.delete", "op": "remove", "kind": "box", "id": "b1", "before": { "Name": "Alpha", "Dims": { "w": 10, "h": 20 } }, "position": 0 }
+            ]
+          },
+          "after": { "undoDepth": 1, "ids": { "box": ["b2"], "label": [] } }
+        },
+        {
+          "do": "undo",
+          "expect": {
+            "ok": true, "changed": true, "batch": 1,
+            "records": [
+              { "seq": 2, "batch": 1, "verb": "box.delete", "cause": "box.delete", "op": "add", "kind": "box", "id": "b1", "after": { "Name": "Alpha", "Dims": { "w": 10, "h": 20 } }, "position": 0 },
+              { "seq": 3, "batch": 1, "verb": "box.delete", "cause": "box.delete", "op": "add", "kind": "label", "id": "l1", "after": { "On": { "kind": "box", "id": "b1" }, "Text": "first" }, "position": 0 }
+            ]
+          },
+          "after": { "undoDepth": 0, "redoDepth": 1, "ids": { "box": ["b1", "b2"], "label": ["l1"] }, "hash": { "equals": "start" } }
+        }
+      ]
+    },
+    {
+      "name": "undo of a delete in the middle of the list puts the entity back in the middle",
+      "section": "4.3",
+      "steps": [
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.create", "input": { "name": "c", "w": 1, "h": 1 } }],
+          "expect": { "ok": true, "changed": true, "batch": 1 },
+          "after": { "ids": { "box": ["b1", "b2", "b3"] }, "hash": { "mark": "three" } }
+        },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.delete", "input": { "id": "b2" } }],
+          "expect": {
+            "ok": true, "changed": true, "batch": 2,
+            "records": [
+              { "seq": 1, "batch": 2, "verb": "box.delete", "cause": "box.delete", "op": "remove", "kind": "box", "id": "b2", "before": { "Name": "Beta", "Dims": { "w": 30, "h": 40 } }, "position": 1 }
+            ]
+          },
+          "after": { "ids": { "box": ["b1", "b3"] } }
+        },
+        {
+          "do": "undo",
+          "expect": {
+            "ok": true, "changed": true, "batch": 2,
+            "records": [
+              { "seq": 2, "batch": 2, "verb": "box.delete", "cause": "box.delete", "op": "add", "kind": "box", "id": "b2", "after": { "Name": "Beta", "Dims": { "w": 30, "h": 40 } }, "position": 1 }
+            ]
+          },
+          "after": { "ids": { "box": ["b1", "b2", "b3"] }, "hash": { "equals": "three" } }
+        },
+        {
+          "do": "redo",
+          "expect": {
+            "ok": true, "changed": true, "batch": 2,
+            "records": [
+              { "seq": 3, "batch": 2, "verb": "box.delete", "cause": "box.delete", "op": "remove", "kind": "box", "id": "b2", "before": { "Name": "Beta", "Dims": { "w": 30, "h": 40 } }, "position": 1 }
+            ]
+          },
+          "after": { "ids": { "box": ["b1", "b3"] } }
+        },
+        {
+          "do": "undo",
+          "expect": { "ok": true, "changed": true, "batch": 2 },
+          "after": { "ids": { "box": ["b1", "b2", "b3"] }, "hash": { "equals": "three" } }
+        }
+      ]
+    },
+    {
+      "name": "a system's records ride in the batch that caused them and undo with it",
+      "section": "4.3",
+      "steps": [
+        { "do": "mark", "name": "start" },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.resize", "input": { "id": "b1", "w": 11 } }],
+          "expect": {
+            "ok": true, "changed": true, "batch": 1,
+            "records": [
+              { "seq": 0, "batch": 1, "verb": "box.resize", "cause": "box.resize", "op": "set", "kind": "box", "id": "b1", "component": "Dims", "field": "w", "before": 10, "after": 11 },
+              { "seq": 1, "batch": 1, "verb": "box.resize", "cause": "system:stale", "op": "set", "kind": "label", "id": "l1", "component": "Stale", "after": true }
+            ]
+          },
+          "after": { "undoDepth": 1 }
+        },
+        {
+          "do": "undo",
+          "expect": {
+            "ok": true, "changed": true, "batch": 1,
+            "records": [
+              { "seq": 2, "batch": 1, "verb": "box.resize", "cause": "system:stale", "op": "set", "kind": "label", "id": "l1", "component": "Stale", "before": true },
+              { "seq": 3, "batch": 1, "verb": "box.resize", "cause": "box.resize", "op": "set", "kind": "box", "id": "b1", "component": "Dims", "field": "w", "before": 11, "after": 10 }
+            ]
+          },
+          "after": { "undoDepth": 0, "redoDepth": 1, "hash": { "equals": "start" } }
+        }
+      ]
+    },
+    {
+      "name": "a new batch that changes something clears the redo tail",
+      "section": "4.3",
+      "steps": [
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.rename", "input": { "id": "b1", "name": "X" } }],
+          "expect": { "ok": true, "changed": true, "batch": 1 }
+        },
+        { "do": "undo", "expect": { "ok": true, "changed": true, "batch": 1 }, "after": { "redoDepth": 1 } },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.rename", "input": { "id": "b1", "name": "Y" } }],
+          "expect": {
+            "ok": true, "changed": true, "batch": 2,
+            "records": [
+              { "seq": 2, "batch": 2, "verb": "box.rename", "cause": "box.rename", "op": "set", "kind": "box", "id": "b1", "component": "Name", "before": "Alpha", "after": "Y" }
+            ]
+          },
+          "after": { "undoDepth": 1, "redoDepth": 0 }
+        },
+        { "do": "redo", "expect": { "ok": false, "reason": "nothing_to_redo" } }
+      ]
+    },
+    {
+      "name": "a lock refuses an edit, an undo and a redo with its reason",
+      "section": "4.2",
+      "steps": [
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.rename", "input": { "id": "b1", "name": "X" } }],
+          "expect": { "ok": true, "changed": true, "batch": 1 }
+        },
+        { "do": "lock", "reason": "A solve is running; try again when it ends." },
+        { "do": "undo", "expect": { "ok": false, "reason": "locked", "message": "A solve is running; try again when it ends." }, "after": { "undoDepth": 1, "redoDepth": 0 } },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "box.rename", "input": { "id": "b1", "name": "Y" } }],
+          "expect": { "ok": false, "reason": "locked", "message": "A solve is running; try again when it ends." },
+          "after": { "undoDepth": 1, "log": 1 }
+        },
+        { "do": "release" },
+        { "do": "undo", "expect": { "ok": true, "changed": true, "batch": 1 }, "after": { "undoDepth": 0, "redoDepth": 1 } },
+        { "do": "lock", "reason": "busy" },
+        { "do": "redo", "expect": { "ok": false, "reason": "locked", "message": "busy" }, "after": { "undoDepth": 0, "redoDepth": 1 } },
+        { "do": "release" },
+        { "do": "redo", "expect": { "ok": true, "changed": true, "batch": 1 }, "after": { "undoDepth": 1, "redoDepth": 0 } }
+      ]
+    },
+    {
+      "name": "who may call: a verb open to the person only, and undo and redo",
+      "section": "4.1",
+      "steps": [
+        {
+          "do": "run",
+          "actor": "script",
+          "calls": [{ "verb": "label.delete", "input": { "id": "l1" } }],
+          "expect": { "ok": false, "reason": "actor", "at": 0 },
+          "after": { "undoDepth": 0, "ids": { "label": ["l1"] } }
+        },
+        {
+          "do": "run",
+          "actor": "person",
+          "calls": [{ "verb": "label.delete", "input": { "id": "l1" } }],
+          "expect": {
+            "ok": true, "changed": true, "batch": 1,
+            "records": [
+              { "seq": 0, "batch": 1, "verb": "label.delete", "cause": "label.delete", "op": "remove", "kind": "label", "id": "l1", "before": { "On": { "kind": "box", "id": "b1" }, "Text": "first" }, "position": 0 }
+            ]
+          },
+          "after": { "undoDepth": 1 }
+        },
+        { "do": "undo", "actor": "script", "expect": { "ok": false, "reason": "actor" }, "after": { "undoDepth": 1, "redoDepth": 0 } }
+      ]
+    },
+    {
+      "name": "base plus the log reaches the stored hash with the same ids, undo and redo included",
+      "section": "11.3",
+      "steps": [
+        { "do": "run", "actor": "person", "calls": [{ "verb": "box.create", "input": { "name": "a", "w": 1, "h": 1 }, "as": "x" }], "expect": { "ok": true, "changed": true, "ids": { "x": "b3" } } },
+        { "do": "run", "actor": "person", "calls": [{ "verb": "box.rename", "input": { "id": "b1", "name": "B" } }], "expect": { "ok": true, "changed": true } },
+        { "do": "undo", "expect": { "ok": true, "changed": true } },
+        { "do": "redo", "expect": { "ok": true, "changed": true } },
+        { "do": "run", "actor": "person", "calls": [{ "verb": "box.delete", "input": { "id": "b3" } }], "expect": { "ok": true, "changed": true } },
+        { "do": "undo", "expect": { "ok": true, "changed": true } },
+        { "do": "run", "actor": "person", "calls": [{ "verb": "box.create", "input": { "name": "y", "w": 1, "h": 1 }, "as": "y" }], "expect": { "ok": true, "changed": true, "ids": { "y": "b4" } }, "after": { "ids": { "box": ["b1", "b2", "b3", "b4"] } } },
+        { "do": "replay" }
+      ]
+    }
+  ]
+}

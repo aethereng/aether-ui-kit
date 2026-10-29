@@ -1,0 +1,517 @@
+// @vitest-environment node
+import { describe, expect, it } from 'vitest'
+import { createStore, replay, type Actor, type Call, type ChangeEvent, type Gesture, type Store } from '..'
+import { create, person, proposed, toyRegistry, toyStore } from './toy'
+
+const resize = (id: string, w?: number, h?: number): Call => ({ verb: 'box.resize', input: { id, ...(w === undefined ? {} : { w }), ...(h === undefined ? {} : { h }) } })
+const rename = (id: string, name: string): Call => ({ verb: 'box.rename', input: { id, name } })
+
+function open(store: Store, actor: Actor = 'person'): Gesture {
+  const g = store.gesture({ actor })
+  if (!g.ok) throw new Error(`the gesture was refused: ${g.refusal.issues.map((i) => i.message).join('; ')}`)
+  return g.gesture
+}
+const dims = (store: Store, id: string): unknown => store.get('box', id)!.Dims
+const shape = (store: Store) => ({ hash: store.hash(), undo: store.undoDepth, redo: store.redoDepth, log: store.log.length })
+
+describe('a gesture is one edit', () => {
+  it('shows each move to readers at once, and after a move the state is the start plus that move alone', () => {
+    const { store } = toyStore()
+    const g = open(store)
+    expect(g.move([resize('b2', 31)])).toMatchObject({ ok: true, changed: true })
+    expect(dims(store, 'b2')).toEqual({ w: 31, h: 40 })
+    expect(g.move([resize('b2', undefined, 45)])).toMatchObject({ ok: true, changed: true })
+    expect(dims(store, 'b2')).toEqual({ w: 30, h: 45 })
+    expect(g.end()).toMatchObject({ ok: true, changed: true })
+    expect(dims(store, 'b2')).toEqual({ w: 30, h: 45 })
+  })
+  it('makes one undo step, one batch number and one log entry of a drag of many moves, and clears the redo tail', () => {
+    const { store } = toyStore()
+    store.run([rename('b1', 'X')], person)
+    store.undo('person')
+    const before = shape(store)
+    const g = open(store)
+    for (const w of [31, 32, 33, 34, 35]) g.move([resize('b2', w)])
+    expect(shape(store).undo).toBe(before.undo)
+    expect(shape(store).log).toBe(before.log)
+    expect(shape(store).hash).not.toBe(before.hash)
+    const ended = g.end()
+    expect(ended).toMatchObject({ ok: true, changed: true, batch: 3 })
+    expect(ended.ok && ended.records).toMatchObject([{ op: 'set', component: 'Dims', field: 'w', before: 30, after: 35, batch: 3 }])
+    expect(shape(store)).toMatchObject({ undo: before.undo + 1, redo: 0, log: before.log + 1 })
+    expect(store.log[store.log.length - 1]).toMatchObject({ verb: 'box.resize', input: { id: 'b2', w: 35 }, batch: 3, actor: 'person' })
+  })
+  it('undoes to the state before the gesture in one step, redoes to the state it ended in, and its log replays', () => {
+    const { registry, store } = toyStore()
+    const start = store.hash()
+    const g = open(store)
+    for (const w of [11, 12, 13]) g.move([resize('b1', w)])
+    g.end()
+    const end = store.hash()
+    expect(store.undo('person').ok).toBe(true)
+    expect(store.hash()).toBe(start)
+    expect(store.redo('person').ok).toBe(true)
+    expect(store.hash()).toBe(end)
+    const back = replay(registry, store.save())
+    expect(back.ok && back.store.hash()).toBe(end)
+  })
+  it('runs the systems again for each move, also when a move writes what the move before it wrote', () => {
+    const { store } = toyStore()
+    const g = open(store)
+    g.move([resize('b1', 11)])
+    const second = g.move([resize('b1', 11)])
+    expect(second.ok && second.records.map((r) => r.cause)).toEqual(['box.resize', 'system:stale'])
+    expect(store.get('label', 'l1')!.Stale).toBe(true)
+    const ended = g.end()
+    expect(ended.ok && ended.records.map((r) => r.cause)).toEqual(['box.resize', 'system:stale'])
+  })
+  it('takes back the records a system wrote with a move, along with the move', () => {
+    const { store } = toyStore()
+    const start = store.hash()
+    const g = open(store)
+    g.move([resize('b1', 11)])
+    expect(store.get('label', 'l1')!.Stale).toBe(true)
+    g.move([])
+    expect(store.get('label', 'l1')!.Stale).toBeUndefined()
+    expect(store.hash()).toBe(start)
+    expect(g.end()).toMatchObject({ ok: true, changed: false })
+  })
+})
+
+describe('a gesture that ends where it began', () => {
+  it('leaves no step, no log entry, no batch number and the redo tail, and the next batch is numbered as if it had not happened', () => {
+    const prepared = () => {
+      const { store } = toyStore()
+      store.run([rename('b1', 'X')], person)
+      store.undo('person')
+      return store
+    }
+    const control = prepared()
+    const dragged = prepared()
+    const g = open(dragged)
+    for (const w of [12, 15]) g.move([resize('b1', w)])
+    g.move([resize('b1', 12), resize('b1', 10)])
+    const before = shape(dragged)
+    const ended = g.end()
+    expect(ended).toMatchObject({ ok: true, changed: false, records: [] })
+    expect(ended.ok && ended.batch).toBeUndefined()
+    expect(shape(dragged)).toEqual(before)
+    expect(dragged.get('label', 'l1')!.Stale).toBeUndefined()
+    expect(dragged.run([rename('b1', 'Y')], person)).toEqual(control.run([rename('b1', 'Y')], person))
+    expect(dragged.hash()).toBe(control.hash())
+  })
+  it('puts the counters back, so the next create takes the id the gesture minted and took back', () => {
+    const store = createStore(toyRegistry())
+    store.run([create('a'), create('b')], person)
+    const g = open(store)
+    g.move([create('x')])
+    expect(store.ids('box')).toEqual(['b1', 'b2', 'b3'])
+    // a move that changes nothing against the state the gesture began from takes the create back
+    g.move([rename('b1', 'a')])
+    expect(store.ids('box')).toEqual(['b1', 'b2'])
+    expect(g.end()).toMatchObject({ ok: true, changed: false })
+    const next = store.run([create('n', 1, 1, 'n')], person)
+    expect(next.ok && next.ids.n).toBe('b3')
+  })
+  it('keeps the redo tail when it ends where it began', () => {
+    const { store } = toyStore()
+    store.run([rename('b1', 'X')], person)
+    store.undo('person')
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    g.move([resize('b2', 30)])
+    g.end()
+    expect(store.redoDepth).toBe(1)
+    expect(store.redo('person').ok).toBe(true)
+  })
+  it('leaves no step when it made no move at all', () => {
+    const { store } = toyStore()
+    const before = shape(store)
+    expect(open(store).end()).toMatchObject({ ok: true, changed: false })
+    expect(shape(store)).toEqual(before)
+  })
+  it('measures a move against the state the gesture began from', () => {
+    const { store } = toyStore()
+    const g = open(store)
+    expect(g.move([rename('b1', 'Z')])).toMatchObject({ ok: true, changed: true })
+    expect(g.move([rename('b1', 'Alpha')])).toMatchObject({ ok: true, changed: false })
+    expect(g.end()).toMatchObject({ ok: true, changed: false })
+    expect(store.undoDepth).toBe(1)
+  })
+})
+
+describe('while a gesture is open', () => {
+  it('refuses an edit, an undo, a redo, an accept and a second gesture, and still reads and previews', () => {
+    const { store } = toyStore()
+    store.run([rename('b1', 'X')], person)
+    store.undo('person')
+    const proposal = proposed(store, [{ verb: 'box.rename', input: { id: 'b2', name: 'Q' } }])
+    const g = open(store)
+    const reasons = [store.run([rename('b2', 'Q')], person), store.undo('person'), store.redo('person'), store.accept(proposal), store.gesture({ actor: 'person' })].map((o) => (o.ok ? 'ok' : o.refusal.reason))
+    expect(reasons).toEqual(['gesture', 'gesture', 'gesture', 'gesture', 'gesture'])
+    expect(store.read('entity.get', { kind: 'box', id: 'b1' }).ok).toBe(true)
+    expect(store.preview(proposal).ok).toBe(true)
+    g.end()
+    expect(store.run([rename('b2', 'Q')], person).ok).toBe(true)
+  })
+  it('refuses a move and a cancel while a lock is held, ends under it because each move was applied when it ran and the end only records the step, and takes moves again once it is released', () => {
+    const { store } = toyStore()
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    const release = store.lock('A solve is running; try again when it ends.')
+    expect(g.move([resize('b2', 32)])).toMatchObject({ ok: false, refusal: { reason: 'locked' } })
+    expect(g.cancel()).toMatchObject({ ok: false, refusal: { reason: 'locked' } })
+    expect(g.isOpen()).toBe(true)
+    release()
+    expect(g.move([resize('b2', 33)])).toMatchObject({ ok: true })
+    const again = store.lock('busy')
+    expect(g.end()).toMatchObject({ ok: true, changed: true })
+    again()
+  })
+  it('is refused when a lock is held, and refuses a move, an end and a cancel once it has ended', () => {
+    const { store } = toyStore()
+    const release = store.lock('busy')
+    expect(store.gesture({ actor: 'person' })).toMatchObject({ ok: false, refusal: { reason: 'locked' } })
+    release()
+    const g = open(store)
+    g.end()
+    expect(g.isOpen()).toBe(false)
+    expect([g.move([]), g.end(), g.cancel()].map((o) => (o.ok ? 'ok' : o.refusal.reason))).toEqual(['gesture', 'gesture', 'gesture'])
+  })
+  it('leaves the state as the move before it left it when a move is refused, and goes on', () => {
+    const { store } = toyStore()
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    expect(g.move([resize('b2', 500)])).toMatchObject({ ok: false, refusal: { reason: 'input' } })
+    expect(dims(store, 'b2')).toEqual({ w: 31, h: 40 })
+    expect(g.move([resize('b2', 32)])).toMatchObject({ ok: true })
+    expect(g.end()).toMatchObject({ ok: true, changed: true })
+    expect(store.log[store.log.length - 1]).toMatchObject({ input: { id: 'b2', w: 32 } })
+  })
+  it('refuses a call the actor of the gesture may not make, and goes on', () => {
+    const { store } = toyStore()
+    const g = open(store, 'script')
+    expect(g.move([{ verb: 'label.delete', input: { id: 'l1' } }])).toMatchObject({ ok: false, refusal: { reason: 'actor', at: 0 } })
+    expect(g.isOpen()).toBe(true)
+    expect(g.end()).toMatchObject({ ok: true, changed: false })
+  })
+})
+
+describe('what readers and the history see of a gesture', () => {
+  it('tells listeners of every move, with the records that take them from the state before the move to the state after it', () => {
+    const { store } = toyStore()
+    const seen: ChangeEvent[] = []
+    store.subscribe((e) => seen.push(e), { kind: 'box' })
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    g.move([resize('b2', 32)])
+    g.end()
+    expect(seen.map((e) => e.cause)).toEqual(['verb', 'verb'])
+    expect(seen.map((e) => e.records.map((r) => [r.before, r.after]))).toEqual([[[30, 31]], [[31, 30], [30, 32]]])
+  })
+  it('puts the state back on cancel, leaves nothing in the history, and tells listeners', () => {
+    const { store } = toyStore()
+    store.run([rename('b1', 'X')], person)
+    store.undo('person')
+    const before = shape(store)
+    const seen: ChangeEvent[] = []
+    store.subscribe((e) => seen.push(e), { kind: 'box' })
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    expect(g.cancel()).toMatchObject({ ok: true, changed: false })
+    expect(shape(store)).toEqual(before)
+    expect(seen.map((e) => e.records.map((r) => [r.before, r.after]))).toEqual([[[30, 31]], [[31, 30]]])
+    expect(g.isOpen()).toBe(false)
+    expect(store.run([rename('b2', 'Q')], person).ok).toBe(true)
+  })
+  it('gives the sequence numbers back on cancel, so the next batch is numbered as if the gesture had not happened', () => {
+    const control = toyStore().store
+    const { store } = toyStore()
+    const g = open(store)
+    g.move([resize('b1', 12)])
+    g.move([resize('b1', 15), resize('b2', 31)])
+    g.cancel()
+    expect(store.run([rename('b1', 'Y')], person)).toEqual(control.run([rename('b1', 'Y')], person))
+    expect(store.hash()).toBe(control.hash())
+  })
+  it('gives the touched addresses back on cancel, so a proposal names only what a later batch changed', () => {
+    const { store } = toyStore()
+    const proposal = proposed(store, [{ verb: 'box.rename', input: { id: 'b1', name: 'Q' } }])
+    const g = open(store)
+    g.move([resize('b1', 12)])
+    g.cancel()
+    store.run([rename('b2', 'Z')], person)
+    const r = store.accept(proposal)
+    expect(r).toMatchObject({ ok: false, refusal: { reason: 'base_changed' } })
+    expect(r.ok === false && r.refusal.changed).toEqual([{ kind: 'box', id: 'b2', component: 'Name' }])
+  })
+  it('lets a drag that creates keep one id through its moves and replay it, and gives the ids back when it is cancelled', () => {
+    const registry = toyRegistry()
+    const store = createStore(registry)
+    store.run([create('a'), create('b')], person)
+    const g = open(store)
+    g.move([create('x')])
+    expect(store.ids('box')).toEqual(['b1', 'b2', 'b3'])
+    g.move([create('y')])
+    expect(store.ids('box')).toEqual(['b1', 'b2', 'b3'])
+    g.end()
+    expect(store.log[store.log.length - 1]).toMatchObject({ verb: 'box.create', input: { name: 'y', id: 'b3' } })
+    const back = replay(registry, store.save())
+    expect(back.ok && back.store.hash()).toBe(store.hash())
+    expect(back.ok && back.store.ids('box')).toEqual(['b1', 'b2', 'b3'])
+    const h = open(store)
+    h.move([create('z')])
+    expect(store.ids('box')).toEqual(['b1', 'b2', 'b3', 'b4'])
+    h.cancel()
+    expect(store.ids('box')).toEqual(['b1', 'b2', 'b3'])
+    const next = store.run([create('n', 1, 1, 'n')], person)
+    expect(next.ok && next.ids.n).toBe('b4')
+  })
+  it('saves the state the gesture found, whatever its moves have done since', () => {
+    const { registry, store } = toyStore()
+    const start = store.hash()
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    const saved = store.save()
+    expect(saved.hash).toBe(start)
+    const back = replay(registry, saved)
+    expect(back.ok && back.store.hash()).toBe(start)
+    g.end()
+    expect(store.save().hash).toBe(store.hash())
+  })
+  it('names only what a later batch changed when a gesture that left no trace ran in between', () => {
+    const { store } = toyStore()
+    const proposal = proposed(store, [{ verb: 'box.rename', input: { id: 'b1', name: 'Q' } }])
+    const g = open(store)
+    g.move([resize('b1', 12)])
+    g.move([resize('b1', 10)])
+    g.end()
+    store.run([rename('b2', 'Z')], person)
+    const r = store.accept(proposal)
+    expect(r).toMatchObject({ ok: false, refusal: { reason: 'base_changed' } })
+    expect(r.ok === false && r.refusal.changed).toEqual([{ kind: 'box', id: 'b2', component: 'Name' }])
+  })
+  it('names only what the last move changed when a proposal made before the gesture is accepted', () => {
+    const { store } = toyStore()
+    const proposal = proposed(store, [{ verb: 'box.rename', input: { id: 'b1', name: 'Q' } }])
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    g.move([resize('b1', 11)])
+    g.end()
+    const r = store.accept(proposal)
+    expect(r).toMatchObject({ ok: false, refusal: { reason: 'base_changed' } })
+    expect(r.ok === false && r.refusal.changed?.map((c) => `${c.kind}.${c.id}`).sort()).toEqual(['box.b1', 'label.l1'])
+  })
+  it('numbers the records of a move so that those taking back the move before repeat its numbers, and the new ones start where the gesture began', () => {
+    const { store } = toyStore()
+    const seen: ChangeEvent[] = []
+    store.subscribe((e) => seen.push(e))
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    g.move([resize('b2', 32)])
+    const ended = g.end()
+    // the number the record has in the step the gesture makes
+    const numbered = ended.ok ? ended.records[0]!.seq : -1
+    expect(numbered).toBeGreaterThanOrEqual(0)
+    expect(seen[0]!.records.map((r) => r.seq)).toEqual([numbered])
+    expect(seen[1]!.records.map((r) => [r.op, r.before, r.after, r.seq])).toEqual([['set', 31, 30, numbered], ['set', 30, 32, numbered]])
+  })
+  it('numbers the records of the event of a batch, an undo and a redo once each', () => {
+    const { store } = toyStore()
+    const seen: ChangeEvent[] = []
+    store.subscribe((e) => seen.push(e))
+    store.run([resize('b1', 11), resize('b2', 31)], person)
+    store.undo('person')
+    store.redo('person')
+    expect(seen.map((e) => e.cause)).toEqual(['verb', 'undo', 'redo'])
+    for (const e of seen) expect(new Set(e.records.map((r) => r.seq)).size).toBe(e.records.length)
+  })
+})
+
+/** The toy vocabulary with verbs that put an entity back, that fail, and a system that fails. */
+function fragileStore(): Store {
+  const id = { type: 'object', properties: { id: { type: 'string', 'x-ref': 'box' } }, required: ['id'], additionalProperties: false }
+  const registry = toyRegistry((r) => {
+    r.verb<{ id: string }>({
+      name: 'box.refresh', target: 'box', input: id,
+      apply: (d, i) => {
+        const was = d.get('box', i.id)!
+        d.remove('box', i.id)
+        d.add('box', i.id, was)
+      },
+      describe: (i) => `Refresh box ${i.id}`,
+    })
+    r.verb<{ id: string; name: string }>({
+      name: 'box.requeue', target: 'box',
+      input: { type: 'object', properties: { id: { type: 'string', 'x-ref': 'box' }, name: { type: 'string' } }, required: ['id', 'name'], additionalProperties: false },
+      apply: (d, i) => {
+        const was = d.get('box', i.id)!
+        d.remove('box', i.id)
+        d.add('box', i.id, { ...was, Name: i.name })
+      },
+      describe: (i) => `Requeue box ${i.id}`,
+    })
+    r.verb<{ id: string }>({ name: 'box.explode', target: 'box', input: id, apply: () => { throw new TypeError('the verb broke') }, describe: () => 'Explode' })
+    r.verb<{ id: string }>({ name: 'box.fuss', target: 'box', input: id, validate: () => { throw new TypeError('the check broke') }, apply: () => {}, describe: () => 'Fuss' })
+    r.verb<{ id: string }>({ name: 'box.trip', target: 'box', input: id, apply: (d, i) => d.set('box', i.id, 'Tripped', true), describe: () => 'Trip' })
+    r.system({ name: 'tripwire', on: { kind: 'box', component: 'Tripped' }, run: () => { throw new TypeError('the system broke') } })
+  })
+  const store = createStore(registry)
+  const made = store.run([create('Alpha', 10, 20), create('Beta', 30, 40), { verb: 'label.create', input: { on: 'b1', text: 'first' } }], person)
+  if (!made.ok) throw new Error('the fragile setup was refused')
+  return store
+}
+const refresh = (id: string): Call => ({ verb: 'box.refresh', input: { id } })
+const requeue = (id: string, name: string): Call => ({ verb: 'box.requeue', input: { id, name } })
+
+describe('a gesture that ends where it began leaves the ids of each kind in the order it found', () => {
+  it('after a move that takes a box out and puts it back, and after the end', () => {
+    const store = fragileStore()
+    const g = open(store)
+    expect(g.move([refresh('b1')])).toMatchObject({ ok: true, changed: false })
+    expect(store.ids('box')).toEqual(['b1', 'b2'])
+    expect(g.end()).toMatchObject({ ok: true, changed: false })
+    expect(store.ids('box')).toEqual(['b1', 'b2'])
+  })
+  it('after a move that reorders the box and a later one that ends where the gesture began, which takes the first back and tells listeners', () => {
+    const store = fragileStore()
+    const g = open(store)
+    g.move([requeue('b1', 'Z')])
+    expect(store.ids('box')).toEqual(['b2', 'b1'])
+    const seen: ChangeEvent[] = []
+    store.subscribe((e) => seen.push(e), { kind: 'box' })
+    expect(g.move([refresh('b1')])).toMatchObject({ ok: true, changed: false, records: [] })
+    expect(store.ids('box')).toEqual(['b1', 'b2'])
+    expect(store.get('box', 'b1')!.Name).toBe('Alpha')
+    expect(seen.map((e) => [e.cause, e.records.map((r) => `${r.op}:${r.id}`)])).toEqual([['verb', ['remove:b1', 'add:b1']]])
+    expect(g.end()).toMatchObject({ ok: true, changed: false })
+    expect(store.ids('box')).toEqual(['b1', 'b2'])
+  })
+  it('as the same verb leaves them outside a gesture, which changes nothing and takes no step', () => {
+    const store = fragileStore()
+    const before = shape(store)
+    expect(store.run([refresh('b1')], person)).toMatchObject({ ok: true, changed: false })
+    expect(store.ids('box')).toEqual(['b1', 'b2'])
+    expect(shape(store)).toEqual(before)
+  })
+  it('after a cancel of a move that reorders them', () => {
+    const store = fragileStore()
+    const g = open(store)
+    g.move([requeue('b1', 'Z')])
+    expect(store.ids('box')).toEqual(['b2', 'b1'])
+    expect(g.cancel()).toMatchObject({ ok: true })
+    expect(store.ids('box')).toEqual(['b1', 'b2'])
+    expect(store.get('box', 'b1')!.Name).toBe('Alpha')
+  })
+})
+
+describe('a gesture whose owner is gone', () => {
+  it.each<[string, Call]>([
+    ['a verb that throws', { verb: 'box.explode', input: { id: 'b1' } }],
+    ['a check that throws', { verb: 'box.fuss', input: { id: 'b1' } }],
+    ['a system that throws', { verb: 'box.trip', input: { id: 'b1' } }],
+  ])('is put back by the store when %s ends a move: the state stays as the move before left it, and an edit succeeds after', (_title, bad) => {
+    const store = fragileStore()
+    const start = shape(store)
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    const midway = store.hash()
+    expect(() => g.move([bad])).toThrow(/broke/)
+    expect(store.hash()).toBe(midway)
+    expect(g.isOpen()).toBe(true)
+    expect(store.run([rename('b1', 'X')], person)).toMatchObject({ ok: false, refusal: { reason: 'gesture' } })
+    expect(store.abandonGesture()).toMatchObject({ ok: true, changed: false })
+    expect(shape(store)).toEqual(start)
+    expect(g.isOpen()).toBe(false)
+    expect(g.move([])).toMatchObject({ ok: false, refusal: { reason: 'gesture' } })
+    expect(store.run([rename('b1', 'X')], person).ok).toBe(true)
+  })
+  it('leaves a store with no gesture open as it was', () => {
+    const { store } = toyStore()
+    const before = shape(store)
+    expect(store.abandonGesture()).toMatchObject({ ok: true, changed: false })
+    expect(shape(store)).toEqual(before)
+  })
+  it('is not put back while a lock is held, and is by the release of the lock, with no second ask', () => {
+    const { store } = toyStore()
+    const start = shape(store)
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    const release = store.lock('A solve is running; try again when it ends.')
+    expect(store.abandonGesture()).toMatchObject({ ok: false, refusal: { reason: 'locked' } })
+    expect(g.isOpen()).toBe(true)
+    expect(dims(store, 'b2')).toEqual({ w: 31, h: 40 })
+    release()
+    expect(g.isOpen()).toBe(false)
+    expect(dims(store, 'b2')).toEqual({ w: 30, h: 40 })
+    expect(shape(store)).toEqual(start)
+    expect(store.run([rename('b1', 'X')], person)).toMatchObject({ ok: true, changed: true })
+  })
+  it('is put back by the release of the last of two locks, and stays open after the first', () => {
+    const { store } = toyStore()
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    const first = store.lock('A solve is running.')
+    const second = store.lock('A file is being saved.')
+    store.abandonGesture()
+    first()
+    expect(g.isOpen()).toBe(true)
+    second()
+    expect(g.isOpen()).toBe(false)
+    expect(dims(store, 'b2')).toEqual({ w: 30, h: 40 })
+  })
+  it('lets a gesture that ended under the lock stand when the lock is released', () => {
+    const { store } = toyStore()
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    const release = store.lock('A solve is running.')
+    store.abandonGesture()
+    expect(g.end()).toMatchObject({ ok: true, changed: true })
+    release()
+    expect(dims(store, 'b2')).toEqual({ w: 31, h: 40 })
+    expect(store.undoDepth).toBe(2)
+  })
+  it('tells the listeners of the cancel once, when the lock is released', () => {
+    const { store } = toyStore()
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    const heard: string[] = []
+    store.subscribe((e) => heard.push(e.cause))
+    const release = store.lock('A solve is running.')
+    store.abandonGesture()
+    expect(heard).toEqual([])
+    release()
+    release()
+    expect(heard).toEqual(['cancel'])
+  })
+})
+
+describe('what a listener finds when a gesture is cancelled, and what a proposal finds while one is open', () => {
+  it('finds the gesture closed and the state given back, so a listener that edits is not refused, and hears the cause cancel', () => {
+    const { store } = toyStore()
+    const g = open(store)
+    g.move([resize('b2', 31)])
+    const heard: Array<{ cause: string; open: boolean; dims: unknown; edit: string }> = []
+    store.subscribe((e) => {
+      if (e.cause !== 'cancel') return
+      const edit = store.run([rename('b1', 'FromListener')], person)
+      heard.push({ cause: e.cause, open: g.isOpen(), dims: dims(store, 'b2'), edit: edit.ok ? 'ok' : edit.refusal.reason })
+    })
+    g.cancel()
+    expect(heard).toEqual([{ cause: 'cancel', open: false, dims: { w: 30, h: 40 }, edit: 'ok' }])
+    expect(store.get('box', 'b1')!.Name).toBe('FromListener')
+  })
+  it('refuses a proposal with the reason gesture while a gesture is open, and makes one once it has been ended or cancelled', () => {
+    const { store } = toyStore()
+    const items = [{ verb: 'box.rename', input: { id: 'b1', name: 'Q' } }]
+    const g = open(store)
+    expect(store.propose(items)).toMatchObject({ ok: false, refusal: { reason: 'gesture' } })
+    g.cancel()
+    expect(store.propose(items)).toMatchObject({ ok: true })
+    const h = open(store)
+    h.move([resize('b2', 31)])
+    expect(store.propose(items)).toMatchObject({ ok: false, refusal: { reason: 'gesture' } })
+    h.end()
+    expect(store.propose(items)).toMatchObject({ ok: true })
+  })
+})

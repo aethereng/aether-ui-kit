@@ -60,7 +60,7 @@ describe('change events say what changed', () => {
     store.subscribe(fn)
     store.run([rename('X'), { verb: 'box.rename', input: { id: 'b9', name: 'x' } }], person)
     store.run([rename('Alpha')], person)
-    store.preview(proposed(store, [rename('Z')]))
+    store.preview(proposed(store, [rename('Z')]), { actor: 'script' })
     expect(fn).not.toHaveBeenCalled()
   })
   it('keeps the commit when a listener throws, and surfaces the fault outside the commit', async () => {

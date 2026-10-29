@@ -567,6 +567,10 @@ const refusal = (reason: Refusal['reason'], issues: Issue[], extra: Partial<Refu
   refusal: { reason, issues, ...extra },
 })
 
+/** The refusal of a call by an actor the registry does not hold, or by a caller that names none. */
+const unregistered = (actor: Actor | undefined): { ok: false; refusal: Refusal } =>
+  refusal('actor', [{ message: typeof actor === 'string' ? `the actor '${actor}' is not registered` : 'no actor is named' }])
+
 export interface Store extends Reader {
   hash(): string
   snapshot(): Snapshot
@@ -589,10 +593,16 @@ export interface Store extends Reader {
   abandonGesture(): Outcome
   /** Refused with the reason 'gesture' while a gesture is open. */
   propose(items: readonly ProposalItem[]): ProposeOutcome
-  /** The card of a proposal: what it would change, computed on an overlay, the store untouched. `allowOfferedIds` is run's. */
-  preview(proposal: Proposal, options?: { only?: readonly number[]; actor?: Actor; allowOfferedIds?: boolean }): Preview
-  /** `allowOfferedIds` is run's: a proposal whose creates carry their ids is accepted under them, each checked as offer checks it. */
-  accept(proposal: Proposal, options?: { only?: readonly number[]; actor?: Actor; acknowledgeBase?: boolean; allowOfferedIds?: boolean }): Outcome
+  /**
+   * The card of a proposal: what it would change, computed on an overlay, the store untouched. It runs as the actor given,
+   * which the caller names; `allowOfferedIds` is run's.
+   */
+  preview(proposal: Proposal, options: { actor: Actor; only?: readonly number[]; allowOfferedIds?: boolean }): Preview
+  /**
+   * Commits a proposal as the actor given, which the caller names. `allowOfferedIds` is run's: a proposal whose creates
+   * carry their ids is accepted under them, each checked as offer checks it.
+   */
+  accept(proposal: Proposal, options: { actor: Actor; only?: readonly number[]; acknowledgeBase?: boolean; allowOfferedIds?: boolean }): Outcome
   read(name: string, input: Json): ReadOutcome
   subscribe(listener: (event: ChangeEvent) => void, filter?: { kind?: string; component?: string }): () => void
 }
@@ -731,6 +741,7 @@ class VerbStore implements Store {
     unticked: ReadonlyMap<string, number>,
     again?: { records: readonly ChangeRecord[]; seq: number },
   ): Built {
+    if (!this.registry.actors.includes(actor)) return unregistered(actor)
     const draft = new Overlay(this.registry, this.state, this.nextBatch, again?.seq ?? this.nextSeq)
     // a gesture's move first undoes the move before it, and is measured against the state that leaves; a second overlay
     // takes the same reversal and is never written again, so a system can read the state the gesture began from
@@ -899,7 +910,8 @@ class VerbStore implements Store {
   private travel(actor: Actor, from: 'undo' | 'redo'): Outcome {
     const lock = this.busy()
     if (lock !== null) return { ok: false, refusal: lock }
-    if (actor !== 'person') return refusal('actor', [{ message: `${from} is open to the person only` }])
+    const first = this.registry.actors[0]!
+    if (actor !== first) return refusal('actor', [{ message: `${from} is open to the ${first} only` }])
     const stack = from === 'undo' ? this.undoStack : this.redoStack
     const step = stack[stack.length - 1]
     if (step === undefined) return refusal(from === 'undo' ? 'nothing_to_undo' : 'nothing_to_redo', [{ message: `there is nothing to ${from}` }])
@@ -930,6 +942,7 @@ class VerbStore implements Store {
   gesture(options: { actor: Actor }): GestureOutcome {
     const busy = this.busy()
     if (busy !== null) return { ok: false, refusal: busy }
+    if (!this.registry.actors.includes(options.actor)) return unregistered(options.actor)
     const open: GestureState = { actor: options.actor, seq: this.nextSeq, hash: this.hash(), counters: new Map(this.state.counters), touched: this.touched.length, last: null }
     this.gesturing = open
     return {
@@ -1084,18 +1097,18 @@ class VerbStore implements Store {
     return { ok: true, items: picked.map((i) => proposal.items[i]!), unticked }
   }
 
-  preview(proposal: Proposal, options: { only?: readonly number[]; actor?: Actor; allowOfferedIds?: boolean } = {}): Preview {
+  preview(proposal: Proposal, options: { actor: Actor; only?: readonly number[]; allowOfferedIds?: boolean }): Preview {
     const sub = this.subset(proposal, options.only)
     if (!sub.ok) return sub
-    const built = this.build(sub.items, options.actor ?? 'script', options.allowOfferedIds === true, sub.unticked)
+    const built = this.build(sub.items, options.actor, options.allowOfferedIds === true, sub.unticked)
     if (!built.ok) return built
     return { ok: true, lines: built.lines, records: built.draft.frozenRecords(), ids: built.ids }
   }
 
-  accept(proposal: Proposal, options: { only?: readonly number[]; actor?: Actor; acknowledgeBase?: boolean; allowOfferedIds?: boolean } = {}): Outcome {
+  accept(proposal: Proposal, options: { actor: Actor; only?: readonly number[]; acknowledgeBase?: boolean; allowOfferedIds?: boolean }): Outcome {
     const lock = this.busy()
     if (lock !== null) return { ok: false, refusal: lock }
-    const actor = options.actor ?? 'script'
+    const actor = options.actor
     const sub = this.subset(proposal, options.only)
     if (!sub.ok) return sub
     const contentMoved = proposal.baseHash !== this.hash()

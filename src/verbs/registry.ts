@@ -11,13 +11,15 @@ export interface Registry {
   readonly verbs: ReadonlyMap<string, Verb>
   readonly systems: readonly System[]
   readonly reads: ReadonlyMap<string, ReadVerb>
+  /** The actors that may make a call, in the order they were given; undo and redo are open to the first only. */
+  readonly actors: readonly Actor[]
   kind(name: string, spec: KindSpec): void
   verb<I extends Json>(verb: Verb<I>): void
   system(system: System): void
   read(read: ReadVerb): void
   /** The id space a kind's ids live in: its group, or the kind itself. */
   space(kind: string): string
-  /** The schema of a proposal, its items a union over the verbs the actor may call. */
+  /** The schema of a proposal, its items a union over the verbs the actor may call. Throws for an actor the registry does not hold. */
   proposalSchema(actor: Actor): Schema
   /** The schema of a read: a union over the read verbs. */
   readSchema(): Schema
@@ -36,10 +38,15 @@ export type Projection = (reader: Reader, kinds: readonly string[]) => Json
 /**
  * An empty registry holding the read verbs every vocabulary shares; an app registers its kinds, verbs and systems into
  * it. A projection given in the options replaces the default one (each kind to its entities by id, each entity to its
- * components) in `model.read`, so a vocabulary can serve a read shape of its own.
+ * components) in `model.read`, so a vocabulary can serve a read shape of its own. The actors name who may make a call,
+ * `['person']` when none are given; a verb opens itself to some of them only, and undo and redo are open to the first.
  */
-export function createRegistry(options: { project?: Projection } = {}): Registry {
+export function createRegistry(options: { project?: Projection; actors?: readonly Actor[] } = {}): Registry {
   const project = options.project ?? projection
+  const actors: readonly Actor[] = Object.freeze([...(options.actors ?? ['person'])])
+  if (actors.length === 0 || actors.some((a) => typeof a !== 'string' || a === '') || new Set(actors).size !== actors.length) {
+    throw new Error('the actors must be one name or more, none empty and none given twice')
+  }
   const kinds = new Map<string, KindSpec>()
   const verbs = new Map<string, Verb>()
   const systems: System[] = []
@@ -50,6 +57,7 @@ export function createRegistry(options: { project?: Projection } = {}): Registry
     verbs,
     systems,
     reads,
+    actors,
     kind(name, spec) {
       if (kinds.has(name)) throw new Error(`kind '${name}' is registered twice`)
       if (!isValidName(name) || !isValidName(spec.prefix) || (spec.group !== undefined && !isValidName(spec.group))) throw new Error(`kind '${name}', its prefix and its group must hold no reserved character, no whitespace, no leading '#', and must not be named ${PROTO_KEY}`)
@@ -71,6 +79,8 @@ export function createRegistry(options: { project?: Projection } = {}): Registry
       if (!v.name.startsWith(`${v.target}.`) || v.name.length === v.target.length + 1) throw new Error(`verb '${v.name}' is not named '${v.target}.<action>'`)
       const unknownMinted = v.mintsOther?.find((k) => !kinds.has(k))
       if (unknownMinted !== undefined) throw new Error(`verb '${v.name}' mints the kind '${unknownMinted}', which is not registered`)
+      const unknownActor = v.actors?.find((a) => !actors.includes(a))
+      if (unknownActor !== undefined) throw new Error(`verb '${v.name}' is open to the actor '${unknownActor}', which is not registered`)
       const unread = unreadKeywords(v.input)
       if (unread.length > 0) throw new Error(`verb '${v.name}' uses schema keywords or forms the checker does not read: ${unread.join(', ')}`)
       const unknownRef = refKinds(v.input).find((k) => !kinds.has(k))
@@ -87,6 +97,7 @@ export function createRegistry(options: { project?: Projection } = {}): Registry
     },
     space: (kind) => kinds.get(kind)?.group ?? kind,
     proposalSchema(actor) {
+      if (!actors.includes(actor)) throw new Error(`the actor '${actor}' is not registered`)
       const allowed = [...verbs.values()].filter((v) => v.actors === undefined || v.actors.includes(actor))
       return {
         type: 'object',

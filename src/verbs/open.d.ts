@@ -20,7 +20,7 @@ import type { Registry } from './registry';
 export type OpenInput = {
     snapshot: Json;
 };
-/** The verb `<kind>.open`. `kind` is a registered kind that stands for the whole state; the verb is open to the person unless `actors` says otherwise. */
+/** The verb `<kind>.open`. `kind` is a registered kind that stands for the whole state; the verb is open to the first actor the registry names unless `actors` says otherwise. */
 export declare function openVerb(registry: Registry, kind: string, options?: {
     actors?: readonly Actor[];
 }): Verb<OpenInput>;

@@ -103,13 +103,13 @@ function inOrder(entities: Opened['entities'], orders: ReadonlyMap<string, strin
   return placed
 }
 
-/** The verb `<kind>.open`. `kind` is a registered kind that stands for the whole state; the verb is open to the person unless `actors` says otherwise. */
+/** The verb `<kind>.open`. `kind` is a registered kind that stands for the whole state; the verb is open to the first actor the registry names unless `actors` says otherwise. */
 export function openVerb(registry: Registry, kind: string, options: { actors?: readonly Actor[] } = {}): Verb<OpenInput> {
   return {
     name: `${kind}.open`,
     target: kind,
     opens: true,
-    actors: options.actors ?? ['person'],
+    actors: options.actors ?? [registry.actors[0]!],
     input: {
       type: 'object',
       properties: { snapshot: { type: 'object', description: 'The saved state to open: its entities by kind and id, and the counters ids are minted from.' } },

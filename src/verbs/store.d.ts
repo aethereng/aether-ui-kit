@@ -77,16 +77,22 @@ export interface Store extends Reader {
     abandonGesture(): Outcome;
     /** Refused with the reason 'gesture' while a gesture is open. */
     propose(items: readonly ProposalItem[]): ProposeOutcome;
-    /** The card of a proposal: what it would change, computed on an overlay, the store untouched. `allowOfferedIds` is run's. */
-    preview(proposal: Proposal, options?: {
+    /**
+     * The card of a proposal: what it would change, computed on an overlay, the store untouched. It runs as the actor given,
+     * which the caller names; `allowOfferedIds` is run's.
+     */
+    preview(proposal: Proposal, options: {
+        actor: Actor;
         only?: readonly number[];
-        actor?: Actor;
         allowOfferedIds?: boolean;
     }): Preview;
-    /** `allowOfferedIds` is run's: a proposal whose creates carry their ids is accepted under them, each checked as offer checks it. */
-    accept(proposal: Proposal, options?: {
+    /**
+     * Commits a proposal as the actor given, which the caller names. `allowOfferedIds` is run's: a proposal whose creates
+     * carry their ids is accepted under them, each checked as offer checks it.
+     */
+    accept(proposal: Proposal, options: {
+        actor: Actor;
         only?: readonly number[];
-        actor?: Actor;
         acknowledgeBase?: boolean;
         allowOfferedIds?: boolean;
     }): Outcome;

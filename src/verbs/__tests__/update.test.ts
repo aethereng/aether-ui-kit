@@ -129,7 +129,7 @@ describe('an update that changes nothing', () => {
 describe('the card line, undo, replay, references and actors', () => {
   it('describes the call with each field named by its label, its value and its unit, in the order of the table', () => {
     const { store } = toy()
-    const card = store.preview(proposed(store, [{ verb: 'box.update', input: { id: 'b1', set: { h: 21, w: 11, name: 'X' } } }]))
+    const card = store.preview(proposed(store, [{ verb: 'box.update', input: { id: 'b1', set: { h: 21, w: 11, name: 'X' } } }]), { actor: 'script' })
     expect(card.ok && card.lines).toEqual(["Set name to 'X', width to 11 mm, height to 21 mm on box b1"])
   })
   it('undoes and redoes like any other verb, and its log replays to the same state', () => {

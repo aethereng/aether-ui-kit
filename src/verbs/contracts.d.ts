@@ -10,7 +10,8 @@ export type Json = null | boolean | number | string | Json[] | {
 export type Schema = {
     [key: string]: Json;
 };
-export type Actor = 'person' | 'script';
+/** Who makes a call: one of the names the registry was given (see createRegistry). */
+export type Actor = string;
 /** The components of one entity, by component name. Frozen once stored. */
 export type Components = {
     readonly [component: string]: Json;
@@ -128,7 +129,7 @@ export interface Verb<I extends Json = Json> {
     mintsOther?: readonly string[];
     /** A JSON Schema; the schema a caller is given (toCallSchema) is generated from it. A string property marked `x-ref` names a kind. */
     input: Schema;
-    /** Who may call it; absent means anyone. */
+    /** Who may call it, from the actors the registry names; absent means any of them. */
     actors?: readonly Actor[];
     /**
      * The verb replaces everything in the store with another state (see open.ts). It takes a batch to itself, no system

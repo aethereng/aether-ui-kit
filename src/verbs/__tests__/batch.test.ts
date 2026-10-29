@@ -662,7 +662,7 @@ describe('what a caller is handed cannot be written to', () => {
     store.run([rename('b1', 'X')], person)
     const undone = store.undo('person')
     const redone = store.redo('person')
-    const card = store.preview(proposed(store, [{ verb: 'box.rename', input: { id: 'b1', name: 'Y' } }]))
+    const card = store.preview(proposed(store, [{ verb: 'box.rename', input: { id: 'b1', name: 'Y' } }]), { actor: 'script' })
     expect([undone, redone, card].map((o) => o.ok && frozen(o.records))).toEqual([true, true, true])
   })
   it('hands validate the batch so far as frozen lists of frozen records and calls', () => {

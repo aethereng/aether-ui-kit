@@ -7,7 +7,7 @@ import { createRegistry, createStore, dependants, type Call, type Proposal, type
 export const BOX_INPUT: Schema = { type: 'object', properties: { name: { type: 'string' }, w: { type: 'number', minimum: 1, maximum: 100 }, h: { type: 'number', minimum: 1, maximum: 100 } }, required: ['name', 'w', 'h'], additionalProperties: false }
 
 export function toyRegistry(extra: (r: Registry) => void = () => {}, options: Parameters<typeof createRegistry>[0] = {}): Registry {
-  const r = createRegistry(options)
+  const r = createRegistry({ actors: ['person', 'script'], ...options })
   r.kind('box', { prefix: 'b', group: 'stock' })
   r.kind('crate', { prefix: 'c', group: 'stock' })
   r.kind('label', { prefix: 'l', relations: { On: 'box' } })

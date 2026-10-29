@@ -147,7 +147,7 @@ describe('removing an optional field', () => {
   it('writes the card line with the fields it clears, after the fields it sets', () => {
     const { store } = fields()
     const line = (set: Json): string | undefined => {
-      const card = store.preview(proposed(store, [update('b1', set)]))
+      const card = store.preview(proposed(store, [update('b1', set)]), { actor: 'script' })
       return card.ok ? card.lines[0] : undefined
     }
     expect(line({ depth: null, name: 'X' })).toBe("Set name to 'X' and clear depth on box b1")

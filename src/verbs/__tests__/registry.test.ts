@@ -23,6 +23,13 @@ describe('registering a vocabulary', () => {
     expect(() => r.kind('a.b', { prefix: 'a' })).toThrow(/reserved/)
     expect(() => r.kind('ab', { prefix: '#' })).toThrow(/reserved/)
   })
+  it('refuses a prefix that holds a dot, which an id may hold, and takes the same prefix without it', () => {
+    const r = createRegistry()
+    expect(() => r.kind('beam', { prefix: 'C15x33.9' })).toThrow(/reserved/)
+    expect(r.kinds.has('beam')).toBe(false)
+    r.kind('beam', { prefix: 'C15x33' })
+    expect(r.kinds.get('beam')?.prefix).toBe('C15x33')
+  })
   it('refuses a verb that targets a kind nobody registered', () => {
     const r = createRegistry()
     expect(() => r.verb({ name: 'box.create', target: 'box', input: empty, ...noop })).toThrow(/not registered/)

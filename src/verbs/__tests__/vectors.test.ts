@@ -5,8 +5,8 @@ import { createStore, replay, type Actor, type Call, type Json, type Outcome, ty
 import { toyRegistry } from './toy'
 
 /**
- * The golden vectors of the machinery (S0): batches and the records they must leave, written by hand from sections 4
- * and 11 of the definition in vectors.json, which also says how a record, a seq and a batch number are counted.
+ * The golden vectors of the machinery: batches and the records they must leave, written by hand in vectors.json, which
+ * also says how a record, a seq and a batch number are counted.
  * This file only plays them against the toy vocabulary; no expected value is computed here.
  */
 interface Expected {
@@ -38,7 +38,6 @@ type Step =
   | { do: 'replay' }
 interface Vector {
   name: string
-  section: string
   steps: Step[]
 }
 interface Vectors {
@@ -134,10 +133,9 @@ function play(vector: Vector, base: Snapshot): number {
 }
 
 describe('the golden vectors of the machinery', () => {
-  it('holds a good number of vectors, each with a unique name and the section of the definition it comes from', () => {
+  it('holds a good number of vectors, each with a unique name', () => {
     expect(file.vectors.length).toBeGreaterThanOrEqual(10)
     expect(new Set(file.vectors.map((v) => v.name)).size).toBe(file.vectors.length)
-    for (const v of file.vectors) expect({ name: v.name, section: v.section }).toEqual({ name: v.name, section: expect.stringMatching(/^(4|11)[.][0-9]+$/) })
   })
   it('holds the batch whose writes cancel, which leaves the redo tail and takes no batch number', () => {
     const v = file.vectors.find((x) => x.name.startsWith('a batch whose writes cancel'))
@@ -153,11 +151,11 @@ describe('the golden vectors of the machinery', () => {
   })
   it('sees a vector whose expectation is wrong (seeded), and passes the same vector when it is right', () => {
     const rename: Call = { verb: 'box.rename', input: { id: 'b1', name: 'X' } }
-    const right: Vector = { name: 'seed', section: '11.2', steps: [{ do: 'run', actor: 'person', calls: [rename], expect: { ok: true, changed: true, batch: 1 }, after: { undoDepth: 1 } }] }
-    const wrong: Vector = { name: 'seed', section: '11.2', steps: [{ do: 'run', actor: 'person', calls: [rename], expect: { ok: true, changed: false }, after: { undoDepth: 1 } }] }
+    const right: Vector = { name: 'seed', steps: [{ do: 'run', actor: 'person', calls: [rename], expect: { ok: true, changed: true, batch: 1 }, after: { undoDepth: 1 } }] }
+    const wrong: Vector = { name: 'seed', steps: [{ do: 'run', actor: 'person', calls: [rename], expect: { ok: true, changed: false }, after: { undoDepth: 1 } }] }
     expect(() => play(right, file.base)).not.toThrow()
     expect(() => play(wrong, file.base)).toThrow('changed')
-    const dropped: Vector = { name: 'seed', section: '11.2', steps: [{ do: 'run', actor: 'person', calls: [rename], expect: { ok: true, records: [] } }] }
+    const dropped: Vector = { name: 'seed', steps: [{ do: 'run', actor: 'person', calls: [rename], expect: { ok: true, records: [] } }] }
     expect(() => play(dropped, file.base)).toThrow('records')
   })
 })

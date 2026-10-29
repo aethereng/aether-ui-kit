@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
-import { createRegistry, createStore, openVerb, type Actor, type Registry } from '..'
+import { createRegistry, createStore, openVerb, replay, type Actor, type Registry } from '..'
 import { create, person, proposed, script, toyRegistry, toyStore } from './toy'
 
 /** A registry of one kind and two verbs: `note.add`, open to anyone, and `note.seal`, open to the script only. */
@@ -31,6 +31,10 @@ describe('the actors a registry names', () => {
     expect(() => createRegistry({ actors: [] })).toThrow(/actors/)
     expect(() => createRegistry({ actors: ['person', ''] })).toThrow(/actors/)
     expect(() => createRegistry({ actors: ['person', 'person'] })).toThrow(/actors/)
+  })
+
+  it('refuses a single name given in place of a list', () => {
+    expect(() => createRegistry({ actors: 'person' as never })).toThrow(/actors/)
   })
 
   it('refuses a verb open to an actor it does not hold, and takes one open to an actor it holds', () => {
@@ -108,7 +112,31 @@ describe('preview and accept', () => {
     const none = { ok: false, refusal: { reason: 'actor', issues: [{ message: 'no actor is named' }] } }
     expect(store.preview(p, {} as never)).toEqual(none)
     expect(store.accept(p, {} as never)).toEqual(none)
+    expect(store.preview(p, undefined as never)).toEqual(none)
+    expect(store.accept(p, undefined as never)).toEqual(none)
     expect(store.hash()).toBe(before)
+  })
+
+  it('refuse an actor the registry does not hold before they compare the base, so the reason is the actor either way', () => {
+    const { store } = toyStore()
+    const p = proposed(store, [create('Gamma')])
+    const robot = { ok: false, refusal: { reason: 'actor', issues: [{ message: "the actor 'robot' is not registered" }] } }
+    expect(store.accept(p, { actor: 'robot' })).toEqual(robot)
+    expect(store.run([create('Delta')], person)).toMatchObject({ ok: true })
+    expect(store.accept(p, { actor: 'robot' })).toEqual(robot)
+    expect(store.accept(p, { actor: 'person' })).toMatchObject({ ok: false, refusal: { reason: 'base_changed' } })
+  })
+})
+
+describe('a saved log', () => {
+  it('replays against a registry that holds every actor it names, and is refused at the first entry by one it does not', () => {
+    const store = createStore(notes(['person', 'script']))
+    expect(store.run([add('a')], { actor: 'person' })).toMatchObject({ ok: true })
+    expect(store.run([add('b')], { actor: 'script' })).toMatchObject({ ok: true })
+    const saved = store.save()
+    const again = replay(notes(['person', 'script']), saved)
+    expect(again.ok && again.store.hash()).toBe(store.hash())
+    expect(replay(notes(['person']), saved)).toEqual({ ok: false, refusal: { reason: 'replay', at: 1, issues: [{ message: "the actor 'script' is not registered" }] } })
   })
 })
 

@@ -43,10 +43,11 @@ export type Projection = (reader: Reader, kinds: readonly string[]) => Json
  */
 export function createRegistry(options: { project?: Projection; actors?: readonly Actor[] } = {}): Registry {
   const project = options.project ?? projection
-  const actors: readonly Actor[] = Object.freeze([...(options.actors ?? ['person'])])
-  if (actors.length === 0 || actors.some((a) => typeof a !== 'string' || a === '') || new Set(actors).size !== actors.length) {
-    throw new Error('the actors must be one name or more, none empty and none given twice')
+  const given: unknown = options.actors ?? ['person']
+  if (!Array.isArray(given) || given.length === 0 || given.some((a) => typeof a !== 'string' || a === '') || new Set(given).size !== given.length) {
+    throw new Error('the actors must be a list of one name or more, none empty and none given twice')
   }
+  const actors: readonly Actor[] = Object.freeze([...(given as Actor[])])
   const kinds = new Map<string, KindSpec>()
   const verbs = new Map<string, Verb>()
   const systems: System[] = []

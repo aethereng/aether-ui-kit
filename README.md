@@ -44,7 +44,7 @@ The core knows how to stack overlapping bars into lanes. It does not know what a
 
 So for `Gantt` and `Graph2D`, a wrapper for another framework genuinely would be a new file importing the same core; that claim is load-bearing, and the gallery already drives `ForceLayout` directly, without the component, to prove the core stands alone. For the small controls it would be a rewrite: there is just not much to rewrite.
 
-Two things travel further than the components do. The cores are **exported separately** (`viz/core`, `viz/core/gantt`, `controls/core`, `property-editor/core`, `assistant/core`), so the maths is usable from React, Svelte or nothing at all without pulling Vue in. And **`ui-kit.css` is framework-agnostic**: every `.aether-*` class and the whole token contract below is plain CSS.
+Two things travel further than the components do. The cores are **exported separately** (listed under [Components](#components)), so the maths is usable from React, Svelte or nothing at all without pulling Vue in. And **`ui-kit.css` is framework-agnostic**: every `.aether-*` class and the whole token contract below is plain CSS.
 
 Today, Vue is the only wrapper that exists.
 
@@ -74,8 +74,8 @@ this was written down. v0.9.1 is the same tree under a name that has not moved.)
 The package ships raw `.vue` and `.ts`: your bundler compiles it, same as any source dependency.
 
 **A bundler is required.**
-There is deliberately no Node-importable entry point: no `main`, and all 32 `exports` subpaths
-point at `.vue`, `.ts` or `.css`, none of which Node can load. `require('@aether/ui-kit')` will not
+There is deliberately no Node-importable entry point: no `main`, and every `exports` subpath
+points at `.vue`, `.ts` or `.css`, none of which Node can load. `require('@aether/ui-kit')` will not
 work and is not meant to. `scripts/check-exports.mjs` holds the decision rather than leaving it as folklore. It resolves and builds every subpath through a real Vite build against the packed
 tarball, and it *fails* on a subpath pointing at a `.js` file rather than letting it inherit the
 exemption from the `.vue` targets beside it. Such a target is one a consumer could reasonably
@@ -311,6 +311,8 @@ What the store does with a batch of calls:
 **Actors** name who makes a call. `createRegistry({ actors })` takes the app's names (`['person']` when none are given).
 A verb may be open to some of them only, a call by an actor the registry does not hold is refused, and undo and redo
 are open to the first actor only. `preview` and `accept` run as the actor the caller names; they have no default.
+A saved log names the actor of each entry, so it replays only against a registry that holds every one of them: an
+entry by any other actor is refused at replay, with the actor named.
 
 **Ids** hold none of `[ ] { } ~` and no whitespace, do not start with `#`, and may hold a dot, so a path reads one
 inside brackets: `beam[C15x33.9].Size`. The name of a kind, its prefix and its group hold no dot.

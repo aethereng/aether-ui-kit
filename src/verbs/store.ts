@@ -1098,6 +1098,8 @@ class VerbStore implements Store {
   }
 
   preview(proposal: Proposal, options: { actor: Actor; only?: readonly number[]; allowOfferedIds?: boolean }): Preview {
+    // checked before anything reads the options, so a caller that gives none is told that no actor is named
+    if (!this.registry.actors.includes(options?.actor)) return unregistered(options?.actor)
     const sub = this.subset(proposal, options.only)
     if (!sub.ok) return sub
     const built = this.build(sub.items, options.actor, options.allowOfferedIds === true, sub.unticked)
@@ -1108,6 +1110,8 @@ class VerbStore implements Store {
   accept(proposal: Proposal, options: { actor: Actor; only?: readonly number[]; acknowledgeBase?: boolean; allowOfferedIds?: boolean }): Outcome {
     const lock = this.busy()
     if (lock !== null) return { ok: false, refusal: lock }
+    // checked before the base is compared, so the actor is named whether or not the store moved under the proposal
+    if (!this.registry.actors.includes(options?.actor)) return unregistered(options?.actor)
     const actor = options.actor
     const sub = this.subset(proposal, options.only)
     if (!sub.ok) return sub

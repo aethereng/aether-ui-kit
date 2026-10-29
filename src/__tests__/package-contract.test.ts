@@ -54,7 +54,7 @@ describe('exports map', () => {
    * what produced the broken one. The only honest way to ask "is this file in the tarball" is to
    * pack and look, which is too slow for a unit test -- so the property moved to
    * scripts/check-exports.mjs (npm run check:exports), which packs, extracts, compares the
-   * clean-clone tree a git dependency actually installs, and builds all 32 subpaths through the
+   * clean-clone tree a git dependency actually installs, and builds every subpath through the
    * installed package's own exports map. It runs nightly.
    *
    * An inert assertion beside a live one is worse than no assertion: it spends the credibility

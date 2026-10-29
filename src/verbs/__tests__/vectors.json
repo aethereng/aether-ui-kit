@@ -1,5 +1,5 @@
 {
-  "about": "Golden vectors for the verb machinery, written by hand from sections 4 and 11 of the definition and run against the toy vocabulary of toy.ts. A record is as 4.3 gives it. Its seq counts every record the store has written, undo and redo included, from 0. Its batch is the number of the step it belongs to, from 1, and a batch that is refused or changes nothing takes none. An undo or redo record is the original with before and after exchanged (and the op of an add and a remove exchanged with them), its seq renumbered. A remove carries the position the entity held among the ids of its kind, and the add that undoes it carries the same. A gesture replaces each of its moves by the next, so the step it ends as holds the records of its last move alone, numbered from the seq the gesture began at as if that move had run by itself, and a gesture that ends where it began takes no seq, no batch number and no log entry. The hashes of E1 are not here yet: a hash is named by a mark and compared with another.",
+  "about": "Golden vectors for the verb machinery, written by hand and run against the toy vocabulary of toy.ts. A record is a ChangeRecord (contracts.ts). Its seq counts every record the store has written, undo and redo included, from 0. Its batch is the number of the step it belongs to, from 1, and a batch that is refused or changes nothing takes none. An undo or redo record is the original with before and after exchanged (and the op of an add and a remove exchanged with them), its seq renumbered. A remove carries the position the entity held among the ids of its kind, and the add that undoes it carries the same. A gesture replaces each of its moves by the next, so the step it ends as holds the records of its last move alone, numbered from the seq the gesture began at as if that move had run by itself, and a gesture that ends where it began takes no seq, no batch number and no log entry. No hash is written out here: a step names a hash by a mark and compares it with another.",
   "base": {
     "entities": {
       "box": {
@@ -15,7 +15,6 @@
   "vectors": [
     {
       "name": "three valid verbs are one undo step, and undo and redo return the hash",
-      "section": "11.2",
       "steps": [
         { "do": "mark", "name": "start" },
         {
@@ -64,7 +63,6 @@
     },
     {
       "name": "a batch whose third verb is invalid changes the store, the stack and the log by nothing",
-      "section": "11.2",
       "steps": [
         { "do": "mark", "name": "start" },
         {
@@ -82,7 +80,6 @@
     },
     {
       "name": "an input that changes nothing leaves no step, no batch number and no log entry",
-      "section": "11.2",
       "steps": [
         { "do": "mark", "name": "start" },
         {
@@ -111,7 +108,6 @@
     },
     {
       "name": "a batch whose writes cancel is no change, and the redo tail stays",
-      "section": "11.2",
       "steps": [
         {
           "do": "run",
@@ -170,7 +166,6 @@
     },
     {
       "name": "a resize and its reverse on a box a label sits on is no change, and the system that marks the label stale does not run",
-      "section": "4.2",
       "steps": [
         { "do": "mark", "name": "start" },
         {
@@ -202,7 +197,6 @@
     },
     {
       "name": "a drag of five moves is one undo step and one log entry, numbered as its last move alone",
-      "section": "4.5",
       "steps": [
         { "do": "mark", "name": "start" },
         {
@@ -252,7 +246,6 @@
     },
     {
       "name": "a drag that ends where it began leaves no step, no log entry, no batch number and no seq, and keeps the redo tail",
-      "section": "4.5",
       "steps": [
         { "do": "mark", "name": "start" },
         {
@@ -298,7 +291,6 @@
     },
     {
       "name": "create, delete, create never yields one id twice",
-      "section": "11.3",
       "steps": [
         {
           "do": "run",
@@ -339,7 +331,6 @@
     },
     {
       "name": "a handle resolves to the id the layer minted, and the log holds ids and no handle",
-      "section": "4.2",
       "steps": [
         {
           "do": "run",
@@ -368,7 +359,6 @@
     },
     {
       "name": "undo of a cascade delete puts each entity back where it was",
-      "section": "4.3",
       "steps": [
         { "do": "mark", "name": "start" },
         {
@@ -399,7 +389,6 @@
     },
     {
       "name": "undo of a delete in the middle of the list puts the entity back in the middle",
-      "section": "4.3",
       "steps": [
         {
           "do": "run",
@@ -449,7 +438,6 @@
     },
     {
       "name": "a system's records ride in the batch that caused them and undo with it",
-      "section": "4.3",
       "steps": [
         { "do": "mark", "name": "start" },
         {
@@ -480,7 +468,6 @@
     },
     {
       "name": "a new batch that changes something clears the redo tail",
-      "section": "4.3",
       "steps": [
         {
           "do": "run",
@@ -506,7 +493,6 @@
     },
     {
       "name": "a lock refuses an edit, an undo and a redo with its reason",
-      "section": "4.2",
       "steps": [
         {
           "do": "run",
@@ -533,7 +519,6 @@
     },
     {
       "name": "who may call: a verb open to the person only, and undo and redo",
-      "section": "4.1",
       "steps": [
         {
           "do": "run",
@@ -559,7 +544,6 @@
     },
     {
       "name": "base plus the log reaches the stored hash with the same ids, undo and redo included",
-      "section": "11.3",
       "steps": [
         { "do": "run", "actor": "person", "calls": [{ "verb": "box.create", "input": { "name": "a", "w": 1, "h": 1 }, "as": "x" }], "expect": { "ok": true, "changed": true, "ids": { "x": "b3" } } },
         { "do": "run", "actor": "person", "calls": [{ "verb": "box.rename", "input": { "id": "b1", "name": "B" } }], "expect": { "ok": true, "changed": true } },

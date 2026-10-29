@@ -210,6 +210,8 @@ focus ring), which every component needs and no component owns.
 
 All under `@aether/ui-kit/…`. Framework-free cores, importable on their own: `controls/core`, `property-editor/core`, `viz/core`, `viz/core/gantt`, `assistant/core`.
 
+`verbs` is framework-free too, and has no Vue part at all: see [Verbs](#verbs-the-edit-layer-under-an-editor) below.
+
 There is also one plain CSS class, `.aether-button-group`, for a joined row of `Tool`s. It is not a component because nothing in it is ever *active*: a row of commands only looks like a `Seg`, and bending `Seg`'s `modelValue` contract to hold three unrelated actions would make it lie about what it is.
 
 ### PropertyEditor: where the labels sit
@@ -269,6 +271,56 @@ function reschedule(id: string, start: number, end: number | null) {
 
 ---
 
+## Verbs: the edit layer under an editor
+
+`verbs` is plain TypeScript with no Vue and no DOM. An app declares its vocabulary in a registry: the kinds of entity it
+stores (each with the prefix its ids start with and the places it holds references to other entities), the verbs that
+change them, the systems that react inside the same batch, and the reads. Every change then goes through a store.
+
+```ts
+import { createRegistry, createStore } from '@aether/ui-kit/verbs'
+
+const registry = createRegistry({ actors: ['person', 'script'] })
+registry.kind('note', { prefix: 'n' })
+registry.verb<{ text: string }>({
+  name: 'note.add',
+  target: 'note',
+  mints: true, // the store names the new note: n1, n2, …
+  input: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'], additionalProperties: false },
+  apply: (draft, input, context) => draft.add('note', context.id!, { Text: input.text }),
+  describe: (input) => `Add a note '${input.text}'`,
+})
+
+const store = createStore(registry)
+store.run([{ verb: 'note.add', input: { text: 'first' } }], { actor: 'person' }) // { ok: true, … }
+store.undo('person')
+```
+
+What the store does with a batch of calls:
+
+- It checks each call's input against the verb's JSON Schema, then against the verb's own validation, and refuses the
+  whole batch with a reason and the number of the call that refused.
+- It applies the batch to an overlay and commits it as one step, or commits nothing. Listeners are told the records of
+  what changed, filtered by kind and component.
+- It keeps a log. `undo` and `redo` walk the steps, and a saved log (`save`, `replay`) reaches the same content hash and
+  the same id counters, or is refused with the reason.
+- A batch can wait as a proposal: `preview` computes what it would change without touching the store, and `accept`
+  commits it later, refusing it when the store moved under it unless the caller acknowledges that.
+- A gesture (a drag) runs as moves that readers see at once and that commit as one step.
+
+**Actors** name who makes a call. `createRegistry({ actors })` takes the app's names (`['person']` when none are given).
+A verb may be open to some of them only, a call by an actor the registry does not hold is refused, and undo and redo
+are open to the first actor only. `preview` and `accept` run as the actor the caller names; they have no default.
+
+**Ids** hold none of `[ ] { } ~` and no whitespace, do not start with `#`, and may hold a dot, so a path reads one
+inside brackets: `beam[C15x33.9].Size`. The name of a kind, its prefix and its group hold no dot.
+
+`toCallSchema` gives a verb's input schema as a caller outside the app is given it: wherever the schema marks a
+reference (`x-ref`), the value may also be `{ handle }`, the name an earlier call of the same proposal gave the entity
+it creates. The content hash is SHA-256, computed inside the module, so the kit still has no runtime dependency.
+
+---
+
 ## Gallery
 
 ### **[aethereng.github.io/aether-ui-kit](https://aethereng.github.io/aether-ui-kit/)**
@@ -305,7 +357,7 @@ consumers on a Node they do not need.
 
 The tests are in three layers that exist for different reasons:
 
-- **Cores**: lane packing, span-vs-point classification, force-layout convergence, the scrub handoff, speed cycling, field coercion. No DOM. This is where the logic lives, so this is where most tests live.
+- **Cores**: lane packing, span-vs-point classification, force-layout convergence, the scrub handoff, speed cycling, field coercion, and the verb store's batches, undo, proposals and replay. No DOM. This is where the logic lives, so this is where most tests live.
 - **The package contract**: that every `exports` subpath resolves to a file that exists *and* is inside the published `files` globs; that runtime dependencies stay at zero; that the token contract holds. Both classes of bug here have shipped once: an entry point that 404s for anyone installing normally, and CSS reading tokens no palette defined.
 - **Wrapper / pointer layer**: real `pointerdown`/`move`/`up` sequences against rendered DOM. This layer exists because that is where these components have actually broken: an extraction renamed a class, every hit-test selector silently stopped matching, and drag, resize and create were all dead while everything still compiled and type-checked.
 

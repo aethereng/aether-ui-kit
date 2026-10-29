@@ -122,6 +122,10 @@
       "types": "./src/controls/core/index.d.ts",
       "import": "./src/controls/core/index.ts"
     },
+    "./verbs": {
+      "types": "./src/verbs/index.d.ts",
+      "import": "./src/verbs/index.ts"
+    },
     "./assistant/core": {
       "types": "./src/assistant/core/index.d.ts",
       "import": "./src/assistant/core/index.ts"

@@ -371,7 +371,9 @@ and the words of its refusal. A cell's value is given when the cell is left or E
 back as the record holds it. A change in a ticked row goes to every ticked row, and lines pasted into a cell go one to a
 row from there down, each as one `run`; where a change cannot go to every row, nothing runs and the reason is shown
 beside the cell. It emits `open` with the id of a row whose id is clicked, and `changed` with the column, the values and
-whether they were pasted, for the words of the app's step. `ticked` is a `v-model` the app may hold. The head (which kind
+whether they were pasted, for the words of the app's step. `ticked` is a `v-model` the app may hold. A free-text column
+is edited in its cells unless the app sets `textEdited` to false, which shows it as text. The table has no name of its
+own: the app names the region it sits in, a section with an `aria-label` for example. The head (which kind
 is shown, the counts) and what a change calls stay the app's. The table paints its fixed head and first columns in
 `--aether-record-table-ground`, the surface unless the app sets it to another colour the table sits on.
 

@@ -15,6 +15,8 @@ type __VLS_Props = {
     query?: string;
     /** What the table says where it shows no row. */
     empty?: string;
+    /** Free-text columns are edited in their cells; false shows them as text. */
+    textEdited?: boolean;
 };
 type __VLS_PublicProps = __VLS_Props & {
     /** The rows ticked, by id, shown or hidden by the search. Cleared when the table shows another kind. */
@@ -35,5 +37,6 @@ declare const _default: import("vue").DefineComponent<__VLS_PublicProps, {}, {},
     editable: boolean;
     openId: string | null;
     query: string;
+    textEdited: boolean;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

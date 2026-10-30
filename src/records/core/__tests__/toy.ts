@@ -67,7 +67,7 @@ export const FIXINGS: KindDecl = {
   },
 }
 
-/** Stocks: a grade written as free text, and a coat chosen in the words declared for it. */
+/** Stocks: a grade written as free text, a coat chosen in the words declared for it, and a mill and a flag shown only. */
 export const STOCKS: KindDecl = {
   name: 'stocks',
   word: 'stock',
@@ -79,9 +79,11 @@ export const STOCKS: KindDecl = {
       label: 'Coat',
       options: [
         { value: 'zinc', label: 'Galvanised steel' },
-        { value: 'paint', label: 'Painted' },
+        { value: 'paint', label: 'Painted in two coats of oxide' },
       ],
     },
+    mill: { schema: { enum: ['north', 'south'] }, optional: true, label: 'Mill', readonly: true },
+    rolled: { schema: { type: 'boolean' }, optional: true, label: 'Rolled', readonly: true },
   },
 }
 

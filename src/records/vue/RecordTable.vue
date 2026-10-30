@@ -59,8 +59,10 @@ const props = withDefaults(
     query?: string
     /** What the table says where it shows no row. */
     empty?: string
+    /** Free-text columns are edited in their cells; false shows them as text. */
+    textEdited?: boolean
   }>(),
-  { units: () => STORED, optionsOf: (column: TableColumn) => column.values ?? [], editable: true, openId: null, query: '', empty: undefined },
+  { units: () => STORED, optionsOf: (column: TableColumn) => column.values ?? [], editable: true, openId: null, query: '', empty: undefined, textEdited: true },
 )
 const emit = defineEmits<{ open: [id: string]; changed: [column: TableColumn, values: RowValue[], pasted: boolean] }>()
 /** The rows ticked, by id, shown or hidden by the search. Cleared when the table shows another kind. */
@@ -111,7 +113,7 @@ function shownText(record: Fields, column: TableColumn): string {
 const measure = measurer()
 /** Counts the page's fonts loading, which the characters are measured again for. */
 const fontsLoaded = ref(0)
-void document.fonts?.ready.then(() => fontsLoaded.value++)
+if (typeof document !== 'undefined') void document.fonts?.ready.then(() => fontsLoaded.value++)
 /** Each number, free text and choice column's width in px, over the rows shown. */
 const widths = computed(() => {
   void fontsLoaded.value
@@ -212,7 +214,7 @@ watch(
           <td v-for="c in columns" :key="c.key" :class="{ 'aether-record-table__cell--refused': problem?.at === cellId(r.id, c) }">
             <template v-if="takesField(kind, r.record, c.field)">
               <TextField
-                v-if="c.kind === 'number' || c.kind === 'string'"
+                v-if="c.kind === 'number' || (c.kind === 'string' && textEdited)"
                 class="aether-record-table__input"
                 :inputmode="c.kind === 'number' ? 'decimal' : undefined"
                 autocomplete="off"

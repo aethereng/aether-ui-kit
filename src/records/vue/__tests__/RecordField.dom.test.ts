@@ -324,6 +324,35 @@ describe('the name each control is read by', () => {
   })
 })
 
+describe('what a field shows and gives as the app and the person change it', () => {
+  it('shows its numbers again in the units the app switches to', async () => {
+    const w = field('size', 0.0125)
+    expect((w.find('input[data-field="size"]').element as HTMLInputElement).value).toBe('12.5')
+    await w.setProps({ units: STORED })
+    expect((w.find('input[data-field="size"]').element as HTMLInputElement).value).toBe('0.0125')
+  })
+
+  it("gives a summary's text when it is left", async () => {
+    const w = field('outline', [[0, 0, 0]], {}, SHELVES, 'wall')
+    await type(w, 'textarea[data-field="outline"]', '[[1,0,0]]')
+    expect(given(w)).toEqual([[[1, 0, 0]]])
+  })
+
+  it('gives null when all three numbers are cleared', async () => {
+    const w = field('at', [1, 2, 3], { units: STORED })
+    for (const axis of ['x', 'y', 'z']) await type(w, `input[data-axis="${axis}"]`, '', 'stay')
+    await w.find('.aether-record-field__vector').trigger('focusout')
+    expect(given(w)).toEqual([null])
+  })
+
+  it('shows None for a summary with no value and no line, its refusal in the danger tone, and the heads of its table', () => {
+    expect(field('outline', null, {}, SHELVES, 'wall').find('[data-summary]').text()).toBe('None')
+    expect(field('size', 1, { issue: 'Too small' }).find('.aether-record-field__refusal').classes()).toContain('tone-danger')
+    const heads = field('layers', []).findAll('th[scope="col"]').map((h) => h.text())
+    expect(heads).toEqual(['Depth (mm)', 'Stock', 'Push (kN)'])
+  })
+})
+
 describe('the smaller rules of a value', () => {
   it('reads a typed minus sign as a minus', async () => {
     const w = field('size', 1)

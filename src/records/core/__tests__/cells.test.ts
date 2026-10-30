@@ -65,7 +65,7 @@ describe('what a cell shows', () => {
   it('offers a choice its blank first: "(none)" where a blank is a value, "(choose)" where it is not', () => {
     expect(choiceLabels(PARTS, finish, ['raw', 'painted'])).toEqual(['(none)', 'raw', 'painted'])
     expect(choiceLabels(PARTS, stock, ['s1'])).toEqual(['(choose)', 's1'])
-    expect(choiceLabels(STOCKS, col(STOCKS, 'coat'), ['zinc', 'paint', 'tar']), 'the words declared, else the value').toEqual(['(none)', 'Galvanised steel', 'Painted', 'tar'])
+    expect(choiceLabels(STOCKS, col(STOCKS, 'coat'), ['zinc', 'paint', 'tar']), 'the words declared, else the value').toEqual(['(none)', 'Galvanised steel', 'Painted in two coats of oxide', 'tar'])
   })
 
   it('sizes a choice column to its blank alone where no row shown holds a value', () => {

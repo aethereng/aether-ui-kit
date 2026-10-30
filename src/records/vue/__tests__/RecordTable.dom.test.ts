@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils'
 import RecordTable from '../RecordTable.vue'
-import type { CellRefusal, KindDecl, Row, RowValue, TableColumn } from '../../core'
+import { tableColumns, type CellRefusal, type KindDecl, type Row, type RowValue, type TableColumn } from '../../core'
 import { FIXINGS, PARTS, SHELVES, STOCKS, UNITS, row } from '../../core/__tests__/toy'
 import type { Json } from '../../../verbs'
 
@@ -65,7 +65,21 @@ describe('what the table shows', () => {
       ['s2', 's2'],
     ])
     expect([(cell(w, 'p1:kept').element as HTMLInputElement).checked, (cell(w, 'p2:kept').element as HTMLInputElement).checked]).toEqual([true, false])
-    expect([cell(w, 'p1:sides').element.tagName, cell(w, 'p1:sides').text()], 'a value no cell edits').toEqual(['SPAN', 'top'])
+    expect([cell(w, 'p1:sides').element.tagName, cell(w, 'p1:sides').text(), cell(w, 'p1:sides').attributes('title')], 'a value no cell edits').toEqual([
+      'SPAN',
+      'top',
+      'top',
+    ])
+    expect([cell(w, 'p1:size').attributes('inputmode'), cell(w, 'p1:made').attributes('inputmode')], 'the keypad of a number').toEqual(['decimal', undefined])
+    expect((cell(w, 'p1:sides').element as HTMLElement).style.maxWidth, 'a text no wider than the ceiling').toBe('200px')
+  })
+
+  it('edits a free text in its cell, or shows it as text where the app asks', async () => {
+    const { w } = table(PARTS, parts())
+    expect(cell(w, 'p1:made').element.tagName).toBe('INPUT')
+    await w.setProps({ textEdited: false })
+    expect([cell(w, 'p1:made').element.tagName, cell(w, 'p1:made').text()]).toEqual(['SPAN', 'Ann'])
+    expect(cell(w, 'p1:size').element.tagName, 'a number is still edited').toBe('INPUT')
   })
 
   it('offers a choice in the words its field declares for each value', () => {
@@ -73,8 +87,10 @@ describe('what the table shows', () => {
     expect([...(cell(w, 's1:coat').element as HTMLSelectElement).options].map((o) => [o.value, o.text])).toEqual([
       ['', '(none)'],
       ['zinc', 'Galvanised steel'],
-      ['paint', 'Painted'],
+      ['paint', 'Painted in two coats of oxide'],
     ])
+    const painted = table(STOCKS, [row('s2', { grade: 'S275', coat: 'paint' })], { optionsOf: (c: TableColumn) => c.values ?? [] }).w
+    expect(cell(painted, 's2:coat').attributes('title'), 'a choice its column cuts: its words in full').toBe('Painted in two coats of oxide')
   })
 
   it("shows a cell in its own unit where its row's variant gives the field another quantity than the head's", () => {
@@ -86,13 +102,15 @@ describe('what the table shows', () => {
     expect(cell(w, 'b1:turns').exists() && !cell(w, 'w1:turns').exists(), 'a field its variant does not take has no cell').toBe(true)
   })
 
-  it('sizes each column to what it holds, and gives a value its column cuts its whole text as its title', () => {
+  it('sizes each column to what it holds, and gives a value its column cuts its whole text as its title', async () => {
     const { w } = table(PARTS, [row('p1', { size: 0.01 }), row('p2', { size: -1.23456789012e-7 })])
     const width = (at: string) => Number.parseFloat((cell(w, at).element as HTMLElement).style.width)
     expect(valueOf(w, 'p2:size').length * 8 + 22, 'precondition: the long value passes the ceiling').toBeGreaterThan(160)
     expect([width('p1:size'), width('p1:at.x')], 'the ceiling; a column of no value at the floor').toEqual([160, 48])
     expect([cell(w, 'p1:size').attributes('title'), cell(w, 'p2:size').attributes('title')]).toEqual([undefined, valueOf(w, 'p2:size')])
     expect(width('p1:stock'), 'a choice of no value: its blank label, the padding and the arrow').toBe(Math.max(64, '(choose)'.length * 8 + 22 + 24))
+    await w.setProps({ query: 'p1' })
+    expect(width('p1:size'), 'sized over the rows shown').toBe(48)
   })
 
   it('says so where it shows no row, in its own words or the words it is given', async () => {
@@ -104,6 +122,9 @@ describe('what the table shows', () => {
     expect(w.find('.aether-record-table__none').text()).toBe('Nothing here')
     await w.setProps({ query: '' })
     expect(w.find('.aether-record-table__none').exists(), 'rows shown').toBe(false)
+    const blank = table(PARTS, [], { query: '  ' }).w
+    expect(blank.find('.aether-record-table__none').text(), 'a query of spaces').toBe('No part yet.')
+    expect((blank.find('[data-table-tick-all]').element as HTMLInputElement).checked, 'no row to tick').toBe(false)
   })
 })
 
@@ -143,6 +164,10 @@ describe('a cell changed', () => {
     expect([await paste(cell(w, 'h1:width'), '1\n2'), runs], 'a paste where the table is not editable').toEqual([false, []])
     await w.setProps({ editable: true })
     expect([cell(w, 'h1:width'), cell(w, 'h1:held')].map((c) => (c.element as HTMLInputElement).disabled), 'editable: the read-only field alone').toEqual([false, true])
+    const stock = table(STOCKS, [row('s1', { grade: 'S355', coat: 'zinc', mill: 'north', rolled: true })]).w
+    const disabled = (at: string) => (cell(stock, at).element as HTMLInputElement).disabled
+    expect(['s1:mill', 's1:rolled'].map(disabled), 'a read-only choice and flag').toEqual([true, true])
+    expect(['s1:grade', 's1:coat'].map(disabled), 'the positive arm').toEqual([false, false])
     expect(await paste(cell(w, 'h1:held'), '1\n2')).toBe(true)
     expect([issueOf(w, 'h1:held'), runs], 'a paste into it').toEqual(['Weight held is read only', []])
   })
@@ -267,7 +292,35 @@ describe('lines pasted into a cell', () => {
   })
 })
 
+describe('the names a table is read by', () => {
+  it('names every cell by its field and row, and every tick, and marks the heads of columns and rows', () => {
+    const { w } = table(PARTS, parts())
+    const edited = tableColumns(PARTS).filter((c) => c.kind !== 'text')
+    expect(w.findAll('[data-table-row="p1"] [data-cell]:not(span)').map((c) => c.attributes('aria-label'))).toEqual(edited.map((c) => `${c.label} of p1`))
+    expect([w.find('[data-table-tick="p1"]').attributes('aria-label'), w.find('[data-table-tick-all]').attributes('aria-label')]).toEqual(['Tick p1', 'Tick every row'])
+    const heads = w.findAll('thead th')
+    expect([heads.length, heads.every((h) => h.attributes('scope') === 'col'), heads[1]!.text()]).toEqual([tableColumns(PARTS).length + 2, true, 'Id'])
+    const id = w.find('[data-table-row="p1"] th')
+    expect([id.attributes('scope'), id.find('button').attributes('type'), id.text()]).toEqual(['row', 'button', 'p1'])
+  })
+
+  it("marks a refused choice invalid, and gives its refusal as an alert", async () => {
+    const { w } = table(PARTS, parts(), { answer: { row: 'p2', words: 'Not that stock' } })
+    await cell(w, 'p2:stock').setValue('s1')
+    expect([issueOf(w, 'p2:stock'), cell(w, 'p2:stock').attributes('aria-invalid'), w.find('[data-cell-issue]').attributes('role')]).toEqual(['Not that stock', 'true', 'alert'])
+  })
+})
+
 describe('the row open', () => {
+  it('brings the row open into sight when the table is drawn', async () => {
+    const into = vi.fn()
+    Element.prototype.scrollIntoView = into
+    table(PARTS, parts(), { openId: 'p2' })
+    await nextTick()
+    expect(into.mock.contexts.map((el) => (el as HTMLElement).dataset.tableRow)).toEqual(['p2'])
+    expect(into.mock.calls[0], 'the least scroll that shows it').toEqual([{ block: 'nearest' }])
+  })
+
   it('emits the id of a row whose id is clicked, marks the row open and brings it into sight', async () => {
     const into = vi.fn()
     Element.prototype.scrollIntoView = into

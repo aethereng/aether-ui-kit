@@ -192,6 +192,8 @@ focus ring), which every component needs and no component owns.
 | **RadioGroup** | `controls/radio-group` | One choice out of a few, as buttons. A `role="radiogroup"` for a VALUE; if choosing swaps a panel it is a `Seg`. Arrows wrap and select; one tab stop. |
 | **Card** | `controls/card` | A panel surface: bordered, padded, holds content. Static: a clickable card is a different component. Padding and radius match `Disclosure`, which consumers stack it beside. |
 | **Legend** | `viz/legend` | What the colour on a drawing means for one field: a ramp from `stops` with the `ticks` the app has formatted, or the sentence saying the field is zero or has no finite range. |
+| **Overlay** | `controls/overlay` | A full-page card for work the app must wait on, shown through the deferred flag: a title, what is being worked on, a bar that sweeps or fills to `progress`, a line of detail, and a stop button. `aside` takes it away at once. |
+| **Gallery** | `controls/gallery` | Sample cards in one section per family: a picture, a title, a line, a foot and a note. Emits `open` with the item's id. The page around it stays the app's. |
 | **Spinner** | `controls/spinner` | Indeterminate busy indicator. `label` names it for a screen reader; omit it when text beside it already says what is happening. |
 | **Icon** | `controls/icon` | An icon from an SVG path string on a 24 by 24 grid, the form `@mdi/js` exports; the app keeps the icon set. 1em unless `size` says otherwise; `label` names it, and without one it is hidden from a screen reader. |
 | **Tooltip** | `controls/tooltip` | Hover/focus tooltip that escapes any ancestor clipping it, via the top layer. |

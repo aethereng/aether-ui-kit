@@ -131,3 +131,7 @@ export { deferredFlag } from './deferred'
 export type { DeferredFlag, DeferredFlagOptions } from './deferred'
 export { bindDismiss } from './dismiss'
 export type { DismissTarget, DismissOptions } from './dismiss'
+
+// How a gallery's cards fall into sections, and the shapes `controls/gallery` takes.
+export { gallerySections } from './gallery'
+export type { GalleryFamily, GalleryItem, GallerySection } from './gallery'

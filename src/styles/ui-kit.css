@@ -84,6 +84,9 @@
      drawing. */
   --aether-text-sm: 11px;
   --aether-space-1: 4px;
+  --aether-weight-strong: 600;
+  /* The display face, which a title set large is in. A host with a brand face points this at it. */
+  --aether-font-display: ui-sans-serif, system-ui, sans-serif;
 
   /* Control typography. Hardcoded 12.5px until now, which a host on a different type scale could
      only fight with an override; kit controls sat visibly smaller beside a 14px list. */
@@ -134,6 +137,19 @@
      type inside the transformed group can divide the scale back out and hold its size; the
      value here is the identity fallback for an unzoomed graph. */
   --aether-graph-label-scale: 1;
+  /* A busy overlay's tints, which a theme sets beside its palette: the scrim over what it covers, the
+     card's shadow, the glow of the sweeping bar, and the filter its mark breathes between. `none` is a
+     mark that does not glow. The other two are the space at the card's foot and above its stop button. */
+  --aether-overlay-scrim: rgba(27, 30, 35, 0.28);
+  --aether-overlay-scrim-filter: blur(6px) saturate(105%);
+  --aether-overlay-shadow: 0 18px 44px -14px rgba(27, 30, 35, 0.22), 0 3px 10px -4px rgba(27, 30, 35, 0.16);
+  --aether-overlay-comet-glow: 0 0 6px color-mix(in srgb, var(--aether-cool-soft) 35%, transparent);
+  --aether-overlay-mark-glow-low: none;
+  --aether-overlay-mark-glow-high: none;
+  --aether-overlay-card-end: 26px;
+  --aether-overlay-stop-gap: 18px;
+  /* The colour a gallery's picture stands on: the ground it was taken on. */
+  --aether-gallery-ground: var(--aether-panel);
   /* The colour a record table sits on, which it paints its fixed head and first columns in so that the rows scrolled
      under them do not show through. A host whose table sits on another colour sets it there. */
   --aether-record-table-ground: var(--aether-surface);

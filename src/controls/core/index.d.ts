@@ -14,3 +14,5 @@ export { deferredFlag } from './deferred';
 export type { DeferredFlag, DeferredFlagOptions } from './deferred';
 export { bindDismiss } from './dismiss';
 export type { DismissTarget, DismissOptions } from './dismiss';
+export { gallerySections } from './gallery';
+export type { GalleryFamily, GalleryItem, GallerySection } from './gallery';

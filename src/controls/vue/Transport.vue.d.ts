@@ -41,6 +41,7 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     "onScrub-start"?: (() => any) | undefined;
     "onScrub-end"?: (() => any) | undefined;
 }>, {
+    stoppable: boolean;
     format: (t: number) => string;
     speed: number;
     speeds: number[];
@@ -48,7 +49,6 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     precomputePct: number;
     speedMode: "cycle" | "presets";
     speedLabel: (s: number) => string;
-    stoppable: boolean;
     computeLabel: string;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;

@@ -71,7 +71,7 @@ const named = computed(() => (props.unit ? `${props.label} ${props.unit}` : prop
 }
 /* box-sizing is stated because this sets its own height, and the kit ships no global reset. */
 .aether-legend__bar {
-  box-sizing: content-box;
+  box-sizing: border-box;
   height: 10px;
   margin: var(--aether-space-1) 0;
   border-radius: 3px;
@@ -100,7 +100,7 @@ const named = computed(() => (props.unit ? `${props.label} ${props.unit}` : prop
 }
 /* the no-value colour may be as light as the panel, so it carries an edge of its own */
 .aether-legend__swatch {
-  box-sizing: content-box;
+  box-sizing: border-box;
   flex: none;
   width: 10px;
   height: 10px;

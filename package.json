@@ -118,6 +118,14 @@
       "types": "./src/controls/vue/Transport.vue.d.ts",
       "import": "./src/controls/vue/Transport.vue"
     },
+    "./controls/overlay": {
+      "types": "./src/controls/vue/Overlay.vue.d.ts",
+      "import": "./src/controls/vue/Overlay.vue"
+    },
+    "./controls/gallery": {
+      "types": "./src/controls/vue/Gallery.vue.d.ts",
+      "import": "./src/controls/vue/Gallery.vue"
+    },
     "./controls/icon": {
       "types": "./src/controls/vue/Icon.vue.d.ts",
       "import": "./src/controls/vue/Icon.vue"

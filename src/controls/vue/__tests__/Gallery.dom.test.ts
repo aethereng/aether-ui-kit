@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { h } from 'vue'
 import Gallery from '../Gallery.vue'
 import { gallerySections, type GalleryFamily, type GalleryItem } from '../../core/gallery'
+import { declared, stylesOf } from '../../../__tests__/sfcRules'
 
 const FAMILIES: GalleryFamily[] = [
   { id: 'frames', title: 'Frames', line: 'Members and joints.' },
@@ -124,5 +125,31 @@ describe('Gallery: when its data changes', () => {
     const w = gallery()
     await w.setProps({ items: ITEMS.map((i) => (i.id === 'dome' ? { ...i, picture: 'dome-light.png' } : i)) })
     expect(card(w, 'dome').find('img').attributes('src')).toBe('dome-light.png')
+  })
+})
+
+describe('Gallery: the rules jsdom does not apply', () => {
+  const sheet = stylesOf('controls/vue/Gallery.vue')
+  const PHONE = '(max-width: 719.98px)'
+  const ratio = (value: string | undefined) => {
+    const [w, h] = (value ?? '').split('/').map(Number)
+    return w! / h!
+  }
+
+  it('lifts a card for the keyboard as for the pointer', () => {
+    const lift = declared(sheet, '.aether-gallery__card:focus-within')
+    expect(lift.transform).toBe('translateY(-3px)')
+    expect(lift).toEqual(declared(sheet, '.aether-gallery__card:hover'))
+  })
+
+  it('holds the picture box to the ratio the image states, so nothing moves as it loads', () => {
+    const img = card(gallery(), 'dome').find('img')
+    const stated = Number(img.attributes('width')) / Number(img.attributes('height'))
+    expect(ratio(declared(sheet, '.aether-gallery__media')['aspect-ratio'])).toBe(stated)
+  })
+
+  it('falls to one column on a phone, with the pictures cut shorter', () => {
+    expect(declared(sheet, '.aether-gallery__grid', PHONE)['grid-template-columns']).toBe('1fr')
+    expect(ratio(declared(sheet, '.aether-gallery__media', PHONE)['aspect-ratio'])).toBe(16 / 9)
   })
 })

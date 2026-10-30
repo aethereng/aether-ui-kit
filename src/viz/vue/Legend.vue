@@ -4,12 +4,13 @@
  *
  * PLAIN DATA. `stops` is the colour list the drawing itself colours from, as `linear-gradient` takes
  * it, and `ticks` are text the caller has already formatted, so a value on the bar reads as it reads
- * everywhere else in the app. Nothing here knows what a field is or how its numbers are worked out.
+ * everywhere else in the app. The field itself and the working out of its numbers stay with the caller.
  *
- * TWO STATES WITH NO RAMP, because a ramp from 0 to 0 says something false in both. `zero`: every
- * sample is exactly 0, which is a finding to state. `nonfinite`: the samples are NaN or infinite
- * wherever they are not 0, so no range can be stated. A ramp whose field holds a few such samples
- * beside finite ones stays a ramp, and `noValueKey` explains the colour they are drawn in.
+ * TWO STATES WITH NO RAMP, where a ramp from 0 to 0 would show a range the field does not have. `zero`:
+ * every sample is exactly 0, which is a finding to state. `nonfinite`: the samples are NaN or infinite
+ * wherever they are not 0, so no range can be stated. `note` is the sentence for either, because what
+ * was sampled and the language it is told in are the caller's. A ramp whose field holds a few such
+ * samples beside finite ones stays a ramp, and `noValueKey` explains the colour they are drawn in.
  *
  * A panel around it, its place on the screen and the words for a field still on its way stay the
  * app's. The inner parts carry `aether-legend__*` classes for an app that sets the ramp larger. */
@@ -27,22 +28,24 @@ const props = withDefaults(
     ticks?: readonly string[]
     /** `ramp`, or why there is none. */
     state?: 'ramp' | 'zero' | 'nonfinite'
+    /** The sentence for `zero` and `nonfinite`. Without one the legend names the field and stops. */
+    note?: string
     /** The colour the drawing gives a value the ramp cannot place, shown as a swatch. */
     noValueColor?: string
     /** The words beside that swatch under a ramp. */
     noValueKey?: string
   }>(),
-  { unit: undefined, ticks: () => [], state: 'ramp', noValueColor: undefined, noValueKey: undefined },
+  { unit: undefined, ticks: () => [], state: 'ramp', note: undefined, noValueColor: undefined, noValueKey: undefined },
 )
 
 const named = computed(() => (props.unit ? `${props.label} ${props.unit}` : props.label))
 </script>
 
 <template>
-  <p v-if="state === 'zero'" class="aether-legend__note" data-legend="zero">{{ named }} is zero everywhere in this result.</p>
+  <p v-if="state === 'zero'" class="aether-legend__note" data-legend="zero">{{ note ?? named }}</p>
   <p v-else-if="state === 'nonfinite'" class="aether-legend__note aether-legend__note--warn" data-legend="nonfinite">
     <span v-if="noValueColor" class="aether-legend__swatch" :style="{ background: noValueColor }" aria-hidden="true" />
-    <span>{{ named }} holds values in this result that are not finite numbers, so it has no ramp.</span>
+    <span>{{ note ?? named }}</span>
   </p>
   <div v-else class="aether-legend" data-legend="ramp">
     <div class="aether-legend__label">

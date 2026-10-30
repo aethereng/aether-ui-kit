@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import Legend from '../Legend.vue'
+import { declared, stylesOf } from '../../../__tests__/sfcRules'
 
 /* A legend is the only place a drawing's colours get their numbers, so these pin what a wrong
  * legend would say: a ramp over a field with no range, numbers out of order, and a colour nobody
@@ -59,21 +60,34 @@ describe('Legend: a ramp', () => {
 })
 
 describe('Legend: no ramp', () => {
-  it('says a zero field is zero, with no bar and no number', () => {
-    const w = mount(Legend, { props: { ...base, unit: 'MPa', state: 'zero', ticks: ['0', '0'] } })
-    expect(w.find('[data-legend="zero"]').text()).toBe('Stress MPa is zero everywhere in this result.')
+  it('says what the app says of a zero field, with no bar and no number', () => {
+    const w = mount(Legend, { props: { ...base, unit: 'MPa', state: 'zero', note: 'Flat at 0 across this map.', ticks: ['0', '0'] } })
+    expect(w.find('[data-legend="zero"]').text()).toBe('Flat at 0 across this map.')
     expect(w.find('.aether-legend__bar').exists()).toBe(false)
     expect(w.find('.aether-legend__ticks').exists()).toBe(false)
     expect(w.find('[data-legend="zero"]').classes()).not.toContain('aether-legend__note--warn')
   })
 
-  it('says a field with no finite range has none, in the warning colour, with the swatch', () => {
-    const w = mount(Legend, { props: { ...base, state: 'nonfinite', noValueColor: 'rgb(255, 255, 0)' } })
+  it('says what the app says of a field with no finite range, in the warning colour, with the swatch', () => {
+    const w = mount(Legend, { props: { ...base, state: 'nonfinite', note: 'No range here.', noValueColor: 'rgb(255, 255, 0)' } })
     const note = w.find('[data-legend="nonfinite"]')
-    expect(note.text()).toBe('Stress holds values in this result that are not finite numbers, so it has no ramp.')
+    expect(note.text()).toBe('No range here.')
     expect(note.classes()).toContain('aether-legend__note--warn')
-    expect((note.find('.aether-legend__swatch').element as HTMLElement).style.background).toBe('rgb(255, 255, 0)')
+    const swatch = note.find('.aether-legend__swatch')
+    expect((swatch.element as HTMLElement).style.background).toBe('rgb(255, 255, 0)')
+    expect(swatch.attributes('aria-hidden')).toBe('true')
     expect(w.find('.aether-legend__bar').exists()).toBe(false)
+  })
+
+  it.each(['zero', 'nonfinite'] as const)('adds no words of its own to %s: with none from the app it names the field and stops', (state) => {
+    const w = mount(Legend, { props: { ...base, unit: 'MPa', state } })
+    expect(w.text()).toBe('Stress MPa')
+  })
+
+  it('keeps the note to the states with no ramp', () => {
+    const w = mount(Legend, { props: { ...base, note: 'No range here.' } })
+    expect(ramp(w).exists(), 'precondition: the ramp is drawn').toBe(true)
+    expect(w.text()).not.toContain('No range here.')
   })
 
   it('leaves the swatch out when it has no colour for one', () => {
@@ -87,5 +101,21 @@ describe('Legend: no ramp', () => {
       const w = mount(Legend, { props: { ...base, state }, attrs: { id: 'x' } })
       expect(w.attributes('id'), state).toBe('x')
     }
+  })
+})
+
+describe('Legend: the rules jsdom does not apply', () => {
+  const sheet = stylesOf('viz/vue/Legend.vue')
+
+  it('gives the bar a height, or the ramp draws nothing', () => {
+    expect(declared(sheet, '.aether-legend__bar').height).toBe('10px')
+  })
+
+  it('edges the bar, so a ramp as light as the panel keeps its ends', () => {
+    expect(declared(sheet, '.aether-legend__bar').border).toBe('1px solid var(--aether-panel)')
+  })
+
+  it('sets the note with no range in the warning colour', () => {
+    expect(declared(sheet, '.aether-legend__note--warn').color).toBe('var(--aether-warm-soft)')
   })
 })

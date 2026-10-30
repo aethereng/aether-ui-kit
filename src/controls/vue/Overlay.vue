@@ -7,16 +7,22 @@
  * says, for the moment what it covers becomes the thing to watch.
  *
  * THE BAR IS A MEASURE ONLY WHERE THERE IS ONE. `progress` is a fraction from 0 to 1, for work that can
- * report one. Without it the bar sweeps and claims nothing: a bar held at 0% and then racing says less
- * than a sweep does.
+ * report one. Without it the bar sweeps and claims nothing, since a bar held at 0% and then racing
+ * would state a measure that does not exist.
  *
- * ALWAYS MOUNTED, shown by a class. The card's looping animations bubble animation events that confuse
- * <Transition>'s end detection and leave it stuck, and an opacity transition from `visibility: hidden`
- * is dropped by browsers, so this fades opacity alone and is inert while hidden, which keeps the stop
- * button out of the tab order.
+ * ALWAYS MOUNTED, shown by a class. The card's looping animations bubble animation events, on which
+ * <Transition>'s end detection sticks, and an opacity transition from `visibility: hidden` is dropped
+ * by browsers, so this fades opacity alone and is inert while hidden, which keeps the stop button out
+ * of the tab order.
  *
- * The `mark` slot takes a picture, as Tool's `icon` does. The tints of the scrim and the shadows are
- * tokens, so a theme sets them where it sets its palette. */
+ * NOT A MODAL. It covers the page without blocking it: Tab still reaches what is behind it, and there is
+ * no focus trap, scroll lock or Escape. An app that must block its page makes its own content inert
+ * while this shows. It is `position: fixed` and outside the top layer, so it goes where no ancestor sets
+ * a transform, a filter or `contain`.
+ *
+ * The `mark` slot takes one decorative figure above the title, as Tool's `icon` does: a logo, or a
+ * Spinner. The tints of the scrim and the shadows are tokens, so a theme sets them where it sets its
+ * palette. */
 import { computed } from 'vue'
 import Tool from './Tool.vue'
 import { useDeferredFlag } from './composables'

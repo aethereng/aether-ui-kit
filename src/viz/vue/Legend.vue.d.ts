@@ -9,6 +9,8 @@ type __VLS_Props = {
     ticks?: readonly string[];
     /** `ramp`, or why there is none. */
     state?: 'ramp' | 'zero' | 'nonfinite';
+    /** The sentence for `zero` and `nonfinite`. Without one the legend names the field and stops. */
+    note?: string;
     /** The colour the drawing gives a value the ramp cannot place, shown as a swatch. */
     noValueColor?: string;
     /** The words beside that swatch under a ramp. */
@@ -16,6 +18,7 @@ type __VLS_Props = {
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
     unit: string;
+    note: string;
     ticks: readonly string[];
     state: "ramp" | "zero" | "nonfinite";
     noValueColor: string;

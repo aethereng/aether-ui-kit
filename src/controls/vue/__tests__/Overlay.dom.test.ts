@@ -1,10 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { nextTick } from 'vue'
-import { readFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { h, nextTick } from 'vue'
 import Overlay from '../Overlay.vue'
+import Spinner from '../Spinner.vue'
+import { declared, stylesOf } from '../../../__tests__/sfcRules'
 
 /* The flag's rules are deferredFlag's, tested there. These pin what the overlay adds: which flag it
  * shows, what it takes away at once, what the bar claims, and that a hidden card holds no tab stop. */
@@ -96,6 +95,16 @@ describe('Overlay: what it says', () => {
     expect(mark.find('.m').exists()).toBe(true)
     expect(mark.attributes('aria-hidden')).toBe('true')
   })
+
+  it('takes any figure in the mark, such as the spinner from this kit', () => {
+    const mark = mount(Overlay, { props: base, slots: { mark: () => h(Spinner, { size: 28 }) } }).find('.aether-overlay__mark')
+    expect(mark.findComponent(Spinner).exists()).toBe(true)
+    expect(mark.attributes('aria-hidden')).toBe('true')
+  })
+
+  it('hides the moving dots from a screen reader', () => {
+    expect(mount(Overlay, { props: base }).find('.aether-overlay__dots').attributes('aria-hidden')).toBe('true')
+  })
 })
 
 describe('Overlay: the bar', () => {
@@ -126,13 +135,58 @@ describe('Overlay: the bar', () => {
   })
 })
 
-describe('Overlay: the sweep’s colours', () => {
-  /* jsdom applies no gradient, so this reads the rule: without `in srgb`, the color-mix stops move the
-   * whole sweep to Oklab, which only a picture of the page shows. */
-  it('states the space it blends in', () => {
-    const source = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../Overlay.vue'), 'utf8')
-    const comet = source.slice(source.indexOf('.aether-overlay__comet {'))
-    expect(comet.slice(0, comet.indexOf('}'))).toContain('90deg in srgb,')
+describe('Overlay: the rules jsdom does not apply', () => {
+  const sheet = stylesOf('controls/vue/Overlay.vue')
+  const REDUCED = '(prefers-reduced-motion: reduce)'
+
+  it('lets every click through while hidden, and takes them once shown', async () => {
+    const hidden = mount(Overlay, { props: base, attachTo: document.body })
+    expect(getComputedStyle(hidden.element).pointerEvents).toBe('none')
+    expect(getComputedStyle(hidden.element).opacity).toBe('0')
+    hidden.unmount()
+    const w = mount(Overlay, { props: { ...base, open: true }, attachTo: document.body })
+    vi.advanceTimersByTime(SHOW_DELAY)
+    await nextTick()
+    expect(w.classes(), 'precondition: it is showing').toContain('is-visible')
+    expect(getComputedStyle(w.element).pointerEvents).toBe('auto')
+    expect(getComputedStyle(w.element).opacity).toBe('1')
+    w.unmount()
+  })
+
+  it('covers the page, above what an app sets its floating chrome under', () => {
+    expect(declared(sheet, '.aether-overlay')).toMatchObject({ position: 'fixed', inset: '0px', 'z-index': '2400' })
+  })
+
+  it.each(['.aether-overlay__mark', '.aether-overlay__comet', '.aether-overlay__dots::after'])('pauses %s while hidden', (part) => {
+    expect(declared(sheet, `.aether-overlay:not(.is-visible) ${part}`)['animation-play-state']).toBe('paused')
+  })
+
+  it('keeps a filled bar under reduced motion, so the card still reads as busy', () => {
+    const comet = declared(sheet, '.aether-overlay__comet', REDUCED)
+    expect(comet).toMatchObject({ position: 'static', display: 'block', width: '100%', height: '100%', animation: 'none' })
+    expect(Number(comet.opacity)).toBeGreaterThan(0)
+  })
+
+  /* Without `in srgb`, the color-mix stops move the whole sweep to Oklab, which only a picture of the
+   * page shows. */
+  it('states the space the sweep blends in', () => {
+    expect(declared(sheet, '.aether-overlay__comet').background).toContain('90deg in srgb,')
+  })
+})
+
+describe('Overlay: not a modal', () => {
+  it('claims no dialog, moves no focus, locks no scroll and takes no Escape', async () => {
+    const w = mount(Overlay, { props: { ...base, open: true, stoppable: true }, attachTo: document.body })
+    vi.advanceTimersByTime(SHOW_DELAY)
+    await nextTick()
+    expect(w.classes(), 'precondition: it is showing').toContain('is-visible')
+    expect(w.find('[aria-modal], [role="dialog"], [role="alertdialog"], dialog').exists()).toBe(false)
+    expect(document.activeElement).toBe(document.body)
+    expect(document.body.style.overflow).toBe('')
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await w.find('button').trigger('keydown', { key: 'Escape' })
+    expect(w.emitted('stop')).toBeUndefined()
+    w.unmount()
   })
 })
 

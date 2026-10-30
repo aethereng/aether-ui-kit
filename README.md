@@ -191,7 +191,7 @@ focus ring), which every component needs and no component owns.
 | **DateField** | `controls/date-field` | A date input with the kit's own picker. Keeps the native input for typing and the OS wheel on touch; replaces only the desktop popup, which cannot be themed. |
 | **RadioGroup** | `controls/radio-group` | One choice out of a few, as buttons. A `role="radiogroup"` for a VALUE; if choosing swaps a panel it is a `Seg`. Arrows wrap and select; one tab stop. |
 | **Card** | `controls/card` | A panel surface: bordered, padded, holds content. Static: a clickable card is a different component. Padding and radius match `Disclosure`, which consumers stack it beside. |
-| **Legend** | `viz/legend` | What the colour on a drawing means for one field: a ramp from `stops` with the `ticks` the app has formatted, or the sentence saying the field is zero or has no finite range. |
+| **Legend** | `viz/legend` | What the colour on a drawing means for one field: a ramp from `stops` with the `ticks` the app has formatted, or the app's own sentence for a field that is zero or has no finite range. |
 | **Overlay** | `controls/overlay` | A full-page card for work the app must wait on, shown through the deferred flag: a title, what is being worked on, a bar that sweeps or fills to `progress`, a line of detail, and a stop button. `aside` takes it away at once. |
 | **Gallery** | `controls/gallery` | Sample cards in one section per family: a picture, a title, a line, a foot and a note. Emits `open` with the item's id. The page around it stays the app's. |
 | **Spinner** | `controls/spinner` | Indeterminate busy indicator. `label` names it for a screen reader; omit it when text beside it already says what is happening. |
@@ -416,15 +416,18 @@ Each takes plain data, and the app says how it looks where its look differs from
 `aether-legend__*`, `aether-overlay__*` or `aether-gallery__*` classes, which an app's own rule can name under a class of its own.
 
 - `viz/legend` is one field. `stops` is the colour list the drawing itself colours from, and `ticks` are text the app has
-  formatted, so a value reads on the bar as it reads elsewhere. `state` is `ramp`, `zero` or `nonfinite`: the last two draw a
-  sentence and no bar, since a ramp from 0 to 0 says something false in both. `noValueColor` and `noValueKey` explain a colour the
-  ramp cannot place. A panel around it, and the words for a field still on its way, stay the app's.
+  formatted, so a value reads on the bar as it reads elsewhere. `state` is `ramp`, `zero` or `nonfinite`: the last two draw no bar,
+  since neither has a range to show, and `note` is the sentence in its place, in the app's words. `noValueColor` and `noValueKey`
+  explain a colour the ramp cannot place. A panel around it, and the words for a field still on its way, stay the app's.
 - `controls/overlay` shows through `useDeferredFlag`, so `open` is the raw flag. `aside` takes it away at once, for the moment what
   it covers becomes the thing to watch. `progress` is a fraction from 0 to 1, for work that can report one; without it the bar sweeps.
-  `stoppable`, `stopLabel` and `stopDanger` set the button, and the `mark` slot takes a picture. A theme sets
-  `--aether-overlay-scrim`, `--aether-overlay-scrim-filter`, `--aether-overlay-shadow`, `--aether-overlay-comet-glow` and
-  `--aether-overlay-mark-glow-low` and `-high`; `--aether-overlay-card-end` and `--aether-overlay-stop-gap` are its two spaces, and
-  `--aether-font-display` is the title's face.
+  `stoppable`, `stopLabel` and `stopDanger` set the button, and the `mark` slot takes one decorative figure, such as a logo or a
+  `Spinner`. A theme sets `--aether-overlay-scrim`, `--aether-overlay-scrim-filter`, `--aether-overlay-shadow`,
+  `--aether-overlay-comet-glow` and `--aether-overlay-mark-glow-low` and `-high`; `--aether-overlay-card-end` and
+  `--aether-overlay-stop-gap` are its two spaces, and `--aether-font-display` is the title's face.
+  It is not a modal: Tab still reaches the page behind it, and there is no focus trap, scroll lock or Escape, so an app that must
+  block its page makes its own content inert while this shows. It is `position: fixed` and outside the top layer, so it goes where
+  no ancestor sets a transform, a filter or `contain`.
 - `controls/gallery` takes `families` and `items`, and emits `open` with an item's id. An item has a `picture`, already the address
   for the theme in force, or an `icon` path in its place, with `foot` and `footIcon` at the card's foot and a `note` beside its
   button. The picture stands on `--aether-gallery-ground`. The page around it stays the app's: its head, whether it scrolls as a page

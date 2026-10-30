@@ -11,6 +11,12 @@ import type { Json, Schema } from '../../verbs'
  */
 export type Control = 'vector' | 'switches' | 'rows' | 'summary' | 'json' | 'text' | 'app'
 
+/** A group of a choice's options: its words, and the values it holds with their words. */
+export interface OptionGroup {
+  label: string
+  options: { value: string; label: string }[]
+}
+
 /** A column of a `rows` field: the property of each entry, its words, and its quantity when it is a physical number. */
 export interface FieldColumn {
   key: string
@@ -36,6 +42,8 @@ export interface FieldDecl {
   control?: Control
   /** The names of a choice or of `switches`, with their words. */
   options?: readonly { value: string; label: string }[]
+  /** The names of a choice, in groups, shown after any `options`. */
+  groups?: readonly OptionGroup[]
   /** Values offered above `switches`. */
   presets?: readonly { label: string; value: Json }[]
   /** The columns of `rows`. */

@@ -15,10 +15,12 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {
     invalid: (words: string) => any;
     open: (id: string) => any;
     commit: (value: Json) => any;
+    restored: () => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     onInvalid?: ((words: string) => any) | undefined;
     onOpen?: ((id: string) => any) | undefined;
     onCommit?: ((value: Json) => any) | undefined;
+    onRestored?: (() => any) | undefined;
 }>, {
     summary: string;
     units: Units;

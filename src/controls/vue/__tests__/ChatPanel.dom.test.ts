@@ -96,6 +96,17 @@ describe('ChatPanel renders what it is given', () => {
   })
 })
 
+describe('ChatPanel history', () => {
+  it('renders the most recent 50 messages where no historyLimit is given', () => {
+    const many = Array.from({ length: 60 }, (_, i) => ({ role: 'sys', text: 'm' + i }) as ChatMessage)
+    const w = mount(ChatPanel, { props: { messages: many, modelValue: '' } })
+    const shown = w.findAll('.aether-chat__txt').map((t) => t.text())
+    expect(shown).toHaveLength(50)
+    expect(shown[0]).toBe('m10')
+    expect(shown[49]).toBe('m59')
+  })
+})
+
 describe('ChatPanel pending count', () => {
   it('counts only queued messages from "you"', () => {
     const w = mountPanel()

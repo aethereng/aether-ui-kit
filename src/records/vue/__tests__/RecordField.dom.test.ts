@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import RecordField from '../RecordField.vue'
-import { STORED, exampleOf, formFields, shapeLine, type FieldView, type FormContext } from '../../core'
+import { STORED, exampleOf, formFields, shapeLine, type FieldView, type FormContext, type KindDecl } from '../../core'
 import { PARTS, SHELVES, UNITS } from '../../core/__tests__/toy'
 import type { Json } from '../../../verbs'
 
@@ -318,6 +318,13 @@ describe('the name each control is read by', () => {
     begin(names(field(name, undefined, {}, kind, variant), '[role="group"]'), [out])
   })
 
+  it.each([
+    ['a label of one control', 'made', 'Ann', 'label', 'Made by optional'],
+    ['a label of a group', 'sides', ['left'], '.aether-record-field__label', 'Sides optional'],
+  ] as const)('reads the mark of an optional field apart from %s', (_, name, value, selector, words) => {
+    expect((field(name, value as Json).find(selector).element.textContent ?? '').replace(/\s+/g, ' ').trim()).toBe(words)
+  })
+
   it('marks an optional field, and only one', () => {
     expect(field('made', 'Ann').find('.aether-record-field__opt').text()).toBe('optional')
     expect(field('size', 1).find('.aether-record-field__opt').exists(), 'a field the record requires').toBe(false)
@@ -428,6 +435,122 @@ describe('a form around the fields', () => {
 
   it('shows a refusal beside the field', () => {
     expect(field('size', 1, { issue: 'Size must be positive' }).find('.aether-record-field__refusal').text()).toContain('Size must be positive')
+  })
+
+  it('announces a refusal, and marks the control it describes', () => {
+    const w = field('size', 1, { issue: 'Size must be positive' })
+    const refusal = w.find('.aether-record-field__refusal')
+    expect(refusal.attributes('role'), 'read out as it appears').toBe('alert')
+    const input = w.find('input[data-field="size"]')
+    expect(input.attributes('aria-invalid')).toBe('true')
+    expect(input.attributes('aria-describedby')).toBe(refusal.attributes('id'))
+  })
+
+  it('marks no control while no refusal is shown', () => {
+    const input = field('size', 1).find('input[data-field="size"]')
+    expect(input.attributes('aria-invalid')).toBeUndefined()
+    expect(input.attributes('aria-describedby')).toBeUndefined()
+  })
+
+  it.each([
+    ['a choice', 'finish', 'raw', PARTS, '', 'select[data-field="finish"]'],
+    ['a free text', 'made', 'Ann', PARTS, '', 'input[data-field="made"]'],
+    ['an axis of three numbers', 'at', [1, 2, 3], PARTS, '', 'input[data-axis="x"]'],
+    ['JSON', 'extra', { k: 1 }, PARTS, '', 'input[data-field="extra"]'],
+    ['the text of a summary', 'outline', [[0, 0, 0]], SHELVES, 'wall', 'textarea[data-field="outline"]'],
+  ] as const)('marks %s under a refusal', (_, name, value, kind, variant, selector) => {
+    expect(field(name, value as Json, { issue: 'No' }, kind, variant).find(selector).attributes('aria-invalid')).toBe('true')
+  })
+
+  it.each([
+    ['three numbers', 'at', [1, 2, 3], PARTS, ''],
+    ['switches', 'sides', ['left'], PARTS, ''],
+    ['a list of references', 'posts', ['s1', 's2'], SHELVES, 'wall'],
+    ['a table', 'layers', [], PARTS, ''],
+  ] as const)('has the refusal describe the group of %s', (_, name, value, kind, variant) => {
+    const w = field(name, value as Json, { issue: 'No' }, kind, variant)
+    expect(w.find('[role="group"]').attributes('aria-describedby')).toBe(w.find('.aether-record-field__refusal').attributes('id'))
+  })
+})
+
+describe('Escape in a field', () => {
+  const press = async (w: VueWrapper, selector: string): Promise<KeyboardEvent> => {
+    const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+    w.find(selector).element.dispatchEvent(event)
+    await nextTick()
+    return event
+  }
+  const text = (w: VueWrapper, selector: string): string => (w.find(selector).element as HTMLInputElement).value
+  const layers = [{ depth: 0.001, stock: 's1', push: [0, 0, 0] }]
+
+  it.each([
+    ['a number', 'size', 0.0125, PARTS, '', 'input[data-field="size"]', '20', '12.5'],
+    ['a free text', 'made', 'Ann', PARTS, '', 'input[data-field="made"]', 'Bea', 'Ann'],
+    ['an axis of three numbers', 'at', [0.001, 0.002, 0.003], PARTS, '', 'input[data-axis="x"]', '5', '1'],
+    ['JSON', 'extra', { k: 1 }, PARTS, '', 'input[data-field="extra"]', '{"k":2}', '{"k":1}'],
+    ['a table', 'layers', layers, PARTS, '', 'tr[data-row="0"] input', '5', '1'],
+    ['the text of a summary', 'outline', [[0, 0, 0]], SHELVES, 'wall', 'textarea[data-field="outline"]', '[[1,0,0]]', '[[0,0,0]]'],
+  ] as const)('puts back %s typed, gives nothing, and uses the key', async (_, name, value, kind, variant, selector, typed, back) => {
+    const w = field(name, value as Json, {}, kind, variant)
+    await type(w, selector, typed, 'stay')
+    const event = await press(w, selector)
+    expect(text(w, selector)).toBe(back)
+    expect(given(w)).toEqual([])
+    expect(event.defaultPrevented, 'the key is used').toBe(true)
+    expect(w.emitted('restored')).toHaveLength(1)
+  })
+
+  it('tells the form it put a refused value back, so the words beside it can go', async () => {
+    const w = field('size', 1, { issue: 'Write a number, such as 1' })
+    await type(w, 'input[data-field="size"]', 'x')
+    await press(w, 'input[data-field="size"]')
+    expect(w.emitted('restored')).toHaveLength(1)
+  })
+
+  it('leaves the key to the form around it where nothing is typed', async () => {
+    const w = field('size', 0.0125)
+    const event = await press(w, 'input[data-field="size"]')
+    expect(event.defaultPrevented).toBe(false)
+    expect(w.emitted('restored')).toBeUndefined()
+  })
+
+  it('leaves the key where the control holds no text', async () => {
+    const w = field('finish', 'raw')
+    const event = await press(w, 'select[data-field="finish"]')
+    expect(event.defaultPrevented).toBe(false)
+  })
+})
+
+describe('a choice in groups', () => {
+  const grouped: KindDecl = {
+    name: 'coats',
+    word: 'coat',
+    fields: {
+      coat: {
+        schema: { type: 'string', enum: [] },
+        optional: true,
+        label: 'Coat',
+        options: [{ value: 'none', label: 'None' }],
+        groups: [
+          { label: 'Oils', options: [{ value: 'tung', label: 'Tung' }] },
+          { label: 'Waxes', options: [{ value: 'bees', label: 'Bees' }, { value: 'carnauba', label: 'Carnauba' }] },
+        ],
+      },
+    },
+  }
+
+  it('shows its options, then each group under its words', () => {
+    const w = field('coat', 'bees', {}, grouped)
+    const select = w.find('select[data-field="coat"]').element as HTMLSelectElement
+    expect([...select.querySelectorAll('optgroup')].map((g) => g.label)).toEqual(['Oils', 'Waxes'])
+    expect([...select.options].map((o) => o.value)).toEqual(['', 'none', 'tung', 'bees', 'carnauba'])
+    expect(select.value).toBe('bees')
+  })
+
+  it('gives a value chosen in a group', async () => {
+    const w = field('coat', 'bees', {}, grouped)
+    await w.find('select[data-field="coat"]').setValue('tung')
+    expect(given(w)).toEqual(['tung'])
   })
 })
 

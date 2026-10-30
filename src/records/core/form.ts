@@ -4,7 +4,7 @@
 import type { Json, Schema } from '../../verbs'
 import { clearsField, takesNull, valueSchema } from './schema'
 import { fieldsTaken } from './columns'
-import type { FieldColumn, KindDecl } from './types'
+import type { FieldColumn, KindDecl, OptionGroup } from './types'
 
 /** A choice offered: its value and its words. */
 export interface Option {
@@ -22,6 +22,8 @@ export interface FieldView {
    */
   kind: 'number' | 'choice' | 'flag' | 'refList' | 'vector' | 'switches' | 'rows' | 'summary' | 'json' | 'text' | 'app'
   options: Option[]
+  /** A choice's options in groups, shown after `options`. */
+  groups?: readonly OptionGroup[]
   required: boolean
   /** A null given for it clears it. */
   clears: boolean
@@ -118,6 +120,7 @@ export function formFields(kind: KindDecl, variant: string, context: FormContext
       label: decl.label,
       kind: view,
       options,
+      ...(decl.groups === undefined ? {} : { groups: decl.groups }),
       required,
       clears: clearsField(kind, name),
       nullable: takesNull(decl.schema),

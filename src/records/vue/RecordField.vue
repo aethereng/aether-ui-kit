@@ -10,7 +10,8 @@
 // record's units store it (Units). What cannot be read as the field's value is answered beside it (`invalid`) and nothing
 // is given. A choice of another record offers a link that opens the record chosen (`open`). A field declared read only is
 // shown and gives nothing. `flush` gives what is typed and not yet given: a form's Enter, and its button for a draft, call
-// it on every field.
+// it on every field. Escape puts back a value typed and not given, and uses the key (`restored`); with nothing typed the key
+// goes on to whatever holds the form. A refusal is announced when it appears, and its control is marked and described by it.
 import { computed, ref, useId, watch } from 'vue'
 import TextField from '../../controls/vue/TextField.vue'
 import Select from '../../controls/vue/Select.vue'
@@ -26,7 +27,7 @@ const props = withDefaults(defineProps<{ field: FieldView; value: Json | undefin
   issue: undefined,
   summary: undefined,
 })
-const emit = defineEmits<{ commit: [value: Json]; invalid: [words: string]; open: [id: string] }>()
+const emit = defineEmits<{ commit: [value: Json]; invalid: [words: string]; open: [id: string]; restored: [] }>()
 
 const f = computed(() => props.field)
 const uid = useId()
@@ -267,6 +268,25 @@ const editWords = computed(() => {
   return stored ? `Edit as text, in ${stored}` : 'Edit as text'
 })
 
+/** Whether a control holds text other than the record's value. */
+function holdsTyped(): boolean {
+  const k = f.value.kind
+  if (k === 'number') return text.value !== shown(props.value)
+  if (k === 'text') return text.value !== textOf(props.value)
+  if (k === 'json' || k === 'summary') return text.value !== (props.value === undefined || props.value === null ? '' : JSON.stringify(props.value))
+  if (k === 'vector') return parts.value.join('|') !== shownParts(props.value).join('|')
+  if (k === 'rows') return JSON.stringify(rows.value) !== JSON.stringify(storedRows().map(rowText))
+  return false
+}
+
+/** Escape in a control holding typed text puts the record's value back and uses the key. */
+function restore(event: KeyboardEvent): void {
+  if (!holdsTyped()) return
+  event.preventDefault()
+  fill()
+  emit('restored')
+}
+
 /** Gives what is typed and not yet given. */
 function flush(): void {
   const k = f.value.kind
@@ -281,23 +301,29 @@ defineExpose({ flush })
 /** The kinds drawn as a group of controls, named by the span of their label; the label of any other kind is for its one control. */
 const grouped = computed(() => ['vector', 'switches', 'rows', 'refList'].includes(f.value.kind))
 const id = computed(() => `${uid}-${f.value.name}`)
+/** The refusal's place beside the field, for the control it describes. */
+const described = computed(() => (props.issue ? { 'aria-describedby': `${id.value}-refusal` } : {}))
+/** What a control of one value carries while its value is refused. */
+const refused = computed(() => (props.issue ? { 'aria-invalid': 'true' as const, ...described.value } : {}))
 </script>
 
 <template>
-  <div v-if="field.kind !== 'app'" class="aether-record-field" :class="`aether-record-field--${field.kind}`" :data-field-row="field.name">
+  <!-- Escape reaches this box from the controls inside it, and the box takes no focus of its own. -->
+  <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
+  <div v-if="field.kind !== 'app'" class="aether-record-field" :class="`aether-record-field--${field.kind}`" :data-field-row="field.name" @keydown.escape="restore">
     <template v-if="field.kind === 'flag'">
       <label class="aether-record-field__flag">
-        <Switch :model-value="value === true" :disabled="locked" :name="field.name" :data-field="field.name" @update:model-value="setFlag" />
+        <Switch :model-value="value === true" :disabled="locked" :name="field.name" :data-field="field.name" v-bind="refused" @update:model-value="setFlag" />
         <span class="aether-record-field__label">{{ field.label }}</span>
       </label>
     </template>
     <template v-else>
       <label v-if="!grouped" class="aether-record-field__label" :for="id">
-        {{ field.label }}<em v-if="!field.required" class="aether-record-field__opt">optional</em>
+        {{ field.label }}{{ ' ' }}<em v-if="!field.required" class="aether-record-field__opt">optional</em>
       </label>
       <span v-else :id="`${id}-label`" class="aether-record-field__label">
         {{ field.label }}<span v-if="field.kind === 'vector' && unit" class="aether-record-field__label-unit" data-unit>, {{ unit }}</span
-        ><em v-if="!field.required" class="aether-record-field__opt">optional</em>
+        >{{ ' ' }}<em v-if="!field.required" class="aether-record-field__opt">optional</em>
       </span>
 
       <div v-if="field.kind === 'number'" class="aether-record-field__box">
@@ -307,6 +333,7 @@ const id = computed(() => `${uid}-${f.value.name}`)
           :disabled="locked"
           :name="field.name"
           :data-field="field.name"
+          v-bind="refused"
           inputmode="decimal"
           autocomplete="off"
           @change="commitNumber"
@@ -320,9 +347,11 @@ const id = computed(() => `${uid}-${f.value.name}`)
           :id="id"
           :model-value="typeof value === 'string' ? value : ''"
           :options="[{ value: '', label: field.blank }, ...field.options]"
+          :groups="field.groups ? [...field.groups] : undefined"
           :disabled="locked"
           :name="field.name"
           :data-field="field.name"
+          v-bind="refused"
           @update:model-value="setChoice"
         />
         <button
@@ -336,7 +365,7 @@ const id = computed(() => `${uid}-${f.value.name}`)
         </button>
       </template>
 
-      <div v-else-if="field.kind === 'vector'" class="aether-record-field__vector" role="group" :aria-labelledby="`${id}-label`" @focusout="leaveVector">
+      <div v-else-if="field.kind === 'vector'" class="aether-record-field__vector" role="group" :aria-labelledby="`${id}-label`" v-bind="described" @focusout="leaveVector">
         <span v-for="(axis, i) in AXES" :key="axis" class="aether-record-field__box aether-record-field__axis">
           <span class="aether-record-field__axis-name" aria-hidden="true">{{ axis }}</span>
           <TextField
@@ -346,6 +375,7 @@ const id = computed(() => `${uid}-${f.value.name}`)
             :data-field="field.name"
             :data-axis="axis"
             :aria-label="`${field.label} ${axis}`"
+            :aria-invalid="issue ? 'true' : undefined"
             inputmode="decimal"
             autocomplete="off"
             @update:model-value="parts[i] = $event"
@@ -354,7 +384,7 @@ const id = computed(() => `${uid}-${f.value.name}`)
         </span>
       </div>
 
-      <div v-else-if="field.kind === 'switches'" class="aether-record-field__switches" role="group" :aria-labelledby="`${id}-label`">
+      <div v-else-if="field.kind === 'switches'" class="aether-record-field__switches" role="group" :aria-labelledby="`${id}-label`" v-bind="described">
         <div v-if="field.presets?.length" class="aether-record-field__presets">
           <Tool v-for="p in field.presets" :key="p.label" :label="p.label" :disabled="locked" :data-preset="p.label" @click="give(p.value)" />
         </div>
@@ -372,7 +402,7 @@ const id = computed(() => `${uid}-${f.value.name}`)
         </label>
       </div>
 
-      <div v-else-if="field.kind === 'refList'" class="aether-record-field__refs" role="group" :aria-labelledby="`${id}-label`">
+      <div v-else-if="field.kind === 'refList'" class="aether-record-field__refs" role="group" :aria-labelledby="`${id}-label`" v-bind="described">
         <Select
           v-for="i in slots"
           :key="i"
@@ -386,7 +416,7 @@ const id = computed(() => `${uid}-${f.value.name}`)
         />
       </div>
 
-      <div v-else-if="field.kind === 'rows'" class="aether-record-field__rows" role="group" :aria-labelledby="`${id}-label`" :data-field="field.name">
+      <div v-else-if="field.kind === 'rows'" class="aether-record-field__rows" role="group" :aria-labelledby="`${id}-label`" :data-field="field.name" v-bind="described">
         <table class="aether-record-field__table">
           <thead>
             <tr>
@@ -446,7 +476,7 @@ const id = computed(() => `${uid}-${f.value.name}`)
       <div v-else-if="field.kind === 'summary'" class="aether-record-field__summary">
         <span class="aether-record-field__summary-line" :data-summary="field.name">{{ summaryLine }}</span>
         <Disclosure v-model:open="summaryOpen" :label="editWords" :disabled="locked" class="aether-record-field__summary-edit">
-          <TextField :id="id" v-model="text" multiline :rows="3" :disabled="locked" :name="field.name" :data-field="field.name" autocomplete="off" @change="commitJson" />
+          <TextField :id="id" v-model="text" multiline :rows="3" :disabled="locked" :name="field.name" :data-field="field.name" v-bind="refused" autocomplete="off" @change="commitJson" />
         </Disclosure>
       </div>
 
@@ -457,6 +487,7 @@ const id = computed(() => `${uid}-${f.value.name}`)
         :disabled="locked"
         :name="field.name"
         :data-field="field.name"
+        v-bind="refused"
         autocomplete="off"
         @change="commitText"
         @keydown.enter="commitText"
@@ -469,12 +500,13 @@ const id = computed(() => `${uid}-${f.value.name}`)
         :disabled="locked"
         :name="field.name"
         :data-field="field.name"
+        v-bind="refused"
         autocomplete="off"
         @change="commitJson"
         @keydown.enter="commitJson"
       />
     </template>
-    <Callout v-if="issue" tone="danger" class="aether-record-field__refusal">{{ issue }}</Callout>
+    <Callout v-if="issue" :id="`${id}-refusal`" tone="danger" live class="aether-record-field__refusal">{{ issue }}</Callout>
   </div>
 </template>
 

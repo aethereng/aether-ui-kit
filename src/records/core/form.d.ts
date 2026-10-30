@@ -1,5 +1,5 @@
 import type { Json, Schema } from '../../verbs';
-import type { FieldColumn, KindDecl } from './types';
+import type { FieldColumn, KindDecl, OptionGroup } from './types';
 /** A choice offered: its value and its words. */
 export interface Option {
     value: string;
@@ -15,6 +15,8 @@ export interface FieldView {
      */
     kind: 'number' | 'choice' | 'flag' | 'refList' | 'vector' | 'switches' | 'rows' | 'summary' | 'json' | 'text' | 'app';
     options: Option[];
+    /** A choice's options in groups, shown after `options`. */
+    groups?: readonly OptionGroup[];
     required: boolean;
     /** A null given for it clears it. */
     clears: boolean;

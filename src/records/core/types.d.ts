@@ -6,6 +6,14 @@ import type { Json, Schema } from '../../verbs';
  * whose control is the app's own is `app`: the kit's field draws nothing for it, and the app's form draws its control.
  */
 export type Control = 'vector' | 'switches' | 'rows' | 'summary' | 'json' | 'text' | 'app';
+/** A group of a choice's options: its words, and the values it holds with their words. */
+export interface OptionGroup {
+    label: string;
+    options: {
+        value: string;
+        label: string;
+    }[];
+}
 /** A column of a `rows` field: the property of each entry, its words, and its quantity when it is a physical number. */
 export interface FieldColumn {
     key: string;
@@ -33,6 +41,8 @@ export interface FieldDecl {
         value: string;
         label: string;
     }[];
+    /** The names of a choice, in groups, shown after any `options`. */
+    groups?: readonly OptionGroup[];
     /** Values offered above `switches`. */
     presets?: readonly {
         label: string;

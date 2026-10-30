@@ -1,5 +1,5 @@
 export { STORED } from './types';
-export type { Control, FieldColumn, FieldDecl, Fields, KindDecl, Units, Variant } from './types';
+export type { Control, FieldColumn, FieldDecl, Fields, KindDecl, OptionGroup, Units, Variant } from './types';
 export { blankTaken, clearsField, createSchema, fieldsSchema, takesNull, valueSchema, withoutCleared } from './schema';
 export type { FieldTable } from './schema';
 export { fieldsTaken, quantityOf, tableColumns, takesField, variantOf } from './columns';

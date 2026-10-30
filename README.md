@@ -200,7 +200,8 @@ focus ring), which every component needs and no component owns.
 | **Menu** | `controls/menu` | Dropdown menu with the full APG keyboard model. |
 | **Dialog** | `controls/dialog` | Modal dialog over the native `<dialog>` element. |
 | **SearchField** | `controls/search-field` | Search input whose clear button appears only once there is something to clear. |
-| **ChatPanel** | `controls/chat-panel` | Message log + compose box for the queue → send → apply-reply agent pattern. Owns the log; you own what Send *does*. `actions="assistant"` switches to Send and Stop over a log that also holds streaming text, reference chips, tool calls, refusals, proposals and cards. `refScopes` sets the reference scopes the chips read. A proposal row may carry a `basis`, which adds a column; a proposal may be `destructive`, and `later` lets a superseded, discarded or accepted card be taken up again, emitting `accept` or `load-again`. |
+| **ChatPanel** | `controls/chat-panel` | Message log + compose box. Owns the log; you own what Send *does*. Plain text with Queue, Send and Apply reply by default. `rich` reads a reply as markdown with `{{scope:path}}` reference chips, draws marks, and follows and announces a message that is still arriving; `refScopes` sets the scopes the chips read. Slots add the rest: `entry` for entries of your own kind, `message-extra`, `above-compose`, and `actions` with `shortcut` for your own buttons. |
+| **ChatRefChip** | `controls/chat-ref-chip` | One reference as a chip: the value, its unit and where it came from. A reference that could not be resolved says so. |
 | **Toast** | `controls/toast` | Transient status pill that fades itself out. Controlled: you own the message. |
 | **Transport** | `controls/transport` | Playback transport: play/pause/replay, scrub, speed, precompute progress. Unit-agnostic: drives simulation seconds or calendar days. |
 | **Switch** | `controls/switch` | Boolean toggle as a pill switch. One bare input; you own the label. |
@@ -214,7 +215,7 @@ focus ring), which every component needs and no component owns.
 | **Graph2D** | `viz/graph` | Force-directed graph over SVG. Opt-in zoom/pan/pinch, hover reporting, edge-pan while dragging. Positions are `number[]`, so the core is dimension-agnostic. |
 | **Gantt** | `viz/gantt` | Lanes, spans, points and anchors in day-index space. Drag to move, edges to resize. |
 
-All under `@aether/ui-kit/…`. Framework-free cores, importable on their own: `controls/core`, `property-editor/core`, `viz/core`, `viz/core/gantt`, `assistant/core`, `records/core`, `theme/core`.
+All under `@aether/ui-kit/…`. Framework-free cores, importable on their own: `controls/core`, `property-editor/core`, `viz/core`, `viz/core/gantt`, `records/core`, `theme/core`.
 
 `verbs` is framework-free too, and has no Vue part at all: see [Verbs](#verbs-the-edit-layer-under-an-editor) below.
 

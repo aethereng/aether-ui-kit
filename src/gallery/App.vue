@@ -61,6 +61,8 @@ import FilterRailExample from './examples/FilterRailExample.vue'
 import FilterRailExampleSrc from './examples/FilterRailExample.vue?raw'
 import ChatPanelExample from './examples/ChatPanelExample.vue'
 import ChatPanelExampleSrc from './examples/ChatPanelExample.vue?raw'
+import ChatRefChipExample from './examples/ChatRefChipExample.vue'
+import ChatRefChipExampleSrc from './examples/ChatRefChipExample.vue?raw'
 import ToastExample from './examples/ToastExample.vue'
 import ToastExampleSrc from './examples/ToastExample.vue?raw'
 import TransportExample from './examples/TransportExample.vue'
@@ -411,6 +413,9 @@ function setGroup(g: Group, open: boolean) {
 
         <GSection v-else-if="c.id === 'chat-panel'" :meta="c" :source="ChatPanelExampleSrc">
           <ChatPanelExample />
+        </GSection>
+        <GSection v-else-if="c.id === 'chat-ref-chip'" :meta="c" :source="ChatRefChipExampleSrc">
+          <ChatRefChipExample />
         </GSection>
 
         <GSection v-else-if="c.id === 'toast'" :meta="c" :source="ToastExampleSrc">
@@ -925,12 +930,24 @@ body {
   border-radius: var(--aether-radius);
   overflow: hidden;
 }
-/* The assistant demo holds every message kind at once, so it is as tall as they are, capped at the
-   viewport so the whole box is always on one screen and the log scrolls inside it when the screen
-   is short. */
-.g-chat--assistant {
+/* The rich demo holds more than bubbles, so it is taller, capped at the viewport so the whole box is
+   always on one screen and the log scrolls inside it when the screen is short. */
+.g-chat--rich {
   max-width: 600px;
-  height: min(1140px, 92vh);
+  height: min(640px, 92vh);
+}
+.g-chat-notice {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--aether-line);
+  border-radius: var(--aether-radius);
+  font-size: 12.8px;
+}
+.g-chat-busy {
+  margin: 0;
+  padding: 4px 16px 0;
+  color: var(--aether-ink-soft);
+  font-size: 12px;
 }
 .g-hint--spaced {
   margin-top: 22px;

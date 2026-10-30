@@ -564,7 +564,7 @@
   border: 1px solid var(--aether-line);
   align-self: flex-end;
 }
-.aether-chat__msg--agent {
+.aether-chat__msg--reply {
   background: var(--aether-cool-wash);
   border: 1px solid var(--aether-line);
   align-self: flex-start;
@@ -601,6 +601,30 @@
   font-size: 10px;
   font-weight: 600;
   color: var(--aether-faint);
+}
+/* Visually hidden, and still read: the live region of a rich log, and the label of a mark. Display none
+   would remove it from the accessibility tree, which is its whole job. */
+.aether-chat__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+/* A highlight is a box AND a wavy underline: the underline survives a greyscale print and a
+   colour-blind reader, the tone is for everyone else. */
+.aether-chat__mark {
+  padding: 0 1px;
+  border-radius: 2px;
+  background: var(--aether-tone-warning-wash);
+  color: inherit;
+  text-decoration: underline wavy var(--aether-tone-warning);
+  text-underline-offset: 2px;
 }
 .aether-chat__compose {
   flex: 0 0 auto;

@@ -5,7 +5,7 @@ import { mount, type VueWrapper } from '@vue/test-utils'
 import ChatPanel from '../ChatPanel.vue'
 import type { ChatEntry, RefChipData } from '../../core'
 
-/* Headings, block quotes and fenced code in an agent reply, as the assistant panel draws them. Each is
+/* Headings, block quotes and fenced code in a reply, as a rich log draws them. Each is
  * drawn as its element and as text: no heading element of any size, no markup from a code block, and
  * a mark or a chip kept inside each block. */
 
@@ -23,7 +23,7 @@ const resolveRef = (ref: string) => (ref === 'r1:summary.max_abs_displacement' ?
 const wrappers: VueWrapper[] = []
 function mountPanel(messages: ChatEntry[], props: Record<string, unknown> = {}) {
   const w = mount(ChatPanel, {
-    props: { messages, modelValue: '', actions: 'assistant', resolveRef, ...props },
+    props: { messages, modelValue: '', rich: true, resolveRef, ...props },
   })
   wrappers.push(w as unknown as VueWrapper)
   return w
@@ -32,7 +32,7 @@ afterEach(() => {
   while (wrappers.length) wrappers.pop()!.unmount()
 })
 
-const reply = (text: string, extra: Record<string, unknown> = {}): ChatEntry => ({ role: 'agent', text, ...extra }) as ChatEntry
+const reply = (text: string, extra: Record<string, unknown> = {}): ChatEntry => ({ role: 'reply', text, ...extra }) as ChatEntry
 const md = (w: VueWrapper) => w.find('.aether-chat__md')
 const status = (w: VueWrapper) => w.find('.aether-chat__sr[role="status"] span').text()
 
@@ -112,8 +112,8 @@ describe('a fenced code block is a monospace block', () => {
     expect(md(w).find('p').text()).toBe('after')
   })
 
-  it('negative arm: a relay panel shows the fence and its hashes as written', () => {
-    const w = mountPanel([reply('## Result')], { actions: 'relay' })
+  it('negative arm: a plain log shows the fence and its hashes as written', () => {
+    const w = mountPanel([reply('## Result')], { rich: false })
     expect(md(w).exists()).toBe(false)
     expect(w.text()).toContain('## Result')
   })

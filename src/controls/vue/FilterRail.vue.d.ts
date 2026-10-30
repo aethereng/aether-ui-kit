@@ -1,8 +1,8 @@
 import type { FilterGroup } from '../core/types';
 declare const _default: <V extends string = string>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
     props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{
-        readonly onClear?: (() => any) | undefined;
         readonly onToggle?: ((groupKey: string, value: V) => any) | undefined;
+        readonly onClear?: (() => any) | undefined;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onToggle" | "onClear"> & {
         groups: FilterGroup<V>[];
         hiddenCount?: number;
@@ -15,7 +15,7 @@ declare const _default: <V extends string = string>(__VLS_props: NonNullable<Awa
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {};
-    emit: ((evt: "clear") => void) & ((evt: "toggle", groupKey: string, value: V) => void);
+    emit: ((evt: "toggle", groupKey: string, value: V) => void) & ((evt: "clear") => void);
 }>) => import("vue").VNode & {
     __ctx?: Awaited<typeof __VLS_setup>;
 };

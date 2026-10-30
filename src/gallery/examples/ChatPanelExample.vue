@@ -1,19 +1,14 @@
 <script setup lang="ts">
 /* THIS FILE IS THE EXAMPLE: rendered as the demo and sliced for the Template/Script tabs. */
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
 import ChatPanel from '@aether/ui-kit/controls/chat-panel'
+import Tool from '@aether/ui-kit/controls/tool'
 import { findBareNumerals } from '@aether/ui-kit/controls/core'
-import type {
-  ChatEntry,
-  ChatMessage,
-  ChatProposalMessage,
-  ChatToolMessage,
-  RefChipData,
-} from '@aether/ui-kit/controls/core'
+import type { ChatMessage, RefChipData } from '@aether/ui-kit/controls/core'
 
 /* Controlled: the caller owns the log and the compose box. The panel renders and emits, and
    never invents a message. `queued` on a 'you' message is what drives the count on Send. */
-const messages = ref<ChatMessage[]>([{ role: 'agent', text: 'Ready when you are.' }])
+const messages = ref<ChatMessage[]>([{ role: 'reply', text: 'Ready when you are.' }])
 const compose = ref('')
 
 function onQueue() {
@@ -35,10 +30,10 @@ function onSend() {
 
 /* A host calls this after importing a reply file; here it hands back a canned response. */
 function onApplyReply() {
-  messages.value.push({ role: 'agent', text: 'Done. See the diff.' })
+  messages.value.push({ role: 'reply', text: 'Done. See the diff.' })
 }
 
-/* ---- actions="assistant": one request at a time, a log of more than text ---- */
+/* ---- a rich log: markdown, reference chips, marks, a stream, and the caller's additions ---- */
 
 /* What a reference points at is the app's to say. `resolveRef` is called while the log renders, so
    it is a lookup; null means "I cannot resolve this", and the panel draws the warning chip. */
@@ -58,82 +53,30 @@ const index: Record<string, RefChipData> = {
     provenance: 'Example provenance line.',
     reduced: true,
   },
-  'c:limit.value': {
-    value: '1.37',
-    unit: null,
-    source: { kind: 'capabilities', id: null, hash: '9c04e2d11223344' },
-    path: 'limit.value',
-    provenance: null,
-  },
 }
 const resolveRef = (ref: string): RefChipData | null => index[ref] ?? null
 
 /* The panel judges nothing. The app's own gate finds the bare numerals and hands the panel their
    spans; here that gate is the core's rule with no identifier admitted. */
-function agentText(text: string): ChatMessage {
+function replyText(text: string): ChatMessage {
   const marks = findBareNumerals(text, []).map((s) => ({ ...s, kind: 'bare numeral' }))
-  return { role: 'agent', text, marks }
+  return { role: 'reply', text, marks }
 }
 
-const assistantCompose = ref('')
-const assistantMessages = ref<ChatEntry[]>([
+/* An entry of this page's own kind. The panel draws none of it: the `entry` slot does, where it stands
+   in the log. */
+type Notice = { kind: 'notice'; title: string; body: string }
+type Entry = ChatMessage | Notice
+
+const richCompose = ref('')
+const richMessages = ref<Entry[]>([
   { role: 'you', text: 'Example request: compare the two results.' },
-  agentText(
-    'The maximum is {{r1:result.max}} and the mean is {{r1:result.mean}}. The limit is ' +
-      '{{c:limit.value}}, and {{r9:result.missing}} has no answer. A rough figure of 12 units has no source.',
+  replyText(
+    'The **maximum** is {{r1:result.max}} and the mean is {{r1:result.mean}}, and {{r9:result.missing}} ' +
+      'has no answer. A rough figure of 12 units has no source.',
   ),
-  {
-    kind: 'tool',
-    callId: 'call-1',
-    name: 'example_lookup',
-    status: 'done',
-    summary: 'Example summary of what the call returned.',
-    detail: `Example detail, line one.
-  Example detail, line two.`,
-    open: false,
-  },
-  { kind: 'tool', callId: 'call-2', name: 'example_check', status: 'failed', summary: 'Example failure summary.' },
-  { kind: 'refusal', source: 'engine', text: `Example refusal text.
-  An indented second line, kept as written.` },
-  {
-    kind: 'proposal',
-    id: 'proposal-1',
-    title: 'Example proposal',
-    status: 'pending',
-    rows: [
-      { path: 'example.row_a', before: '1', after: '2' },
-      { path: 'example.row_b', before: 'off', after: 'on' },
-      { path: 'example.row_c', before: '0.5', after: '0.75' },
-      { path: 'example.row_d', before: 'none', after: 'set' },
-      { path: 'example.row_e', before: 'a', after: 'b' },
-      { path: 'example.row_f', before: '10', after: '12' },
-    ],
-    flags: [{ text: 'Example flag, with the value it concerns:', reference: 'r1:result.max' }],
-  },
-  { kind: 'card', title: 'Example card', body: 'Example card body.', source: 'example source' },
+  { kind: 'notice', title: 'Example notice', body: 'Drawn by the page through the entry slot.' },
 ])
-
-/* Accept, Discard and the Details toggle only ASK. Nothing on screen changes until this code
-   changes the message, which is what "controlled" means for a card that can be acted on. */
-const proposalById = (id: string) =>
-  assistantMessages.value.find((e): e is ChatProposalMessage => e.kind === 'proposal' && e.id === id)
-const toolById = (id: string) =>
-  assistantMessages.value.find((e): e is ChatToolMessage => e.kind === 'tool' && e.callId === id)
-
-function onAccept(id: string) {
-  const p = proposalById(id)
-  if (p) p.status = 'accepted'
-}
-function onDiscard(id: string) {
-  const p = proposalById(id)
-  if (p) p.status = 'discarded'
-}
-function onToggleTool(id: string) {
-  const t = toolById(id)
-  if (t) t.open = !t.open
-}
-
-const proposalStatus = computed(() => proposalById('proposal-1')?.status ?? 'none')
 const opened = ref('none yet')
 
 /* A stream the app drives: it grows one message in place and clears `streaming` when it ends. Cut
@@ -153,13 +96,13 @@ function finish() {
   busy.value = false
 }
 
-function onAssistantSend() {
+function onRichSend() {
   if (busy.value) return
-  const t = assistantCompose.value.trim()
-  if (t) assistantMessages.value.push({ role: 'you', text: t })
-  assistantCompose.value = ''
-  assistantMessages.value.push({ role: 'agent', text: '', streaming: true })
-  live = assistantMessages.value[assistantMessages.value.length - 1] as ChatMessage
+  const t = richCompose.value.trim()
+  if (t) richMessages.value.push({ role: 'you', text: t })
+  richCompose.value = ''
+  richMessages.value.push({ role: 'reply', text: '', streaming: true })
+  live = richMessages.value[richMessages.value.length - 1] as ChatMessage
   busy.value = true
   let shown = 0
   timer = setInterval(() => {
@@ -182,7 +125,7 @@ onBeforeUnmount(() => clearInterval(timer))
     <ChatPanel
       v-model="compose"
       :messages="messages"
-      placeholder="Ask the agent…"
+      placeholder="Write a request…"
       @queue="onQueue"
       @send="onSend"
       @apply-reply="onApplyReply"
@@ -198,30 +141,34 @@ onBeforeUnmount(() => clearInterval(timer))
   </code>
 
   <p class="g-hint g-hint--spaced">
-    <code>actions="assistant"</code> shows Send and, while busy, Stop, and the log renders every
-    kind on one screen: text with reference chips and marked numerals, tool calls, a refusal, a
-    proposal and a card. Send streams a reply; Accept and Discard only ask, and the status changes
-    when this page changes it.
+    <code>rich</code> reads a reply as markdown with reference chips and marked numerals. This page adds
+    the rest: a notice of its own through <code>#entry</code>, a line through <code>#above-compose</code>
+    while the reply streams, and Send and Stop through <code>#actions</code>.
   </p>
 
-  <div class="g-chat g-chat--assistant">
+  <div class="g-chat g-chat--rich">
     <ChatPanel
-      v-model="assistantCompose"
-      actions="assistant"
-      :messages="assistantMessages"
-      :busy="busy"
-      fixed-line="Example fixed line."
-      proposal-line="Example proposal line."
+      v-model="richCompose"
+      rich
+      shortcut="send"
+      :messages="richMessages"
       :resolve-ref="resolveRef"
-      placeholder="Ask the assistant…"
-      @send="onAssistantSend"
-      @stop="finish"
-      @accept="onAccept"
-      @discard="onDiscard"
-      @toggle-tool="onToggleTool"
+      placeholder="Write a request…"
+      @send="onRichSend"
       @open-ref="opened = $event"
-    />
+    >
+      <template #entry="{ entry }">
+        <p class="g-chat-notice"><b>{{ entry.title }}</b> {{ entry.body }}</p>
+      </template>
+      <template #above-compose>
+        <p v-if="busy" class="g-chat-busy">A reply is arriving.</p>
+      </template>
+      <template #actions>
+        <Tool label="Send" hot :disabled="busy" @click="onRichSend" />
+        <Tool v-if="busy" label="Stop" @click="finish" />
+      </template>
+    </ChatPanel>
   </div>
 
-  <code class="g-ex-state">proposal = {{ proposalStatus }} · open-ref = {{ opened }}</code>
+  <code class="g-ex-state">open-ref = {{ opened }}</code>
 </template>

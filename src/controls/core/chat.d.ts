@@ -5,7 +5,7 @@ export interface ChatMark {
 }
 export interface ChatMessage {
     kind?: 'text';
-    role: 'you' | 'agent' | 'sys';
+    role: 'you' | 'reply' | 'sys';
     text: string;
     queued?: boolean;
     refs?: string[];
@@ -14,88 +14,18 @@ export interface ChatMessage {
     /** Spans to highlight; offsets index into `text`. A mark that is out of range, empty, inverted or
      *  overlapping an earlier one is dropped, and of two overlapping marks the first wins. */
     marks?: ChatMark[];
-    /** The reasoning behind this reply, kept under its turn once the reply settles and shown folded.
-     *  Read under `actions="assistant"` only, and only on an agent message. */
-    reasoning?: string;
 }
-export type ChatToolStatus = 'running' | 'done' | 'refused' | 'failed';
-export interface ChatToolMessage {
-    kind: 'tool';
-    callId: string;
-    name: string;
-    status: ChatToolStatus;
-    /** One line. */
-    summary: string;
-    /** Shown behind a Disclosure when present. */
-    detail?: string;
-    /** Whether the detail is revealed. The app owns it and flips it on `toggle-tool`. */
-    open?: boolean;
+/** An entry of the caller's own kind. The panel draws none of them: the `entry` slot does, where it
+ *  stands in the log. */
+export interface ChatOwnEntry {
+    kind: string;
 }
-export interface ChatRefusalMessage {
-    kind: 'refusal';
-    /** Rendered verbatim, whitespace preserved. */
-    text: string;
-    source: 'engine' | 'api';
-}
-/** Where a proposed value came from. `suggestion` is a value the assistant chose itself; the panel
- *  marks it as the assistant's suggestion. Nothing about the value is checked here. */
-export interface ChatProposalBasis {
-    kind: 'person' | 'file' | 'list' | 'suggestion';
-    text: string;
-}
-/** A cell that carries the parts a reply's text carries: `marks` are highlighted and `{{scope:path}}`
- *  references in `text` are chips, drawn as the reply draws them. A plain string cell is plain text. */
-export interface ChatProposalCell {
-    text: string;
-    marks?: ChatMark[];
-}
-export interface ChatProposalRow {
-    path: string;
-    before: string | ChatProposalCell;
-    after: string | ChatProposalCell;
-    /** Shown in its own column when any row of the proposal has a basis. */
-    basis?: ChatProposalBasis | null;
-    /** The reader may take or leave this row: it draws a tick, on by default. A proposal with a selectable
-     *  row asks for selection, and its card's actions say so. */
-    selectable?: boolean;
-}
-export interface ChatProposalFlag {
-    text: string;
-    /** A reference string, `scope:path`, rendered as a chip. */
-    reference: string;
-}
-export type ChatProposalStatus = 'pending' | 'accepted' | 'discarded' | 'superseded' | 'refused';
-export interface ChatProposalMessage {
-    kind: 'proposal';
-    id: string;
-    title: string;
-    rows: ChatProposalRow[];
-    flags: ChatProposalFlag[];
-    /** Accept and Discard show only while `pending`; the app moves it on. */
-    status: ChatProposalStatus;
-    /** The card says so in text, and its Accept control is labelled for it. Not by colour alone. */
-    destructive?: boolean;
-    /** A card that can still be taken up after its status has moved on: `accept` for a superseded or
-     *  discarded card, `load-again` for an accepted one. Absent or null shows neither. */
-    later?: 'accept' | 'load-again' | null;
-    /** The card carries a note field. What the reader writes goes out with each decision. */
-    note?: boolean;
-}
-/** What the reader decided on a proposal card, as its events carry it. `rows` are indexes into the
- *  card's `rows`: the ticked rows and every row the app did not mark selectable for Accept, all of them
- *  for Accept all, and none for Discard. `note` is the note field's text, empty when there is none. */
-export interface ChatProposalDecision {
-    rows: number[];
-    note: string;
-}
-export interface ChatCardMessage {
-    kind: 'card';
-    title: string;
-    body: string;
-    source: string;
-}
-export type ChatEntry = ChatMessage | ChatToolMessage | ChatRefusalMessage | ChatProposalMessage | ChatCardMessage;
+export type ChatEntry = ChatMessage | ChatOwnEntry;
 export declare function isTextMessage(m: ChatEntry): m is ChatMessage;
+/** The marks that can be drawn: whole spans of `text`, in order, none overlapping. The app's gate
+ *  decides what to mark. A malformed span is dropped here rather than thrown, so one bad offset
+ *  cannot blank a reply. Of two overlapping spans the first wins. */
+export declare function usableMarks(text: string, marks?: readonly ChatMark[]): ChatMark[];
 export { findBareNumerals, referencesIn, splitReferences } from './refs';
 export type { BareNumeralSpan, ChatSegment, ReferenceScopes } from './refs';
 export type RefSourceKind = 'run' | 'model' | 'proposal' | 'capabilities' | 'schema' | 'verification' | 'findings' | 'registry';

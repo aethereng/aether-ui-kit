@@ -61,17 +61,7 @@ export type { ScrubHandle } from './transport'
 export type {
   ChatMessage,
   ChatMark,
-  ChatToolMessage,
-  ChatToolStatus,
-  ChatRefusalMessage,
-  ChatProposalMessage,
-  ChatProposalRow,
-  ChatProposalCell,
-  ChatProposalDecision,
-  ChatProposalBasis,
-  ChatProposalFlag,
-  ChatProposalStatus,
-  ChatCardMessage,
+  ChatOwnEntry,
   ChatEntry,
   ChatSegment,
   BareNumeralSpan,
@@ -81,6 +71,7 @@ export type {
 } from './chat'
 export {
   isTextMessage,
+  usableMarks,
   splitReferences,
   findBareNumerals,
   describeRef,

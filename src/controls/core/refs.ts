@@ -1,8 +1,8 @@
 /* The reference grammar and the path resolver. Framework-free: no Vue, no DOM, no SDK, so an app's
  * gate, its tools and its tests run the rules the panel renders with.
  *
- * A reference is `{{scope:path}}`. An app mints one beside each value a tool returns, the assistant
- * copies it, and the panel draws it as a chip. This file holds the rules those steps share: which
+ * A reference is `{{scope:path}}`. An app mints one beside each value it hands out, whoever writes
+ * the reply copies it, and the panel draws it as a chip. This file holds the rules those steps share: which
  * scopes a list admits, where a reference starts and ends, what a bare numeral is, the numeral gate
  * built from the two, and the path vocabulary (parse, format, resolve, the leaves of a document),
  * with the one option that changes how an id in brackets is read.

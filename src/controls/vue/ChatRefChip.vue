@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /* One reference chip: the value an app resolved a `{{scope:path}}` token to, with the run or
- * build it came from written in the chip itself, not behind a hover. Private to ChatPanel (it is
- * not in the exports map): the panel draws it in two places, a reply's text and a proposal's
- * flags, and one component keeps those two from drifting.
+ * build it came from written in the chip itself, not behind a hover. ChatPanel draws it in a
+ * reply's text, and a caller's own entry may draw it too, so one component keeps those from
+ * drifting.
  *
  * Every chip is a <button>. A click says "open this reference" and the app decides what that
  * means; the chip never navigates and never resolves anything. The whole text of a chip is in its

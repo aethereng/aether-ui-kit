@@ -13,7 +13,7 @@ import type { ChatMessage } from '../../core'
 const msgs = (): ChatMessage[] => [
   { role: 'sys', text: 'note one' },
   { role: 'you', text: 'queued one', queued: true, refs: ['a.md'] },
-  { role: 'agent', text: 'reply one', refs: ['a.md', 'b.md'] },
+  { role: 'reply', text: 'reply one', refs: ['a.md', 'b.md'] },
 ]
 
 function mountPanel(extra: Record<string, unknown> = {}) {
@@ -50,7 +50,7 @@ describe('ChatPanel renders what it is given', () => {
     expect(rows[0]!.find('.aether-chat__who').text()).toBe('note')
     expect(rows[1]!.find('.aether-chat__who').text()).toBe('you · queued')
     expect(rows[1]!.classes()).toContain('queued')
-    expect(rows[2]!.find('.aether-chat__who').text()).toBe('agent')
+    expect(rows[2]!.find('.aether-chat__who').text()).toBe('reply')
     expect(rows[2]!.classes()).not.toContain('queued')
   })
 

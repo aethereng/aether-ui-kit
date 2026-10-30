@@ -9,7 +9,7 @@ import {
 } from '../chat'
 import type { ChatEntry, RefChipData } from '../chat'
 
-/* The core is where the assistant's two rules live: what counts as a reference, and what counts as
+/* The core is where the panel's two rules live: what counts as a reference, and what counts as
  * a bare numeral. Both are rules a gate leans on, so every one of them is pinned here as its own
  * case. A detector that always fires passes a positive-only suite, so each positive has a negative
  * that must come back empty. */
@@ -284,11 +284,8 @@ describe('isTextMessage', () => {
   it('is true for kind omitted and for kind text, false for every other kind', () => {
     const entries: [ChatEntry, boolean][] = [
       [{ role: 'you', text: 'a' }, true],
-      [{ kind: 'text', role: 'agent', text: 'a' }, true],
-      [{ kind: 'tool', callId: 'c', name: 'n', status: 'done', summary: 's' }, false],
-      [{ kind: 'refusal', text: 't', source: 'api' }, false],
-      [{ kind: 'proposal', id: 'p', title: 't', rows: [], flags: [], status: 'pending' }, false],
-      [{ kind: 'card', title: 't', body: 'b', source: 's' }, false],
+      [{ kind: 'text', role: 'reply', text: 'a' }, true],
+      [{ kind: 'notice' }, false],
     ]
     for (const [e, want] of entries) expect(isTextMessage(e)).toBe(want)
   })

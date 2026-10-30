@@ -102,9 +102,8 @@ describe('meta.ts describes the components as they actually are', () => {
 describe('the site shows what the kit ships', () => {
   /* The README sends a reader to the site for the components, and a part that ships with no section
    * is invisible there with every test green. So a part is either on the site or on this list, and
-   * the README's sentence names the same list. ChatRefChip draws inside ChatPanel's section and has no
-   * import of its own, so the README does not name it. */
-  const NOT_ON_THE_SITE = ['ChatRefChip', 'Icon', 'RecordField', 'RecordTable']
+   * the README's sentence names the same list. */
+  const NOT_ON_THE_SITE = ['Icon', 'RecordField', 'RecordTable']
   const app = readFileSync(join(SRC, 'gallery', 'App.vue'), 'utf8')
   const readme = readFileSync(join(SRC, '..', 'README.md'), 'utf8')
 
@@ -124,7 +123,7 @@ describe('the site shows what the kit ships', () => {
     const start = readme.indexOf('\n## Gallery')
     expect(start, 'precondition: the section was found').toBeGreaterThan(0)
     const section = readme.slice(start, readme.indexOf('\n## ', start + 1))
-    for (const name of NOT_ON_THE_SITE.filter((n) => n !== 'ChatRefChip')) expect(section).toContain(`\`${name}\``)
+    for (const name of NOT_ON_THE_SITE) expect(section).toContain(`\`${name}\``)
     expect(section).not.toMatch(/every component/i)
   })
 })

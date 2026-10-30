@@ -3,9 +3,9 @@ import { mount, type VueWrapper } from '@vue/test-utils'
 import ChatPanel from '../ChatPanel.vue'
 import type { ChatEntry, RefChipData } from '../../core'
 
-/* An agent reply is read as markdown in the assistant panel. These tests read what the panel draws:
+/* A reply is read as markdown in a rich log. These tests read what the panel draws:
  * each construct as its element, a mark and a chip where they stand inside formatting, escaped text,
- * and the words a screen reader is given. The person's own messages and a relay panel stay as written. */
+ * and the words a screen reader is given. The person's own messages and a plain log stay as written. */
 
 const NL = String.fromCharCode(10)
 
@@ -22,7 +22,7 @@ const resolveRef = (ref: string) => (ref === 'r1:summary.max_abs_displacement' ?
 const wrappers: VueWrapper[] = []
 function mountPanel(messages: ChatEntry[], props: Record<string, unknown> = {}) {
   const w = mount(ChatPanel, {
-    props: { messages, modelValue: '', actions: 'assistant', resolveRef, ...props },
+    props: { messages, modelValue: '', rich: true, resolveRef, ...props },
   })
   wrappers.push(w as unknown as VueWrapper)
   return w
@@ -31,11 +31,11 @@ afterEach(() => {
   while (wrappers.length) wrappers.pop()!.unmount()
 })
 
-const reply = (text: string, extra: Record<string, unknown> = {}): ChatEntry => ({ role: 'agent', text, ...extra }) as ChatEntry
+const reply = (text: string, extra: Record<string, unknown> = {}): ChatEntry => ({ role: 'reply', text, ...extra }) as ChatEntry
 const md = (w: VueWrapper) => w.find('.aether-chat__md')
 const status = (w: VueWrapper) => w.find('.aether-chat__sr[role="status"] span').text()
 
-describe('an agent reply is read as markdown', () => {
+describe('a reply is read as markdown', () => {
   it('draws each construct as its element: paragraph, strong, em, code, bullet list and numbered list', () => {
     const w = mountPanel([reply('**bold** *em* `code`' + NL + NL + '- one' + NL + '- two' + NL + NL + '1. first' + NL + '2. second')])
     expect(md(w).findAll('p')).toHaveLength(1)
@@ -61,8 +61,8 @@ describe('an agent reply is read as markdown', () => {
     expect(w.text()).toContain('**mine**')
   })
 
-  it('negative arm: a relay panel shows the reply verbatim, markers and all', () => {
-    const w = mountPanel([reply('**bold**')], { actions: 'relay' })
+  it('negative arm: a plain log shows the reply verbatim, markers and all', () => {
+    const w = mountPanel([reply('**bold**')], { rich: false })
     expect(md(w).exists()).toBe(false)
     expect(w.find('strong').exists()).toBe(false)
     expect(w.text()).toContain('**bold**')

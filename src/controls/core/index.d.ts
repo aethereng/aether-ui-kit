@@ -4,8 +4,8 @@ export { focusableItems, firstItem, lastItem, menuKey, isTypeaheadKey } from './
 export declare function isChipActive<V extends string>(value: V, active: V | Set<V>): boolean;
 export { DEFAULT_SPEEDS, cycleSpeed, isAtEnd, beginScrub, endScrub } from './transport';
 export type { ScrubHandle } from './transport';
-export type { ChatMessage, ChatMark, ChatToolMessage, ChatToolStatus, ChatRefusalMessage, ChatProposalMessage, ChatProposalRow, ChatProposalCell, ChatProposalDecision, ChatProposalBasis, ChatProposalFlag, ChatProposalStatus, ChatCardMessage, ChatEntry, ChatSegment, BareNumeralSpan, RefSourceKind, RefChipData, RefChipText, } from './chat';
-export { isTextMessage, splitReferences, findBareNumerals, describeRef, REF_HASH_LENGTH, UNRESOLVED_TEXT, REDUCED_TEXT, STREAM_FOLLOW_THRESHOLD, CHIP_TEXT_LIMIT, } from './chat';
+export type { ChatMessage, ChatMark, ChatOwnEntry, ChatEntry, ChatSegment, BareNumeralSpan, RefSourceKind, RefChipData, RefChipText, } from './chat';
+export { isTextMessage, usableMarks, splitReferences, findBareNumerals, describeRef, REF_HASH_LENGTH, UNRESOLVED_TEXT, REDUCED_TEXT, STREAM_FOLLOW_THRESHOLD, CHIP_TEXT_LIMIT, } from './chat';
 export { DEFAULT_REFERENCE_SCOPES, DEFAULT_PATH_RULES, numeralGate, referencesIn, hasReservedCharacter, reservedCharactersOf, idsIn, slug, parsePath, formatPath, resolvePath, modelLeaves, } from './refs';
 export type { ReferenceScopes, Violation, ViolationKind, PathRules, PathStep, ParsedPath, Reduction, TupleTable, Leaf, LeafOptions, } from './refs';
 export { visibleRows, treeKey, typeahead, ancestorIds, isExpandable } from './tree';

@@ -110,6 +110,10 @@
       "types": "./src/controls/vue/ChatPanel.vue.d.ts",
       "import": "./src/controls/vue/ChatPanel.vue"
     },
+    "./controls/chat-ref-chip": {
+      "types": "./src/controls/vue/ChatRefChip.vue.d.ts",
+      "import": "./src/controls/vue/ChatRefChip.vue"
+    },
     "./controls/toast": {
       "types": "./src/controls/vue/Toast.vue.d.ts",
       "import": "./src/controls/vue/Toast.vue"

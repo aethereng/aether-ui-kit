@@ -27,8 +27,8 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     onStop?: (() => any) | undefined;
 }>, {
     progress: number | null;
-    aside: boolean;
     detail: string;
+    aside: boolean;
     subject: string;
     stoppable: boolean;
     stopLabel: string;

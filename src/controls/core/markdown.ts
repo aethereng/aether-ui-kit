@@ -1,4 +1,4 @@
-/* Markdown for an agent reply, framework-free: the blocks and inline spans the panel draws, with
+/* Markdown for a reply, framework-free: the blocks and inline spans the panel draws, with
  * the reference chips and the marks kept where they stand.
  *
  * WHAT IT READS. Paragraphs (the text between blank lines), line breaks inside a paragraph, bullet
@@ -21,7 +21,7 @@
  * references, which are drawn on the block's first line.
  *
  * @internal: read by ChatPanel alone, so it is not a subpath of the exports map. */
-import type { ChatMark } from './chat'
+import { usableMarks, type ChatMark } from './chat'
 import { LIST_LINE, MAX_QUOTE_DEPTH, QUOTE_LINE } from './markup'
 import { DEFAULT_REFERENCE_SCOPES, splitReferences, type ReferenceScopes } from './refs'
 
@@ -88,23 +88,6 @@ function linesOf(text: string): Span[] {
     if (nl < 0) return lines
     start = nl + 1
   }
-}
-
-/** The marks that can be drawn: whole spans of `text`, in order, none overlapping. The app's gate
- *  decides what to mark. A malformed span is dropped here rather than thrown, so one bad offset
- *  cannot blank a reply. Of two overlapping spans the first wins. */
-export function usableMarks(text: string, marks: readonly ChatMark[] = []): ChatMark[] {
-  const sorted = marks
-    .filter((k) => Number.isInteger(k.start) && Number.isInteger(k.end) && k.start >= 0 && k.start < k.end && k.end <= text.length)
-    .sort((a, b) => a.start - b.start)
-  const out: ChatMark[] = []
-  let edge = 0
-  for (const k of sorted) {
-    if (k.start < edge) continue
-    out.push(k)
-    edge = k.end
-  }
-  return out
 }
 
 /** The blocks of a reply's text. `marks` are the gate's spans, offsets into `text`; a malformed mark is

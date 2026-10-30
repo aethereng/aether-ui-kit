@@ -64,6 +64,14 @@ describe('RecordTable, many rows', () => {
     expect(ids(w)).toHaveLength(99)
     expect(w.find('[data-table-gap]').exists()).toBe(false)
   })
+  it('draws a window from the count that needs one', async () => {
+    sized()
+    const w = table(PARTS, many(100)).w
+    await nextTick()
+    expect(ids(w)).toHaveLength(20)
+    expect(w.find('[data-table-gap]').exists()).toBe(true)
+    w.unmount()
+  })
   it('draws the rows in sight and a screenful each side, the rest a gap of their height', async () => {
     sized()
     const w = table(PARTS, many(500)).w
@@ -104,6 +112,124 @@ describe('RecordTable, many rows', () => {
     await w.setProps({ openId: 'p300' })
     await nextTick()
     expect(ids(w)).toContain('p300')
+  })
+  it('centres a row opened far down', async () => {
+    sized()
+    const w = table(PARTS, many(500)).w
+    await nextTick()
+    await w.setProps({ openId: 'p300' })
+    await nextTick()
+    expect(w.find('.aether-record-table').element.scrollTop).toBe(300 * 40 - 200)
+    w.unmount()
+  })
+  it('draws and scrolls to a row open before the table is there', async () => {
+    sized()
+    const w = table(PARTS, many(500), { openId: 'p300' }).w
+    await nextTick()
+    await nextTick()
+    expect(ids(w)).toContain('p300')
+    expect(w.find('.aether-record-table').element.scrollTop).toBe(300 * 40 - 200)
+    w.unmount()
+  })
+  it('draws the last rows at the end of the list, and no gap below them', async () => {
+    sized()
+    const w = table(PARTS, many(500)).w
+    await nextTick()
+    const box = w.find('.aether-record-table')
+    box.element.scrollTop = 500 * 40 - 400
+    await box.trigger('scroll')
+    expect(ids(w).at(-1)).toBe('p499')
+    expect(w.findAll('[data-table-gap]')).toHaveLength(1)
+    expect((w.find('[data-table-gap]').element as HTMLElement).style.height).toBe(`${Number(ids(w)[0]!.slice(1)) * 40}px`)
+    w.unmount()
+  })
+  it('draws the last rows where a shorter list does not reach the place scrolled to', async () => {
+    sized()
+    const w = table(PARTS, many(500)).w
+    await nextTick()
+    const box = w.find('.aether-record-table')
+    box.element.scrollTop = 16000
+    await box.trigger('scroll')
+    await w.setProps({ rows: many(200) })
+    expect(ids(w)).toContain('p199')
+    w.unmount()
+  })
+  it('draws the rows at the place a short list has reached when a row makes it long', async () => {
+    sized()
+    const w = table(PARTS, many(99)).w
+    await nextTick()
+    const box = w.find('.aether-record-table')
+    box.element.scrollTop = 3000
+    await box.trigger('scroll')
+    await w.setProps({ rows: many(100) })
+    expect(ids(w)).toContain('p75')
+    w.unmount()
+  })
+  it('draws the rows at the place reached when a short list is swapped for a long one', async () => {
+    sized()
+    const w = table(PARTS, many(50)).w
+    await nextTick()
+    const box = w.find('.aether-record-table')
+    box.element.scrollTop = 1600
+    await box.trigger('scroll')
+    await w.setProps({ rows: many(800) })
+    expect(ids(w)).toContain('p40')
+    w.unmount()
+  })
+  it('keeps what is typed in a cell through a scroll that moves the drawn rows, and gives it when the cell is left', async () => {
+    sized()
+    const { w, runs } = table(PARTS, many(500))
+    await nextTick()
+    const cell = w.find('[data-cell="p2:size"]')
+    const input = cell.element as HTMLInputElement
+    input.focus()
+    input.value = '0.05'
+    await cell.trigger('input')
+    const box = w.find('.aether-record-table')
+    box.element.scrollTop = 40
+    await box.trigger('scroll')
+    expect(input.value, 'a scroll inside the drawn rows').toBe('0.05')
+    box.element.scrollTop = 8 * 40
+    await box.trigger('scroll')
+    expect(w.find('[data-table-row="p0"]').exists() && input.value, 'a scroll that moves them').toBe('0.05')
+    await cell.trigger('change')
+    await cell.trigger('blur')
+    expect(runs.map((r) => r.values[0]!.id)).toEqual(['p2'])
+    w.unmount()
+  })
+  it('draws nothing for a scroll inside the drawn rows', async () => {
+    sized()
+    // a choice cell asks for its options at each draw
+    const asked = vi.fn(optionsOf)
+    const w = table(PARTS, many(500), { optionsOf: asked }).w
+    await nextTick()
+    const box = w.find('.aether-record-table')
+    const before = asked.mock.calls.length
+    box.element.scrollTop = 40
+    await box.trigger('scroll')
+    await nextTick()
+    expect(asked.mock.calls.length).toBe(before)
+    box.element.scrollTop = 8 * 40
+    await box.trigger('scroll')
+    await nextTick()
+    expect(asked.mock.calls.length, 'a scroll that moves them draws').toBeGreaterThan(before)
+    w.unmount()
+  })
+  it('leaves a focused cell scrolled up out of the drawn rows, which gives what is typed in it', async () => {
+    sized()
+    const { w, runs } = table(PARTS, many(500))
+    await nextTick()
+    const box = w.find('.aether-record-table')
+    box.element.scrollTop = 8000
+    await box.trigger('scroll')
+    const input = w.find('[data-cell="p200:size"]').element as HTMLInputElement
+    input.focus()
+    input.value = '0.05'
+    input.addEventListener('blur', () => input.dispatchEvent(new Event('change', { bubbles: true })), { once: true })
+    box.element.scrollTop = 0
+    await box.trigger('scroll')
+    expect(runs.map((r) => r.values[0]!.id)).toEqual(['p200'])
+    w.unmount()
   })
   it('leaves a focused cell scrolled out of the drawn rows, which gives what is typed in it', async () => {
     sized()

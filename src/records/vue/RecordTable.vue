@@ -112,11 +112,16 @@ function scrolled(): void {
   const held = el.querySelector<HTMLElement>('[data-table-row] :focus')
   const at = shownRows.value.findIndex((r) => r.id === held?.closest<HTMLElement>('[data-table-row]')?.dataset.tableRow)
   if (at >= 0 && (at < left.from || at >= left.to)) held?.blur()
-  seen.value = { ...seen.value, top: el.scrollTop }
+  if (left.from !== drawn.value.from || left.to !== drawn.value.to) seen.value = { ...seen.value, top: el.scrollTop }
 }
+// A short list's scroll is not followed, so the place it has reached is read when the rows become many.
+watch(manyRows, (many) => {
+  if (many && body.value !== null) seen.value = { ...seen.value, top: body.value.scrollTop }
+})
 let watcher: ResizeObserver | null = null
 onMounted(() => {
   sizeUp()
+  void bringIn(props.openId)
   if (typeof ResizeObserver !== 'undefined' && body.value !== null) {
     watcher = new ResizeObserver(sizeUp)
     watcher.observe(body.value)
@@ -149,6 +154,9 @@ watch(
 
 const headUnit = (column: TableColumn): string => (column.quantity === undefined ? '' : (props.units.label(column.quantity) ?? ''))
 const textOf = (record: Fields, column: TableColumn): string => cellText(props.kind, record, column, props.units)
+/** What is typed in a cell and not yet given. A redraw while it is held, as when a scroll moves the drawn rows, shows it, where a field goes back to its value. */
+const typing = ref<{ at: string; text: string } | null>(null)
+const shownInCell = (row: Row, column: TableColumn): string => (typing.value?.at === cellId(row.id, column) ? typing.value.text : textOf(row.record, column))
 /** A choice's options as its cell offers them: the blank first, then each value in its declared words. */
 function choiceOptions(column: TableColumn, row: Row): { value: string; label: string }[] {
   const values = props.optionsOf(column, row)
@@ -204,6 +212,7 @@ function take(at: string, column: TableColumn, values: RowValue[], pasted: boole
 function commit(row: Row, column: TableColumn, typed: string | boolean): void {
   if (!props.editable) return
   const at = cellId(row.id, column)
+  typing.value = null
   const out = cellChange(props.kind, row, column, typed, tickedRows.value, shown.value, props.units)
   if (out === null) return
   if ('refused' in out) {
@@ -229,27 +238,25 @@ function paste(event: ClipboardEvent, row: Row, column: TableColumn): void {
 
 /** Escape puts the cell back as the record holds it. */
 function revert(event: KeyboardEvent, row: Row, column: TableColumn): void {
+  typing.value = null
   ;(event.target as HTMLInputElement).value = textOf(row.record, column)
   if (problem.value?.at === cellId(row.id, column)) problem.value = null
 }
 
 const emptyWords = computed(() => props.empty ?? (props.query.trim() === '' ? `No ${props.kind.word} yet.` : `No ${props.kind.word} matches “${props.query}”.`))
 
-// The row opened (in the app, or by a click on its id) is drawn, and brought into sight.
-watch(
-  () => props.openId,
-  async (id) => {
-    if (id === null) return
-    const at = shownRows.value.findIndex((r) => r.id === id)
-    if (body.value !== null && at >= 0 && (at < drawn.value.from || at >= drawn.value.to)) {
-      body.value.scrollTop = Math.max(0, at * seen.value.row - seen.value.height / 2)
-      seen.value = { ...seen.value, top: body.value.scrollTop }
-    }
-    await nextTick()
-    ;[...(body.value?.querySelectorAll<HTMLElement>('[data-table-row]') ?? [])].find((el) => el.dataset.tableRow === id)?.scrollIntoView?.({ block: 'nearest' })
-  },
-  { immediate: true },
-)
+// The row opened (in the app, or by a click on its id, or before the table was drawn) is drawn, and brought into sight.
+async function bringIn(id: string | null): Promise<void> {
+  if (id === null) return
+  const at = shownRows.value.findIndex((r) => r.id === id)
+  if (body.value !== null && at >= 0 && (at < drawn.value.from || at >= drawn.value.to)) {
+    body.value.scrollTop = Math.max(0, at * seen.value.row - seen.value.height / 2)
+    seen.value = { ...seen.value, top: body.value.scrollTop }
+  }
+  await nextTick()
+  ;[...(body.value?.querySelectorAll<HTMLElement>('[data-table-row]') ?? [])].find((el) => el.dataset.tableRow === id)?.scrollIntoView?.({ block: 'nearest' })
+}
+watch(() => props.openId, bringIn)
 </script>
 
 <template>
@@ -291,13 +298,15 @@ watch(
                 class="aether-record-table__input"
                 :inputmode="c.kind === 'number' ? 'decimal' : undefined"
                 autocomplete="off"
-                :model-value="textOf(r.record, c)"
+                :model-value="shownInCell(r, c)"
                 :disabled="!editable || c.readonly === true"
                 :style="widthOf(c)"
                 :title="titleOf(textOf(r.record, c), c)"
                 :aria-label="`${c.label} of ${r.id}`"
                 :aria-invalid="problem?.at === cellId(r.id, c) || undefined"
                 :data-cell="cellId(r.id, c)"
+                @update:model-value="typing = { at: cellId(r.id, c), text: $event }"
+                @blur="typing = null"
                 @change="commit(r, c, ($event.target as HTMLInputElement).value)"
                 @keydown.enter="commit(r, c, ($event.target as HTMLInputElement).value)"
                 @keydown.escape="revert($event, r, c)"

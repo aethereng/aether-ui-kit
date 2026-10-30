@@ -208,7 +208,7 @@ focus ring), which every component needs and no component owns.
 | **Graph2D** | `viz/graph` | Force-directed graph over SVG. Opt-in zoom/pan/pinch, hover reporting, edge-pan while dragging. Positions are `number[]`, so the core is dimension-agnostic. |
 | **Gantt** | `viz/gantt` | Lanes, spans, points and anchors in day-index space. Drag to move, edges to resize. |
 
-All under `@aether/ui-kit/…`. Framework-free cores, importable on their own: `controls/core`, `property-editor/core`, `viz/core`, `viz/core/gantt`, `assistant/core`.
+All under `@aether/ui-kit/…`. Framework-free cores, importable on their own: `controls/core`, `property-editor/core`, `viz/core`, `viz/core/gantt`, `assistant/core`, `records/core`.
 
 `verbs` is framework-free too, and has no Vue part at all: see [Verbs](#verbs-the-edit-layer-under-an-editor) below.
 
@@ -320,6 +320,37 @@ inside brackets: `beam[C15x33.9].Size`. The name of a kind, its prefix and its g
 `toCallSchema` gives a verb's input schema as a caller outside the app is given it: wherever the schema marks a
 reference (`x-ref`), the value may also be `{ handle }`, the name an earlier call of the same proposal gave the entity
 it creates. The content hash is SHA-256, computed inside the module, so the kit still has no runtime dependency.
+
+---
+
+## Records: the rules of a record editor
+
+`records/core` is plain TypeScript, like `verbs`. An app declares each kind of record once, as a `KindDecl`: its fields in
+display order, each a `FieldDecl` with the JSON Schema of its value (`x-ref` names the kind a reference points into),
+its words, the quantity its numbers measure, its group and its control; and, for a kind whose records take one of
+several shapes, the `tag` that tells them apart, the `common` fields every variant takes, and each `Variant`'s own
+fields, required fields, references and quantities. Numbers are shown and read through the app's `Units`.
+
+```ts
+import { formFields, tableColumns, valueFor, type KindDecl } from '@aether/ui-kit/records/core'
+```
+
+From a declaration the core gives:
+
+- the schemas a kind's verbs check against: `fieldsSchema` for an update's set, `createSchema` for a create's record,
+  `withoutCleared`, where a null given for an optional field clears it unless its schema stores null;
+- the form: `formFields` (the fields a variant takes, each in its control, a choice of another record offering the ids
+  the app holds), `groupFields`, `keepOnVariant` (what a draft keeps when its variant changes) and `issueField` (the field
+  a verb's refusal names);
+- the table: `tableColumns`, `takesField`, `quantityOf`, the column widths (`numberWidth`, `choiceWidth`, `isCut`), and
+  the cell rules `cellText`, `valueFor`, `cellChange` and `pasteRows`, where a change to several rows goes to every row
+  or to none;
+- beside the store: `deleteClosure` (every record a delete must take with it, from the app's delete plan), `stepWords`
+  (the words of each step undo and redo walk) and `draftKeeper` (drafts a form leaves unapplied, dropped with their
+  record).
+
+A field whose control is the app's own is declared `control: 'app'`: the core marks it, and the app's form draws it. The
+verbs a change calls stay the app's.
 
 ---
 

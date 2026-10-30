@@ -126,6 +126,10 @@
       "types": "./src/verbs/index.d.ts",
       "import": "./src/verbs/index.ts"
     },
+    "./records/core": {
+      "types": "./src/records/core/index.d.ts",
+      "import": "./src/records/core/index.ts"
+    },
     "./assistant/core": {
       "types": "./src/assistant/core/index.d.ts",
       "import": "./src/assistant/core/index.ts"

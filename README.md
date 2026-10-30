@@ -410,6 +410,28 @@ hot reload. `theme/refs` gives a Vue app the same state as refs: `themeRefs(cont
 
 ---
 
+## A legend, a busy overlay, a gallery of samples
+
+Each takes plain data, and the app says how it looks where its look differs from the default. Each part's inner elements carry
+`aether-legend__*`, `aether-overlay__*` or `aether-gallery__*` classes, which an app's own rule can name under a class of its own.
+
+- `viz/legend` is one field. `stops` is the colour list the drawing itself colours from, and `ticks` are text the app has
+  formatted, so a value reads on the bar as it reads elsewhere. `state` is `ramp`, `zero` or `nonfinite`: the last two draw a
+  sentence and no bar, since a ramp from 0 to 0 says something false in both. `noValueColor` and `noValueKey` explain a colour the
+  ramp cannot place. A panel around it, and the words for a field still on its way, stay the app's.
+- `controls/overlay` shows through `useDeferredFlag`, so `open` is the raw flag. `aside` takes it away at once, for the moment what
+  it covers becomes the thing to watch. `progress` is a fraction from 0 to 1, for work that can report one; without it the bar sweeps.
+  `stoppable`, `stopLabel` and `stopDanger` set the button, and the `mark` slot takes a picture. A theme sets
+  `--aether-overlay-scrim`, `--aether-overlay-scrim-filter`, `--aether-overlay-shadow`, `--aether-overlay-comet-glow` and
+  `--aether-overlay-mark-glow-low` and `-high`; `--aether-overlay-card-end` and `--aether-overlay-stop-gap` are its two spaces, and
+  `--aether-font-display` is the title's face.
+- `controls/gallery` takes `families` and `items`, and emits `open` with an item's id. An item has a `picture`, already the address
+  for the theme in force, or an `icon` path in its place, with `foot` and `footIcon` at the card's foot and a `note` beside its
+  button. The picture stands on `--aether-gallery-ground`. The page around it stays the app's: its head, whether it scrolls as a page
+  or as a layer, what closes it, and any way in that is not a sample.
+
+---
+
 ## Gallery
 
 ### **[aethereng.github.io/aether-ui-kit](https://aethereng.github.io/aether-ui-kit/)**

@@ -5,8 +5,8 @@
  * stylesheet, so no part of this depends on a UI framework's theme. `cssTokens()` emits a palette
  * as `--<prefix>-<role>` custom properties, which the app's stylesheets and its mapping both read.
  *
- * COMMA-SEPARATED TRIPLES, deliberately: `--q-surface: 23,30,74`. A call site composes a colour as
- * `rgb(var(--q-x))` and an alpha as `rgba(var(--q-x), α)`; a space-separated triple would break
+ * COMMA-SEPARATED TRIPLES, deliberately: `--app-surface: 18,24,38`. A call site composes a colour as
+ * `rgb(var(--app-x))` and an alpha as `rgba(var(--app-x), α)`; a space-separated triple would break
  * every alpha form among them, so the format must hold. A triple also cannot be used where a
  * colour is expected, so a token used without its rgb() wrapper fails loudly instead of resolving
  * to something plausible. The kit's own tokens are full colours, as its contract requires; the
@@ -49,14 +49,15 @@ export function cssTokens(themes: Record<string, ThemeDef>, prefix: string): str
 
 export interface ThemeOptions {
   themes: Record<string, ThemeDef>
-  /** The name of the dark theme among `themes`. */
+  /** The name of the dark theme among `themes`. A name that is not among them reads as dark, with
+   *  no colours. */
   dark: string
   /** The name of the light theme among `themes`. */
   light: string
   /** The localStorage key the reader's choice is kept under. Own key per app: two apps served
    *  from one origin share its storage. */
   storageKey: string
-  /** The custom properties' prefix: `q` gives `--q-surface`. */
+  /** The custom properties' prefix: `app` gives `--app-surface`. */
   prefix: string
   /** Paper is light: while the page prints, the document wears the light theme. Default true. */
   paper?: boolean
@@ -72,16 +73,19 @@ export interface ThemeController {
   toggle(): void
   /** Calls `listener` with the new name after every toggle; gives back the call that stops it. */
   subscribe(listener: (name: string) => void): () => void
+  /** Takes off the print listeners and every subscriber, for a controller that does not live as long
+   *  as the page (a module replaced by a hot reload). The stylesheet and `data-theme` stay as they
+   *  are, so the page does not change. */
+  dispose(): void
 }
 
 /**
  * Owns which theme is on, and puts its tokens on the page.
  *
  * BEFORE FIRST PAINT, deliberately. Called at module scope, this puts the tokens and `data-theme`
- * on the document before anything mounts. A theme applied after mount once left a control holding
- * the outgoing palette for good: a `transition` on a token-coloured background started before the
- * element had settled and committed its start value. The cheap defence is to never paint the
- * wrong palette in the first place.
+ * on the document before anything mounts: a theme applied after mount can leave a control holding
+ * the outgoing palette, when a `transition` on a token-coloured background starts before the
+ * element has settled and commits its start value.
  *
  * Without a document (a server render, a node test) it reads the same and touches nothing.
  */
@@ -90,13 +94,14 @@ export function createThemeController(options: ThemeOptions): ThemeController {
 
   /* An explicit saved choice wins; otherwise follow the OS. Read synchronously so there is no
      flash of the wrong theme. */
-  const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(storageKey) : null
+  const saved = readChoice(storageKey)
   const prefersDark =
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'
       ? window.matchMedia('(prefers-color-scheme: dark)').matches
       : true
   let name = saved === dark || saved === light ? saved : prefersDark ? dark : light
   const listeners = new Set<(name: string) => void>()
+  const undo: (() => void)[] = []
 
   if (typeof document !== 'undefined') {
     const id = `${prefix}-tokens-${storageKey}`
@@ -117,10 +122,19 @@ export function createThemeController(options: ThemeOptions): ThemeController {
      both. */
   if (paper && typeof window !== 'undefined' && typeof document !== 'undefined') {
     const wear = (on: boolean): void => document.documentElement.setAttribute('data-theme', on ? light : name)
-    window.addEventListener('beforeprint', () => wear(true))
-    window.addEventListener('afterprint', () => wear(false))
+    const before = (): void => wear(true)
+    const after = (): void => wear(false)
+    window.addEventListener('beforeprint', before)
+    window.addEventListener('afterprint', after)
+    undo.push(() => {
+      window.removeEventListener('beforeprint', before)
+      window.removeEventListener('afterprint', after)
+    })
     if (typeof window.matchMedia === 'function') {
-      window.matchMedia('print').addEventListener?.('change', (e) => wear(e.matches))
+      const query = window.matchMedia('print')
+      const change = (e: MediaQueryListEvent): void => wear(e.matches)
+      query.addEventListener?.('change', change)
+      undo.push(() => query.removeEventListener?.('change', change))
     }
   }
 
@@ -152,5 +166,19 @@ export function createThemeController(options: ThemeOptions): ThemeController {
         listeners.delete(listener)
       }
     },
+    dispose() {
+      for (const off of undo.splice(0)) off()
+      listeners.clear()
+    },
+  }
+}
+
+/* A browser blocking site data throws on reaching `localStorage` at all, which `typeof` does not
+   guard, and with no storage there is simply no saved choice. */
+function readChoice(storageKey: string): string | null {
+  try {
+    return localStorage.getItem(storageKey)
+  } catch {
+    return null
   }
 }

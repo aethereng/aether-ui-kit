@@ -126,6 +126,102 @@ describe('createThemeController: which theme a page opens in', () => {
   })
 })
 
+describe('createThemeController: where the browser withholds something', () => {
+  it('follows the OS when reading the kept choice throws, and the app still starts', () => {
+    localStorage.setItem(KEY, 'day')
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('site data blocked')
+    })
+    expect(createThemeController(options()).name).toBe('night')
+    prefersDark = false
+    expect(createThemeController(options()).name).toBe('day')
+  })
+
+  it('follows the OS when reaching storage at all throws, as a browser blocking site data does', () => {
+    const own = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new Error('the operation is insecure')
+      },
+    })
+    try {
+      expect(() => localStorage, 'precondition: reaching storage throws').toThrow()
+      prefersDark = false
+      const theme = createThemeController(options())
+      expect(theme.name).toBe('day')
+      theme.toggle()
+      expect(theme.name).toBe('night')
+      expect(onPage()).toBe('night')
+    } finally {
+      if (own) Object.defineProperty(globalThis, 'localStorage', own)
+    }
+  })
+
+  it('opens dark and still answers print with no matchMedia at all', () => {
+    vi.stubGlobal('matchMedia', undefined)
+    expect(window.matchMedia, 'precondition: no matchMedia').toBeUndefined()
+    const added = vi.spyOn(window, 'addEventListener')
+    const theme = createThemeController(options())
+    expect(theme.name).toBe('night')
+    expect(added.mock.calls.map(([type]) => type)).toEqual(['beforeprint', 'afterprint'])
+  })
+
+  it('takes a print query that has no addEventListener, as an old browser gives', () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({ matches: query === '(prefers-color-scheme: dark)' })),
+    )
+    expect(createThemeController(options()).name).toBe('night')
+  })
+
+  it('reads as dark with no colours when the theme it is on is not among `themes`', () => {
+    const theme = createThemeController(options({ themes: {} }))
+    expect(theme.name).toBe('night')
+    expect(theme.isDark).toBe(true)
+    expect(theme.colors).toEqual({})
+  })
+})
+
+describe('createThemeController: dispose', () => {
+  it('takes off every listener it added, and the print query’s', () => {
+    const added = vi.spyOn(window, 'addEventListener')
+    const removed = vi.spyOn(window, 'removeEventListener')
+    const printOff = vi.fn()
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches: query === '(prefers-color-scheme: dark)',
+        addEventListener: vi.fn(),
+        removeEventListener: printOff,
+      })),
+    )
+    createThemeController(options()).dispose()
+    const on = added.mock.calls.filter(([t]) => t === 'beforeprint' || t === 'afterprint')
+    const off = removed.mock.calls.filter(([t]) => t === 'beforeprint' || t === 'afterprint')
+    expect(on, 'precondition: both print listeners were added').toHaveLength(2)
+    expect(off.map(([t, fn]) => [t, fn])).toEqual(on.map(([t, fn]) => [t, fn]))
+    expect(printOff).toHaveBeenCalledOnce()
+  })
+
+  it('stops telling its listeners, and leaves the page in the theme it is on', () => {
+    const theme = createThemeController(options())
+    const heard: string[] = []
+    theme.subscribe((name) => heard.push(name))
+    theme.dispose()
+    expect(onPage()).toBe('night')
+    expect(document.head.querySelectorAll('style')).toHaveLength(1)
+    theme.toggle()
+    expect(heard).toEqual([])
+  })
+
+  it('takes nothing off with paper false, where it added nothing', () => {
+    const removed = vi.spyOn(window, 'removeEventListener')
+    createThemeController(options({ paper: false })).dispose()
+    expect(removed).not.toHaveBeenCalled()
+  })
+})
+
 describe('createThemeController: toggle', () => {
   it('turns dark to light and back, on the page and in storage', () => {
     const theme = createThemeController(options())

@@ -345,3 +345,34 @@ describe('every symbol a core module exports is reachable through the exports ma
     ).toEqual([])
   })
 })
+
+describe('the small parts are worded for any app', () => {
+  /* A part lifted out of two apps' copies keeps one app's vocabulary most easily in an example.
+   * The seed proves the pattern sees the word before an empty result is read as a pass, and reading
+   * a file that has moved fails, so a move cannot pass by reading nothing. */
+  const APP_WORD = /\bsolv(?:e|es|er|ing)\b/i
+  const LIFTED = [
+    'src/controls/vue/composables.ts',
+    'src/controls/vue/composables.d.ts',
+    'src/controls/core/deferred.ts',
+    'src/controls/core/dismiss.ts',
+    'src/controls/core/transport.ts',
+    'src/controls/vue/Badge.vue',
+    'src/theme/core/theme.ts',
+    'src/theme/vue/refs.ts',
+  ]
+
+  it('sees the word in a seeded line', () => {
+    expect('a flag from a raw one ("a solve is running")').toMatch(APP_WORD)
+  })
+
+  it.each(LIFTED)('%s names no solve', (file) => {
+    expect(readFileSync(resolve(root, file), 'utf8')).not.toMatch(APP_WORD)
+  })
+
+  it('nor does the README, past the one sentence about the problems the kit solves', () => {
+    const readme = readFileSync(resolve(root, 'README.md'), 'utf8').replace('the problems it solves', '')
+    expect(readme.length, 'precondition: the README was read').toBeGreaterThan(1000)
+    expect(readme).not.toMatch(APP_WORD)
+  })
+})

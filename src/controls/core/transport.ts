@@ -1,5 +1,5 @@
 // Framework-free transport helpers. Shared by every scrubbable-playback surface
-// (a solver's dynamics diagnostic, a 3-D viewer's playback, and any timeline
+// (a simulation's time steps, a 3-D viewer's playback, and any timeline
 // scrubbed view). Pairs with controls/vue/Transport.vue. The component is controlled:
 // the caller owns current/duration/playing/speed; the transport only renders + emits.
 

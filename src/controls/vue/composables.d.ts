@@ -2,7 +2,7 @@ import { type Ref, type WatchSource } from 'vue';
 import { type DeferredFlagOptions } from '../core/deferred';
 import { type DismissOptions } from '../core/dismiss';
 /**
- * A display flag from a raw one ("a solve is running"): it shows only once the source has been up
+ * A display flag from a raw one ("a save is running"): it shows only once the source has been up
  * `showDelayMs`, and stays up at least `minVisibleMs` once shown. The rules and their defaults are
  * `deferredFlag`'s (controls/core). The timers stop with the scope that called this.
  */

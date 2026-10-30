@@ -384,25 +384,26 @@ is shown, the counts) and what a change calls stay the app's. The table paints i
 
 `controls/composables` holds two Vue composables, each over a framework-free core in `controls/core`.
 
-- `useDeferredFlag(source, { showDelayMs, minVisibleMs })` gives a flag for the eye from a raw one ("a solve is
+- `useDeferredFlag(source, { showDelayMs, minVisibleMs })` gives a flag for the eye from a raw one ("a save is
   running"): it shows only once the source has been up `showDelayMs`, so quick work never flashes a spinner, and once
   shown it stays up at least `minVisibleMs`. Its core is `deferredFlag(onChange, options)`, which holds the defaults.
 - `useDismiss(open, root, trigger, options)` closes a popover the way a menu closes: on Escape, which hands focus back to
   `trigger`, or on a press outside `root`, which holds both the popover and its control. By default the popover takes
-  Escape first, in the capture phase, and marks it used, so a handler under it that reads `defaultPrevented` stands down;
+  Escape first, in the capture phase, and marks it used, so a handler under it that reads `defaultPrevented` can skip the press;
   and an input method composing text keeps its Escape. `{ first: false }` reads Escape after the page's own handlers,
   unmarked; `{ keepComposition: false }` closes on a composing Escape too. Its core is `bindDismiss(window, target,
   options)`, which gives back the call that unbinds it.
 
 `theme/core` puts an app's palette on the page. `createThemeController({ themes, dark, light, storageKey, prefix, paper })`
-writes each theme's colours as `--<prefix>-<role>` custom properties holding comma-separated triples (`23,30,74`, read as
-`rgb(var(--q-surface))` or `rgba(var(--q-surface), 0.7)`) under one selector, `[data-theme='<name>']`, and sets
+writes each theme's colours as `--<prefix>-<role>` custom properties holding comma-separated triples (`18,24,38`, read as
+`rgb(var(--app-surface))` or `rgba(var(--app-surface), 0.7)`) under one selector, `[data-theme='<name>']`, and sets
 `data-theme` on the document root. Called at module scope, it does this before anything mounts. The reader's choice is
 kept under `storageKey`, and without one the page follows the OS. With `paper` (the default), the document wears the light
 theme while it prints and the reader's theme after; `paper: false` prints in the reader's theme. The controller is read
-through `name`, `isDark` and `colors`, turned by `toggle`, and heard through `subscribe`. `theme/refs` gives a Vue app the
-same state as refs: `themeRefs(controller)`, callable at module scope beside it. `hexToTriple` and `cssTokens` are
-exported too. The palettes stay the app's, and so does the stylesheet that maps the kit's `--aether-*` tokens onto them.
+through `name`, `isDark` and `colors`, turned by `toggle`, and heard through `subscribe`. Where storage is blocked it follows
+the OS and keeps the choice for the page. `dispose` takes off its print listeners and subscribers, for a controller replaced by a
+hot reload. `theme/refs` gives a Vue app the same state as refs: `themeRefs(controller)`, callable at module scope beside it.
+`hexToTriple` and `cssTokens` are exported too. The palettes stay the app's, and so does the stylesheet that maps the kit's `--aether-*` tokens onto them.
 
 ---
 

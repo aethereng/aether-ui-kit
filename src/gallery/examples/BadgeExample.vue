@@ -13,7 +13,7 @@ const toneOf: Record<RunState, 'success' | 'warning' | 'danger' | 'neutral'> = {
   failed: 'danger',
   queued: 'neutral',
 }
-const solves: RunState[] = ['complete', 'degraded', 'failed', 'queued']
+const runs: RunState[] = ['complete', 'degraded', 'failed', 'queued']
 
 /* A row of badges has no shared state and no active member, so there is nothing to model and no
    group component; the row is a flex container the caller owns. Same reasoning as
@@ -43,7 +43,7 @@ const counts = [
 
     <!-- Domain -> tone, resolved by the caller. -->
     <div class="g-badge-row">
-      <Badge v-for="s in solves" :key="s" :tone="toneOf[s]">{{ s }}</Badge>
+      <Badge v-for="s in runs" :key="s" :tone="toneOf[s]">{{ s }}</Badge>
     </div>
   </div>
 </template>

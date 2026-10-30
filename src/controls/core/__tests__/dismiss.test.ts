@@ -126,6 +126,52 @@ describe('bindDismiss: a press', () => {
   })
 })
 
+describe('bindDismiss: a press with nothing to read it against', () => {
+  function closesOn(rootOf: () => Element | null, fire: () => void): number {
+    let closed = 0
+    unbind = bindDismiss(window, {
+      isOpen: () => true,
+      close: () => {
+        closed += 1
+      },
+      root: rootOf,
+      trigger: () => trigger,
+    })
+    fire()
+    return closed
+  }
+
+  it('closes when the root is gone', () => {
+    expect(closesOn(() => null, () => press(outside))).toBe(1)
+  })
+
+  it('closes on a press whose target is not a node, without throwing', () => {
+    const errors: unknown[] = []
+    const onError = (e: ErrorEvent): void => {
+      errors.push(e.error)
+      e.preventDefault()
+    }
+    window.addEventListener('error', onError)
+    expect(closesOn(() => root, () => window.dispatchEvent(new Event('pointerdown')))).toBe(1)
+    window.removeEventListener('error', onError)
+    expect(errors).toEqual([])
+  })
+
+  it('does not call close on a press while it is closed', () => {
+    let closed = 0
+    unbind = bindDismiss(window, {
+      isOpen: () => false,
+      close: () => {
+        closed += 1
+      },
+      root: () => root,
+      trigger: () => trigger,
+    })
+    press(outside)
+    expect(closed).toBe(0)
+  })
+})
+
 describe('bindDismiss: unbinding', () => {
   it.each([{}, { first: false }])('takes both listeners off (%o)', (options) => {
     bind(options)

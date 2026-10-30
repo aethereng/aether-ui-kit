@@ -20,7 +20,7 @@ withDefaults(
 )
 
 /* No role="status". Most badges are static, and a live region on a count that never changes makes a
-   screen reader announce furniture. A caller whose badge DOES change (a solve result landing)
+   screen reader announce furniture. A caller whose badge DOES change (a result landing)
    owns that, by wrapping it in its own live region where it knows the update is worth speaking. */
 </script>
 

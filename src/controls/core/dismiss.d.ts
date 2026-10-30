@@ -11,8 +11,8 @@ export interface DismissTarget {
 export interface DismissOptions {
     /**
      * The popover takes Escape before anything under it: the key is read in the capture phase and
-     * marked as used (`preventDefault`), so a handler that reads `defaultPrevented` stands down for
-     * the same press. False reads it after the page's own handlers and leaves it unmarked.
+     * marked as used (`preventDefault`), so a handler that reads `defaultPrevented` can skip the same
+     * press. False reads it after the page's own handlers and leaves it unmarked.
      * Default true.
      */
     first?: boolean;

@@ -166,34 +166,6 @@
       "types": "./src/records/vue/RecordTable.vue.d.ts",
       "import": "./src/records/vue/RecordTable.vue"
     },
-    "./assistant/core": {
-      "types": "./src/assistant/core/index.d.ts",
-      "import": "./src/assistant/core/index.ts"
-    },
-    "./assistant/core/models": {
-      "types": "./src/assistant/core/models.d.ts",
-      "import": "./src/assistant/core/models.ts"
-    },
-    "./assistant/core/cardDetail": {
-      "types": "./src/assistant/core/cardDetail.d.ts",
-      "import": "./src/assistant/core/cardDetail.ts"
-    },
-    "./assistant/core/texts": {
-      "types": "./src/assistant/core/texts.d.ts",
-      "import": "./src/assistant/core/texts.ts"
-    },
-    "./assistant/core/key": {
-      "types": "./src/assistant/core/key.d.ts",
-      "import": "./src/assistant/core/key.ts"
-    },
-    "./assistant/core/loop": {
-      "types": "./src/assistant/core/loop.d.ts",
-      "import": "./src/assistant/core/loop.ts"
-    },
-    "./assistant/core/ledger": {
-      "types": "./src/assistant/core/ledger.d.ts",
-      "import": "./src/assistant/core/ledger.ts"
-    },
     "./viz/graph": {
       "types": "./src/viz/vue/Graph2D.vue.d.ts",
       "import": "./src/viz/vue/Graph2D.vue"

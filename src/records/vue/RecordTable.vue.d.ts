@@ -6,8 +6,11 @@ type __VLS_Props = {
     /** Takes the values a change gives a field, one per row: null where every one is taken, else the refusal. */
     run: (field: string, values: readonly RowValue[]) => CellRefusal | null;
     units?: Units;
-    /** The values a choice column offers: the ids of the kind a reference names, or the column's own values. */
-    optionsOf?: (column: TableColumn) => readonly string[];
+    /**
+     * The values a choice column offers: the ids of the kind a reference names, or the column's own values. Given a row, those
+     * its cell offers, where a record's own value limits them; with none, every value of the column, which its width reads.
+     */
+    optionsOf?: (column: TableColumn, row?: Row) => readonly string[];
     /** Cells take changes. */
     editable?: boolean;
     /** The row open in the app, marked and brought into sight. */
@@ -33,7 +36,7 @@ declare const _default: import("vue").DefineComponent<__VLS_PublicProps, {}, {},
 }>, {
     empty: string;
     units: Units;
-    optionsOf: (column: TableColumn) => readonly string[];
+    optionsOf: (column: TableColumn, row?: Row) => readonly string[];
     editable: boolean;
     openId: string | null;
     query: string;

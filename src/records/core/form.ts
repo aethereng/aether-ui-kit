@@ -113,7 +113,7 @@ export function formFields(kind: KindDecl, variant: string, context: FormContext
       const ref = column['x-ref']
       return { ...c, ...(typeof ref === 'string' ? { options: plain(context.ids(ref)) } : {}), ...(isVector(column) ? { vector: true as const } : {}) }
     })
-    const blank = options.length === 0 && refKind !== undefined ? `(no ${refKind.replace(/_/g, ' ')} yet)` : required ? '(choose)' : '(none)'
+    const blank = decl.blank ?? (options.length === 0 && refKind !== undefined ? `(no ${refKind.replace(/_/g, ' ')} yet)` : required ? '(choose)' : '(none)')
     const quantity = chosen?.quantities?.[name] ?? decl.quantity
     return {
       name,

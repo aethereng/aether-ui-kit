@@ -372,15 +372,17 @@ of `control: 'app'` draws nothing, its label and its `issue` included: the app d
 field's label and any refusal of its value beside it.
 
 `records/table` is `RecordTable.vue`, the records of one kind as a table. It takes the `kind`, its `rows` (every record,
-those the `query` hides among them), the app's `units`, `optionsOf` (the values a choice column offers), whether it is
-`editable`, the `openId` of the row the app has open, the `empty` words for a table with no row shown, and `run`: a
+those the `query` hides among them), the app's `units`, `optionsOf` (the values a choice column offers: given a row, those its cell
+offers), whether it is `editable`, the `openId` of the row the app has open, the `empty` words for a table with no row shown, and `run`: a
 function that takes the values a change gives a field, one per row, and answers null where it took them all, or the row
 and the words of its refusal. A cell's value is given when the cell is left or Enter is pressed, and Escape puts the cell
 back as the record holds it. A change in a ticked row goes to every ticked row, and lines pasted into a cell go one to a
 row from there down, each as one `run`; where a change cannot go to every row, nothing runs and the reason is shown
 beside the cell. It emits `open` with the id of a row whose id is clicked, and `changed` with the column, the values and
 whether they were pasted, for the words of the app's step. `ticked` is a `v-model` the app may hold. A free-text column
-is edited in its cells unless the app sets `textEdited` to false, which shows it as text. The table has no name of its
+is edited in its cells unless the app sets `textEdited` to false, which shows it as text. A field's declared `options`, `groups` and
+`blank` give a cell its words and its choices. From 100 rows on, only the rows in sight and a screenful each side are drawn,
+the rest a gap of their height; a cell scrolled out of them is left first, which gives what is typed in it. The table has no name of its
 own: the app names the region it sits in, a section with an `aria-label` for example. The head (which kind
 is shown, the counts) and what a change calls stay the app's. The table paints its fixed head and first columns in
 `--aether-record-table-ground`, the surface unless the app sets it to another colour the table sits on.

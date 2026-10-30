@@ -12,7 +12,10 @@
 //
 // What stays the app's: the head (which kind is shown, the counts), the table's place on screen, and what a change calls.
 // `ticked` is a model the app may hold, for its counts and for anything it does with the rows ticked.
-import { computed, nextTick, ref, watch } from 'vue'
+//
+// Of a table of many rows only those in sight and a screenful each side are drawn, the rest being a gap of their height, so that a
+// thousand rows open and scroll as ten do. A cell scrolled out of the drawn rows is left first, which gives what is typed in it.
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Select from '../../controls/vue/Select.vue'
 import Switch from '../../controls/vue/Switch.vue'
 import TextField from '../../controls/vue/TextField.vue'
@@ -50,8 +53,11 @@ const props = withDefaults(
     /** Takes the values a change gives a field, one per row: null where every one is taken, else the refusal. */
     run: (field: string, values: readonly RowValue[]) => CellRefusal | null
     units?: Units
-    /** The values a choice column offers: the ids of the kind a reference names, or the column's own values. */
-    optionsOf?: (column: TableColumn) => readonly string[]
+    /**
+     * The values a choice column offers: the ids of the kind a reference names, or the column's own values. Given a row, those
+     * its cell offers, where a record's own value limits them; with none, every value of the column, which its width reads.
+     */
+    optionsOf?: (column: TableColumn, row?: Row) => readonly string[]
     /** Cells take changes. */
     editable?: boolean
     /** The row open in the app, marked and brought into sight. */
@@ -72,6 +78,51 @@ const columns = computed(() => tableColumns(props.kind))
 /** The rows shown: those the search finds. */
 const shownRows = computed(() => props.rows.filter((r) => matches(props.kind, r, columns.value, props.query, props.units)))
 const shown = computed(() => new Set(shownRows.value.map((r) => r.id)))
+
+/** From this many rows on, only those in sight and a screenful each side are drawn. */
+const MANY_ROWS = 100
+/** The drawn rows move by this many, so that a small scroll draws nothing. */
+const STEP = 8
+/** What a screen is taken to hold, in px, until the table is measured. */
+const SCREEN = 800
+const body = ref<HTMLElement | null>(null)
+const seen = ref({ top: 0, height: 0, row: 40 })
+const manyRows = computed(() => shownRows.value.length >= MANY_ROWS)
+function drawnAt(top: number): { from: number; to: number } {
+  const n = shownRows.value.length
+  if (!manyRows.value) return { from: 0, to: n }
+  const screen = Math.ceil((seen.value.height || SCREEN) / seen.value.row)
+  const first = Math.min(Math.floor(top / seen.value.row / STEP) * STEP, Math.max(0, n - screen))
+  return { from: Math.max(0, first - screen), to: Math.min(n, first + 2 * screen) }
+}
+const drawn = computed(() => drawnAt(seen.value.top))
+const drawnRows = computed(() => shownRows.value.slice(drawn.value.from, drawn.value.to))
+const gap = (rows: number) => ({ height: `${rows * seen.value.row}px` })
+function sizeUp(): void {
+  const el = body.value
+  if (el === null) return
+  const rows = [...el.querySelectorAll('[data-table-row]')]
+  const row = rows.reduce((sum, r) => sum + r.getBoundingClientRect().height, 0) / (rows.length || 1)
+  seen.value = { top: el.scrollTop, height: el.clientHeight, row: row || seen.value.row }
+}
+function scrolled(): void {
+  const el = body.value
+  if (el === null || !manyRows.value) return
+  const left = drawnAt(el.scrollTop)
+  const held = el.querySelector<HTMLElement>('[data-table-row] :focus')
+  const at = shownRows.value.findIndex((r) => r.id === held?.closest<HTMLElement>('[data-table-row]')?.dataset.tableRow)
+  if (at >= 0 && (at < left.from || at >= left.to)) held?.blur()
+  seen.value = { ...seen.value, top: el.scrollTop }
+}
+let watcher: ResizeObserver | null = null
+onMounted(() => {
+  sizeUp()
+  if (typeof ResizeObserver !== 'undefined' && body.value !== null) {
+    watcher = new ResizeObserver(sizeUp)
+    watcher.observe(body.value)
+  }
+})
+onBeforeUnmount(() => watcher?.disconnect())
 
 function tick(id: string, on: boolean): void {
   const next = new Set(ticked.value)
@@ -99,15 +150,29 @@ watch(
 const headUnit = (column: TableColumn): string => (column.quantity === undefined ? '' : (props.units.label(column.quantity) ?? ''))
 const textOf = (record: Fields, column: TableColumn): string => cellText(props.kind, record, column, props.units)
 /** A choice's options as its cell offers them: the blank first, then each value in its declared words. */
-function choiceOptions(column: TableColumn): { value: string; label: string }[] {
-  const values = props.optionsOf(column)
+function choiceOptions(column: TableColumn, row: Row): { value: string; label: string }[] {
+  const values = props.optionsOf(column, row)
   return choiceLabels(props.kind, column, values).map((label, i) => ({ value: i === 0 ? '' : values[i - 1]!, label }))
 }
-/** The words a cell shows: a choice's label for its value, else its text. */
-function shownText(record: Fields, column: TableColumn): string {
+/** The groups a choice field declares, each with the values this cell offers. */
+function choiceGroups(column: TableColumn, row: Row): { label: string; options: { value: string; label: string }[] }[] {
+  const offered = new Set(props.optionsOf(column, row))
+  return (props.kind.fields[column.field]?.groups ?? []).map((g) => ({ label: g.label, options: g.options.filter((o) => offered.has(o.value)) })).filter((g) => g.options.length > 0)
+}
+/** The options a cell shows outside its groups. */
+function looseOptions(column: TableColumn, row: Row): { value: string; label: string }[] {
+  const grouped = new Set((props.kind.fields[column.field]?.groups ?? []).flatMap((g) => g.options.map((o) => o.value)))
+  return choiceOptions(column, row).filter((o) => !grouped.has(o.value))
+}
+/** The words a choice's cell shows for its value. */
+function shownText(row: Row, column: TableColumn): string {
+  const text = textOf(row.record, column)
+  return text === '' ? text : (choiceOptions(column, row).find((o) => o.value === text)?.label ?? text)
+}
+/** The words a text shown only holds: those its field declares for the value, else the value. */
+function declaredText(record: Fields, column: TableColumn): string {
   const text = textOf(record, column)
-  if (column.kind !== 'choice' || text === '') return text
-  return choiceOptions(column).find((o) => o.value === text)?.label ?? text
+  return props.kind.fields[column.field]?.options?.find((o) => o.value === text)?.label ?? text
 }
 
 const measure = measurer()
@@ -170,12 +235,16 @@ function revert(event: KeyboardEvent, row: Row, column: TableColumn): void {
 
 const emptyWords = computed(() => props.empty ?? (props.query.trim() === '' ? `No ${props.kind.word} yet.` : `No ${props.kind.word} matches “${props.query}”.`))
 
-const body = ref<HTMLElement | null>(null)
-// The row opened (in the app, or by a click on its id) is brought into sight.
+// The row opened (in the app, or by a click on its id) is drawn, and brought into sight.
 watch(
   () => props.openId,
   async (id) => {
     if (id === null) return
+    const at = shownRows.value.findIndex((r) => r.id === id)
+    if (body.value !== null && at >= 0 && (at < drawn.value.from || at >= drawn.value.to)) {
+      body.value.scrollTop = Math.max(0, at * seen.value.row - seen.value.height / 2)
+      seen.value = { ...seen.value, top: body.value.scrollTop }
+    }
     await nextTick()
     ;[...(body.value?.querySelectorAll<HTMLElement>('[data-table-row]') ?? [])].find((el) => el.dataset.tableRow === id)?.scrollIntoView?.({ block: 'nearest' })
   },
@@ -184,8 +253,8 @@ watch(
 </script>
 
 <template>
-  <div ref="body" class="aether-record-table">
-    <table class="aether-record-table__table">
+  <div ref="body" class="aether-record-table" @scroll.passive="scrolled">
+    <table class="aether-record-table__table" :aria-rowcount="manyRows ? shownRows.length + 1 : undefined">
       <thead>
         <tr>
           <th class="aether-record-table__tick" scope="col">
@@ -198,9 +267,13 @@ watch(
         </tr>
       </thead>
       <tbody>
+        <tr v-if="drawn.from > 0" class="aether-record-table__gap" aria-hidden="true" :style="gap(drawn.from)" data-table-gap>
+          <td :colspan="columns.length + 2" />
+        </tr>
         <tr
-          v-for="r in shownRows"
+          v-for="(r, i) in drawnRows"
           :key="r.id"
+          :aria-rowindex="manyRows ? drawn.from + i + 2 : undefined"
           :class="{ 'aether-record-table__row--open': openId === r.id, 'aether-record-table__row--ticked': ticked.has(r.id) }"
           :aria-current="openId === r.id || undefined"
           :data-table-row="r.id"
@@ -234,10 +307,11 @@ watch(
                 v-else-if="c.kind === 'choice'"
                 class="aether-record-table__input"
                 :model-value="textOf(r.record, c)"
-                :options="choiceOptions(c)"
+                :options="looseOptions(c, r)"
+                :groups="choiceGroups(c, r)"
                 :disabled="!editable || c.readonly === true"
                 :style="widthOf(c)"
-                :title="titleOf(shownText(r.record, c), c)"
+                :title="titleOf(shownText(r, c), c)"
                 :aria-label="`${c.label} of ${r.id}`"
                 :aria-invalid="problem?.at === cellId(r.id, c) || undefined"
                 :data-cell="cellId(r.id, c)"
@@ -251,13 +325,16 @@ watch(
                 :data-cell="cellId(r.id, c)"
                 @update:model-value="commit(r, c, $event)"
               />
-              <span v-else class="aether-record-table__text" :style="{ maxWidth: `${TEXT_CEILING}px` }" :title="textOf(r.record, c)" :data-cell="cellId(r.id, c)">{{
-                textOf(r.record, c)
+              <span v-else class="aether-record-table__text" :style="{ maxWidth: `${TEXT_CEILING}px` }" :title="declaredText(r.record, c)" :data-cell="cellId(r.id, c)">{{
+                declaredText(r.record, c)
               }}</span>
               <span v-if="ownUnit(kind, r.record, c, units)" class="aether-record-table__unit"> {{ ownUnit(kind, r.record, c, units) }}</span>
             </template>
             <p v-if="problem?.at === cellId(r.id, c)" class="aether-record-table__issue" role="alert" data-cell-issue>{{ problem.words }}</p>
           </td>
+        </tr>
+        <tr v-if="drawn.to < shownRows.length" class="aether-record-table__gap" aria-hidden="true" :style="gap(shownRows.length - drawn.to)" data-table-gap>
+          <td :colspan="columns.length + 2" />
         </tr>
       </tbody>
     </table>
@@ -342,6 +419,10 @@ watch(
 .aether-record-table__row--open td,
 .aether-record-table__row--open th {
   background-image: linear-gradient(color-mix(in srgb, var(--aether-cool) 14%, transparent), color-mix(in srgb, var(--aether-cool) 14%, transparent));
+}
+.aether-record-table__table .aether-record-table__gap td {
+  padding: 0;
+  border: 0;
 }
 .aether-record-table__input {
   font-variant-numeric: tabular-nums;

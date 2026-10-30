@@ -80,7 +80,8 @@ export function cellWords(kind: KindDecl, record: Fields, column: TableColumn, u
  */
 export function choiceLabels(kind: KindDecl, column: TableColumn, options: readonly string[]): string[] {
   const declared = kind.fields[column.field]?.options
-  return [blankTaken(kind, column.field) ? '(none)' : '(choose)', ...options.map((o) => declared?.find((d) => d.value === o)?.label ?? o)]
+  const blank = kind.fields[column.field]?.blank ?? (blankTaken(kind, column.field) ? '(none)' : '(choose)')
+  return [blank, ...options.map((o) => declared?.find((d) => d.value === o)?.label ?? o)]
 }
 
 /**

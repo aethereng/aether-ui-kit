@@ -52,6 +52,111 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
+describe('RecordTable, many rows', () => {
+  const many = (n: number): Row[] => Array.from({ length: n }, (_, i) => row(`p${i}`, { size: 0.01, stock: 's1', at: [0, 0, 0] }))
+  const ids = (w: VueWrapper): string[] => w.findAll('[data-table-row]').map((r) => (r.element as HTMLElement).dataset.tableRow!)
+  afterEach(() => vi.restoreAllMocks())
+  function sized() {
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(400)
+  }
+  it('draws every row below the count that needs a window', () => {
+    const w = table(PARTS, many(99)).w
+    expect(ids(w)).toHaveLength(99)
+    expect(w.find('[data-table-gap]').exists()).toBe(false)
+  })
+  it('draws the rows in sight and a screenful each side, the rest a gap of their height', async () => {
+    sized()
+    const w = table(PARTS, many(500)).w
+    await nextTick()
+    expect(ids(w)[0]).toBe('p0')
+    expect(ids(w)).toHaveLength(20)
+    expect((w.find('[data-table-gap]').element as HTMLElement).style.height).toBe(`${480 * 40}px`)
+    const box = w.find('.aether-record-table')
+    box.element.scrollTop = 4000
+    await box.trigger('scroll')
+    expect(ids(w)).toContain('p100')
+    expect(ids(w)).not.toContain('p0')
+    expect(w.findAll('[data-table-gap]')).toHaveLength(2)
+    expect((w.find('[data-table-gap]').element as HTMLElement).style.height).toBe(`${Number(ids(w)[0]!.slice(1)) * 40}px`)
+    w.unmount()
+  })
+  it('counts every row for assistive technology, and gives each drawn row its place', async () => {
+    sized()
+    const w = table(PARTS, many(500)).w
+    await nextTick()
+    expect(w.find('table').attributes('aria-rowcount')).toBe('501')
+    expect(w.find('[data-table-row="p3"]').attributes('aria-rowindex')).toBe('5')
+  })
+  it('ticks every row with Tick every row, those not drawn among them', async () => {
+    sized()
+    const w = table(PARTS, many(500)).w
+    await nextTick()
+    await w.find('[data-table-tick-all]').setValue(true)
+    const ticked = w.emitted('update:ticked')!.at(-1)![0] as ReadonlySet<string>
+    expect(ticked.size).toBe(500)
+    expect(ticked.has('p499')).toBe(true)
+  })
+  it('draws a row opened far down', async () => {
+    sized()
+    const w = table(PARTS, many(500)).w
+    await nextTick()
+    expect(ids(w)).not.toContain('p300')
+    await w.setProps({ openId: 'p300' })
+    await nextTick()
+    expect(ids(w)).toContain('p300')
+  })
+  it('leaves a focused cell scrolled out of the drawn rows, which gives what is typed in it', async () => {
+    sized()
+    const { w, runs } = table(PARTS, many(500))
+    await nextTick()
+    const cell = w.find('[data-cell="p1:size"]')
+    const input = cell.element as HTMLInputElement
+    input.focus()
+    input.value = '0.05'
+    input.addEventListener('blur', () => input.dispatchEvent(new Event('change', { bubbles: true })), { once: true })
+    const box = w.find('.aether-record-table')
+    box.element.scrollTop = 8000
+    await box.trigger('scroll')
+    expect(runs.map((r) => r.values[0]!.id)).toEqual(['p1'])
+    w.unmount()
+  })
+})
+
+describe('RecordTable, a field declaring its words and options', () => {
+  const stockOf = (w: VueWrapper, id: string): HTMLSelectElement => w.find(`[data-cell="${id}:stock"]`).element as HTMLSelectElement
+  it('gives a blank the words a field declares for it', () => {
+    const blanked: KindDecl = { ...PARTS, fields: { ...PARTS.fields, stock: { ...PARTS.fields.stock!, blank: 'any stock' } } }
+    expect(stockOf(table(blanked, parts()).w, 'p1').options[0]!.text).toBe('any stock')
+  })
+  it('offers a row what optionsOf gives for that row, and its width reads every value', () => {
+    const asked: (string | undefined)[] = []
+    const w = table(PARTS, parts(), {
+      optionsOf: (c: TableColumn, r?: Row) => {
+        if (c.ref !== 'stocks') return c.values ?? []
+        asked.push(r?.id)
+        return r?.id === 'p2' ? ['s2'] : ['s1', 's2']
+      },
+    }).w
+    expect([...stockOf(w, 'p2').options].map((o) => o.value)).toEqual(['', 's2'])
+    expect([...stockOf(w, 'p1').options].map((o) => o.value)).toEqual(['', 's1', 's2'])
+    expect(asked).toContain(undefined)
+  })
+  it('shows a choice in the groups its field declares, each with the values offered', () => {
+    const groups = [
+      { label: 'Near', options: [{ value: 's1', label: 'Stock one' }] },
+      { label: 'Far', options: [{ value: 's9', label: 'Not offered' }] },
+    ]
+    const select = stockOf(table({ ...PARTS, fields: { ...PARTS.fields, stock: { ...PARTS.fields.stock!, groups } } }, parts()).w, 'p1')
+    expect([...select.querySelectorAll('optgroup')].map((g) => g.label)).toEqual(['Near'])
+    expect(select.querySelector('optgroup option')!.textContent!.trim()).toBe('Stock one')
+    expect([...select.options].filter((o) => o.parentElement === select).map((o) => o.value)).toEqual(['', 's2'])
+  })
+  it('shows a text shown only in the words its field declares for the value', () => {
+    const kind: KindDecl = { ...PARTS, fields: { ...PARTS.fields, finish: { ...PARTS.fields.finish!, control: 'summary', options: [{ value: 'raw', label: 'Left raw' }] } } }
+    expect(table(kind, parts()).w.find('[data-cell="p1:finish"]').text()).toBe('Left raw')
+  })
+})
+
 describe('what the table shows', () => {
   it('shows a row per record and a column per field, numbers in their unit, and the full label of a short head', () => {
     const { w } = table(PARTS, parts())

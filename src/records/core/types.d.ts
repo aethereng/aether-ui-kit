@@ -43,6 +43,8 @@ export interface FieldDecl {
     }[];
     /** The names of a choice, in groups, shown after any `options`. */
     groups?: readonly OptionGroup[];
+    /** The words of a choice's blank, where the kit's own do not say what a blank means. */
+    blank?: string;
     /** Values offered above `switches`. */
     presets?: readonly {
         label: string;

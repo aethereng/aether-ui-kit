@@ -176,7 +176,7 @@ describe('token contract', () => {
         Array.from(m[1]!.matchAll(/#[0-9a-fA-F]{3,8}\b/g), (h) => h[0]),
       ).flat()
     expect(hexesIn('<style>.a { color: #abc; }</style>')).toEqual(['#abc'])
-    const components = globSync('src/{controls,viz,property-editor}/vue/**/*.vue', {
+    const components = globSync('src/{controls,viz,property-editor,records}/vue/**/*.vue', {
       cwd: root,
       nodir: true,
     }) as string[]

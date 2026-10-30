@@ -130,6 +130,10 @@
       "types": "./src/records/core/index.d.ts",
       "import": "./src/records/core/index.ts"
     },
+    "./records/field": {
+      "types": "./src/records/vue/RecordField.vue.d.ts",
+      "import": "./src/records/vue/RecordField.vue"
+    },
     "./assistant/core": {
       "types": "./src/assistant/core/index.d.ts",
       "import": "./src/assistant/core/index.ts"

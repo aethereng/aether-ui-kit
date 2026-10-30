@@ -32,7 +32,8 @@ export interface FieldView {
   /** The value's schema, for text read as a value. */
   shape?: Schema
   quantity?: string
-  columns?: (FieldColumn & { options?: Option[] })[]
+  /** The columns of `rows`: a reference offers the records the app holds; three numbers are a vector. */
+  columns?: (FieldColumn & { options?: Option[]; vector?: true })[]
   /** The blank of a choice: what it reads before anything is chosen. */
   blank: string
   /** For a choice of another record, the kind it is chosen from. */
@@ -56,6 +57,8 @@ export interface FormContext {
 }
 
 const isSchema = (s: unknown): s is Schema => typeof s === 'object' && s !== null && !Array.isArray(s)
+/** A list of exactly three numbers. */
+const isVector = (s: Schema): boolean => s.type === 'array' && s.minItems === 3 && s.maxItems === 3 && isSchema(s.items) && s.items.type === 'number'
 const plain = (values: readonly string[]): Option[] => values.map((v) => ({ value: v, label: v }))
 
 /**
@@ -104,9 +107,9 @@ export function formFields(kind: KindDecl, variant: string, context: FormContext
     const required = isTag || decl.optional !== true || (chosen?.required.includes(name) ?? false)
     const itemProps = items !== undefined && isSchema(items.properties) ? items.properties : {}
     const columns = decl.columns?.map((c) => {
-      const column = itemProps[c.key]
-      const ref = isSchema(column) ? column['x-ref'] : undefined
-      return { ...c, ...(typeof ref === 'string' ? { options: plain(context.ids(ref)) } : {}) }
+      const column = isSchema(itemProps[c.key]) ? valueSchema(itemProps[c.key] as Schema) : {}
+      const ref = column['x-ref']
+      return { ...c, ...(typeof ref === 'string' ? { options: plain(context.ids(ref)) } : {}), ...(isVector(column) ? { vector: true as const } : {}) }
     })
     const blank = options.length === 0 && refKind !== undefined ? `(no ${refKind.replace(/_/g, ' ')} yet)` : required ? '(choose)' : '(none)'
     const quantity = chosen?.quantities?.[name] ?? decl.quantity

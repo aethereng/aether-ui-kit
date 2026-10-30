@@ -10,5 +10,6 @@ export { bulkRefusal, cellChange, cellText, cellValue, cellWords, choiceLabels, 
 export type { CellRefusal, Row, RowValue } from './cells';
 export { formFields, groupFields, issueField, keepOnVariant } from './form';
 export type { FieldView, FormContext, Option } from './form';
+export { exampleOf, shapeLine } from './shapes';
 export { deleteClosure, draftKeeper, stepWords } from './steps';
 export type { Depths, Draft, DraftKeeper, DraftStore, Named, StepWords } from './steps';

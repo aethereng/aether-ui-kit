@@ -78,6 +78,8 @@ export interface Units {
   label(quantity: string): string | undefined
   shown(value: number, quantity: string): number
   stored(value: number, quantity: string): number
+  /** The unit's words for a quantity as the record stores it, where a field's text holds stored numbers (`summary`). */
+  storedLabel?(quantity: string): string | undefined
 }
 
 /** A record's fields, by name, without the id. */

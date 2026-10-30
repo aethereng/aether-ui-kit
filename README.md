@@ -205,6 +205,7 @@ focus ring), which every component needs and no component owns.
 | **Select** | `controls/select` | Native single-choice dropdown, themed via `appearance: base-select`. Supports `groups`. |
 | **Slider** | `controls/slider` | A dragged number with a read-out. `format` maps the stored value to what is shown, and feeds `aria-valuetext`. `ticks` marks values the scale does not make obvious; the kit draws the track and thumb so the marks land exactly. |
 | **PropertyEditor** | `property-editor` | Schema-driven form. Bind a `FieldDescriptor[]`, get an editor. Composes the standalone controls. |
+| **RecordField** | `records/field` | One field of a record, in the control its `FieldView` takes (`records/core`). Gives its value when it is left or Enter is pressed. |
 | **Graph2D** | `viz/graph` | Force-directed graph over SVG. Opt-in zoom/pan/pinch, hover reporting, edge-pan while dragging. Positions are `number[]`, so the core is dimension-agnostic. |
 | **Gantt** | `viz/gantt` | Lanes, spans, points and anchors in day-index space. Drag to move, edges to resize. |
 
@@ -351,6 +352,14 @@ From a declaration the core gives:
 
 A field whose control is the app's own is declared `control: 'app'`: the core marks it, and the app's form draws it. The
 verbs a change calls stay the app's.
+
+`records/field` is `RecordField.vue`, one field of a form. It takes a `field` (a `FieldView` from `formFields`), the
+`value` the record holds, the app's `units`, an `issue` to show beside it, and for a `summary` field the app's line of what
+the value holds. It emits `commit` with the value when the field is left or Enter is pressed, and only where the value
+differs from the record's; `invalid` with the words for text it cannot read; and `open` with the id a choice of another
+record links to. `flush` gives what is typed and not yet given, for a form's Enter and its button for a draft. A number is
+typed in the unit shown and given as the record stores it. A field declared `readonly` is shown and gives nothing, and a
+field of `control: 'app'` draws nothing, so the app draws its own control in that place.
 
 ---
 

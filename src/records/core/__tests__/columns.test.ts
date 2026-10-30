@@ -35,7 +35,7 @@ describe("a kind's table columns", () => {
     expect(columns.map((c) => c.key)).toEqual(['by', 'note', 'part', 'load', 'turns'])
     expect(columns[0]).toMatchObject({ field: 'by', kind: 'text', tag: true })
     expect(Object.keys(SHELVES.fields).at(-1), 'precondition: a tag declared last').toBe('hung')
-    expect(tableColumns(SHELVES).map((c) => c.key)).toEqual(['hung', 'width', 'held', 'parts', 'posts'])
+    expect(tableColumns(SHELVES).map((c) => c.key)).toEqual(['hung', 'width', 'held', 'parts', 'posts', 'outline'])
   })
 })
 

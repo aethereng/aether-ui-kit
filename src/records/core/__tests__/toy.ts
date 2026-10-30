@@ -30,16 +30,18 @@ export const PARTS: KindDecl = {
         { value: 'a', label: 'Lock A' },
         { value: 'b', label: 'Lock B' },
       ],
+      presets: [{ label: 'Both locked', value: { a: true, b: true } }],
     },
     pair: { schema: { type: 'array', items: { type: 'string', 'x-ref': 'stocks' }, minItems: 2, maxItems: 2 }, optional: true, label: 'Pair', control: 'app' },
     layers: {
-      schema: { type: 'array', items: { type: 'object', properties: { depth: num, stock: { type: 'string', 'x-ref': 'stocks' } } } },
+      schema: { type: 'array', items: { type: 'object', properties: { depth: num, stock: { type: 'string', 'x-ref': 'stocks' }, push: vec3 } } },
       optional: true,
       label: 'Layers',
       control: 'rows',
       columns: [
         { key: 'depth', label: 'Depth', quantity: 'length' },
         { key: 'stock', label: 'Stock' },
+        { key: 'push', label: 'Push', quantity: 'force' },
       ],
     },
     extra: { schema: { type: 'object' }, optional: true, label: 'Extra', control: 'json', advanced: true },
@@ -72,12 +74,13 @@ export const SHELVES: KindDecl = {
   name: 'shelves',
   word: 'shelf',
   tag: 'hung',
-  common: ['held', 'parts', 'posts'],
+  common: ['held', 'parts', 'posts', 'outline'],
   fields: {
     width: { schema: num, optional: true, label: 'Width', quantity: 'length' },
     held: { schema: num, optional: true, label: 'Weight held', quantity: 'force', readonly: true },
     parts: { schema: { type: 'array', items: { type: 'string', 'x-ref': 'parts' } }, optional: true, label: 'Parts' },
     posts: { schema: { type: 'array', items: { type: 'string', 'x-ref': 'stocks' }, minItems: 2, maxItems: 2 }, optional: true, label: 'Posts' },
+    outline: { schema: orNull({ type: 'array', items: vec3 }), optional: true, label: 'Outline', quantity: 'length', control: 'summary' },
     hung: { schema: { enum: ['wall', 'floor'] }, optional: true, label: 'Hung on' },
   },
   variants: {
@@ -88,11 +91,12 @@ export const SHELVES: KindDecl = {
 
 const factor: Record<string, number> = { length: 1000, force: 1e-3, lineLoad: 1e-6 }
 const label: Record<string, string> = { length: 'mm', force: 'kN', lineLoad: 'kN/mm' }
-/** A length in mm, a force in kN and a force per length in kN/mm; any other quantity as stored. */
+/** A length in mm, a force in kN and a force per length in kN/mm, stored in m, N and N/m; any other quantity as stored. */
 export const UNITS: Units = {
   label: (q) => label[q],
   shown: (v, q) => v * (factor[q] ?? 1),
   stored: (v, q) => v / (factor[q] ?? 1),
+  storedLabel: (q) => ({ length: 'm', force: 'N', lineLoad: 'N/m' })[q],
 }
 
 export const row = (id: string, record: Row['record']): Row => ({ id, record })

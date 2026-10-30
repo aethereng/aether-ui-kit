@@ -50,6 +50,7 @@ describe('the form of a record', () => {
     expect(f.layers!.columns).toEqual([
       { key: 'depth', label: 'Depth', quantity: 'length' },
       { key: 'stock', label: 'Stock', options: [{ value: 's1', label: 's1' }, { value: 's2', label: 's2' }] },
+      { key: 'push', label: 'Push', quantity: 'force', vector: true },
     ])
     expect(f.size).toMatchObject({ quantity: 'length', group: 'Shape', shape: { type: 'number' } })
     expect(f.at).toMatchObject({ quantity: 'length', nullable: true })
@@ -65,7 +66,7 @@ describe('the form of a record', () => {
 
   it('shows the fields in the kind order, a tag declared last last, and requires the tag though it is optional', () => {
     const f = formFields(SHELVES, 'wall', context)
-    expect(f.map((x) => x.name)).toEqual(['width', 'held', 'parts', 'posts', 'hung'])
+    expect(f.map((x) => x.name)).toEqual(['width', 'held', 'parts', 'posts', 'outline', 'hung'])
     expect(SHELVES.fields.hung!.optional, 'precondition: an optional tag').toBe(true)
     expect(byName(f).hung!.required).toBe(true)
     expect(byName(f).width!.required).toBe(false)

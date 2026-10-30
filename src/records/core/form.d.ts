@@ -25,8 +25,10 @@ export interface FieldView {
     /** The value's schema, for text read as a value. */
     shape?: Schema;
     quantity?: string;
+    /** The columns of `rows`: a reference offers the records the app holds; three numbers are a vector. */
     columns?: (FieldColumn & {
         options?: Option[];
+        vector?: true;
     })[];
     /** The blank of a choice: what it reads before anything is chosen. */
     blank: string;

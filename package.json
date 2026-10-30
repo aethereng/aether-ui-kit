@@ -194,6 +194,10 @@
       "types": "./src/viz/core/gantt.d.ts",
       "import": "./src/viz/core/gantt.ts"
     },
+    "./viz/legend": {
+      "types": "./src/viz/vue/Legend.vue.d.ts",
+      "import": "./src/viz/vue/Legend.vue"
+    },
     "./viz/core": {
       "types": "./src/viz/core/index.d.ts",
       "import": "./src/viz/core/index.ts"

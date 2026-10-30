@@ -80,6 +80,11 @@
      accent instead, so the scrollbar does not blend into "this is also a selection" visually. */
   --aether-scrollbar: var(--aether-cool);
 
+  /* The small text and the smallest gap of the parts that set a line of small print beside a
+     drawing. */
+  --aether-text-sm: 11px;
+  --aether-space-1: 4px;
+
   /* Control typography. Hardcoded 12.5px until now, which a host on a different type scale could
      only fight with an override; kit controls sat visibly smaller beside a 14px list. */
   --aether-control-font-size: 12.5px;

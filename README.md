@@ -191,6 +191,7 @@ focus ring), which every component needs and no component owns.
 | **DateField** | `controls/date-field` | A date input with the kit's own picker. Keeps the native input for typing and the OS wheel on touch; replaces only the desktop popup, which cannot be themed. |
 | **RadioGroup** | `controls/radio-group` | One choice out of a few, as buttons. A `role="radiogroup"` for a VALUE; if choosing swaps a panel it is a `Seg`. Arrows wrap and select; one tab stop. |
 | **Card** | `controls/card` | A panel surface: bordered, padded, holds content. Static: a clickable card is a different component. Padding and radius match `Disclosure`, which consumers stack it beside. |
+| **Legend** | `viz/legend` | What the colour on a drawing means for one field: a ramp from `stops` with the `ticks` the app has formatted, or the sentence saying the field is zero or has no finite range. |
 | **Spinner** | `controls/spinner` | Indeterminate busy indicator. `label` names it for a screen reader; omit it when text beside it already says what is happening. |
 | **Icon** | `controls/icon` | An icon from an SVG path string on a 24 by 24 grid, the form `@mdi/js` exports; the app keeps the icon set. 1em unless `size` says otherwise; `label` names it, and without one it is hidden from a screen reader. |
 | **Tooltip** | `controls/tooltip` | Hover/focus tooltip that escapes any ancestor clipping it, via the top layer. |

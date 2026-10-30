@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { COMPONENTS } from '../gallery/meta'
@@ -97,4 +97,34 @@ describe('meta.ts describes the components as they actually are', () => {
       }
     },
   )
+})
+
+describe('the site shows what the kit ships', () => {
+  /* The README sends a reader to the site for the components, and a part that ships with no section
+   * is invisible there with every test green. So a part is either on the site or on this list, and
+   * the README's sentence names the same list. ChatRefChip draws inside ChatPanel's section and has no
+   * import of its own, so the README does not name it. */
+  const NOT_ON_THE_SITE = ['ChatRefChip', 'Icon', 'RecordField', 'RecordTable']
+  const app = readFileSync(join(SRC, 'gallery', 'App.vue'), 'utf8')
+  const readme = readFileSync(join(SRC, '..', 'README.md'), 'utf8')
+
+  it('has a section for every shipped part, but for the ones listed', () => {
+    const named = new Set(COMPONENTS.map((c) => c.name))
+    expect([...new Set(components)].filter((n) => !named.has(n)).sort()).toEqual(NOT_ON_THE_SITE)
+  })
+
+  it.each(COMPONENTS.map((c) => [c.id, c.name] as const))('%s renders its own example', (id, name) => {
+    expect(existsSync(join(SRC, 'gallery', 'examples', `${name}Example.vue`)), `${name}Example.vue`).toBe(true)
+    const branch = app.slice(app.indexOf(`c.id === '${id}'`))
+    expect(app, `App.vue has no branch for ${id}`).toContain(`c.id === '${id}'`)
+    expect(branch.slice(0, branch.indexOf('</GSection>'))).toContain(`<${name}Example />`)
+  })
+
+  it('and the README says which are not there', () => {
+    const start = readme.indexOf('\n## Gallery')
+    expect(start, 'precondition: the section was found').toBeGreaterThan(0)
+    const section = readme.slice(start, readme.indexOf('\n## ', start + 1))
+    for (const name of NOT_ON_THE_SITE.filter((n) => n !== 'ChatRefChip')) expect(section).toContain(`\`${name}\``)
+    expect(section).not.toMatch(/every component/i)
+  })
 })

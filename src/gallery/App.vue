@@ -71,6 +71,12 @@ import Graph2DExample from './examples/Graph2DExample.vue'
 import Graph2DExampleSrc from './examples/Graph2DExample.vue?raw'
 import GanttExample from './examples/GanttExample.vue'
 import GanttExampleSrc from './examples/GanttExample.vue?raw'
+import GalleryExample from './examples/GalleryExample.vue'
+import GalleryExampleSrc from './examples/GalleryExample.vue?raw'
+import OverlayExample from './examples/OverlayExample.vue'
+import OverlayExampleSrc from './examples/OverlayExample.vue?raw'
+import LegendExample from './examples/LegendExample.vue'
+import LegendExampleSrc from './examples/LegendExample.vue?raw'
 
 
 
@@ -410,6 +416,18 @@ function setGroup(g: Group, open: boolean) {
         <GSection v-else-if="c.id === 'toast'" :meta="c" :source="ToastExampleSrc">
           <ToastExample />
         </GSection>
+
+        <GSection v-else-if="c.id === 'gallery'" :meta="c" :source="GalleryExampleSrc">
+          <GalleryExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'overlay'" :meta="c" :source="OverlayExampleSrc">
+          <OverlayExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'legend'" :meta="c" :source="LegendExampleSrc">
+          <LegendExample />
+        </GSection>
       </template>
     </template>
 
@@ -465,6 +483,7 @@ html[data-theme='paper'],
   --aether-warm-ink: #fbf8f2;
   --aether-rose-wash: rgba(163, 59, 82, 0.12);
   --aether-font-mono: var(--g-mono);
+  --aether-font-display: var(--g-display);
   --aether-transport-bg: rgba(251, 248, 242, 0.82);
   --aether-transport-backdrop: blur(8px) saturate(1.1);
   --aether-transport-radius: 10px;
@@ -542,6 +561,9 @@ html[data-theme='timber'] {
   --aether-warm-ink: #0e1b1a;
   --aether-rose-wash: rgba(224, 143, 164, 0.16);
   --aether-font-mono: var(--g-mono);
+  --aether-font-display: var(--g-display);
+  --aether-overlay-scrim: rgba(6, 12, 11, 0.55);
+  --aether-overlay-shadow: 0 18px 44px -14px rgba(0, 0, 0, 0.6), 0 3px 10px -4px rgba(0, 0, 0, 0.45);
   --aether-transport-bg: rgba(19, 32, 31, 0.8);
   --aether-transport-backdrop: blur(8px) saturate(1.1);
   --aether-transport-radius: 10px;

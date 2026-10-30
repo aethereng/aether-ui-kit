@@ -9,7 +9,7 @@
 [![Runtime deps](https://img.shields.io/badge/runtime%20deps-0-A9591B?style=flat-square)](package.json)
 [![Deploy gallery](https://github.com/aethereng/aether-ui-kit/actions/workflows/deploy-gallery.yml/badge.svg)](https://github.com/aethereng/aether-ui-kit/actions/workflows/deploy-gallery.yml)
 
-### → **[See every component, live](https://aethereng.github.io/aether-ui-kit/)** ←
+### → **[See the components, live](https://aethereng.github.io/aether-ui-kit/)** ←
 
 </div>
 
@@ -439,7 +439,7 @@ Each takes plain data, and the app says how it looks where its look differs from
 
 ### **[aethereng.github.io/aether-ui-kit](https://aethereng.github.io/aether-ui-kit/)**
 
-Every component, live, with its props, emits, exposed methods, and a copyable worked example including its data. Deploys when a version tag is pushed, or by hand from the Actions tab.
+The components, live, each with its props, emits, exposed methods, and a copyable worked example including its data. `Icon`, `RecordField` and `RecordTable` are not on it yet. Deploys when a version tag is pushed, or by hand from the Actions tab.
 
 Or run it locally:
 

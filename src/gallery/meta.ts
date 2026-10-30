@@ -703,6 +703,67 @@ export const COMPONENTS: CompMeta[] = [
       },
     ],
   },
+  {
+    id: 'gallery',
+    name: 'Gallery',
+    subpath: '@aether/ui-kit/controls/gallery',
+    group: 'Controls',
+    core: '@aether/ui-kit/controls/core',
+    blurb: 'Sample cards in one section per family: a picture, a title, a line, a foot and a note.',
+    detail:
+      'A card is a list item with a button inside it, so a `note` can sit beside the button as text a reader can select. The page around it stays the caller\'s: its head, whether it scrolls as a page or as a layer, what closes it, and any way in that is not a sample. The picture stands on `--aether-gallery-ground`.',
+    props: [
+      { name: 'families', type: 'readonly GalleryFamily[]', note: 'the sections, in their order; one with no items is left out' },
+      {
+        name: 'items',
+        type: 'readonly GalleryItem[]',
+        note: '`picture` is the address for the theme in force, or `icon` a path in its place; an item whose family is not listed is not shown',
+      },
+    ],
+    emits: [{ name: 'open', type: '[id: string]', note: 'the id of the item whose card was pressed' }],
+  },
+  {
+    id: 'overlay',
+    name: 'Overlay',
+    subpath: '@aether/ui-kit/controls/overlay',
+    group: 'Overlays',
+    core: '@aether/ui-kit/controls/core',
+    blurb: 'A full-page card for work the app must wait on, shown through the deferred flag.',
+    detail:
+      'Quick work never shows the card, and once shown it stays long enough to read. It is not a modal: Tab still reaches the page behind it, and there is no focus trap, scroll lock or Escape, so an app that must block its page makes its own content inert while this shows. It is `position: fixed` and outside the top layer, so it goes where no ancestor sets a transform, a filter or `contain`. For a modal, use Dialog.',
+    props: [
+      { name: 'open', type: 'boolean', note: 'the work is running; the raw flag, which goes through the deferred flag' },
+      { name: 'aside', type: 'boolean?', note: 'takes the card away at once while true, without waiting out its minimum time' },
+      { name: 'label', type: 'string', note: "the title, and the bar's accessible name" },
+      { name: 'subject', type: 'string?', note: 'what is being worked on, under the title' },
+      { name: 'detail', type: 'string?', note: 'a line of detail under the bar' },
+      { name: 'progress', type: 'number | null?', note: 'how far along, from 0 to 1; without it the bar sweeps' },
+      { name: 'stoppable', type: 'boolean?', note: 'shows the stop button' },
+      { name: 'stopLabel', type: 'string?', note: "default 'Stop'" },
+      { name: 'stopDanger', type: 'boolean?', note: 'draws the stop button in the danger tone' },
+    ],
+    emits: [{ name: 'stop', type: '[]', note: "the stop button was pressed; stopping the work is the caller's" }],
+    slots: [{ name: 'mark', type: 'no props', note: 'one decorative figure above the title, hidden from a screen reader' }],
+  },
+  {
+    id: 'legend',
+    name: 'Legend',
+    subpath: '@aether/ui-kit/viz/legend',
+    group: 'Visualization',
+    blurb: 'What the colour on a drawing means, for one field.',
+    detail:
+      'A ramp from the same colour list the drawing colours from, with the numbers the caller has formatted under it. A field that is zero everywhere or has no finite range has no ramp: `state` says which, and `note` is the sentence in its place, in the caller\'s words. A panel around it stays the caller\'s, and one legend is one field, so several stack.',
+    props: [
+      { name: 'label', type: 'string', note: "the field's name" },
+      { name: 'unit', type: 'string?', note: 'drawn apart from the name' },
+      { name: 'stops', type: 'string', note: 'the colour stops as CSS, as linear-gradient takes them' },
+      { name: 'ticks', type: 'readonly string[]?', note: 'text the caller has formatted, spread from the left end to the right end' },
+      { name: 'state', type: "'ramp' | 'zero' | 'nonfinite'?", note: "default 'ramp'; the other two draw `note` and no bar" },
+      { name: 'note', type: 'string?', note: 'the sentence for `zero` and `nonfinite`; without one the legend names the field and stops' },
+      { name: 'noValueColor', type: 'string?', note: 'the colour the drawing gives a value the ramp cannot place, shown as a swatch' },
+      { name: 'noValueKey', type: 'string?', note: 'the words beside that swatch under a ramp' },
+    ],
+  },
 ]
 
 export const GROUPS: Group[] = ['Controls', 'Overlays', 'Forms', 'Visualization']

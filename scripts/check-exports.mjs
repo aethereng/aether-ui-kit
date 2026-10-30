@@ -3,11 +3,10 @@
  *
  * WHY THIS EXISTS. `@aether/ui-kit` is public, `type: module`, has no `main`, and declares its
  * exports subpaths in the `exports` map of package.json, each with several condition targets.
- * That is the same manifest shape as the two quintus packages that shipped unimportable; except
- * this one is already published and already consumed as a tag-pinned git dependency. Nothing
- * verified that any of those targets reaches an
- * installed copy. A published package is verified by executing what a consumer receives; the
- * kit was the package where that had never been done.
+ * A package of that manifest shape can ship unimportable with every test green, and this one is
+ * already published and already consumed as a tag-pinned git dependency. Nothing verified that any
+ * of those targets reaches an installed copy. A published package is verified by executing what a
+ * consumer receives; the kit was the package where that had never been done.
  *
  * WHAT WAS ALREADY THERE, AND WHY IT COULD NOT CATCH THIS. `src/__tests__/package-contract.test.ts`
  * has an assertion named "ships every exported file inside the published `files` globs". Its
@@ -26,7 +25,7 @@
  * target exists there by construction; the question is whether it exists in the tarball, and a
  * workspace symlink is precisely what hides that.
  *
- * THE RUNTIME IS NOT NODE, SO THE QUINTUS GATE DOES NOT PORT. The kit publishes SOURCE: `files`
+ * THE RUNTIME IS NOT NODE, SO THE USUAL GATE DOES NOT APPLY. The kit publishes SOURCE: `files`
  * is `["src", "!src/**\/__tests__", "!src/**\/*.test.ts", "NOTICE"]` ; so every subpath that
  * points at a `.vue` file is one Node cannot import at all. "Import it under Node" is the wrong
  * question here. The property is identical; the runtime is a bundler.
@@ -147,8 +146,8 @@ async function main() {
 
     // --- RUNTIME: the bundler-only decision, checked rather than assumed ---
     // @aether/ui-kit is BUNDLER-ONLY. Its import targets are .vue, .ts and .css sources
-    // (BUNDLER_EXT below), and Node can import none of those. That is why quintus's "import it
-    // under Node" gate does not port, and why the dynamic half above is a Vite build.
+    // (BUNDLER_EXT below), and Node can import none of those. That is why an "import it under
+    // Node" gate does not apply here, and why the dynamic half above is a Vite build.
     //
     // Recorded here as well as in README.md so it cannot decay into folklore. If someone adds a
     // .js or .mjs subpath, the bundler-only premise no longer covers the package -- a consumer

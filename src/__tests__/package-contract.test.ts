@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { execFileSync } from 'node:child_process'
 import { readFileSync, existsSync, globSync } from 'node:fs'
 import { dirname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -358,6 +359,10 @@ describe('the small parts are worded for any app', () => {
     'src/controls/core/dismiss.ts',
     'src/controls/core/transport.ts',
     'src/controls/vue/Badge.vue',
+    'src/controls/vue/Overlay.vue',
+    'src/controls/vue/Gallery.vue',
+    'src/controls/core/gallery.ts',
+    'src/viz/vue/Legend.vue',
     'src/theme/core/theme.ts',
     'src/theme/vue/refs.ts',
   ]
@@ -374,5 +379,32 @@ describe('the small parts are worded for any app', () => {
     const readme = readFileSync(resolve(root, 'README.md'), 'utf8').replace('the problems it solves', '')
     expect(readme.length, 'precondition: the README was read').toBeGreaterThan(1000)
     expect(readme).not.toMatch(APP_WORD)
+  })
+})
+
+describe('no tracked file names an app the kit is used by', () => {
+  /* The repo is public and reads for a stranger, so a reason in it is stated generally. The names are
+   * assembled here so this file does not match itself. `git grep` exits 1 for no match, which comes
+   * back as an empty list; any other failure throws, so a grep that could not run does not read as a
+   * clean repo. Its population is whatever git tracks, so a new file needs no listing. */
+  const tracked = (pattern: string): string[] => {
+    try {
+      return execFileSync('git', ['grep', '-I', '-i', '-l', '-E', pattern], { cwd: root, encoding: 'utf8' }).split('\n').filter(Boolean)
+    } catch (e) {
+      if ((e as { status?: number }).status === 1) return []
+      throw e
+    }
+  }
+
+  it('sees a word that is there', () => {
+    expect(tracked('aether-overlay__scrim')).toContain('src/controls/vue/Overlay.vue')
+  })
+
+  it('returns nothing for a word that is nowhere', () => {
+    expect(tracked(['no', 'such', 'word', 'anywhere'].join('-'))).toEqual([])
+  })
+
+  it('finds neither name', () => {
+    expect(tracked(['qui' + 'ntus', 'et' + 'ere'].join('|'))).toEqual([])
   })
 })

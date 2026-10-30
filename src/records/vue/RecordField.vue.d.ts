@@ -12,12 +12,12 @@ declare function flush(): void;
 declare const _default: import("vue").DefineComponent<__VLS_Props, {
     flush: typeof flush;
 }, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    open: (id: string) => any;
     invalid: (words: string) => any;
+    open: (id: string) => any;
     commit: (value: Json) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
-    onOpen?: ((id: string) => any) | undefined;
     onInvalid?: ((words: string) => any) | undefined;
+    onOpen?: ((id: string) => any) | undefined;
     onCommit?: ((value: Json) => any) | undefined;
 }>, {
     summary: string;

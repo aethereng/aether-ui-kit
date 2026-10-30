@@ -124,3 +124,10 @@ export type {
 // caller types its own node data against TreeNode<T> and may drive the same key handling itself.
 export { visibleRows, treeKey, typeahead, ancestorIds, isExpandable } from './tree'
 export type { TreeNode, TreeRow, TreeKeyResult } from './tree'
+
+// A busy flag that shows late and stays a minimum time, and how a popover closes: the halves of
+// useDeferredFlag and useDismiss (controls/composables) that need no framework.
+export { deferredFlag } from './deferred'
+export type { DeferredFlag, DeferredFlagOptions } from './deferred'
+export { bindDismiss } from './dismiss'
+export type { DismissTarget, DismissOptions } from './dismiss'

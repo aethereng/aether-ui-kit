@@ -10,3 +10,7 @@ export { DEFAULT_REFERENCE_SCOPES, DEFAULT_PATH_RULES, numeralGate, referencesIn
 export type { ReferenceScopes, Violation, ViolationKind, PathRules, PathStep, ParsedPath, Reduction, TupleTable, Leaf, LeafOptions, } from './refs';
 export { visibleRows, treeKey, typeahead, ancestorIds, isExpandable } from './tree';
 export type { TreeNode, TreeRow, TreeKeyResult } from './tree';
+export { deferredFlag } from './deferred';
+export type { DeferredFlag, DeferredFlagOptions } from './deferred';
+export { bindDismiss } from './dismiss';
+export type { DismissTarget, DismissOptions } from './dismiss';

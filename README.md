@@ -192,6 +192,7 @@ focus ring), which every component needs and no component owns.
 | **RadioGroup** | `controls/radio-group` | One choice out of a few, as buttons. A `role="radiogroup"` for a VALUE; if choosing swaps a panel it is a `Seg`. Arrows wrap and select; one tab stop. |
 | **Card** | `controls/card` | A panel surface: bordered, padded, holds content. Static: a clickable card is a different component. Padding and radius match `Disclosure`, which consumers stack it beside. |
 | **Spinner** | `controls/spinner` | Indeterminate busy indicator. `label` names it for a screen reader; omit it when text beside it already says what is happening. |
+| **Icon** | `controls/icon` | An icon from an SVG path string on a 24 by 24 grid, the form `@mdi/js` exports; the app keeps the icon set. 1em unless `size` says otherwise; `label` names it, and without one it is hidden from a screen reader. |
 | **Tooltip** | `controls/tooltip` | Hover/focus tooltip that escapes any ancestor clipping it, via the top layer. |
 | **Menu** | `controls/menu` | Dropdown menu with the full APG keyboard model. |
 | **Dialog** | `controls/dialog` | Modal dialog over the native `<dialog>` element. |
@@ -210,7 +211,7 @@ focus ring), which every component needs and no component owns.
 | **Graph2D** | `viz/graph` | Force-directed graph over SVG. Opt-in zoom/pan/pinch, hover reporting, edge-pan while dragging. Positions are `number[]`, so the core is dimension-agnostic. |
 | **Gantt** | `viz/gantt` | Lanes, spans, points and anchors in day-index space. Drag to move, edges to resize. |
 
-All under `@aether/ui-kit/…`. Framework-free cores, importable on their own: `controls/core`, `property-editor/core`, `viz/core`, `viz/core/gantt`, `assistant/core`, `records/core`.
+All under `@aether/ui-kit/…`. Framework-free cores, importable on their own: `controls/core`, `property-editor/core`, `viz/core`, `viz/core/gantt`, `assistant/core`, `records/core`, `theme/core`.
 
 `verbs` is framework-free too, and has no Vue part at all: see [Verbs](#verbs-the-edit-layer-under-an-editor) below.
 
@@ -376,6 +377,32 @@ is edited in its cells unless the app sets `textEdited` to false, which shows it
 own: the app names the region it sits in, a section with an `aria-label` for example. The head (which kind
 is shown, the counts) and what a change calls stay the app's. The table paints its fixed head and first columns in
 `--aether-record-table-ground`, the surface unless the app sets it to another colour the table sits on.
+
+---
+
+## Small parts: a busy flag, a popover's close, the theme
+
+`controls/composables` holds two Vue composables, each over a framework-free core in `controls/core`.
+
+- `useDeferredFlag(source, { showDelayMs, minVisibleMs })` gives a flag for the eye from a raw one ("a solve is
+  running"): it shows only once the source has been up `showDelayMs`, so quick work never flashes a spinner, and once
+  shown it stays up at least `minVisibleMs`. Its core is `deferredFlag(onChange, options)`, which holds the defaults.
+- `useDismiss(open, root, trigger, options)` closes a popover the way a menu closes: on Escape, which hands focus back to
+  `trigger`, or on a press outside `root`, which holds both the popover and its control. By default the popover takes
+  Escape first, in the capture phase, and marks it used, so a handler under it that reads `defaultPrevented` stands down;
+  and an input method composing text keeps its Escape. `{ first: false }` reads Escape after the page's own handlers,
+  unmarked; `{ keepComposition: false }` closes on a composing Escape too. Its core is `bindDismiss(window, target,
+  options)`, which gives back the call that unbinds it.
+
+`theme/core` puts an app's palette on the page. `createThemeController({ themes, dark, light, storageKey, prefix, paper })`
+writes each theme's colours as `--<prefix>-<role>` custom properties holding comma-separated triples (`23,30,74`, read as
+`rgb(var(--q-surface))` or `rgba(var(--q-surface), 0.7)`) under one selector, `[data-theme='<name>']`, and sets
+`data-theme` on the document root. Called at module scope, it does this before anything mounts. The reader's choice is
+kept under `storageKey`, and without one the page follows the OS. With `paper` (the default), the document wears the light
+theme while it prints and the reader's theme after; `paper: false` prints in the reader's theme. The controller is read
+through `name`, `isDark` and `colors`, turned by `toggle`, and heard through `subscribe`. `theme/refs` gives a Vue app the
+same state as refs: `themeRefs(controller)`, callable at module scope beside it. `hexToTriple` and `cssTokens` are
+exported too. The palettes stay the app's, and so does the stylesheet that maps the kit's `--aether-*` tokens onto them.
 
 ---
 

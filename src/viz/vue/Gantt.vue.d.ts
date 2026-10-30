@@ -21,9 +21,9 @@ type __VLS_Props = {
     }[];
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    move: (id: string, start: number, end: number | null) => any;
-    select: (id: string) => any;
     resize: (id: string, edge: "r" | "l", value: number) => any;
+    select: (id: string) => any;
+    move: (id: string, start: number, end: number | null) => any;
     dragStart: (id: string) => any;
     dragEnd: (id: string) => any;
     newAt: (day: number, type: string) => any;
@@ -32,9 +32,9 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
         i: number;
     } | null) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
-    onMove?: ((id: string, start: number, end: number | null) => any) | undefined;
-    onSelect?: ((id: string) => any) | undefined;
     onResize?: ((id: string, edge: "r" | "l", value: number) => any) | undefined;
+    onSelect?: ((id: string) => any) | undefined;
+    onMove?: ((id: string, start: number, end: number | null) => any) | undefined;
     onDragStart?: ((id: string) => any) | undefined;
     onDragEnd?: ((id: string) => any) | undefined;
     onNewAt?: ((day: number, type: string) => any) | undefined;

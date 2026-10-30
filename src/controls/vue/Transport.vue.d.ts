@@ -27,15 +27,15 @@ type __VLS_Slots = {
     stop?: () => unknown;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    stop: () => any;
     toggle: () => any;
+    stop: () => any;
     seek: (t: number) => any;
     "set-speed": (s: number) => any;
     "scrub-start": () => any;
     "scrub-end": () => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
-    onStop?: (() => any) | undefined;
     onToggle?: (() => any) | undefined;
+    onStop?: (() => any) | undefined;
     onSeek?: ((t: number) => any) | undefined;
     "onSet-speed"?: ((s: number) => any) | undefined;
     "onScrub-start"?: (() => any) | undefined;

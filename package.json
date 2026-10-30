@@ -118,9 +118,25 @@
       "types": "./src/controls/vue/Transport.vue.d.ts",
       "import": "./src/controls/vue/Transport.vue"
     },
+    "./controls/icon": {
+      "types": "./src/controls/vue/Icon.vue.d.ts",
+      "import": "./src/controls/vue/Icon.vue"
+    },
     "./controls/core": {
       "types": "./src/controls/core/index.d.ts",
       "import": "./src/controls/core/index.ts"
+    },
+    "./controls/composables": {
+      "types": "./src/controls/vue/composables.d.ts",
+      "import": "./src/controls/vue/composables.ts"
+    },
+    "./theme/core": {
+      "types": "./src/theme/core/index.d.ts",
+      "import": "./src/theme/core/index.ts"
+    },
+    "./theme/refs": {
+      "types": "./src/theme/vue/refs.d.ts",
+      "import": "./src/theme/vue/refs.ts"
     },
     "./verbs": {
       "types": "./src/verbs/index.d.ts",

@@ -342,9 +342,9 @@ From a declaration the core gives:
 - the form: `formFields` (the fields a variant takes, each in its control, a choice of another record offering the ids
   the app holds), `groupFields`, `keepOnVariant` (what a draft keeps when its variant changes) and `issueField` (the field
   a verb's refusal names);
-- the table: `tableColumns`, `takesField`, `quantityOf`, the column widths (`numberWidth`, `choiceWidth`, `isCut`), and
-  the cell rules `cellText`, `valueFor`, `cellChange` and `pasteRows`, where a change to several rows goes to every row
-  or to none;
+- the table: `tableColumns`, `takesField`, `quantityOf`, the column widths (`numberWidth`, `choiceWidth`, `textWidth`,
+  `isCut`), and the cell rules `cellText`, `valueFor`, `cellChange` and `pasteRows`, where a change to several rows goes
+  to every row or to none, and a field declared `readonly` takes none;
 - beside the store: `deleteClosure` (every record a delete must take with it, from the app's delete plan), `stepWords`
   (the words of each step undo and redo walk) and `draftKeeper` (drafts a form leaves unapplied, dropped with their
   record).

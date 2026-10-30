@@ -9,6 +9,7 @@ import {
   choiceLabels,
   columnWidths,
   matches,
+  measurer,
   numberText,
   ownUnit,
   pasteRows,
@@ -17,7 +18,7 @@ import {
   valueFor,
   type TableColumn,
 } from '..'
-import { FIXINGS, PARTS, UNITS, row } from './toy'
+import { FIXINGS, PARTS, SHELVES, STOCKS, UNITS, row } from './toy'
 
 const col = (kind: typeof PARTS, key: string): TableColumn => tableColumns(kind).find((c) => c.key === key)!
 const size = col(PARTS, 'size')
@@ -27,6 +28,9 @@ const stock = col(PARTS, 'stock')
 const kept = col(PARTS, 'kept')
 const load = col(FIXINGS, 'load')
 const turns = col(FIXINGS, 'turns')
+const made = col(PARTS, 'made')
+const note = col(FIXINGS, 'note')
+const held = col(SHELVES, 'held')
 
 describe('what a cell shows', () => {
   it('shows a number at twelve significant figures, in the unit of its quantity', () => {
@@ -49,10 +53,11 @@ describe('what a cell shows', () => {
   })
 
   it("names a cell's own unit only where its variant gives another quantity than the column's", () => {
-    expect(ownUnit(FIXINGS, { by: 'weld', load: 2000 }, load, UNITS)).toBe('kN/m')
+    expect(ownUnit(FIXINGS, { by: 'weld', load: 2000 }, load, UNITS)).toBe('kN/mm')
     expect(ownUnit(FIXINGS, { by: 'bolt', load: 2000 }, load, UNITS)).toBe('')
-    expect(cellText(FIXINGS, { by: 'weld', load: 2000 }, load, UNITS)).toBe('2')
-    expect(cellWords(FIXINGS, { by: 'weld', load: 2000 }, load, UNITS)).toBe('2 kN/m')
+    expect(cellText(FIXINGS, { by: 'weld', load: 2000 }, load, UNITS)).toBe('0.002')
+    expect(cellText(FIXINGS, { by: 'bolt', load: 2000 }, load, UNITS)).toBe('2')
+    expect(cellWords(FIXINGS, { by: 'weld', load: 2000 }, load, UNITS)).toBe('0.002 kN/mm')
     expect(cellWords(FIXINGS, { by: 'weld' }, load, UNITS)).toBe('none')
     expect(cellWords(PARTS, { finish: 'raw' }, finish, UNITS)).toBe('raw')
   })
@@ -71,6 +76,17 @@ describe('what a cell shows', () => {
     expect(blank.get('size')).toBe(40 + 22)
     const held = columnWidths(PARTS, columns, [row('p1', { size: 1, finish: 'raw' })], UNITS, optionsOf, measure)
     expect(held.get('finish')).toBe(120 + 22 + 24)
+  })
+
+  it('sizes a free text column to its widest value, and to the floor of a choice where it holds none', () => {
+    const measure = (t: string): number => t.length * 10
+    const rows = [row('p1', { made: 'Ann' }), row('p2', { made: 'Bea Smith' })]
+    expect(columnWidths(PARTS, [made], rows, UNITS, () => [], measure).get('made')).toBe(90 + 22)
+    expect(columnWidths(PARTS, [made], [row('p1', {})], UNITS, () => [], measure).get('made')).toBe(64)
+  })
+
+  it('measures 8 px a character where there is no document', () => {
+    expect(measurer()('12.5')).toBe(32)
   })
 
   it("finds a row by its id or the text of a cell, in any case; an empty query finds every row", () => {
@@ -106,7 +122,16 @@ describe('what a typed or chosen value gives a row', () => {
   })
 
   it("stores a number in the quantity its row's variant gives the field", () => {
-    expect(valueFor(FIXINGS, { by: 'weld' }, load, '3', UNITS)).toEqual({ value: 3000 })
+    expect(valueFor(FIXINGS, { by: 'weld' }, load, '3', UNITS)).toEqual({ value: 3e6 })
+    expect(valueFor(FIXINGS, { by: 'bolt' }, load, '3', UNITS)).toEqual({ value: 3000 })
+  })
+
+  it('gives a free text as typed, trimmed; a blank clears it where a blank is a value, and is asked for where not', () => {
+    expect(valueFor(PARTS, {}, made, ' Ann ', UNITS)).toEqual({ value: 'Ann' })
+    expect(valueFor(PARTS, { made: 'Ann' }, made, '', UNITS)).toEqual({ value: null })
+    expect(valueFor(STOCKS, {}, col(STOCKS, 'grade'), ' ', UNITS)).toEqual({ unread: 'Write a value' })
+    expect(cellChange(PARTS, row('p1', { made: 'Ann' }), made, 'Bea', [], new Set(['p1']), UNITS)).toEqual({ values: [{ id: 'p1', record: { made: 'Ann' }, value: 'Bea' }] })
+    expect(cellChange(FIXINGS, row('f1', { by: 'glue', note: 'n' }), note, 'n', [], new Set(['f1']), UNITS)).toBeNull()
   })
 })
 
@@ -127,7 +152,7 @@ describe('a change to several rows goes to every one or to none', () => {
 
   it("refuses one number for rows whose cells measure different quantities, naming each row's unit", () => {
     const rows = [row('f1', { by: 'bolt' }), row('f2', { by: 'weld' })]
-    expect(bulkRefusal(FIXINGS, rows, load, new Set(['f1', 'f2']), UNITS)).toEqual({ row: 'f2', words: 'Units differ: f1 kN, f2 kN/m' })
+    expect(bulkRefusal(FIXINGS, rows, load, new Set(['f1', 'f2']), UNITS)).toEqual({ row: 'f2', words: 'Units differ: f1 kN, f2 kN/mm' })
     expect(bulkRefusal(FIXINGS, [rows[0]!, row('f3', { by: 'bolt' })], load, new Set(['f1', 'f3']), UNITS)).toBeNull()
   })
 
@@ -141,6 +166,24 @@ describe('a change to several rows goes to every one or to none', () => {
     expect(cellChange(PARTS, p1, size, ' 1 ', [], shown, UNITS)).toBeNull()
     expect(cellChange(PARTS, p1, kept, false, [], shown, UNITS)).toBeNull()
     expect(cellChange(PARTS, p1, kept, true, [], shown, UNITS)).toEqual({ values: [{ ...p1, value: true }] })
+  })
+
+  it('gives nothing where every ticked row holds the value already', () => {
+    const two = [row('p2', { size: 0.002 }), row('p4', { size: 0.002 })]
+    expect(cellChange(PARTS, two[0]!, size, '2', two, new Set(['p2', 'p4']), UNITS)).toBeNull()
+  })
+
+  it('takes no change to a field declared read only: a cell, ticked rows or a paste', () => {
+    const s1 = row('s1', { hung: 'wall', held: 500 })
+    const s2 = row('s2', { hung: 'wall', held: 700 })
+    const both = new Set(['s1', 's2'])
+    expect(held.readonly).toBe(true)
+    expect(cellChange(SHELVES, s1, held, '2', [], both, UNITS)).toBeNull()
+    expect(cellChange(SHELVES, s1, held, '2', [s1, s2], both, UNITS)).toBeNull()
+    expect(bulkRefusal(SHELVES, [s1, s2], held, both, UNITS)).toEqual({ row: 's1', words: 'Weight held is read only' })
+    expect(pasteRows(SHELVES, '1\n2', s1, held, [s1, s2], [s1, s2], UNITS)).toEqual({ refused: { row: 's1', words: 'Weight held is read only' } })
+    const width = col(SHELVES, 'width')
+    expect(cellChange(SHELVES, s1, width, '2', [], both, UNITS), 'the positive arm: a field not read only').toEqual({ values: [{ ...s1, value: 0.002 }] })
   })
 
   it('refuses a ticked change where one row cannot read the value, naming it, and names a bulk refusal first', () => {

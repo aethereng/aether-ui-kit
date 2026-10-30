@@ -4,7 +4,7 @@ export { blankTaken, clearsField, createSchema, fieldsSchema, takesNull, valueSc
 export type { FieldTable } from './schema'
 export { fieldsTaken, quantityOf, tableColumns, takesField, variantOf } from './columns'
 export type { TableColumn } from './columns'
-export { ARROW, CHOICE, NUMBER, PAD, TEXT_CEILING, choiceWidth, isCut, measurer, numberWidth } from './widths'
+export { ARROW, CHOICE, NUMBER, PAD, TEXT_CEILING, choiceWidth, isCut, measurer, numberWidth, textWidth } from './widths'
 export type { Measure } from './widths'
 export {
   bulkRefusal,

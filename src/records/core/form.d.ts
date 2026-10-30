@@ -52,9 +52,10 @@ export interface FormContext {
     word?(kind: string): string;
 }
 /**
- * The fields the form shows for a record of `variant` ('' for none chosen): the tag first where the kind has variants,
- * then the fields the variant takes, in the kind's order. The tag offers each variant whose `needs` the app holds a
- * record of, and the variant shown; a choice of another record offers the ids the app holds.
+ * The fields the form shows for a record of `variant` ('' for none chosen): those a record of it takes (fieldsTaken: the
+ * tag, the common fields and the variant's own), in the kind's order, so a kind that declares its tag first shows it
+ * first. The tag offers each variant whose `needs` the app holds a record of, and the variant shown; a choice of another
+ * record offers the ids the app holds.
  */
 export declare function formFields(kind: KindDecl, variant: string, context: FormContext): FieldView[];
 /** The plain fields by their group, in the order the groups first appear, the fields of no group first; and the advanced. */

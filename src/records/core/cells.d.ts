@@ -33,8 +33,9 @@ export declare function cellWords(kind: KindDecl, record: Fields, column: TableC
 /** A choice's labels as its cell offers them: the blank first, "(none)" where a blank is a value, else "(choose)". */
 export declare function choiceLabels(kind: KindDecl, column: TableColumn, options: readonly string[]): string[];
 /**
- * Each number and choice column's width in px (widths.ts): a number's widest value over the rows shown; a choice's
- * longest label where a row shown holds a value, and its blank label, which each of its cells shows, where none does.
+ * Each number, free text and choice column's width in px (widths.ts): a number's or a text's widest value over the rows
+ * shown; a choice's longest label where a row shown holds a value, and its blank label, which each of its cells shows,
+ * where none does.
  */
 export declare function columnWidths(kind: KindDecl, columns: readonly TableColumn[], rows: readonly Row[], units: Units, optionsOf: (column: TableColumn) => readonly string[], measure: Measure): Map<string, number>;
 /** Whether a row is found by a search: its id, or the text of a cell, holds the query, in any case. */
@@ -49,8 +50,10 @@ export declare function valueFor(kind: KindDecl, record: Fields, column: TableCo
 export declare function bulkRefusal(kind: KindDecl, rows: readonly Row[], column: TableColumn, shown: ReadonlySet<string>, units: Units): CellRefusal | null;
 /**
  * A cell left, or Enter pressed in it: the values it gives, to its row or, where the row is ticked with others, to every
- * ticked row. Null where nothing changed; a refusal where the change cannot go to every row. A row that already holds
- * the value is left out, so Enter and then leaving the cell give it once.
+ * ticked row. `ticked` is every ticked row, those the search hides among them, so that a change to a hidden one is
+ * refused. Null where nothing changes: the cell left as it shows, every row already holding the value, or a field
+ * declared read only. A refusal where the change cannot go to every row. A row that already holds the value is left out,
+ * so Enter and then leaving the cell give it once.
  */
 export declare function cellChange(kind: KindDecl, row: Row, column: TableColumn, typed: string | boolean, ticked: readonly Row[], shown: ReadonlySet<string>, units: Units): {
     refused: CellRefusal;
@@ -59,9 +62,9 @@ export declare function cellChange(kind: KindDecl, row: Row, column: TableColumn
 } | null;
 /**
  * Several lines pasted into a cell: one to a row, from `at` down the rows shown. Null for one line, an ordinary paste. A
- * paste is refused where a line holds a tab (one column per paste), where the rows from here down are fewer than the
- * lines, where the search hides a row between the first row written and the last, and where a row takes no such field or
- * cannot read its line.
+ * paste is refused where the field is declared read only, where a line holds a tab (one column per paste), where the rows
+ * from here down are fewer than the lines, where the search hides a row between the first row written and the last, and
+ * where a row takes no such field or cannot read its line.
  */
 export declare function pasteRows(kind: KindDecl, text: string, at: Row, column: TableColumn, rows: readonly Row[], allRows: readonly Row[], units: Units): {
     refused: CellRefusal;

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import { formFields, groupFields, issueField, keepOnVariant, type FormContext } from '..'
-import { FIXINGS, PARTS } from './toy'
+import { FIXINGS, PARTS, SHELVES } from './toy'
 
 const held: Record<string, string[]> = { stocks: ['s1', 's2'], parts: ['p1'] }
 const context: FormContext = { ids: (kind) => held[kind] ?? [], word: (kind) => `one of ${kind}` }
@@ -61,6 +61,22 @@ describe('the form of a record', () => {
     expect(f.map((x) => x.name)).toEqual(['by', 'note', 'part', 'load'])
     expect(f.map((x) => x.required)).toEqual([true, false, true, true])
     expect(formFields(FIXINGS, '', context).map((x) => x.name)).toEqual(['by', 'note'])
+  })
+
+  it('shows the fields in the kind order, a tag declared last last, and requires the tag though it is optional', () => {
+    const f = formFields(SHELVES, 'wall', context)
+    expect(f.map((x) => x.name)).toEqual(['width', 'held', 'parts', 'posts', 'hung'])
+    expect(SHELVES.fields.hung!.optional, 'precondition: an optional tag').toBe(true)
+    expect(byName(f).hung!.required).toBe(true)
+    expect(byName(f).width!.required).toBe(false)
+  })
+
+  it('offers a list of references one choice per entry, of the records the app holds, a fixed count where its schema sets one', () => {
+    const f = byName(formFields(SHELVES, 'wall', context))
+    expect(f.parts).toMatchObject({ kind: 'refList', options: [{ value: 'p1', label: 'p1' }] })
+    expect(f.parts!.fixed).toBeUndefined()
+    expect(f.posts).toMatchObject({ kind: 'refList', fixed: 2, options: [{ value: 's1', label: 's1' }, { value: 's2', label: 's2' }] })
+    expect(f.held).toMatchObject({ kind: 'number', readonly: true })
   })
 
   it('names the kind a field refers to under its variant, and measures it in the quantity the variant gives it', () => {

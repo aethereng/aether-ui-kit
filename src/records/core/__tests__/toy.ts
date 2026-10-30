@@ -1,5 +1,6 @@
 // A toy vocabulary for the record parts' tests: parts with every kind of field and no variants, fixings whose fields
-// follow their variant, and stocks a part names. The units show a length in mm and a force in kN.
+// follow their variant, stocks a part names, and shelves, whose tag is declared last. The units show a length in mm, a
+// force in kN and a force per length in kN/mm.
 import type { Schema } from '../../../verbs'
 import type { KindDecl, Units } from '..'
 import type { Row } from '../cells'
@@ -66,9 +67,28 @@ export const FIXINGS: KindDecl = {
 
 export const STOCKS: KindDecl = { name: 'stocks', word: 'stock', fields: { grade: { schema: { type: 'string' }, label: 'Grade' } } }
 
-const factor: Record<string, number> = { length: 1000, force: 1e-3, lineLoad: 1e-3 }
-const label: Record<string, string> = { length: 'mm', force: 'kN', lineLoad: 'kN/m' }
-/** A length in mm, a force in kN and a force per length in kN/m; any other quantity as stored. */
+/** Shelves: the tag declared last and optional, a weight shown and never changed, and lists of the records a shelf names. */
+export const SHELVES: KindDecl = {
+  name: 'shelves',
+  word: 'shelf',
+  tag: 'hung',
+  common: ['held', 'parts', 'posts'],
+  fields: {
+    width: { schema: num, optional: true, label: 'Width', quantity: 'length' },
+    held: { schema: num, optional: true, label: 'Weight held', quantity: 'force', readonly: true },
+    parts: { schema: { type: 'array', items: { type: 'string', 'x-ref': 'parts' } }, optional: true, label: 'Parts' },
+    posts: { schema: { type: 'array', items: { type: 'string', 'x-ref': 'stocks' }, minItems: 2, maxItems: 2 }, optional: true, label: 'Posts' },
+    hung: { schema: { enum: ['wall', 'floor'] }, optional: true, label: 'Hung on' },
+  },
+  variants: {
+    wall: { label: 'On a wall', fields: ['width'], required: [] },
+    floor: { label: 'On the floor', fields: [], required: [] },
+  },
+}
+
+const factor: Record<string, number> = { length: 1000, force: 1e-3, lineLoad: 1e-6 }
+const label: Record<string, string> = { length: 'mm', force: 'kN', lineLoad: 'kN/mm' }
+/** A length in mm, a force in kN and a force per length in kN/mm; any other quantity as stored. */
 export const UNITS: Units = {
   label: (q) => label[q],
   shown: (v, q) => v * (factor[q] ?? 1),

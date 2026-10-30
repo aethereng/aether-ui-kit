@@ -7,7 +7,8 @@ export interface TableColumn {
     label: string;
     /** The column head's words: the field's short name where it has one, and for a vector the axis. */
     head: string;
-    kind: 'number' | 'choice' | 'flag' | 'text';
+    /** Edited in the cell: a number, a choice, a flag, a free text (`string`). Shown only: any other value (`text`). */
+    kind: 'number' | 'choice' | 'flag' | 'string' | 'text';
     /** For one number of a vector: its place in it. */
     axis?: 0 | 1 | 2;
     /** The quantity the field's numbers measure, where it has one (a row's variant may give another: quantityOf). */
@@ -19,6 +20,8 @@ export interface TableColumn {
     /** The variant's tag: shown, changed in the form. */
     tag?: true;
     advanced?: true;
+    /** Declared read only: shown, and no change to it is taken. */
+    readonly?: true;
 }
 /** The columns of a kind's table, the plain fields first and then the advanced ones, each in the kind's order. */
 export declare function tableColumns(kind: KindDecl): TableColumn[];

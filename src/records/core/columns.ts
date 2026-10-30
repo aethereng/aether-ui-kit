@@ -1,7 +1,8 @@
 // The columns of a kind's table: every field of the kind in its display order, the tag first, the advanced fields last,
-// and a vector as three columns (x, y, z). A number, a choice and a flag are edited in their cell; any other value shows
-// as text and is edited in the form. A kind whose records take one of several variants shows the union of their fields:
-// a cell of a field its row's variant does not take is empty and takes nothing, and the tag is changed in the form.
+// and a vector as three columns (x, y, z). A number, a choice, a flag and a free text are edited in their cell; any other
+// value shows as text and is edited in the form. A field declared read only shows in its cell and takes no change. A kind whose
+// records take one of several variants shows the union of their fields: a cell of a field its row's variant does not take
+// is empty and takes nothing, and the tag is changed in the form.
 import type { Fields, KindDecl } from './types'
 import { valueSchema } from './schema'
 
@@ -13,7 +14,8 @@ export interface TableColumn {
   label: string
   /** The column head's words: the field's short name where it has one, and for a vector the axis. */
   head: string
-  kind: 'number' | 'choice' | 'flag' | 'text'
+  /** Edited in the cell: a number, a choice, a flag, a free text (`string`). Shown only: any other value (`text`). */
+  kind: 'number' | 'choice' | 'flag' | 'string' | 'text'
   /** For one number of a vector: its place in it. */
   axis?: 0 | 1 | 2
   /** The quantity the field's numbers measure, where it has one (a row's variant may give another: quantityOf). */
@@ -25,9 +27,14 @@ export interface TableColumn {
   /** The variant's tag: shown, changed in the form. */
   tag?: true
   advanced?: true
+  /** Declared read only: shown, and no change to it is taken. */
+  readonly?: true
 }
 
 const AXES = ['x', 'y', 'z'] as const
+
+/** Whether a variant gives the field a kind of record to name: its value is then chosen in the form, by variant. */
+const namesByVariant = (kind: KindDecl, field: string): boolean => Object.values(kind.variants ?? {}).some((v) => v.refs?.[field] !== undefined)
 
 /** The columns of a kind's table, the plain fields first and then the advanced ones, each in the kind's order. */
 export function tableColumns(kind: KindDecl): TableColumn[] {
@@ -38,7 +45,14 @@ export function tableColumns(kind: KindDecl): TableColumn[] {
     const decl = kind.fields[name]!
     const value = valueSchema(decl.schema)
     const head = decl.short ?? decl.label
-    const more = { field: name, label: decl.label, head, ...(decl.advanced ? { advanced: true as const } : {}), ...(name === tag ? { tag: true as const } : {}) }
+    const more = {
+      field: name,
+      label: decl.label,
+      head,
+      ...(decl.advanced ? { advanced: true as const } : {}),
+      ...(name === tag ? { tag: true as const } : {}),
+      ...(decl.readonly ? { readonly: true as const } : {}),
+    }
     if (decl.control === 'vector') {
       return AXES.map((axis, i) => ({ ...more, key: `${name}.${axis}`, label: `${decl.label} ${axis}`, head: `${head} ${axis}`, kind: 'number', axis: i as 0 | 1 | 2, quantity: decl.quantity }))
     }
@@ -47,6 +61,7 @@ export function tableColumns(kind: KindDecl): TableColumn[] {
     if (Array.isArray(value.enum)) return [{ ...more, key: name, kind: 'choice', values: value.enum as string[] }]
     if (value.type === 'number' || value.type === 'integer') return [{ ...more, key: name, kind: 'number', quantity: decl.quantity }]
     if (value.type === 'boolean') return [{ ...more, key: name, kind: 'flag' }]
+    if (value.type === 'string' && !namesByVariant(kind, name)) return [{ ...more, key: name, kind: 'string' }]
     return [{ ...more, key: name, kind: 'text' }]
   })
   return [...columns.filter((c) => !c.advanced), ...columns.filter((c) => c.advanced)].map((c) => (c.tag ? { ...c, kind: 'text' } : c))

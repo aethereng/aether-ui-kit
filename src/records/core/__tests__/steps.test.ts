@@ -56,6 +56,31 @@ describe('the words of each step', () => {
     expect(words.undo(store, ok(() => (store.undoDepth = 0))).words).toBe('mine')
   })
 
+  it('drops the words of the steps before a change made after a step elsewhere, so no undo names a step it does not take back', () => {
+    const words = stepWords()
+    const store = { undoDepth: 1, redoDepth: 0 }
+    words.changed(store, 'a')
+    store.undoDepth = 3 // a step another actor made, then this change
+    words.changed(store, 'b')
+    expect(words.undo(store, ok(() => (store.undoDepth = 2))).words).toBeUndefined()
+    expect(words.undo(store, ok(() => (store.undoDepth = 1))).words, "the other actor's step").toBeUndefined()
+  })
+
+  it('empties the redo words at a change, and reads the redo stack for a redo', () => {
+    const words = stepWords()
+    const store = { undoDepth: 1, redoDepth: 0 }
+    words.changed(store, 'a')
+    store.undoDepth = 2
+    words.changed(store, 'b')
+    words.undo(store, ok(() => ((store.undoDepth = 1), (store.redoDepth = 1))))
+    words.undo(store, ok(() => ((store.undoDepth = 0), (store.redoDepth = 2))))
+    store.undoDepth = 1
+    store.redoDepth = 0
+    words.changed(store, 'c')
+    words.undo(store, ok(() => ((store.undoDepth = 0), (store.redoDepth = 1))))
+    expect(words.redo(store, ok(() => ((store.undoDepth = 1), (store.redoDepth = 0)))).words).toBe('c')
+  })
+
   it('keeps the words on their stack when the store refuses the undo, and drops them all on reset', () => {
     const words = stepWords()
     const store = { undoDepth: 1, redoDepth: 0 }
@@ -67,6 +92,12 @@ describe('the words of each step', () => {
     words.changed(null, 'two')
     words.reset()
     expect(words.undo(store, ok(() => (store.undoDepth = 0))).words).toBeUndefined()
+    const again = stepWords()
+    const other = { undoDepth: 1, redoDepth: 0 }
+    again.changed(other, 'three')
+    again.undo(other, ok(() => ((other.undoDepth = 0), (other.redoDepth = 1))))
+    again.reset()
+    expect(again.redo(other, ok(() => ((other.undoDepth = 1), (other.redoDepth = 0)))).words, 'the redo words go too').toBeUndefined()
   })
 })
 
@@ -103,12 +134,15 @@ describe('the drafts a form leaves unapplied', () => {
   })
 
   it('drops a draft with its record, so a record made later with the same id starts from its own fields; a new one stays', () => {
-    const keeper = draftKeeper()
+    let changes = 0
+    const keeper = draftKeeper(() => changes++)
     const store = storeOf({ fixings: ['f1', 'f2'] })
     keeper.keep(store, 'fixings', 'f1', { variant: 'weld', fields: {} })
     keeper.keep(store, 'fixings', 'f2', { variant: 'bolt', fields: {} })
     keeper.keep(store, 'fixings', null, { variant: 'glue', fields: {} })
+    expect(changes).toBe(3)
     store.change({ fixings: ['f2'] })
+    expect(changes, 'the drop is told').toBe(4)
     expect(keeper.kept(store)).toEqual([
       { kind: 'fixings', id: 'f2' },
       { kind: 'fixings', id: null },

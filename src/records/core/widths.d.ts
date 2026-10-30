@@ -22,6 +22,8 @@ export type Measure = (text: string) => number;
 export declare function measurer(): Measure;
 /** A number column's width: its widest value; NUMBER.floor where no value is written. */
 export declare function numberWidth(values: readonly string[], measure: Measure): number;
+/** A free text column's width: its widest value, between CHOICE.floor and TEXT_CEILING. */
+export declare function textWidth(values: readonly string[], measure: Measure): number;
 /** A choice column's width: its longest option. */
 export declare function choiceWidth(options: readonly string[], measure: Measure): number;
 /** Whether `text` is cut in a control `width` px wide, `chrome` px of which are not text. */

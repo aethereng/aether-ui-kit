@@ -3,7 +3,8 @@
 // - a choice: its longest option where a row shown holds a value, and its blank label, "(none)" or "(choose)", where none
 //   does, plus the padding and the arrow, between CHOICE.floor and CHOICE.ceiling. The kit's select draws its label and its
 //   arrow past its own edge where it is narrower than they are, so a choice column is never narrower than its blank label;
-// - a text: as wide as it is, up to TEXT_CEILING, cut with an ellipsis past it;
+// - a free text edited in its cell: its widest value plus the padding, between CHOICE.floor and TEXT_CEILING;
+// - a text shown only: as wide as it is, up to TEXT_CEILING, cut with an ellipsis past it;
 // - a number column whose cells hold nothing: NUMBER.floor.
 // A value wider than its column is cut, and its cell carries the whole value as its title.
 
@@ -58,6 +59,11 @@ const widest = (texts: readonly string[], measure: Measure): number => texts.red
 export function numberWidth(values: readonly string[], measure: Measure): number {
   const written = values.filter((v) => v !== '')
   return written.length === 0 ? NUMBER.floor : clamp(widest(written, measure) + PAD, NUMBER)
+}
+
+/** A free text column's width: its widest value, between CHOICE.floor and TEXT_CEILING. */
+export function textWidth(values: readonly string[], measure: Measure): number {
+  return clamp(widest(values, measure) + PAD, { floor: CHOICE.floor, ceiling: TEXT_CEILING })
 }
 
 /** A choice column's width: its longest option. */

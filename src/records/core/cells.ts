@@ -1,12 +1,12 @@
 // The cells of a record table: what a cell shows, what a typed or chosen value gives its row, and when a change to several
 // rows at once, ticked or pasted, is refused. A change goes to every row it names or to none: it is refused, naming the
 // rows, where a row is hidden by the search, where one takes no such field (its variant has none), or where the rows'
-// cells measure different quantities, since one typed number would mean two different values. A number is typed in the
-// unit shown and stored as the record's units hold it (Units).
+// cells measure different quantities, since one typed number would mean two different values; and a field declared read
+// only takes no change at all. A number is typed in the unit shown and stored as the record's units hold it (Units).
 import type { Json } from '../../verbs'
 import { blankTaken } from './schema'
 import { quantityOf, takesField, type TableColumn } from './columns'
-import { choiceWidth, numberWidth, type Measure } from './widths'
+import { choiceWidth, numberWidth, textWidth, type Measure } from './widths'
 import type { Fields, KindDecl, Units } from './types'
 
 /** A row of a table: a record and its id. */
@@ -80,8 +80,9 @@ export function choiceLabels(kind: KindDecl, column: TableColumn, options: reado
 }
 
 /**
- * Each number and choice column's width in px (widths.ts): a number's widest value over the rows shown; a choice's
- * longest label where a row shown holds a value, and its blank label, which each of its cells shows, where none does.
+ * Each number, free text and choice column's width in px (widths.ts): a number's or a text's widest value over the rows
+ * shown; a choice's longest label where a row shown holds a value, and its blank label, which each of its cells shows,
+ * where none does.
  */
 export function columnWidths(
   kind: KindDecl,
@@ -95,6 +96,7 @@ export function columnWidths(
   for (const c of columns) {
     const texts = rows.map((r) => cellText(kind, r.record, c, units))
     if (c.kind === 'number') out.set(c.key, numberWidth(texts, measure))
+    else if (c.kind === 'string') out.set(c.key, textWidth(texts, measure))
     else if (c.kind === 'choice') {
       const labels = choiceLabels(kind, c, optionsOf(c))
       out.set(c.key, choiceWidth(texts.some((t) => t !== '') ? labels : labels.slice(0, 1), measure))
@@ -113,9 +115,9 @@ export function matches(kind: KindDecl, row: Row, columns: readonly TableColumn[
 export function valueFor(kind: KindDecl, record: Fields, column: TableColumn, typed: string | boolean, units: Units): { value: Json } | { unread: string } {
   if (column.kind === 'flag') return { value: typed === true }
   const text = String(typed).trim()
-  if (column.kind === 'choice') {
+  if (column.kind === 'choice' || column.kind === 'string') {
     if (text !== '') return { value: text }
-    return blankTaken(kind, column.field) ? { value: null } : { unread: 'Choose one' }
+    return blankTaken(kind, column.field) ? { value: null } : { unread: column.kind === 'choice' ? 'Choose one' : 'Write a value' }
   }
   if (text === '') return column.axis === undefined && blankTaken(kind, column.field) ? { value: null } : { unread: 'Number only' }
   const n = Number(text.replace(/−/g, '-'))
@@ -130,9 +132,11 @@ export function valueFor(kind: KindDecl, record: Fields, column: TableColumn, ty
 }
 
 const named = (rows: readonly Row[]): string => rows.map((r) => r.id).join(', ')
+const unchanged = (column: TableColumn): string => `${column.label} is read only`
 
 /** Why one change cannot go to every one of these rows, naming the rows, or null where it can. */
 export function bulkRefusal(kind: KindDecl, rows: readonly Row[], column: TableColumn, shown: ReadonlySet<string>, units: Units): CellRefusal | null {
+  if (column.readonly && rows.length > 0) return { row: rows[0]!.id, words: unchanged(column) }
   const hidden = rows.filter((r) => !shown.has(r.id))
   if (hidden.length > 0) return { row: hidden[0]!.id, words: `Ticked and hidden by the search: ${named(hidden)}` }
   const lacking = rows.filter((r) => !takesField(kind, r.record, column.field))
@@ -146,8 +150,10 @@ export function bulkRefusal(kind: KindDecl, rows: readonly Row[], column: TableC
 
 /**
  * A cell left, or Enter pressed in it: the values it gives, to its row or, where the row is ticked with others, to every
- * ticked row. Null where nothing changed; a refusal where the change cannot go to every row. A row that already holds
- * the value is left out, so Enter and then leaving the cell give it once.
+ * ticked row. `ticked` is every ticked row, those the search hides among them, so that a change to a hidden one is
+ * refused. Null where nothing changes: the cell left as it shows, every row already holding the value, or a field
+ * declared read only. A refusal where the change cannot go to every row. A row that already holds the value is left out,
+ * so Enter and then leaving the cell give it once.
  */
 export function cellChange(
   kind: KindDecl,
@@ -158,6 +164,7 @@ export function cellChange(
   shown: ReadonlySet<string>,
   units: Units,
 ): { refused: CellRefusal } | { values: RowValue[] } | null {
+  if (column.readonly) return null
   const all = ticked.length > 1 && ticked.some((r) => r.id === row.id) ? ticked : [row]
   const same = column.kind === 'flag' ? typed === cellValue(row.record, column) : String(typed).trim() === cellText(kind, row.record, column, units)
   if (all.length < 2 && same) return null
@@ -169,14 +176,14 @@ export function cellChange(
     if ('unread' in read) return { refused: { row: r.id, words: read.unread } }
     if (JSON.stringify(read.value ?? null) !== JSON.stringify(r.record[column.field] ?? null)) values.push({ id: r.id, record: r.record, value: read.value })
   }
-  return { values }
+  return values.length === 0 ? null : { values }
 }
 
 /**
  * Several lines pasted into a cell: one to a row, from `at` down the rows shown. Null for one line, an ordinary paste. A
- * paste is refused where a line holds a tab (one column per paste), where the rows from here down are fewer than the
- * lines, where the search hides a row between the first row written and the last, and where a row takes no such field or
- * cannot read its line.
+ * paste is refused where the field is declared read only, where a line holds a tab (one column per paste), where the rows
+ * from here down are fewer than the lines, where the search hides a row between the first row written and the last, and
+ * where a row takes no such field or cannot read its line.
  */
 export function pasteRows(
   kind: KindDecl,
@@ -190,6 +197,7 @@ export function pasteRows(
   const lines = text.split(/\r?\n/)
   if (lines.length > 1 && lines[lines.length - 1] === '') lines.pop()
   if (lines.length < 2) return null
+  if (column.readonly) return { refused: { row: at.id, words: unchanged(column) } }
   if (lines.some((l) => l.includes('\t'))) return { refused: { row: at.id, words: 'One column per paste' } }
   const start = rows.findIndex((r) => r.id === at.id)
   const down = rows.slice(start, start + lines.length)

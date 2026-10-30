@@ -178,8 +178,10 @@ const fraction = computed(() => (props.progress === null ? null : Math.min(1, Ma
   inset: 0 auto 0 0;
   width: 40%;
   border-radius: 999px;
+  /* in srgb, stated: a color-mix stop would otherwise move the whole sweep to the browser's default of
+     Oklab for a gradient with a colour of that kind, and its middle would read differently */
   background: linear-gradient(
-    90deg,
+    90deg in srgb,
     color-mix(in srgb, var(--aether-warm) 0%, transparent) 0%,
     var(--aether-warm) 25%,
     var(--aether-cool-soft) 85%,

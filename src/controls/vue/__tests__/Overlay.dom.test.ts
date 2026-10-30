@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import Overlay from '../Overlay.vue'
 
 /* The flag's rules are deferredFlag's, tested there. These pin what the overlay adds: which flag it
@@ -120,6 +123,16 @@ describe('Overlay: the bar', () => {
     expect(bar(0).find('.aether-overlay__fill').exists()).toBe(true)
     expect(bar(1.5).attributes('aria-valuenow')).toBe('100')
     expect(bar(-1).attributes('aria-valuenow')).toBe('0')
+  })
+})
+
+describe('Overlay: the sweep’s colours', () => {
+  /* jsdom applies no gradient, so this reads the rule: without `in srgb`, the color-mix stops move the
+   * whole sweep to Oklab, which only a picture of the page shows. */
+  it('states the space it blends in', () => {
+    const source = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../Overlay.vue'), 'utf8')
+    const comet = source.slice(source.indexOf('.aether-overlay__comet {'))
+    expect(comet.slice(0, comet.indexOf('}'))).toContain('90deg in srgb,')
   })
 })
 

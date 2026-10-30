@@ -74,9 +74,13 @@ export function cellWords(kind: KindDecl, record: Fields, column: TableColumn, u
   return column.kind === 'number' && label !== undefined ? `${text} ${label}` : text
 }
 
-/** A choice's labels as its cell offers them: the blank first, "(none)" where a blank is a value, else "(choose)". */
+/**
+ * A choice's labels as its cell offers them: the blank first, "(none)" where a blank is a value, else "(choose)"; then each
+ * option in the words its field declares for it, or as it is where the field declares none.
+ */
 export function choiceLabels(kind: KindDecl, column: TableColumn, options: readonly string[]): string[] {
-  return [blankTaken(kind, column.field) ? '(none)' : '(choose)', ...options]
+  const declared = kind.fields[column.field]?.options
+  return [blankTaken(kind, column.field) ? '(none)' : '(choose)', ...options.map((o) => declared?.find((d) => d.value === o)?.label ?? o)]
 }
 
 /**

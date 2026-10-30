@@ -134,6 +134,10 @@
       "types": "./src/records/vue/RecordField.vue.d.ts",
       "import": "./src/records/vue/RecordField.vue"
     },
+    "./records/table": {
+      "types": "./src/records/vue/RecordTable.vue.d.ts",
+      "import": "./src/records/vue/RecordTable.vue"
+    },
     "./assistant/core": {
       "types": "./src/assistant/core/index.d.ts",
       "import": "./src/assistant/core/index.ts"

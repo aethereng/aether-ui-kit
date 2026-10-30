@@ -30,7 +30,10 @@ export declare function cellText(kind: KindDecl, record: Fields, column: TableCo
 export declare function ownUnit(kind: KindDecl, record: Fields, column: TableColumn, units: Units): string;
 /** A cell's value in words, in the unit it shows in: 'none' where it holds nothing. */
 export declare function cellWords(kind: KindDecl, record: Fields, column: TableColumn, units: Units): string;
-/** A choice's labels as its cell offers them: the blank first, "(none)" where a blank is a value, else "(choose)". */
+/**
+ * A choice's labels as its cell offers them: the blank first, "(none)" where a blank is a value, else "(choose)"; then each
+ * option in the words its field declares for it, or as it is where the field declares none.
+ */
 export declare function choiceLabels(kind: KindDecl, column: TableColumn, options: readonly string[]): string[];
 /**
  * Each number, free text and choice column's width in px (widths.ts): a number's or a text's widest value over the rows

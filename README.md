@@ -206,6 +206,7 @@ focus ring), which every component needs and no component owns.
 | **Slider** | `controls/slider` | A dragged number with a read-out. `format` maps the stored value to what is shown, and feeds `aria-valuetext`. `ticks` marks values the scale does not make obvious; the kit draws the track and thumb so the marks land exactly. |
 | **PropertyEditor** | `property-editor` | Schema-driven form. Bind a `FieldDescriptor[]`, get an editor. Composes the standalone controls. |
 | **RecordField** | `records/field` | One field of a record, in the control its `FieldView` takes (`records/core`). Gives its value when it is left or Enter is pressed. |
+| **RecordTable** | `records/table` | The records of one kind as a table, a column per field (`records/core`). A cell's value goes to its row, or to every row ticked, when it is left or Enter is pressed; lines pasted go one to a row. |
 | **Graph2D** | `viz/graph` | Force-directed graph over SVG. Opt-in zoom/pan/pinch, hover reporting, edge-pan while dragging. Positions are `number[]`, so the core is dimension-agnostic. |
 | **Gantt** | `viz/gantt` | Lanes, spans, points and anchors in day-index space. Drag to move, edges to resize. |
 
@@ -361,6 +362,18 @@ record links to. `flush` gives what is typed and not yet given, for a form's Ent
 typed in the unit shown and given as the record stores it. A field declared `readonly` is shown and gives nothing. A field
 of `control: 'app'` draws nothing, its label and its `issue` included: the app draws its control in that place, with the
 field's label and any refusal of its value beside it.
+
+`records/table` is `RecordTable.vue`, the records of one kind as a table. It takes the `kind`, its `rows` (every record,
+those the `query` hides among them), the app's `units`, `optionsOf` (the values a choice column offers), whether it is
+`editable`, the `openId` of the row the app has open, the `empty` words for a table with no row shown, and `run`: a
+function that takes the values a change gives a field, one per row, and answers null where it took them all, or the row
+and the words of its refusal. A cell's value is given when the cell is left or Enter is pressed, and Escape puts the cell
+back as the record holds it. A change in a ticked row goes to every ticked row, and lines pasted into a cell go one to a
+row from there down, each as one `run`; where a change cannot go to every row, nothing runs and the reason is shown
+beside the cell. It emits `open` with the id of a row whose id is clicked, and `changed` with the column, the values and
+whether they were pasted, for the words of the app's step. `ticked` is a `v-model` the app may hold. The head (which kind
+is shown, the counts) and what a change calls stay the app's. The table paints its fixed head and first columns in
+`--aether-record-table-ground`, the surface unless the app sets it to another colour the table sits on.
 
 ---
 

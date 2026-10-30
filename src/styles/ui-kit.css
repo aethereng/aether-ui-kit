@@ -129,6 +129,9 @@
      type inside the transformed group can divide the scale back out and hold its size; the
      value here is the identity fallback for an unzoomed graph. */
   --aether-graph-label-scale: 1;
+  /* The colour a record table sits on, which it paints its fixed head and first columns in so that the rows scrolled
+     under them do not show through. A host whose table sits on another colour sets it there. */
+  --aether-record-table-ground: var(--aether-surface);
 }
 
 /* ---- PropertyEditor (forms) ---- */

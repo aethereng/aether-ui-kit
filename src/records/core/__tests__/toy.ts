@@ -67,7 +67,23 @@ export const FIXINGS: KindDecl = {
   },
 }
 
-export const STOCKS: KindDecl = { name: 'stocks', word: 'stock', fields: { grade: { schema: { type: 'string' }, label: 'Grade' } } }
+/** Stocks: a grade written as free text, and a coat chosen in the words declared for it. */
+export const STOCKS: KindDecl = {
+  name: 'stocks',
+  word: 'stock',
+  fields: {
+    grade: { schema: { type: 'string' }, label: 'Grade' },
+    coat: {
+      schema: { enum: ['zinc', 'paint'] },
+      optional: true,
+      label: 'Coat',
+      options: [
+        { value: 'zinc', label: 'Galvanised steel' },
+        { value: 'paint', label: 'Painted' },
+      ],
+    },
+  },
+}
 
 /** Shelves: the tag declared last and optional, a weight shown and never changed, and lists of the records a shelf names. */
 export const SHELVES: KindDecl = {

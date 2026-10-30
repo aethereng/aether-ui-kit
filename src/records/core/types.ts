@@ -72,7 +72,11 @@ export interface KindDecl {
   variants?: Readonly<Record<string, Variant>>
 }
 
-/** The units a record's numbers are shown in: what a stored number shows as, and what a typed one is stored as. */
+/**
+ * The units a record's numbers are shown in: what a stored number shows as, and what a typed one is stored as. Every number
+ * of a field or column with a quantity goes through `shown` and `stored`, whether or not `label` has words for the
+ * quantity, so for a quantity shown as stored they give the number back unchanged.
+ */
 export interface Units {
   /** The unit's words for a quantity, or undefined where its numbers show as stored with no unit. */
   label(quantity: string): string | undefined

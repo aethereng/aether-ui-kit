@@ -141,6 +141,8 @@ describe('the drafts a form leaves unapplied', () => {
     keeper.keep(store, 'fixings', 'f2', { variant: 'bolt', fields: {} })
     keeper.keep(store, 'fixings', null, { variant: 'glue', fields: {} })
     expect(changes).toBe(3)
+    store.change({ fixings: ['f1', 'f2', 'f3'] })
+    expect(changes, 'a change that drops no draft is not told').toBe(3)
     store.change({ fixings: ['f2'] })
     expect(changes, 'the drop is told').toBe(4)
     expect(keeper.kept(store)).toEqual([

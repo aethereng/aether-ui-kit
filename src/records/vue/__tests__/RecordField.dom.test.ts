@@ -193,16 +193,208 @@ describe('what a field gives nothing for', () => {
     const open = field('width', 0.5, {}, SHELVES, 'wall').find('input[data-field="width"]')
     expect((open.element as HTMLInputElement).disabled, 'the positive arm: a field not read only').toBe(false)
   })
+
+  // One field of each control, with a value that draws every part of it: a table's rows, a choice's link, a switch's presets.
+  const everyKind: [string, Json | undefined, typeof PARTS, string][] = [
+    ['size', 1, PARTS, ''],
+    ['stock', 's1', PARTS, ''],
+    ['finish', 'raw', PARTS, ''],
+    ['kept', true, PARTS, ''],
+    ['at', [1, 2, 3], PARTS, ''],
+    ['made', 'Ann', PARTS, ''],
+    ['sides', ['top'], PARTS, ''],
+    ['locks', { a: true }, PARTS, ''],
+    ['layers', [{ depth: 1, stock: 's1', push: [0, 0, 0] }], PARTS, ''],
+    ['extra', { k: 1 }, PARTS, ''],
+    ['posts', ['s1', 's2'], SHELVES, 'wall'],
+    ['parts', ['p1'], SHELVES, 'wall'],
+    ['outline', [[0, 0, 0]], SHELVES, 'wall'],
+  ]
+  /** Every control a person could change a field with: the link that opens a record changes nothing, so it is not one. */
+  const controlsOf = (w: VueWrapper) => w.findAll('input, select, textarea, button').filter((c) => c.attributes('data-open-ref') === undefined)
+
+  it.each(everyKind)('shows %s declared read only with every control it draws disabled', (name, value, kind, variant) => {
+    const view = fieldOf(name, kind, variant)
+    const locked = controlsOf(field(name, value, { field: { ...view, readonly: true } }, kind, variant))
+    expect(locked.length, 'the field draws its controls').toBeGreaterThan(0)
+    expect(locked.filter((c) => !(c.element as HTMLInputElement).disabled).map((c) => c.html().slice(0, 80))).toEqual([])
+    const open = controlsOf(field(name, value, {}, kind, variant))
+    expect(open.length, 'the positive arm draws as many').toBe(locked.length)
+    expect(
+      open.every((c) => !(c.element as HTMLInputElement).disabled),
+      'the positive arm: not read only, every control can be changed',
+    ).toBe(true)
+  })
+})
+
+describe('when a field is left', () => {
+  /** Focus leaving an element for another, as a browser fires it when a person moves on. */
+  const leave = async (from: Element, to: Element): Promise<void> => {
+    from.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: to }))
+    await nextTick()
+  }
+
+  it('gives three numbers when focus leaves the group, and nothing while it moves between them', async () => {
+    const w = field('at', [1, 2, 3], { units: STORED })
+    await type(w, 'input[data-axis="x"]', '5', 'stay')
+    await leave(w.find('input[data-axis="x"]').element, w.find('input[data-axis="y"]').element)
+    expect(given(w), 'x to y').toEqual([])
+    await leave(w.find('input[data-axis="y"]').element, document.body)
+    expect(given(w)).toEqual([[5, 2, 3]])
+  })
+
+  it('gives a row of a table when focus leaves the row, and nothing while it moves between its cells', async () => {
+    const layers = [{ depth: 0.001, stock: 's1', push: [0, 0, 0] }]
+    const w = field('layers', layers)
+    await type(w, 'tr[data-row="0"] input', '5', 'stay')
+    const [depth, x] = w.findAll('tr[data-row="0"] input')
+    await leave(depth!.element, x!.element)
+    expect(given(w), 'depth to push x').toEqual([])
+    await leave(x!.element, document.body)
+    expect(given(w)).toEqual([[{ ...layers[0], depth: 0.005 }]])
+  })
+
+  it('gives a choice in a table as soon as it is chosen', async () => {
+    const layers = [
+      { depth: 0.001, stock: 's1', push: [0, 0, 0] },
+      { depth: 0.002, stock: 's1', push: [0, 0, 0] },
+    ]
+    const w = field('layers', layers)
+    await w.find('tr[data-row="1"] select').setValue('s2')
+    expect(given(w)).toEqual([[layers[0], { ...layers[1], stock: 's2' }]])
+  })
+
+  it.each([
+    ['a free text', 'made', 'Ann', 'input[data-field="made"]', 'Bea', 'Bea'],
+    ['JSON', 'extra', { k: 1 }, 'input[data-field="extra"]', '{"k":2}', { k: 2 }],
+    ['a cell of a table', 'layers', [{ depth: 0.001, stock: 's1', push: [0, 0, 0] }], 'tr[data-row="0"] input', '5', [{ depth: 0.005, stock: 's1', push: [0, 0, 0] }]],
+    ['a number of a vector in a table', 'layers', [{ depth: 0.001, stock: 's1', push: [0, 0, 0] }], 'tr[data-row="0"] input[placeholder="x"]', '5', [{ depth: 0.001, stock: 's1', push: [5000, 0, 0] }]],
+  ] as const)('gives %s when Enter is pressed in it', async (_, name, value, selector, typed, out) => {
+    const w = field(name, value as Json)
+    await type(w, selector, typed, 'enter')
+    expect(given(w)).toEqual([out])
+  })
+})
+
+describe('the name each control is read by', () => {
+  /** The words a control or group is named by: the elements it is labelled by, its own label, or the label for it or around it. */
+  function nameOf(w: VueWrapper, el: Element): string {
+    const byId = (id: string) => [...w.element.querySelectorAll('[id]')].find((e) => e.id === id)
+    const by = el.getAttribute('aria-labelledby')
+    if (by !== null) return by.split(' ').map((id) => byId(id)?.textContent?.trim() ?? '').join(' ')
+    const own = el.getAttribute('aria-label')
+    if (own !== null) return own
+    const label = [...w.element.querySelectorAll('label')].find((l) => el.id !== '' && l.htmlFor === el.id) ?? el.closest('label')
+    return label?.textContent?.trim() ?? ''
+  }
+  const names = (w: VueWrapper, selector: string): string[] => w.findAll(selector).map((c) => nameOf(w, c.element))
+  /** Each name begins with its words: a label's mark of an optional field follows them. */
+  const begin = (got: string[], words: readonly string[]): void => {
+    expect(got.length, got.join(' | ')).toBe(words.length)
+    words.forEach((w, i) => expect(got[i], `control ${i + 1}`).toMatch(new RegExp(`^${w}`)))
+  }
+
+  it.each([
+    ['size', 1, PARTS, '', 'input', ['Size of the part']],
+    ['made', 'Ann', PARTS, '', 'input', ['Made by']],
+    ['extra', {}, PARTS, '', 'input', ['Extra']],
+    ['stock', 's1', PARTS, '', 'select', ['Stock']],
+    ['kept', true, PARTS, '', 'input', ['Kept']],
+    ['outline', [], SHELVES, 'wall', 'textarea', ['Outline']],
+    ['at', [1, 2, 3], PARTS, '', 'input', ['Place x', 'Place y', 'Place z']],
+    ['locks', null, PARTS, '', 'input', ['Locks Lock A', 'Locks Lock B']],
+    ['posts', null, SHELVES, 'wall', 'select', ['Posts 1', 'Posts 2']],
+    ['layers', [{ depth: 1, stock: 's1', push: [0, 0, 0] }], PARTS, '', 'select, input', ['Depth, row 1', 'Stock, row 1', 'Push x, row 1', 'Push y, row 1', 'Push z, row 1']],
+  ] as const)('names each control of %s by its field', (name, value, kind, variant, selector, out) => {
+    begin(names(field(name, value as Json, {}, kind, variant), selector), out)
+  })
+
+  it.each([
+    ['at', PARTS, '', 'Place, mm'],
+    ['locks', PARTS, '', 'Locks'],
+    ['posts', SHELVES, 'wall', 'Posts'],
+    ['layers', PARTS, '', 'Layers'],
+  ] as const)('names the group of %s by its label', (name, kind, variant, out) => {
+    begin(names(field(name, undefined, {}, kind, variant), '[role="group"]'), [out])
+  })
+
+  it('marks an optional field, and only one', () => {
+    expect(field('made', 'Ann').find('.aether-record-field__opt').text()).toBe('optional')
+    expect(field('size', 1).find('.aether-record-field__opt').exists(), 'a field the record requires').toBe(false)
+  })
+})
+
+describe('the smaller rules of a value', () => {
+  it('reads a typed minus sign as a minus', async () => {
+    const w = field('size', 1)
+    await type(w, 'input[data-field="size"]', '−5')
+    expect(given(w)).toEqual([-0.005])
+  })
+
+  it('gives a flag turned off as null where null clears it, else false', async () => {
+    const w = field('kept', true)
+    await w.find('input[data-field="kept"]').setValue(false)
+    expect(given(w)).toEqual([null])
+    const kept = field('kept', true, { field: { ...fieldOf('kept'), clears: false } })
+    await kept.find('input[data-field="kept"]').setValue(false)
+    expect(given(kept), 'a flag null does not clear').toEqual([false])
+  })
+
+  it('gives JSON null as null where null clears the field or is its value, and answers it elsewhere', async () => {
+    const w = field('extra', { k: 1 })
+    await type(w, 'input[data-field="extra"]', 'null')
+    expect(given(w)).toEqual([null])
+    const held = field('extra', { k: 1 }, { field: { ...fieldOf('extra'), clears: false, nullable: false } })
+    await type(held, 'input[data-field="extra"]', 'null')
+    expect([given(held), said(held)]).toEqual([[], ['Write an object between braces, with a name and a value for each entry']])
+  })
+
+  it('counts one entry of a summary in the singular', () => {
+    expect(field('outline', [[0, 0, 0]], {}, SHELVES, 'wall').find('[data-summary]').text()).toBe('1 entry')
+  })
+
+  it('gives a row of a table left as it shows exactly as the record holds it, a null in a number column included', async () => {
+    const layers = [
+      { depth: null, stock: 's1', push: [0, 0, 0] },
+      { depth: 0.002, stock: 's2', push: [0, 0, 0] },
+    ] as unknown as Json[]
+    const w = field('layers', layers)
+    await type(w, 'tr[data-row="1"] input', '5', 'stay')
+    await w.find('tr[data-row="1"]').trigger('focusout')
+    expect(given(w)).toEqual([[layers[0], { ...(layers[1] as object), depth: 0.005 }]])
+  })
 })
 
 describe('a form around the fields', () => {
+  const flush = async (w: VueWrapper): Promise<void> => {
+    ;(w.vm as unknown as { flush(): void }).flush()
+    await nextTick()
+  }
+
   it('gives what is typed and not yet given when the form flushes it', async () => {
     const w = field('size', 0.001)
     await type(w, 'input[data-field="size"]', '3', 'stay')
     expect(given(w)).toEqual([])
-    ;(w.vm as unknown as { flush(): void }).flush()
-    await nextTick()
+    await flush(w)
     expect(given(w)).toEqual([0.003])
+  })
+
+  const layers = [
+    { depth: 0.001, stock: 's1', push: [0, 0, 0] },
+    { depth: 0.002, stock: 's2', push: [0, 0, 0] },
+  ]
+  it.each([
+    ['a free text', 'made', 'Ann', PARTS, '', 'input[data-field="made"]', 'Bea', 'Bea'],
+    ['three numbers', 'at', [1, 2, 3], PARTS, '', 'input[data-axis="x"]', '5', [0.005, 2, 3]],
+    ['a table', 'layers', layers, PARTS, '', 'tr[data-row="1"] input', '5', [layers[0], { ...layers[1], depth: 0.005 }]],
+    ['JSON', 'extra', { k: 1 }, PARTS, '', 'input[data-field="extra"]', '{"k":2}', { k: 2 }],
+    ['the text of a summary', 'outline', [[0, 0, 0]], SHELVES, 'wall', 'textarea[data-field="outline"]', '[[1,0,0]]', [[1, 0, 0]]],
+  ] as const)('gives %s typed and not yet given when the form flushes it', async (_, name, value, kind, variant, selector, typed, out) => {
+    const w = field(name, value as Json, {}, kind, variant)
+    await type(w, selector, typed, 'stay')
+    expect(given(w)).toEqual([])
+    await flush(w)
+    expect(given(w)).toEqual([out])
   })
 
   it('shows a refusal beside the field', () => {

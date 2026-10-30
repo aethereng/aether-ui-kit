@@ -278,7 +278,7 @@ function flush(): void {
 }
 defineExpose({ flush })
 
-/** The kinds drawn as a group under one label, rather than one control a label names. */
+/** The kinds drawn as a group of controls, named by the span of their label; the label of any other kind is for its one control. */
 const grouped = computed(() => ['vector', 'switches', 'rows', 'refList'].includes(f.value.kind))
 const id = computed(() => `${uid}-${f.value.name}`)
 </script>
@@ -446,7 +446,7 @@ const id = computed(() => `${uid}-${f.value.name}`)
       <div v-else-if="field.kind === 'summary'" class="aether-record-field__summary">
         <span class="aether-record-field__summary-line" :data-summary="field.name">{{ summaryLine }}</span>
         <Disclosure v-model:open="summaryOpen" :label="editWords" :disabled="locked" class="aether-record-field__summary-edit">
-          <TextField v-model="text" multiline :rows="3" :disabled="locked" :name="field.name" :data-field="field.name" autocomplete="off" @change="commitJson" />
+          <TextField :id="id" v-model="text" multiline :rows="3" :disabled="locked" :name="field.name" :data-field="field.name" autocomplete="off" @change="commitJson" />
         </Disclosure>
       </div>
 

@@ -350,16 +350,17 @@ From a declaration the core gives:
   (the words of each step undo and redo walk) and `draftKeeper` (drafts a form leaves unapplied, dropped with their
   record).
 
-A field whose control is the app's own is declared `control: 'app'`: the core marks it, and the app's form draws it. The
-verbs a change calls stay the app's.
+A field whose control is the app's own is declared `control: 'app'`: `formFields` gives it the kind `app`, and the app's
+form draws it. The verbs a change calls stay the app's.
 
 `records/field` is `RecordField.vue`, one field of a form. It takes a `field` (a `FieldView` from `formFields`), the
 `value` the record holds, the app's `units`, an `issue` to show beside it, and for a `summary` field the app's line of what
 the value holds. It emits `commit` with the value when the field is left or Enter is pressed, and only where the value
 differs from the record's; `invalid` with the words for text it cannot read; and `open` with the id a choice of another
 record links to. `flush` gives what is typed and not yet given, for a form's Enter and its button for a draft. A number is
-typed in the unit shown and given as the record stores it. A field declared `readonly` is shown and gives nothing, and a
-field of `control: 'app'` draws nothing, so the app draws its own control in that place.
+typed in the unit shown and given as the record stores it. A field declared `readonly` is shown and gives nothing. A field
+of `control: 'app'` draws nothing, its label and its `issue` included: the app draws its control in that place, with the
+field's label and any refusal of its value beside it.
 
 ---
 

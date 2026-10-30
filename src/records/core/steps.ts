@@ -112,8 +112,9 @@ export function draftKeeper(onChange: () => void = () => {}): DraftKeeper {
         kept = mine
         stores.set(store, mine)
         store.subscribe(() => {
+          const before = mine.size
           for (const [k, d] of mine) if (d.id !== null && !store.ids(d.kind).includes(d.id)) mine.delete(k)
-          onChange()
+          if (mine.size !== before) onChange()
         })
       }
       kept.set(key(kind, id), { kind, id, draft })

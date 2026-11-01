@@ -137,6 +137,25 @@ export const COMPONENTS: CompMeta[] = [
     emits: [{ name: 'update:modelValue', type: '[value: boolean]' }],
   },
   {
+    id: 'checkbox',
+    name: 'Checkbox',
+    subpath: '@aether/ui-kit/controls/checkbox',
+    group: 'Forms',
+    core: '@aether/ui-kit/controls/core',
+    blurb: 'One choice in a list, drawn as a small key: off, on, or partly on for a group.',
+    detail:
+      'A well when off; when on it stands up and lights, with a dot; a group partly on is dimmed, with a bar. Use it for a choice in a list, down to 16px in a row: a setting that takes effect as it moves is a Switch. Controlled, and a press on a group partly on asks for all of it on. The two ends of its light are `--aether-mark-warm` and `--aether-mark-cool`.',
+    props: [
+      { name: 'modelValue', type: 'boolean', note: 'controlled; v-model' },
+      { name: 'mixed', type: 'boolean?', note: 'a group partly on; wins over modelValue' },
+      { name: 'disabled', type: 'boolean?' },
+      { name: 'label', type: 'string?', note: 'accessible name of a key with no words in its slot' },
+      { name: 'size', type: 'number?', note: 'side of the key in px; default 16' },
+    ],
+    emits: [{ name: 'update:modelValue', type: '[value: boolean]', note: 'what a press asks for' }],
+    slots: [{ name: 'default', type: 'words', note: 'the visible label, inside the button, and its accessible name' }],
+  },
+  {
     id: 'text-field',
     name: 'TextField',
     subpath: '@aether/ui-kit/controls/text-field',

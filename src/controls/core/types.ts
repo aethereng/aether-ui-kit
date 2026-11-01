@@ -93,6 +93,19 @@ export interface ToolProps {
   disabled?: boolean
 }
 
+/* One choice in a list, on or off, or a group some of whose members are on. The caller owns the value
+   and works out `mixed` from its rows; the control draws them and says what a press asks for. */
+export interface CheckboxProps {
+  modelValue: boolean
+  /** A group partly on. It wins over `modelValue`, and a press asks for all of it on. */
+  mixed?: boolean
+  disabled?: boolean
+  /** The accessible name of a key with no words in its slot. */
+  label?: string
+  /** The side of the key in px. */
+  size?: number
+}
+
 /* A collapsible panel: a header row that stays visible, and a region below it that does not.
  *
  * CONTROLLED, like Graph2D/Gantt/Transport -- the caller owns `open` and the component emits

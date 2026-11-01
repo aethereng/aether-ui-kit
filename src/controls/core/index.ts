@@ -23,6 +23,7 @@ export type {
   RadioOption,
   RadioGroupProps,
 } from './types'
+export type { CheckboxProps } from './types'
 
 /* Menu's keyboard model, exported for the same reason Tree's is: a caller building its own menu
    surface should be able to reuse the model rather than re-derive which keys wrap and which items
@@ -126,3 +127,7 @@ export type { DismissTarget, DismissOptions } from './dismiss'
 // How a gallery's cards fall into sections, and the shapes `controls/gallery` takes.
 export { gallerySections } from './gallery'
 export type { GalleryFamily, GalleryItem, GallerySection } from './gallery'
+
+// A checkbox's states, what a press gives and the lengths of its drawing: what Checkbox.vue sits on.
+export { checkState, ariaChecked, nextChecked, isCheckboxKey, checkboxLengths } from './checkbox'
+export type { CheckState, CheckboxLengths } from './checkbox'

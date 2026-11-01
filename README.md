@@ -126,6 +126,7 @@ These tokens exist so a host can express something the kit could not otherwise s
 | `--aether-selected-wash` | `var(--aether-cool-wash)` | the tinted form of the above |
 | `--aether-control-font-size` | `12.5px` | control typography. Hardcoded until a host on a 14px type scale found its kit controls sitting visibly smaller beside its own lists, fixable only by overriding the class. |
 | `--aether-ok` | `#3f6b3a` | the affirmative tone. Not `--aether-cool`, which is what `--aether-selected` derives from: a success marker in the selection colour makes "this passed" and "this is selected" the same pixels. |
+| `--aether-mark-warm`, `--aether-mark-cool` | `var(--aether-warm)`, `var(--aether-cool)` | the two ends of the gradient `Checkbox` lights in, for a host with a mark in two colours. Each end needs 3:1 on the grounds a host paints, with `--aether-warm-ink` as the dot on it, so a dark theme's bright pair does not carry over to a light one. Defaults to the accents, so ignoring them leaves ends that invert with the theme. |
 
 ### Two tokens that need a value per theme
 
@@ -205,6 +206,7 @@ focus ring), which every component needs and no component owns.
 | **Toast** | `controls/toast` | Transient status pill that fades itself out. Controlled: you own the message. |
 | **Transport** | `controls/transport` | Playback transport: play/pause/replay, scrub, speed, precompute progress. Unit-agnostic: drives simulation seconds or calendar days. |
 | **Switch** | `controls/switch` | Boolean toggle as a pill switch. One bare input; you own the label. |
+| **Checkbox** | `controls/checkbox` | One choice in a list, drawn as a small key: a well when off; when on it stands up and lights, with a dot; a group partly on is dimmed, with a bar. Down to 16px in a row. A `role="checkbox"` button holding its label, so it takes no part in a form's submission. |
 | **TextField** | `controls/text-field` | Free text, single- or multi-line via `multiline`. `autogrow` tracks content instead of a fixed row count, live. |
 | **NumberField** | `controls/number-field` | A typed number with its unit inside the box. Never rewrites a value you are still typing. |
 | **Select** | `controls/select` | Native single-choice dropdown, themed via `appearance: base-select`. Supports `groups`. |

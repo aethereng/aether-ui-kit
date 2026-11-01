@@ -43,6 +43,8 @@ import SpinnerExample from './examples/SpinnerExample.vue'
 import SpinnerExampleSrc from './examples/SpinnerExample.vue?raw'
 import SwitchExample from './examples/SwitchExample.vue'
 import SwitchExampleSrc from './examples/SwitchExample.vue?raw'
+import CheckboxExample from './examples/CheckboxExample.vue'
+import CheckboxExampleSrc from './examples/CheckboxExample.vue?raw'
 import TooltipExample from './examples/TooltipExample.vue'
 import TooltipExampleSrc from './examples/TooltipExample.vue?raw'
 import MenuExample from './examples/MenuExample.vue'
@@ -341,6 +343,10 @@ function setGroup(g: Group, open: boolean) {
           <SwitchExample />
         </GSection>
 
+        <GSection v-else-if="c.id === 'checkbox'" :meta="c" :source="CheckboxExampleSrc">
+          <CheckboxExample />
+        </GSection>
+
         <GSection v-else-if="c.id === 'text-field'" :meta="c" :source="TextFieldExampleSrc">
           <TextFieldExample />
         </GSection>
@@ -478,6 +484,9 @@ html[data-theme='paper'],
   --aether-cool: #2f6f6b;
   --aether-cool-soft: #5fa4a0;
   --aether-cool-wash: rgba(95, 164, 160, 0.15);
+  /* The light theme's own ends. The dark theme's bright pair measures 2.0 and 2.7 on this ground. */
+  --aether-mark-warm: #a9591b;
+  --aether-mark-cool: #2f6f6b;
   --aether-shadow: 0 1px 2px rgba(27, 30, 35, 0.06);
   /* The rest of the contract. A host that maps only the obvious tokens silently inherits
      the kit's light fallbacks for the others -- which is precisely how a near-white
@@ -552,6 +561,8 @@ html[data-theme='timber'] {
   --aether-cool: #8fc6c2;
   --aether-cool-soft: #a8d8d4;
   --aether-cool-wash: rgba(143, 198, 194, 0.16);
+  --aether-mark-warm: #e5a45f;
+  --aether-mark-cool: #5fa4a0;
   /* Tried teal (the token's default), then warm amber, then rose -- see git history for that
      back-and-forth. Currently back on teal, to compare the light theme's own accent carried into
      timber unchanged against the alternates. --aether-cool resolves to timber's own light-blue

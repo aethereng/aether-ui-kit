@@ -274,3 +274,123 @@ describe('the tokens a host is expected to remap', () => {
     expect(block.slice(0, 200)).toContain('var(--aether-warm-ink)')
   })
 })
+
+/* Checkbox lights in the two mark colours, so what it draws is read against the grounds it sits on. A
+ * key at 16px is a graphic, whose floor is 3:1 (WCAG 1.4.11). The percentages are read out of the
+ * component rather than copied here, so a retuned ring or dim is what these measure. */
+const checkboxSource = readFileSync(resolve(__dirname, '../controls/vue/Checkbox.vue'), 'utf8')
+
+function percentIn(pattern: RegExp): number {
+  const m = pattern.exec(checkboxSource)
+  if (!m) throw new Error(`contrast: ${pattern} is not in Checkbox.vue`)
+  return Number(m[1]) / 100
+}
+const RING = percentIn(/inset 0 0 0 1px color-mix[(]in srgb, var[(]--aether-ink[)] (\d+)%, transparent[)]/)
+const DIM = percentIn(/color-mix[(]in srgb, var[(]--aether-mark-warm[)] (\d+)%, var[(]--aether-surface[)][)]/)
+
+/** A token's value, through any `var()` it is an alias of. */
+function hexOf(map: Record<string, string>, name: string): string {
+  const v = map[name]
+  if (!v) throw new Error(`contrast: ${name} is not in this theme`)
+  const alias = /^var[(](--aether-[a-z0-9-]+)[)]$/.exec(v)
+  return alias ? hexOf(map, alias[1]!) : v
+}
+
+/** `share` of `a` over an opaque `b`, as color-mix in srgb and as a translucent ring both resolve. */
+function mixed(a: string, b: string, share: number): string {
+  const channel = (hex: string, i: number) => parseInt(HEX.exec(hex)![1]!.slice(i, i + 2), 16)
+  return (
+    '#' +
+    [0, 2, 4]
+      .map((i) => Math.round(share * channel(a, i) + (1 - share) * channel(b, i)))
+      .map((c) => c.toString(16).padStart(2, '0'))
+      .join('')
+  )
+}
+
+const MARK_ENDS = ['--aether-mark-warm', '--aether-mark-cool'] as const
+
+/** Every pairing of the key that falls under 3:1, named. */
+function keyFailures(map: Record<string, string>): string[] {
+  const out: string[] = []
+  const under = (what: string, fg: string, bg: string) => {
+    if (ratio(fg, bg) < 3) out.push(`${what} ${ratio(fg, bg).toFixed(2)}`)
+  }
+  for (const ground of GROUNDS) {
+    const g = hexOf(map, ground)
+    under(`the well's ring on ${ground}`, mixed(hexOf(map, '--aether-ink'), g, RING), g)
+    for (const end of MARK_ENDS) under(`${end} on ${ground}`, hexOf(map, end), g)
+  }
+  for (const end of MARK_ENDS) {
+    const lit = hexOf(map, end)
+    under(`the dot on ${end}`, hexOf(map, '--aether-warm-ink'), lit)
+    under(`the bar on ${end} dimmed`, hexOf(map, '--aether-ink'), mixed(lit, hexOf(map, '--aether-surface'), DIM))
+  }
+  return out
+}
+
+describe('Checkbox clears 3:1 in every theme', () => {
+  const themes: [string, Record<string, string>][] = [
+    ['the kit fallback', tokens],
+    ['gallery light', resolveTheme({})],
+    ['gallery dark (timber)', resolveTheme(THEMES['gallery dark (timber)'])],
+  ]
+
+  it.each(themes)('%s', (_name, map) => {
+    expect(keyFailures(map)).toEqual([])
+  })
+
+  it('reports its headroom', () => {
+    const rows = themes.map(([name, map]) => {
+      const low = Math.min(
+        ...MARK_ENDS.flatMap((end) => [
+          ...GROUNDS.map((g) => ratio(hexOf(map, end), hexOf(map, g))),
+          ratio(hexOf(map, '--aether-warm-ink'), hexOf(map, end)),
+        ]),
+      )
+      return `${name}: ${low.toFixed(2)}`
+    })
+    console.log('  checkbox lowest: ' + rows.join(' · '))
+    expect(rows).toHaveLength(3)
+  })
+
+  it('reads the percentages it measures from the component', () => {
+    expect(RING).toBeGreaterThan(0)
+    expect(RING).toBeLessThanOrEqual(1)
+    expect(DIM).toBeGreaterThan(0)
+    expect(DIM).toBeLessThan(1)
+  })
+
+  describe('and the check sees a theme that does not', () => {
+    const light = resolveTheme({})
+    const dark = resolveTheme(THEMES['gallery dark (timber)'])
+
+    it('the dark theme’s bright ends carried onto a light ground', () => {
+      const bad = keyFailures({ ...light, '--aether-mark-warm': '#e5a45f', '--aether-mark-cool': '#5fa4a0' })
+      expect(bad.filter((b) => b.startsWith('--aether-mark-warm on')).length).toBe(2)
+      expect(bad.filter((b) => b.startsWith('--aether-mark-cool on')).length).toBe(2)
+    })
+
+    it('a white dot on the bright ends', () => {
+      const bad = keyFailures({ ...dark, '--aether-warm-ink': '#ffffff' })
+      expect(bad.map((b) => b.split(' ').slice(0, 4).join(' '))).toEqual([
+        'the dot on --aether-mark-warm',
+        'the dot on --aether-mark-cool',
+      ])
+    })
+
+    it('a ring as faint as a line', () => {
+      /* The precondition is the real ring clearing, which the arm above it holds; this one moves the
+       * ink towards the ground until the same percentage cannot clear. */
+      const bad = keyFailures({ ...light, '--aether-ink': '#c8c4bb' })
+      expect(bad.some((b) => b.startsWith("the well's ring on --aether-surface"))).toBe(true)
+    })
+  })
+})
+
+describe('the mark tokens are free to ignore', () => {
+  it('default to the accents, so a host’s theme carries them', () => {
+    expect(tokens['--aether-mark-warm']).toBe('var(--aether-warm)')
+    expect(tokens['--aether-mark-cool']).toBe('var(--aether-cool)')
+  })
+})

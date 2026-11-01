@@ -79,6 +79,10 @@
      teal everywhere else (focus rings, selection, Seg's pill-on state) can point this at a second
      accent instead, so the scrollbar does not blend into "this is also a selection" visually. */
   --aether-scrollbar: var(--aether-cool);
+  /* The two ends of the gradient Checkbox lights in: a host's mark, where it has one. They default to
+     the warm and cool accents, so a host that does not set them gets ends that invert with its theme. */
+  --aether-mark-warm: var(--aether-warm);
+  --aether-mark-cool: var(--aether-cool);
 
   /* The small text and the smallest gap of the parts that set a line of small print beside a
      drawing. */

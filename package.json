@@ -38,6 +38,10 @@
       "types": "./src/controls/vue/Switch.vue.d.ts",
       "import": "./src/controls/vue/Switch.vue"
     },
+    "./controls/checkbox": {
+      "types": "./src/controls/vue/Checkbox.vue.d.ts",
+      "import": "./src/controls/vue/Checkbox.vue"
+    },
     "./controls/slider": {
       "types": "./src/controls/vue/Slider.vue.d.ts",
       "import": "./src/controls/vue/Slider.vue"

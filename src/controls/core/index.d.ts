@@ -1,4 +1,5 @@
 export type { SegOption, ChipOption, FilterGroup, SegProps, ChipProps, ToolProps, DisclosureProps, SelectOption, SelectGroup, SliderTick, RadioOption, RadioGroupProps, } from './types';
+export type { CheckboxProps } from './types';
 export type { MenuItem, MenuKeyResult } from './menu';
 export { focusableItems, firstItem, lastItem, menuKey, isTypeaheadKey } from './menu';
 export declare function isChipActive<V extends string>(value: V, active: V | Set<V>): boolean;
@@ -16,3 +17,5 @@ export { bindDismiss } from './dismiss';
 export type { DismissTarget, DismissOptions } from './dismiss';
 export { gallerySections } from './gallery';
 export type { GalleryFamily, GalleryItem, GallerySection } from './gallery';
+export { checkState, ariaChecked, nextChecked, isCheckboxKey, checkboxLengths } from './checkbox';
+export type { CheckState, CheckboxLengths } from './checkbox';

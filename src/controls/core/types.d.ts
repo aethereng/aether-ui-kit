@@ -78,6 +78,16 @@ export interface ToolProps {
     hot?: boolean;
     disabled?: boolean;
 }
+export interface CheckboxProps {
+    modelValue: boolean;
+    /** A group partly on. It wins over `modelValue`, and a press asks for all of it on. */
+    mixed?: boolean;
+    disabled?: boolean;
+    /** The accessible name of a key with no words in its slot. */
+    label?: string;
+    /** The side of the key in px. */
+    size?: number;
+}
 export interface DisclosureProps {
     /** Header text, and the toggle's accessible name. */
     label: string;

@@ -33,6 +33,24 @@ describe('the tag step names a tag only as the package version', () => {
   })
 })
 
+describe('every place a release states its version states the same one', () => {
+  const read = (file: string) => readFileSync(resolve(__dirname, '../..', file), 'utf8')
+  const pinnedIn = (text: string) => Array.from(text.matchAll(/"@aether\/ui-kit": "github:aethereng\/aether-ui-kit#v(\d+\.\d+\.\d+[^"]*)"/g), (m) => m[1])
+
+  it('the install line in the README pins the tag of the version package.json states', () => {
+    expect(pinnedIn(read('README.md'))).toEqual([PACKAGE.version])
+  })
+
+  it('negative arm: the reader sees a line naming another version', () => {
+    expect(pinnedIn('"@aether/ui-kit": "github:aethereng/aether-ui-kit#v9.9.9"')).toEqual(['9.9.9'])
+  })
+
+  it('the lockfile states it in both its places', () => {
+    const lock = JSON.parse(read('package-lock.json')) as { version: string; packages: Record<string, { version: string }> }
+    expect([lock.version, lock.packages['']!.version]).toEqual([PACKAGE.version, PACKAGE.version])
+  })
+})
+
 describe('the release workflow runs the same check before anything is built', () => {
   const WORKFLOW = readFileSync(resolve(__dirname, '../../.github/workflows/deploy-gallery.yml'), 'utf8')
 

@@ -66,7 +66,13 @@ function press() {
 }
 
 function onClick(e: MouseEvent) {
-  if ((e.target as Element).closest(INTERACTIVE) === e.currentTarget) press()
+  const button = e.currentTarget as HTMLButtonElement
+  if ((e.target as Element).closest(INTERACTIVE) !== button) return
+  // A browser turns Space released inside the button into a click on the button itself. That click has no pointer behind
+  // it, and the focus is still inside.
+  const focused = (button.getRootNode() as Document | ShadowRoot).activeElement
+  if (e.detail === 0 && focused !== button && button.contains(focused)) return
+  press()
 }
 
 function onKeydown(e: KeyboardEvent) {

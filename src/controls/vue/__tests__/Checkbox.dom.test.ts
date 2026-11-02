@@ -251,6 +251,30 @@ describe('Checkbox with something interactive in its label', () => {
     w.unmount()
   })
 
+  it.each(['field', 'link'])('takes no press from the click a browser makes on the button when Space is released in the %s there', async (id) => {
+    const { w, on, part } = labelled()
+    part(id).focus()
+    expect(document.activeElement, 'precondition: the focus is inside').toBe(part(id))
+    w.get('button[role="checkbox"]').element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 0 }))
+    await nextTick()
+    expect(on.value).toBe(false)
+    w.unmount()
+  })
+
+  it('still presses from a pointer on the plain words with the focus inside, and with no pointer where the focus is on the key', async () => {
+    const { w, on, part } = labelled()
+    part('field').focus()
+    part('words').dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 }))
+    await nextTick()
+    expect(on.value, 'a pointer').toBe(true)
+    const button = w.get('button[role="checkbox"]').element as HTMLElement
+    button.focus()
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 0 }))
+    await nextTick()
+    expect(on.value, 'no pointer').toBe(false)
+    w.unmount()
+  })
+
   it('still presses from a click on the plain words, and from Space and a click on the key itself', async () => {
     const { w, on, part, key } = labelled()
     part('words').dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))

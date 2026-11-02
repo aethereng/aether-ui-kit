@@ -4,7 +4,7 @@
  * This page is also the kit's own proof: it is a HOST APP. It defines the --aether-* tokens
  * itself (light + dark below) and the kit's components follow, which is exactly the contract
  * a consumer gets. The theme switch at the top is not a mock; it re-themes this page, and the
- * components re-theme with it because they never hardcode a colour. */
+ * components re-theme with it because they read their colours from those tokens. */
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import GSection from './GSection.vue'
 /* The nav's two buttons are the kit's own Tool. This page is the kit's proof, so its chrome
@@ -288,11 +288,12 @@ function setGroup(g: Group, open: boolean) {
     <section class="g-contract">
       <h2>The token contract</h2>
       <p>
-        Components never hardcode a colour. They read <code>--aether-*</code> custom properties; the
-        kit ships a light fallback palette so it renders standalone, and a host app overrides those
-        tokens to make the kit its own. <strong>This page is that host</strong>: the light/dark
-        switch above rewrites the tokens and every component below follows, with no component code
-        involved.
+        Components read their colours from <code>--aether-*</code> custom properties, apart from a
+        few shadows, highlights and a scrim in near-black or white at low alpha, which sit over any
+        theme. The kit ships a light fallback palette so it renders standalone, and a host app
+        overrides those tokens to make the kit its own. <strong>This page is that host</strong>: the
+        light/dark switch above rewrites the tokens and every component below follows, with no
+        component code involved.
       </p>
       <pre><code>/* in your app, after importing '@aether/ui-kit/styles' */
 :root {

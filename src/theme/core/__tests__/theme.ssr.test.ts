@@ -1,6 +1,6 @@
 // @vitest-environment node
 // The controller made where there is no document and no window (a server render, a node test): it
-// reads the same and touches nothing.
+// reads the same and sets nothing on a page.
 import { describe, expect, it } from 'vitest'
 import { createThemeController } from '../theme'
 

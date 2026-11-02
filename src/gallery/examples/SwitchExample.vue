@@ -22,8 +22,8 @@ const solids = 4812
     </div>
 
     <div class="g-sw-row">
-      <Switch id="sw-ifc" v-model="edges" />
-      <label for="sw-ifc">Raw samples <span class="g-sw-n">{{ solids }}</span></label>
+      <Switch id="sw-samples" v-model="edges" />
+      <label for="sw-samples">Raw samples <span class="g-sw-n">{{ solids }}</span></label>
     </div>
 
     <div class="g-sw-row">

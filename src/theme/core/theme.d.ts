@@ -49,6 +49,7 @@ export interface ThemeController {
  * the outgoing palette, when a `transition` on a token-coloured background starts before the
  * element has settled and commits its start value.
  *
- * Without a document (a server render, a node test) it reads the same and touches nothing.
+ * Without a document (a server render, a node test) it reads the same and sets nothing on a page. It still tries
+ * `localStorage`, for the saved choice and to keep a new one, inside a `try`.
  */
 export declare function createThemeController(options: ThemeOptions): ThemeController;

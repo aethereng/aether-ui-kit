@@ -121,6 +121,7 @@ describe('the projection a vocabulary serves', () => {
 describe('the path grammar', () => {
   it('reads fields, ids and positions', () => {
     expect(parsePath('a.b[c1].d[0]')).toEqual([{ field: 'a' }, { field: 'b' }, { bracket: 'c1' }, { field: 'd' }, { bracket: '0' }])
+    expect(parsePath('box[v1.2].Size'), 'a dot inside brackets is part of the id').toEqual([{ field: 'box' }, { bracket: 'v1.2' }, { field: 'Size' }])
     expect(parsePath('')).toEqual([])
   })
   it('refuses a path that does not read', () => {

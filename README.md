@@ -27,7 +27,7 @@ The components that carry real logic are two pieces:
 
 ```
 src/viz/core/gantt.ts     ← layout maths. No Vue, no DOM. Unit-tested directly.
-src/viz/vue/Gantt.vue     ← renders it, emits deltas. 162 lines of template.
+src/viz/vue/Gantt.vue     ← renders it, emits deltas.
 ```
 
 The core knows how to stack overlapping bars into lanes. It does not know what a bar *means*, what a colour encodes, or what happens on drop. That split is why the cores are testable without a browser.
@@ -68,8 +68,7 @@ Not on a public registry. Depend on it by git ref, pinned to a tag:
 
 Tags are immutable. A published tag is never re-pointed at a different commit; if a release turns
 out to be wrong, the next patch tag supersedes it. That is the guarantee your lockfile rests on:
-the commit it resolved keeps meaning what it meant. (v0.9.0 was moved once, on 2026-08-15, before
-this was written down. v0.9.1 is the same tree under a name that has not moved.)
+the commit it resolved keeps meaning what it meant.
 
 The package ships raw `.vue` and `.ts`: your bundler compiles it, same as any source dependency.
 
@@ -94,7 +93,7 @@ optimizeDeps: { exclude: ['@aether/ui-kit'] }
 
 Read this part. It is the one thing that bites people.
 
-Kit components never hardcode a colour. They read `--aether-*` custom properties, and the package ships a **fallback** palette on `:root` so an unstyled consumer still sees something sensible. Your app overrides those tokens to make the components wear your skin:
+Kit components read their colours from `--aether-*` custom properties, apart from a few shadows, highlights and a scrim in near-black or white at low alpha, which sit over any theme. The package ships a **fallback** palette on `:root` so an unstyled consumer still sees something sensible. Your app overrides those tokens to make the components wear your skin:
 
 ```ts
 import '@aether/ui-kit/styles'   // 1. the kit's CSS + its fallback palette
@@ -323,8 +322,8 @@ are open to the first actor only. `preview` and `accept` run as the actor the ca
 A saved log names the actor of each entry, so it replays only against a registry that holds every one of them: an
 entry by any other actor is refused at replay, with the actor named.
 
-**Ids** hold none of `[ ] { } ~` and no whitespace, do not start with `#`, and may hold a dot, so a path reads one
-inside brackets: `beam[C15x33.9].Size`. The name of a kind, its prefix and its group hold no dot.
+**Ids** hold none of `[ ] { } ~` and no whitespace, do not start with `#`, and may hold a dot, which a path reads as
+part of the id inside brackets: `box[v1.2].Size`. The name of a kind, its prefix and its group hold no dot.
 
 `toCallSchema` gives a verb's input schema as a caller outside the app is given it: wherever the schema marks a
 reference (`x-ref`), the value may also be `{ handle }`, the name an earlier call of the same proposal gave the entity
@@ -485,7 +484,7 @@ The tests are in three layers that exist for different reasons:
 
 ### What earns a place here
 
-A component is extracted when it has **two real consumers**, not two that look alike. Before extracting, we check the candidates share a render paradigm, a data shape, *and* an interaction contract. Several plausible-looking candidates have been rejected on exactly that test, and one was rejected twice. Where two consumers genuinely differ along one axis, that axis becomes a prop (`FilterRail`'s `orientation`, `Transport`'s `speedMode`, `Seg`'s `variant`, `ChatPanel`'s `actions`), not a second component and not an open style hook.
+A component is extracted when it has **two real consumers**, not two that look alike. Before extracting, we check the candidates share a render paradigm, a data shape, *and* an interaction contract. Where two consumers genuinely differ along one axis, that axis becomes a prop (`FilterRail`'s `orientation`, `Transport`'s `speedMode`, `Seg`'s `variant`, `ChatPanel`'s `actions`), not a second component and not an open style hook.
 
 ---
 

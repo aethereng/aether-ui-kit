@@ -9,7 +9,7 @@ const RESERVED = new Set(['.', '[', ']', '{', '}', '~'])
 const ID_RESERVED = new Set(['[', ']', '{', '}', '~'])
 
 /**
- * A dotted path of fields with ids and positions in brackets: `box[b1].Size.width`, `box[b1].Tags[0]`, `box[C15x33.9].Size`.
+ * A dotted path of fields with ids and positions in brackets: `box[b1].Size.width`, `box[b1].Tags[0]`, `box[v1.2].Size`.
  * An id holds no reserved character but the dot (see isValidId), so every id is addressable. Null when the text
  * does not read as a path; an empty text is the root, which has no steps.
  */
@@ -62,7 +62,7 @@ export function resolvePath(root: Json, steps: readonly Step[]): Json | undefine
 /**
  * Whether text may be the id of a new entity: it is not empty, holds no reserved character but the dot and no whitespace,
  * does not start with `#`, and is not the key `__proto__`, which stored content cannot hold (see PROTO_KEY), so an id never
- * sets the prototype of an object that is keyed by it. A file's ids may hold a dot, as C15x33.9 does.
+ * sets the prototype of an object that is keyed by it. An id may hold a dot, as v1.2 does: a path reads it inside brackets.
  */
 export function isValidId(id: string): boolean {
   return id !== '' && id !== PROTO_KEY && !id.startsWith('#') && ![...id].some((ch) => ID_RESERVED.has(ch) || ch.trim() === '')

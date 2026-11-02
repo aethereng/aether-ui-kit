@@ -248,6 +248,168 @@ describe('RecordTable, many rows', () => {
   })
 })
 
+describe('what is typed in a cell and not yet given', () => {
+  const many = (n: number): Row[] => Array.from({ length: n }, (_, i) => row(`p${i}`, { size: 0.01, stock: 's1', at: [0, 0, 0] }))
+  async function type(w: VueWrapper, at: string, text: string): Promise<void> {
+    ;(cell(w, at).element as HTMLInputElement).value = text
+    await cell(w, at).trigger('input')
+  }
+  /** Draws the rows again, which puts a cell back on the value it is given. */
+  const redraw = (w: VueWrapper, rows: Row[]) => w.setProps({ rows })
+
+  describe('draws nothing as it is typed', () => {
+    /** A table counting how often any component in it is drawn again, and how often a row asks for a choice's options. */
+    function counted(n: number) {
+      const count = { draws: 0, asked: 0 }
+      const w = mount(RecordTable, {
+        props: {
+          kind: PARTS,
+          rows: many(n),
+          units: UNITS,
+          run: () => null,
+          optionsOf: (c: TableColumn) => {
+            count.asked++
+            return optionsOf(c)
+          },
+        },
+        attachTo: document.body,
+        global: {
+          mixins: [
+            {
+              updated() {
+                count.draws++
+              },
+            },
+          ],
+        },
+      })
+      return { w, count }
+    }
+
+    it.each([5, 60])('at %s rows', async (n) => {
+      const { w, count } = counted(n)
+      await nextTick()
+      count.draws = 0
+      count.asked = 0
+      for (const text of ['1', '12', '123']) await type(w, 'p2:size', text)
+      expect(valueOf(w, 'p2:size')).toBe('123')
+      expect(count).toEqual({ draws: 0, asked: 0 })
+      w.unmount()
+    })
+
+    it('and the count sees the rows drawn again', async () => {
+      const { w, count } = counted(5)
+      await nextTick()
+      count.draws = 0
+      count.asked = 0
+      await redraw(w, many(5))
+      expect(count.asked).toBeGreaterThan(0)
+      expect(count.draws).toBeGreaterThan(5)
+      w.unmount()
+    })
+  })
+
+  describe('goes, and the cell shows the record again,', () => {
+    it('when the change is given as the cell is left', async () => {
+      const { w, runs } = table(PARTS, parts())
+      await type(w, 'p2:size', '99')
+      expect(valueOf(w, 'p2:size'), 'precondition: held').toBe('99')
+      await cell(w, 'p2:size').trigger('change')
+      expect(runs.map((r) => r.field), 'given').toEqual(['size'])
+      expect(valueOf(w, 'p2:size'), 'this run writes nothing back').toBe('20')
+      await redraw(w, parts())
+      expect(valueOf(w, 'p2:size')).toBe('20')
+    })
+
+    it('when the change is given by Enter', async () => {
+      const { w, runs } = table(PARTS, parts())
+      await type(w, 'p2:size', '99')
+      await cell(w, 'p2:size').trigger('keydown', { key: 'Enter' })
+      expect(runs.map((r) => r.field), 'given').toEqual(['size'])
+      expect(valueOf(w, 'p2:size')).toBe('20')
+    })
+
+    it('when the cell is left with nothing given', async () => {
+      const { w, runs } = table(PARTS, parts())
+      await type(w, 'p2:size', '99')
+      await cell(w, 'p2:size').trigger('blur')
+      expect(valueOf(w, 'p2:size')).toBe('20')
+      await redraw(w, parts())
+      expect([valueOf(w, 'p2:size'), runs]).toEqual(['20', []])
+    })
+
+    it('when Escape is pressed, through the next draw too', async () => {
+      const { w, runs } = table(PARTS, parts())
+      await type(w, 'p2:size', '99')
+      await cell(w, 'p2:size').trigger('keydown', { key: 'Escape' })
+      expect(valueOf(w, 'p2:size')).toBe('20')
+      await redraw(w, parts())
+      expect([valueOf(w, 'p2:size'), runs]).toEqual(['20', []])
+    })
+
+    it('where a draw comes first, as a scroll that moves the rows brings', async () => {
+      const { w } = table(PARTS, parts())
+      await type(w, 'p2:size', '99')
+      await redraw(w, parts())
+      expect(valueOf(w, 'p2:size'), 'held through the draw').toBe('99')
+      await cell(w, 'p2:size').trigger('blur')
+      expect(valueOf(w, 'p2:size')).toBe('20')
+    })
+  })
+
+  describe('goes with its cell, where the cell vanishes and is never left', () => {
+    afterEach(() => vi.restoreAllMocks())
+    /** Types in a focused cell, and reports each blur it has, for the arm that needs none. */
+    async function held(w: VueWrapper, at: string, text: string): Promise<() => number> {
+      let blurs = 0
+      const input = cell(w, at).element as HTMLInputElement
+      input.addEventListener('blur', () => blurs++)
+      input.focus()
+      await type(w, at, text)
+      return () => blurs
+    }
+
+    it('when its row goes and comes back', async () => {
+      vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(400)
+      const { w, runs } = table(PARTS, many(500))
+      await nextTick()
+      const blurs = await held(w, 'p2:size', '0.99')
+      await redraw(w, many(500).filter((r) => r.id !== 'p2'))
+      expect(cell(w, 'p2:size').exists(), 'precondition: the row is gone').toBe(false)
+      expect(blurs(), 'precondition: the cell was not left').toBe(0)
+      await redraw(w, many(500))
+      expect([valueOf(w, 'p2:size'), runs]).toEqual([valueOf(w, 'p3:size'), []])
+      w.unmount()
+    })
+
+    it('when the search hides its row and shows it again', async () => {
+      const { w } = table(PARTS, parts())
+      const blurs = await held(w, 'p2:size', '99')
+      await w.setProps({ query: 'p1' })
+      expect([cell(w, 'p2:size').exists(), blurs()], 'precondition: hidden, and not left').toEqual([false, 0])
+      await w.setProps({ query: '' })
+      expect(valueOf(w, 'p2:size')).toBe('20')
+    })
+
+    it('when the kind goes and comes back', async () => {
+      const { w } = table(PARTS, parts())
+      const blurs = await held(w, 'p2:size', '99')
+      await w.setProps({ kind: SHELVES })
+      expect([cell(w, 'p2:size').exists(), blurs()], 'precondition: gone, and not left').toEqual([false, 0])
+      await w.setProps({ kind: PARTS })
+      expect(valueOf(w, 'p2:size')).toBe('20')
+    })
+
+    it('when another kind draws a cell of the same row and field', async () => {
+      const { w } = table(PARTS, parts())
+      const blurs = await held(w, 'p2:size', '99')
+      await w.setProps({ kind: { ...PARTS, name: 'others' } })
+      expect([cell(w, 'p2:size').exists(), blurs()], 'precondition: drawn, and not left').toEqual([true, 0])
+      expect(valueOf(w, 'p2:size')).toBe('20')
+    })
+  })
+})
+
 describe('RecordTable, a field declaring its words and options', () => {
   const stockOf = (w: VueWrapper, id: string): HTMLSelectElement => w.find(`[data-cell="${id}:stock"]`).element as HTMLSelectElement
   it('gives a blank the words a field declares for it', () => {

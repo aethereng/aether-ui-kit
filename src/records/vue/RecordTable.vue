@@ -15,7 +15,7 @@
 //
 // Of a table of many rows only those in sight and a screenful each side are drawn, the rest being a gap of their height, so that a
 // thousand rows open and scroll as ten do. A cell scrolled out of the drawn rows is left first, which gives what is typed in it.
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, watch } from 'vue'
 import Select from '../../controls/vue/Select.vue'
 import Switch from '../../controls/vue/Switch.vue'
 import TextField from '../../controls/vue/TextField.vue'
@@ -144,19 +144,37 @@ function tickAll(on: boolean): void {
 /** A refused change, beside the cell it was made in: the row the refusal names, and its words. */
 const problem = ref<{ at: string; row: string; words: string } | null>(null)
 const cellId = (row: string, column: TableColumn) => `${row}:${column.key}`
+/**
+ * What is typed in a cell and not yet given, and the input it is typed in. A draw while it is held, as when a scroll moves the
+ * drawn rows, shows it, where a field goes back to its value. It is deliberately not reactive, so that a key draws nothing.
+ */
+let typing: { at: string; text: string; input: HTMLInputElement } | null = null
 watch(
   () => props.kind.name,
   () => {
     ticked.value = new Set()
     problem.value = null
+    typing = null
   },
 )
+// A cell can vanish without being left, its row gone or hidden, and a browser need not say so. What was typed goes with it.
+onUpdated(() => {
+  if (typing !== null && !typing.input.isConnected) typing = null
+})
 
 const headUnit = (column: TableColumn): string => (column.quantity === undefined ? '' : (props.units.label(column.quantity) ?? ''))
 const textOf = (record: Fields, column: TableColumn): string => cellText(props.kind, record, column, props.units)
-/** What is typed in a cell and not yet given. A redraw while it is held, as when a scroll moves the drawn rows, shows it, where a field goes back to its value. */
-const typing = ref<{ at: string; text: string } | null>(null)
-const shownInCell = (row: Row, column: TableColumn): string => (typing.value?.at === cellId(row.id, column) ? typing.value.text : textOf(row.record, column))
+const shownInCell = (row: Row, column: TableColumn): string => (typing?.at === cellId(row.id, column) ? typing.text : textOf(row.record, column))
+function hold(event: Event, row: Row, column: TableColumn): void {
+  const input = event.target as HTMLInputElement
+  typing = { at: cellId(row.id, column), text: input.value, input }
+}
+/** A cell's change given, or the cell left: what is held goes, and the cell shows the record's value again. No draw need follow. */
+function letGo(row: Row, column: TableColumn): void {
+  if (typing?.at !== cellId(row.id, column)) return
+  typing.input.value = textOf(row.record, column)
+  typing = null
+}
 /** A choice's options as its cell offers them: the blank first, then each value in its declared words. */
 function choiceOptions(column: TableColumn, row: Row): { value: string; label: string }[] {
   const values = props.optionsOf(column, row)
@@ -212,7 +230,7 @@ function take(at: string, column: TableColumn, values: RowValue[], pasted: boole
 function commit(row: Row, column: TableColumn, typed: string | boolean): void {
   if (!props.editable) return
   const at = cellId(row.id, column)
-  typing.value = null
+  letGo(row, column)
   const out = cellChange(props.kind, row, column, typed, tickedRows.value, shown.value, props.units)
   if (out === null) return
   if ('refused' in out) {
@@ -238,7 +256,7 @@ function paste(event: ClipboardEvent, row: Row, column: TableColumn): void {
 
 /** Escape puts the cell back as the record holds it. */
 function revert(event: KeyboardEvent, row: Row, column: TableColumn): void {
-  typing.value = null
+  typing = null
   ;(event.target as HTMLInputElement).value = textOf(row.record, column)
   if (problem.value?.at === cellId(row.id, column)) problem.value = null
 }
@@ -305,8 +323,8 @@ watch(() => props.openId, bringIn)
                 :aria-label="`${c.label} of ${r.id}`"
                 :aria-invalid="problem?.at === cellId(r.id, c) || undefined"
                 :data-cell="cellId(r.id, c)"
-                @update:model-value="typing = { at: cellId(r.id, c), text: $event }"
-                @blur="typing = null"
+                @input="hold($event, r, c)"
+                @blur="letGo(r, c)"
                 @change="commit(r, c, ($event.target as HTMLInputElement).value)"
                 @keydown.enter="commit(r, c, ($event.target as HTMLInputElement).value)"
                 @keydown.escape="revert($event, r, c)"

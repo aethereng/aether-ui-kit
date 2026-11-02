@@ -36,11 +36,14 @@ export interface CheckboxLengths {
   barHeight: number
 }
 
+/** The smallest side with room for a dot. A size under it, or one that is no number, draws at it. */
+const MIN_SIDE = 4
+
 /* Every length is rounded to a whole pixel, for the reason Spinner rounds its stroke: a browser floors a
    sub-pixel length, so an unrounded ratio draws a different weight at each size. The dot and the bar are
    even so that they centre on an even side without landing on a half pixel. */
 export function checkboxLengths(size: number): CheckboxLengths {
-  const side = Math.max(2, Math.round(size / 2) * 2)
+  const side = Number.isFinite(size) ? Math.max(MIN_SIDE, Math.round(size / 2) * 2) : MIN_SIDE
   return {
     side,
     radius: Math.round(side * 0.3),

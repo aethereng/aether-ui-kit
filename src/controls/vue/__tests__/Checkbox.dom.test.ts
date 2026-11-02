@@ -338,6 +338,10 @@ describe('Checkbox is sized', () => {
     expect(side({})).toBe('16px')
     expect(side({ size: 24 })).toBe('24px')
   })
+
+  it('and draws at its smallest where the size is no number', () => {
+    expect(side({ size: Number.NaN })).toBe('4px')
+  })
 })
 
 describe('Checkbox’s own rules', () => {

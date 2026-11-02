@@ -55,7 +55,7 @@ describe('the lengths of the drawing', () => {
     expect(l.barHeight).toBeLessThan(l.side)
   })
 
-  it('keeps a side for a size too small to draw', () => {
-    expect(checkboxLengths(0).side).toBe(2)
+  it.each([0, 1, 3, -5, Number.NaN, Number.POSITIVE_INFINITY])('draws a size of %s at the smallest side with room for a dot', (size) => {
+    expect(checkboxLengths(size)).toEqual({ side: 4, radius: 1, dot: 2, barWidth: 2, barHeight: 2 })
   })
 })

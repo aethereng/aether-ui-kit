@@ -134,11 +134,12 @@ function onKeyup(e: KeyboardEvent) {
   height: var(--side);
   border-radius: var(--radius);
   /* The well. The ring is what identifies the control on its ground, so it carries the 3:1 a graphic
-     owes; contrast.test.ts holds the mix against both grounds in every theme. */
+     owes; contrast.test.ts holds the mix against both grounds in every theme. It is listed first so that
+     it paints over the well's shadow, which would darken its top edge under 3:1 on a dark ground. */
   background: color-mix(in srgb, var(--aether-ink) 6%, transparent);
   box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.32),
-    inset 0 0 0 1px color-mix(in srgb, var(--aether-ink) 52%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, var(--aether-ink) 52%, transparent),
+    inset 0 1px 2px rgba(0, 0, 0, 0.32);
   transition:
     background 0.14s,
     box-shadow 0.14s,
@@ -146,8 +147,8 @@ function onKeyup(e: KeyboardEvent) {
 }
 .aether-checkbox:hover:not(:disabled) .aether-checkbox__key {
   box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.32),
-    inset 0 0 0 1px var(--aether-ink);
+    inset 0 0 0 1px var(--aether-ink),
+    inset 0 1px 2px rgba(0, 0, 0, 0.32);
 }
 .aether-checkbox:active:not(:disabled) .aether-checkbox__key {
   transform: scale(0.92);

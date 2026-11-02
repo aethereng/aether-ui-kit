@@ -368,6 +368,17 @@ describe('Checkbox’s own rules', () => {
     expect(declared(sheet, mixed)['box-shadow']).not.toBe(well['box-shadow'])
   })
 
+  it.each(['.aether-checkbox__key', '.aether-checkbox:hover:not(:disabled) .aether-checkbox__key'])(
+    'paints the ring over the well’s shadow, which would darken its top edge under 3:1 on a dark ground: %s',
+    (selector) => {
+      const shadows = declared(sheet, selector)['box-shadow']!
+      const ring = shadows.indexOf('inset 0 0 0 1px')
+      const shadow = shadows.indexOf('inset 0 1px 2px')
+      expect([ring, shadow].every((at) => at >= 0), 'precondition: both are drawn').toBe(true)
+      expect(ring, 'the first listed paints on top').toBeLessThan(shadow)
+    },
+  )
+
   it('shows the dot only when on, and the bar only when partly on', () => {
     expect(declared(sheet, '.aether-checkbox__glyph')['transform']).toBe('scale(0)')
     expect(declared(sheet, '.aether-checkbox--on .aether-checkbox__glyph')['transform']).toBe('scale(1)')

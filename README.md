@@ -15,9 +15,9 @@
 
 ---
 
-Built at [Aether Engineering](https://aethereng.com) for our own tools, and **extracted from them** rather than designed in advance. It is open because the problems it solves are not proprietary: a Gantt that emits day indices instead of dates, a transport that refuses to let two writers touch one playhead, a filter rail whose grouping is data.
+Built at [Aether Engineering](https://aethereng.com) for our own tools, and, `Checkbox` apart, **extracted from them** rather than designed in advance. It is open because the problems it solves are not proprietary: a Gantt that emits day indices instead of dates, a transport that refuses to let two writers touch one playhead, a filter rail whose grouping is data.
 
-**Status: `0.x`.** Every component here ships in a working application, but the API still moves and this has not been through an external review. Pin a tag.
+**Status: `0.x`.** Every component here but `Checkbox` ships in a working application. The API still moves, and this has not been through an external review. Pin a tag.
 
 ---
 
@@ -61,7 +61,7 @@ Not on a public registry. Depend on it by git ref, pinned to a tag:
 ```json
 {
   "dependencies": {
-    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.24.1"
+    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.25.0"
   }
 }
 ```
@@ -112,7 +112,7 @@ A host bridging onto an existing design system maps token to token:
 }
 ```
 
-That is the whole theming story. There is no theme provider, no runtime, no build step. A CI test asserts every token the CSS *reads* is also *defined*, and that no component hardcodes a hex outside the fallback block, which means this contract cannot quietly rot.
+That is the whole theming story. There is no theme provider, no runtime, no build step. A CI test asserts every token the CSS *reads* is also *defined*, and that no component hardcodes a hex outside the fallback block.
 
 ---
 
@@ -205,7 +205,7 @@ focus ring), which every component needs and no component owns.
 | **Toast** | `controls/toast` | Transient status pill that fades itself out. Controlled: you own the message. |
 | **Transport** | `controls/transport` | Playback transport: play/pause/replay, scrub, speed, precompute progress. Unit-agnostic: drives simulation seconds or calendar days. |
 | **Switch** | `controls/switch` | Boolean toggle as a pill switch. One bare input; you own the label. |
-| **Checkbox** | `controls/checkbox` | One choice in a list, drawn as a small key: a well when off; when on it stands up and lights, with a dot; a group partly on is dimmed, with a bar. Down to 16px in a row. A `role="checkbox"` button holding its label, so it takes no part in a form's submission. Whatever is interactive in the label keeps its own keys and clicks. A button may not hold interactive content, so write "I accept the terms" with a link as a `Checkbox` and a `<label for>` beside it, with the link in the label. |
+| **Checkbox** | `controls/checkbox` | One choice in a list, drawn as a small key: a well when off; when on it stands up and lights, with a dot; a group partly on is dimmed, with a bar. Down to 16px in a row. A `role="checkbox"` button holding its label, so it takes no part in a form's submission. Whatever is interactive in the label keeps its own keys and clicks. A button may not hold interactive content, so write "I accept the terms" with a link as a `Checkbox` and a `<label for>` beside it, with the link in the label. No application uses it. |
 | **TextField** | `controls/text-field` | Free text, single- or multi-line via `multiline`. `autogrow` tracks content instead of a fixed row count, live. |
 | **NumberField** | `controls/number-field` | A typed number with its unit inside the box. Never rewrites a value you are still typing. |
 | **Select** | `controls/select` | Native single-choice dropdown, themed via `appearance: base-select`. Supports `groups`. |
@@ -484,7 +484,7 @@ The tests are in three layers that exist for different reasons:
 
 ### What earns a place here
 
-A component is extracted when it has **two real consumers**, not two that look alike. Before extracting, we check the candidates share a render paradigm, a data shape, *and* an interaction contract. Where two consumers genuinely differ along one axis, that axis becomes a prop (`FilterRail`'s `orientation`, `Transport`'s `speedMode`, `Seg`'s `variant`, `ChatPanel`'s `actions`), not a second component and not an open style hook.
+A component is extracted when it has **two real consumers**, not two that look alike. `Checkbox` is the one exception: it has none. Before extracting, we check the candidates share a render paradigm, a data shape, *and* an interaction contract. Where two consumers genuinely differ along one axis, that axis becomes a prop (`FilterRail`'s `orientation`, `Transport`'s `speedMode`, `Seg`'s `variant`, `ChatPanel`'s `actions`), not a second component and not an open style hook.
 
 ---
 

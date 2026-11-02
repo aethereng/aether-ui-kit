@@ -269,7 +269,7 @@ function setGroup(g: Group, open: boolean) {
         thin Vue wrapper, so the mechanics can outlive the framework.
       </p>
       <p class="g-hero__sub">
-        Every component here runs in production in our own tools. The kit decides how a control
+        Every component here but Checkbox runs in production in our own tools. The kit decides how a control
         <em>behaves</em>; what a category means, what a colour encodes, and what the data
         <em>is</em> stay with the caller.
       </p>

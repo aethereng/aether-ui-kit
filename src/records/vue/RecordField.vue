@@ -279,9 +279,9 @@ function holdsTyped(): boolean {
   return false
 }
 
-/** Escape in a control holding typed text puts the record's value back and uses the key. */
+/** Escape in a control holding typed text puts the record's value back and uses the key. An input method composing keeps its Escape. */
 function restore(event: KeyboardEvent): void {
-  if (!holdsTyped()) return
+  if (event.isComposing || !holdsTyped()) return
   event.preventDefault()
   fill()
   emit('restored')

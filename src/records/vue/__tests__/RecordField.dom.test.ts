@@ -507,6 +507,20 @@ describe('Escape in a field', () => {
     expect(w.emitted('restored')).toHaveLength(1)
   })
 
+  it('leaves an Escape that is composing to the input method, and the text stays', async () => {
+    const w = field('size', 0.0125)
+    await type(w, 'input[data-field="size"]', '20', 'stay')
+    const event = new KeyboardEvent('keydown', { key: 'Escape', isComposing: true, bubbles: true, cancelable: true })
+    expect(event.isComposing, 'precondition: the event is composing').toBe(true)
+    w.find('input[data-field="size"]').element.dispatchEvent(event)
+    await nextTick()
+    expect(text(w, 'input[data-field="size"]')).toBe('20')
+    expect(event.defaultPrevented).toBe(false)
+    expect(w.emitted('restored')).toBeUndefined()
+    await press(w, 'input[data-field="size"]')
+    expect(text(w, 'input[data-field="size"]'), 'the same key with no composing').toBe('12.5')
+  })
+
   it('leaves the key to the form around it where nothing is typed', async () => {
     const w = field('size', 0.0125)
     const event = await press(w, 'input[data-field="size"]')

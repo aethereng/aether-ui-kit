@@ -578,6 +578,26 @@ describe('a cell changed', () => {
     expect([valueOf(w, 'p1:size'), issueOf(w, 'p1:size'), cell(w, 'p1:size').attributes('aria-invalid')]).toEqual(['10', null, undefined])
   })
 
+  it('leaves an Escape that is composing to the input method, and the text and the refusal stay', async () => {
+    const composing = () => new KeyboardEvent('keydown', { key: 'Escape', isComposing: true, bubbles: true, cancelable: true })
+    expect(composing().isComposing, 'precondition: the event is composing').toBe(true)
+    const { w } = table(PARTS, parts())
+    ;(cell(w, 'p2:size').element as HTMLInputElement).value = '99'
+    await cell(w, 'p2:size').trigger('input')
+    cell(w, 'p2:size').element.dispatchEvent(composing())
+    await nextTick()
+    expect(valueOf(w, 'p2:size')).toBe('99')
+    await w.setProps({ rows: parts() })
+    expect(valueOf(w, 'p2:size'), 'still held through a draw').toBe('99')
+    await cell(w, 'p2:size').trigger('keydown', { key: 'Escape' })
+    expect(valueOf(w, 'p2:size'), 'the same key with no composing').toBe('20')
+
+    await give(cell(w, 'p1:size'), 'ten')
+    cell(w, 'p1:size').element.dispatchEvent(composing())
+    await nextTick()
+    expect(issueOf(w, 'p1:size')).toBe('Number only')
+  })
+
   it("takes a cell's change after a refusal of it, and the refusal goes", async () => {
     const { w, runs } = table(PARTS, parts())
     await give(cell(w, 'p1:size'), 'ten')

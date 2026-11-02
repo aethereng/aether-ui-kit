@@ -254,8 +254,9 @@ function paste(event: ClipboardEvent, row: Row, column: TableColumn): void {
   take(at, column, out.values, true)
 }
 
-/** Escape puts the cell back as the record holds it. */
+/** Escape puts the cell back as the record holds it. An input method composing keeps its Escape. */
 function revert(event: KeyboardEvent, row: Row, column: TableColumn): void {
+  if (event.isComposing) return
   typing = null
   ;(event.target as HTMLInputElement).value = textOf(row.record, column)
   if (problem.value?.at === cellId(row.id, column)) problem.value = null

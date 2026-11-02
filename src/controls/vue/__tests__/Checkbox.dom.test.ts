@@ -388,6 +388,11 @@ describe('Checkbox’s own rules', () => {
     expect(bar['height']).toBe('var(--bar-height)')
   })
 
+  it('keeps the fill, the dot and the bar on a page printed without backgrounds', () => {
+    expect(declared(sheet, on)['print-color-adjust']).toBe('exact')
+    expect(declared(sheet, mixed)['print-color-adjust']).toBe('exact')
+  })
+
   it('states its own box model, since the kit ships no reset', () => {
     const rule = declared(sheet, '.aether-checkbox')
     expect(rule['box-sizing']).toBe('border-box')

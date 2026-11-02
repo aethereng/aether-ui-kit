@@ -179,6 +179,13 @@ function onKeyup(e: KeyboardEvent) {
     inset 0 0 0 1px color-mix(in srgb, var(--aether-ink) 52%, transparent);
 }
 
+/* A page printed without backgrounds would lose the fill, the dot and the bar, which are all backgrounds.
+   The well's ring prints as it is. */
+.aether-checkbox--on .aether-checkbox__key,
+.aether-checkbox--mixed .aether-checkbox__key {
+  print-color-adjust: exact;
+}
+
 /* The dot and the bar are one element, so a state only ever draws one of them. The ink is the one
    written for a filled tone, which inverts with the theme. */
 .aether-checkbox__glyph {

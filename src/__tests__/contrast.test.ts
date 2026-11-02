@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { declared, stylesOf } from './sfcRules'
 
 /* The palette clears WCAG AA by a hair, not by a mile, and that is a design decision rather than an
  * accident: `--aether-faint` was tuned to land just over the 4.5 floor on `--aether-panel`, which is
@@ -278,15 +279,22 @@ describe('the tokens a host is expected to remap', () => {
 /* Checkbox lights in the two mark colours, so what it draws is read against the grounds it sits on. A
  * key at 16px is a graphic, whose floor is 3:1 (WCAG 1.4.11). The percentages are read out of the
  * component rather than copied here, so a retuned ring or dim is what these measure. */
-const checkboxSource = readFileSync(resolve(__dirname, '../controls/vue/Checkbox.vue'), 'utf8')
+const checkboxSheet = stylesOf('controls/vue/Checkbox.vue')
+const offRule = declared(checkboxSheet, '.aether-checkbox__key')
+const mixedRule = declared(checkboxSheet, '.aether-checkbox--mixed .aether-checkbox__key')
 
-function percentIn(pattern: RegExp): number {
-  const m = pattern.exec(checkboxSource)
-  if (!m) throw new Error(`contrast: ${pattern} is not in Checkbox.vue`)
+function percentIn(text: string | undefined, pattern: RegExp): number {
+  const m = pattern.exec(text ?? '')
+  if (!m) throw new Error(`contrast: ${pattern} is not in "${text}"`)
   return Number(m[1]) / 100
 }
-const RING = percentIn(/inset 0 0 0 1px color-mix[(]in srgb, var[(]--aether-ink[)] (\d+)%, transparent[)]/)
-const DIM = percentIn(/color-mix[(]in srgb, var[(]--aether-mark-warm[)] (\d+)%, var[(]--aether-surface[)][)]/)
+const RING_OF = /inset 0 0 0 1px color-mix[(]in srgb, var[(]--aether-ink[)] (\d+)%, transparent[)]/
+const RING = percentIn(offRule['box-shadow'], RING_OF)
+const MIXED_RING = percentIn(mixedRule['box-shadow'], RING_OF)
+const DIM = {
+  '--aether-mark-warm': percentIn(mixedRule['background'], /color-mix[(]in srgb, var[(]--aether-mark-warm[)] (\d+)%, var[(]--aether-surface[)][)]/),
+  '--aether-mark-cool': percentIn(mixedRule['background'], /color-mix[(]in srgb, var[(]--aether-mark-cool[)] (\d+)%, var[(]--aether-surface[)][)]/),
+}
 
 /** A token's value, through any `var()` it is an alias of. */
 function hexOf(map: Record<string, string>, name: string): string {
@@ -310,21 +318,26 @@ function mixed(a: string, b: string, share: number): string {
 
 const MARK_ENDS = ['--aether-mark-warm', '--aether-mark-cool'] as const
 
-/** Every pairing of the key that falls under 3:1, named. */
-function keyFailures(map: Record<string, string>): string[] {
+/** Every pairing of the key that falls under 3:1, named. The dimmed fill cannot hold it on its ground, so a key partly on
+ *  has its ring for an edge, and the ring is measured as it is drawn, over that fill. */
+function keyFailures(map: Record<string, string>, mixedRing = MIXED_RING): string[] {
   const out: string[] = []
   const under = (what: string, fg: string, bg: string) => {
     if (ratio(fg, bg) < 3) out.push(`${what} ${ratio(fg, bg).toFixed(2)}`)
   }
+  const ink = hexOf(map, '--aether-ink')
+  const dimmed = (end: (typeof MARK_ENDS)[number]) => mixed(hexOf(map, end), hexOf(map, '--aether-surface'), DIM[end])
   for (const ground of GROUNDS) {
     const g = hexOf(map, ground)
-    under(`the well's ring on ${ground}`, mixed(hexOf(map, '--aether-ink'), g, RING), g)
-    for (const end of MARK_ENDS) under(`${end} on ${ground}`, hexOf(map, end), g)
+    under(`the well's ring on ${ground}`, mixed(ink, g, RING), g)
+    for (const end of MARK_ENDS) {
+      under(`${end} on ${ground}`, hexOf(map, end), g)
+      under(`the ring over ${end} dimmed on ${ground}`, mixed(ink, dimmed(end), mixedRing), g)
+    }
   }
   for (const end of MARK_ENDS) {
-    const lit = hexOf(map, end)
-    under(`the dot on ${end}`, hexOf(map, '--aether-warm-ink'), lit)
-    under(`the bar on ${end} dimmed`, hexOf(map, '--aether-ink'), mixed(lit, hexOf(map, '--aether-surface'), DIM))
+    under(`the dot on ${end}`, hexOf(map, '--aether-warm-ink'), hexOf(map, end))
+    under(`the bar on ${end} dimmed`, ink, dimmed(end))
   }
   return out
 }
@@ -355,10 +368,14 @@ describe('Checkbox clears 3:1 in every theme', () => {
   })
 
   it('reads the percentages it measures from the component', () => {
-    expect(RING).toBeGreaterThan(0)
-    expect(RING).toBeLessThanOrEqual(1)
-    expect(DIM).toBeGreaterThan(0)
-    expect(DIM).toBeLessThan(1)
+    for (const ring of [RING, MIXED_RING]) {
+      expect(ring).toBeGreaterThan(0)
+      expect(ring).toBeLessThanOrEqual(1)
+    }
+    for (const dim of Object.values(DIM)) {
+      expect(dim).toBeGreaterThan(0)
+      expect(dim).toBeLessThan(1)
+    }
   })
 
   describe('and the check sees a theme that does not', () => {
@@ -384,6 +401,12 @@ describe('Checkbox clears 3:1 in every theme', () => {
        * ink towards the ground until the same percentage cannot clear. */
       const bad = keyFailures({ ...light, '--aether-ink': '#c8c4bb' })
       expect(bad.some((b) => b.startsWith("the well's ring on --aether-surface"))).toBe(true)
+    })
+
+    it('a key partly on whose ring is too faint to be its edge', () => {
+      const bad = [light, dark].flatMap((map) => keyFailures(map, 0.05))
+      expect(bad.length).toBeGreaterThan(0)
+      expect(bad.every((b) => b.startsWith('the ring over'))).toBe(true)
     })
   })
 })

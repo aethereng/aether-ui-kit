@@ -354,10 +354,10 @@ describe('Checkbox’s own rules', () => {
     expect(fill).not.toMatch(/#[0-9a-f]{3,8}/i)
   })
 
-  it('dims partly on from the same two tokens', () => {
+  it('dims partly on from the same two tokens, each by the same mix with the ground', () => {
     const fill = declared(sheet, mixed)['background'] ?? declared(sheet, mixed)['background-image']
-    expect(fill).toContain('--aether-mark-warm')
-    expect(fill).toContain('--aether-mark-cool')
+    expect(fill).toContain('color-mix(in srgb, var(--aether-mark-warm) 62%, var(--aether-surface))')
+    expect(fill).toContain('color-mix(in srgb, var(--aether-mark-cool) 62%, var(--aether-surface))')
   })
 
   it('draws off as a well, and neither of the other states as one', () => {

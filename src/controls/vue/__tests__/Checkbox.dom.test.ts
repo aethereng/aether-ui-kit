@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { nextTick, ref } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 import Checkbox from '../Checkbox.vue'
 import CheckboxExample from '../../../gallery/examples/CheckboxExample.vue'
 import { declared, stylesOf } from '../../../__tests__/sfcRules'
@@ -192,6 +192,78 @@ describe('Checkbox from the keyboard', () => {
     const w = mount(Checkbox, { props: { modelValue: false, label: 'Row' }, attachTo: document.body })
     ;(w.element as HTMLElement).focus()
     expect(document.activeElement).toBe(w.element)
+    w.unmount()
+  })
+})
+
+describe('Checkbox with something interactive in its label', () => {
+  /* A real parent, which writes back what the key asks, so a press shows in its value. */
+  function labelled() {
+    const on = ref(false)
+    const w = mount(
+      defineComponent({
+        setup: () => () =>
+          h(Checkbox, { modelValue: on.value, 'onUpdate:modelValue': (v: boolean) => (on.value = v) }, () => [
+            h('span', { id: 'words' }, 'Accept '),
+            h('a', { id: 'link', href: '#terms' }, 'the terms'),
+            h('input', { id: 'field', type: 'text' }),
+            h('button', { id: 'button', type: 'button' }, 'More'),
+          ]),
+      }),
+      { attachTo: document.body },
+    )
+    const part = (id: string) => w.get(`#${id}`).element as HTMLElement
+    const key = (el: Element, type: 'keydown' | 'keyup', k: string) => {
+      const e = new KeyboardEvent(type, { key: k, bubbles: true, cancelable: true })
+      el.dispatchEvent(e)
+      return e
+    }
+    return { w, on, part, key }
+  }
+
+  it('leaves Space to an input there, which types it, and the key stays as it is', async () => {
+    const { w, on, part, key } = labelled()
+    expect(key(part('field'), 'keydown', ' ').defaultPrevented).toBe(false)
+    await nextTick()
+    expect(on.value).toBe(false)
+    w.unmount()
+  })
+
+  it('leaves Enter to a link there, which follows it', async () => {
+    const { w, on, part, key } = labelled()
+    expect(key(part('link'), 'keydown', 'Enter').defaultPrevented).toBe(false)
+    await nextTick()
+    expect(on.value).toBe(false)
+    w.unmount()
+  })
+
+  it('leaves the click on Space coming up to a button there', () => {
+    const { w, part, key } = labelled()
+    expect(key(part('button'), 'keyup', ' ').defaultPrevented).toBe(false)
+    w.unmount()
+  })
+
+  it.each(['link', 'field', 'button'])('takes no press from a click on the %s there', async (id) => {
+    const { w, on, part } = labelled()
+    part(id).dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    await nextTick()
+    expect(on.value).toBe(false)
+    w.unmount()
+  })
+
+  it('still presses from a click on the plain words, and from Space and a click on the key itself', async () => {
+    const { w, on, part, key } = labelled()
+    part('words').dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    await nextTick()
+    expect(on.value, 'the plain words').toBe(true)
+    const button = w.get('button[role="checkbox"]').element
+    expect(key(button, 'keydown', ' ').defaultPrevented, 'Space is taken').toBe(true)
+    await nextTick()
+    expect(on.value, 'Space').toBe(false)
+    expect(key(button, 'keyup', ' ').defaultPrevented, 'the click on the way up is stopped').toBe(true)
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    await nextTick()
+    expect(on.value, 'a click').toBe(true)
     w.unmount()
   })
 })

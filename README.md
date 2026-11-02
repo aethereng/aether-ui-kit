@@ -206,7 +206,7 @@ focus ring), which every component needs and no component owns.
 | **Toast** | `controls/toast` | Transient status pill that fades itself out. Controlled: you own the message. |
 | **Transport** | `controls/transport` | Playback transport: play/pause/replay, scrub, speed, precompute progress. Unit-agnostic: drives simulation seconds or calendar days. |
 | **Switch** | `controls/switch` | Boolean toggle as a pill switch. One bare input; you own the label. |
-| **Checkbox** | `controls/checkbox` | One choice in a list, drawn as a small key: a well when off; when on it stands up and lights, with a dot; a group partly on is dimmed, with a bar. Down to 16px in a row. A `role="checkbox"` button holding its label, so it takes no part in a form's submission. |
+| **Checkbox** | `controls/checkbox` | One choice in a list, drawn as a small key: a well when off; when on it stands up and lights, with a dot; a group partly on is dimmed, with a bar. Down to 16px in a row. A `role="checkbox"` button holding its label, so it takes no part in a form's submission. Whatever is interactive in the label keeps its own keys and clicks. A button may not hold interactive content, so write "I accept the terms" with a link as a `Checkbox` and a `<label for>` beside it, with the link in the label. |
 | **TextField** | `controls/text-field` | Free text, single- or multi-line via `multiline`. `autogrow` tracks content instead of a fixed row count, live. |
 | **NumberField** | `controls/number-field` | A typed number with its unit inside the box. Never rewrites a value you are still typing. |
 | **Select** | `controls/select` | Native single-choice dropdown, themed via `appearance: base-select`. Supports `groups`. |

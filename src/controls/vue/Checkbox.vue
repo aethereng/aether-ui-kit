@@ -15,6 +15,9 @@
  * Enter and a checkbox does not. The keydown takes Space and blocks Enter, and the keyup stops the click
  * a browser would add on the way up. A key held down presses once.
  *
+ * What is interactive inside the label keeps its own keys and clicks, so Space types in an input there and
+ * a click on a link there follows the link. A click on the plain words of the label presses the key.
+ *
  * CONTROLLED. A press emits and nothing moves until the caller writes the value back, so a caller that
  * refuses a change never has a key disagreeing with its data. */
 import { computed } from 'vue'
@@ -35,6 +38,10 @@ const props = withDefaults(defineProps<CheckboxProps>(), {
 })
 
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
+
+/** What HTML calls interactive content, and an element made focusable. The button itself is among them. */
+const INTERACTIVE =
+  'a[href], audio[controls], button, details, embed, iframe, img[usemap], input, label, select, summary, textarea, video[controls], [contenteditable], [tabindex]'
 
 const slots = defineSlots<{
   /** The visible label, inside the button, so a press on it presses the key. It is the accessible name. */
@@ -58,7 +65,12 @@ function press() {
   if (!props.disabled) emit('update:modelValue', nextChecked(props.modelValue, props.mixed))
 }
 
+function onClick(e: MouseEvent) {
+  if ((e.target as Element).closest(INTERACTIVE) === e.currentTarget) press()
+}
+
 function onKeydown(e: KeyboardEvent) {
+  if (e.target !== e.currentTarget) return
   if (e.key === 'Enter') {
     e.preventDefault()
   } else if (isCheckboxKey(e.key)) {
@@ -68,6 +80,7 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 function onKeyup(e: KeyboardEvent) {
+  if (e.target !== e.currentTarget) return
   if (isCheckboxKey(e.key)) e.preventDefault()
 }
 </script>
@@ -82,7 +95,7 @@ function onKeyup(e: KeyboardEvent) {
     :aria-checked="ariaChecked(drawn)"
     :aria-label="slots.default ? undefined : label"
     :disabled="disabled"
-    @click="press"
+    @click="onClick"
     @keydown="onKeydown"
     @keyup="onKeyup"
   >

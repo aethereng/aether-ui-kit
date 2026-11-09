@@ -12,6 +12,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     exclude: ['**/node_modules/**'],
+    /* The DOM tests that draw a long list take a few seconds on an idle machine, and the default of five
+       seconds leaves them no room on a shared runner. */
+    testTimeout: 20000,
     /* Node 26 has web storage of its own, on by default, and its localStorage reads as undefined with no
        storage file given. vitest leaves a global that is already there, so jsdom's store never reaches a
        test. This turns Node's off in the workers; Node 24 takes the flag and has nothing to turn off.

@@ -75,8 +75,11 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
      shows a hand. The rows get it too, below, where they are styleable at all. */
   cursor: pointer;
 }
+/* Dimmed the way Switch, Checkbox, Slider and RadioGroup are, so a control that cannot be used reads
+   so at a glance and not only to the pointer. */
 .aether-select:disabled {
   cursor: default;
+  opacity: 0.55;
 }
 .aether-select:focus-visible {
   outline: 2px solid var(--aether-cool);
@@ -121,13 +124,17 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
        the platform's own cursor, which is the platform's to decide. */
     cursor: pointer;
   }
+  /* The ink Menu gives a row it cannot run. Without it the colour above made a disabled row look
+     like any other. */
   .aether-select option:disabled {
+    color: var(--aether-faint);
     cursor: default;
   }
   /* The blue, replaced. `:hover` is the pointer highlight and `:focus` the keyboard one: both are
-     needed, or arrowing through the list leaves the system colour in place for keyboard users. */
-  .aether-select option:hover,
-  .aether-select option:focus {
+     needed, or arrowing through the list leaves the system colour in place for keyboard users.
+     Neither applies to a disabled row, which lights up for nothing it can do. */
+  .aether-select option:hover:not(:disabled),
+  .aether-select option:focus:not(:disabled) {
     background: var(--aether-cool-wash);
     color: var(--aether-cool);
   }

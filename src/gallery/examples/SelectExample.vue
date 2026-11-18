@@ -45,6 +45,17 @@ const channelGroups: SelectGroup[] = [
       <Select v-model="channel" :groups="channelGroups" />
     </label>
 
+    <!-- Same value in both, so the only difference on screen is `disabled`: dimmed as the kit's other
+         unavailable controls are, and it opens nothing. -->
+    <div class="g-sel-pair">
+      <label class="g-sel-row"><span>Enabled</span>
+        <Select v-model="solvent" :options="solvents" />
+      </label>
+      <label class="g-sel-row"><span>Disabled</span>
+        <Select v-model="solvent" :options="solvents" disabled />
+      </label>
+    </div>
+
     <code class="g-ex-state">solvent = {{ solvent }} · channel = {{ channel }}</code>
   </div>
 </template>
@@ -60,6 +71,11 @@ const channelGroups: SelectGroup[] = [
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+.g-sel-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 .g-sel-row > span {
   font-size: 11.5px;

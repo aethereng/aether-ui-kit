@@ -29,7 +29,11 @@ const setpoint = ref<number | undefined>(65)
       <NumberField v-model="setpoint" suffix="°C" placeholder="unset" />
     </label>
 
-    <code class="g-ex-state">flow = {{ flow }} · ratio = {{ ratio }} · setpoint = {{ setpoint === undefined ? 'undefined' : setpoint }}</code>
+    <label class="g-nf-row"><span>Disabled</span>
+      <NumberField :model-value="65" suffix="°C" disabled />
+    </label>
+
+    <code class="g-ex-state">flow ={{ flow }} · ratio = {{ ratio }} · setpoint = {{ setpoint === undefined ? 'undefined' : setpoint }}</code>
   </div>
 </template>
 

@@ -54,7 +54,7 @@ function onInput(e: Event) {
 </script>
 
 <template>
-  <div class="aether-numberfield">
+  <div class="aether-numberfield" :class="{ 'aether-numberfield--disabled': disabled }">
     <input
       type="number"
       :value="modelValue"
@@ -86,6 +86,12 @@ function onInput(e: Event) {
    no focus feedback at all. */
 .aether-numberfield:focus-within {
   border-color: var(--aether-ink-soft);
+}
+/* On the wrapper for the same reason as focus: the wrapper is the visible box, the input inside it
+   has no edge. It had no disabled rule at all, so a disabled one looked live. The dimming is
+   Switch's, Checkbox's, Slider's and RadioGroup's. */
+.aether-numberfield--disabled {
+  opacity: 0.55;
 }
 .aether-numberfield input[type='number'] {
   flex: 1 1 auto;

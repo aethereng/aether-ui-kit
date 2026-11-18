@@ -25,6 +25,39 @@ const mountGroup = (modelValue = 'idea', opts: RadioOption[] = options) =>
 
 const picked = (w: ReturnType<typeof mountGroup>) => w.emitted('update:modelValue')?.[0]
 
+describe('RadioGroup after a click the caller refuses or accepts', () => {
+  /* The options draw from the prop alone, with no native state to flip, so a refusal needs no repair.
+   * What is pinned is that it stays so. */
+  const chosen = (w: ReturnType<typeof mountGroup>) =>
+    w
+      .findAll('[role="radio"]')
+      .filter((b) => b.attributes('aria-checked') === 'true')
+      .map((b) => b.text())
+
+  it('keeps the chosen option and the focus when the caller refuses', async () => {
+    const w = mountGroup('idea')
+    const buttons = w.findAll('[role="radio"]')
+    const risk = buttons[2]!
+    ;(risk.element as HTMLElement).focus()
+    await risk.trigger('click')
+    expect(picked(w)).toEqual(['risk'])
+    expect(chosen(w)).toEqual(['Idea'])
+    expect(document.activeElement).toBe(risk.element)
+    w.unmount()
+  })
+
+  it('chooses the clicked option, keeping the focus, when the caller accepts', async () => {
+    const w = mountGroup('idea')
+    const risk = w.findAll('[role="radio"]')[2]!
+    ;(risk.element as HTMLElement).focus()
+    await risk.trigger('click')
+    await w.setProps({ modelValue: 'risk' })
+    expect(chosen(w)).toEqual(['Risk'])
+    expect(document.activeElement).toBe(risk.element)
+    w.unmount()
+  })
+})
+
 describe('RadioGroup says what it is', () => {
   it('announces itself as a radiogroup, and names itself', () => {
     const w = mountGroup()

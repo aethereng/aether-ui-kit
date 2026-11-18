@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { nextTick } from 'vue'
+
 /* A boolean toggle, rendered as a pill switch rather than a native checkbox.
  *
  * WHY THIS EXISTS AS A COMPONENT. The kit already drew this switch; but only under
@@ -12,12 +14,25 @@
  * a <label> inside the form's own <label>, which is invalid, and would change the DOM that a
  * consumer's overrides are written against. `id`, `aria-label` and friends fall through. */
 
-defineProps<{
+const props = defineProps<{
   modelValue: boolean
   disabled?: boolean
 }>()
 
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
+
+/* The browser flips the input before `change` fires, and `:checked` is patched only when modelValue
+ * moves. A parent that refuses, or answers with the value it already held, moves nothing, so the
+ * input would stay drawn on the state the parent declined. After the parent has had its turn the
+ * input is set back to the prop; a parent that accepted has already moved it there. Setting
+ * `checked` does not touch focus. */
+function onChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  emit('update:modelValue', input.checked)
+  nextTick(() => {
+    input.checked = props.modelValue
+  })
+}
 </script>
 
 <template>
@@ -26,7 +41,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
     class="aether-switch"
     :checked="modelValue"
     :disabled="disabled"
-    @change="emit('update:modelValue', ($event.target as HTMLInputElement).checked)"
+    @change="onChange"
   />
 </template>
 

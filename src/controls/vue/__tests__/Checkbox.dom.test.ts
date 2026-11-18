@@ -122,6 +122,43 @@ describe('Checkbox is pressed', () => {
     w.unmount()
   })
 
+  it.each([false, true])('and, holding %s, reads as it did and keeps focus when the caller refuses', async (modelValue) => {
+    // It draws from its prop alone, with no native state to flip, so a refusal needs no repair.
+    const asked: boolean[] = []
+    const w = mount(Checkbox, {
+      props: { modelValue, label: 'Row', 'onUpdate:modelValue': (v: boolean) => asked.push(v) },
+      attachTo: document.body,
+    })
+    const el = w.element as HTMLElement
+    el.focus()
+    await w.trigger('click')
+    await nextTick()
+    expect(asked).toEqual([!modelValue])
+    expect(misread(el, modelValue ? 'on' : 'off')).toEqual([])
+    expect(document.activeElement).toBe(el)
+    w.unmount()
+  })
+
+  it('and reads the other value, keeping focus, when the caller accepts', async () => {
+    const w = mount(Checkbox, {
+      props: {
+        modelValue: false,
+        label: 'Row',
+        'onUpdate:modelValue': (v: boolean) => {
+          void w.setProps({ modelValue: v })
+        },
+      },
+      attachTo: document.body,
+    })
+    const el = w.element as HTMLElement
+    el.focus()
+    await w.trigger('click')
+    await nextTick()
+    expect(misread(el, 'on')).toEqual([])
+    expect(document.activeElement).toBe(el)
+    w.unmount()
+  })
+
   it('works with v-model, there and back', async () => {
     const on = ref(false)
     const w = mount(Checkbox, {

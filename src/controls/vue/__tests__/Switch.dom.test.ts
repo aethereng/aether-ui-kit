@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 import Switch from '../Switch.vue'
 import PropertyEditor from '../../../property-editor/vue/PropertyEditor.vue'
@@ -50,6 +51,66 @@ describe('Switch', () => {
   it('does not emit while disabled', async () => {
     const w = mount(Switch, { props: { modelValue: false, disabled: true } })
     expect(w.attributes('disabled')).toBeDefined()
+    w.unmount()
+  })
+})
+
+describe('Switch after a change the parent answers', () => {
+  /* A real click on the input, because that is what moves the native state: the browser flips
+   * `checked` before it fires `change`. A parent that keeps its value leaves modelValue where it was,
+   * so nothing re-renders and the flipped input would stay drawn on. */
+  function mountAttached(modelValue: boolean, onUpdate: (v: boolean) => void) {
+    const w = mount(Switch, {
+      props: { modelValue, 'onUpdate:modelValue': onUpdate },
+      attachTo: document.body,
+    })
+    const el = w.element as HTMLInputElement
+    el.focus()
+    return { w, el }
+  }
+
+  it('reads unticked and keeps focus when the parent refuses to turn it on', async () => {
+    const asked: boolean[] = []
+    const { w, el } = mountAttached(false, (v) => asked.push(v))
+    el.click()
+    await nextTick()
+    expect(asked).toEqual([true])
+    expect(el.checked).toBe(false)
+    expect(document.activeElement).toBe(el)
+    w.unmount()
+  })
+
+  it('reads ticked and keeps focus when the parent refuses to turn it off', async () => {
+    const asked: boolean[] = []
+    const { w, el } = mountAttached(true, (v) => asked.push(v))
+    el.click()
+    await nextTick()
+    expect(asked).toEqual([false])
+    expect(el.checked).toBe(true)
+    expect(document.activeElement).toBe(el)
+    w.unmount()
+  })
+
+  it('reads ticked and keeps focus when the parent accepts', async () => {
+    const { w, el } = mountAttached(false, (v) => {
+      void w.setProps({ modelValue: v })
+    })
+    el.click()
+    await nextTick()
+    await nextTick()
+    expect(w.props('modelValue')).toBe(true)
+    expect(el.checked).toBe(true)
+    expect(document.activeElement).toBe(el)
+    w.unmount()
+  })
+
+  it('follows the parent after a refusal when the value moves later', async () => {
+    const { w, el } = mountAttached(false, () => {})
+    el.click()
+    await nextTick()
+    expect(el.checked).toBe(false)
+    await w.setProps({ modelValue: true })
+    expect(el.checked).toBe(true)
     w.unmount()
   })
 })

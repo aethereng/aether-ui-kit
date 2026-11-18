@@ -86,6 +86,10 @@
       "types": "./src/controls/vue/Tooltip.vue.d.ts",
       "import": "./src/controls/vue/Tooltip.vue"
     },
+    "./controls/copy-button": {
+      "types": "./src/controls/vue/CopyButton.vue.d.ts",
+      "import": "./src/controls/vue/CopyButton.vue"
+    },
     "./controls/menu": {
       "types": "./src/controls/vue/Menu.vue.d.ts",
       "import": "./src/controls/vue/Menu.vue"

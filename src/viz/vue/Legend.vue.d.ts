@@ -19,8 +19,8 @@ type __VLS_Props = {
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
     unit: string;
     note: string;
-    ticks: readonly string[];
     state: "ramp" | "zero" | "nonfinite";
+    ticks: readonly string[];
     noValueColor: string;
     noValueKey: string;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;

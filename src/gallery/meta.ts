@@ -303,16 +303,33 @@ export const COMPONENTS: CompMeta[] = [
     name: 'Tooltip',
     subpath: '@aether/ui-kit/controls/tooltip',
     group: 'Overlays',
-    blurb: 'Hover/focus tooltip that escapes any ancestor clipping it.',
+    blurb: 'Hover, focus and tap tooltip that escapes any ancestor clipping it.',
     detail:
-      'Explanatory text on hover or focus. It uses the platform\'s top layer, so no ancestor\'s `overflow` or transform can clip it and there is nothing to portal. `placement` picks a side, and it flips when there is no room.',
+      'Explanatory text on hover, on keyboard focus, and on a tap. It uses the platform\'s top layer, so no ancestor\'s `overflow` or transform can clip it and there is nothing to portal. `placement` picks a side, and it flips when there is no room. A tap on a touch screen opens it and a second tap closes it; a tap elsewhere or Escape closes it too. A tap on a trigger that is itself a control (a button, a link, a field) only runs the control and opens nothing; a control that has something to say afterwards calls `show()`.',
     props: [
-      { name: 'text', type: 'string', note: 'plain text; rich content is unreachable by touch' },
+      { name: 'text', type: 'string', note: 'plain text; rich content is awkward to reach by touch' },
       { name: 'placement', type: "'top' | 'bottom' | 'left' | 'right'?", note: "default 'bottom'" },
-      { name: 'delay', type: 'number?', note: 'hover dwell in ms, default 400; focus is immediate' },
+      { name: 'delay', type: 'number?', note: 'hover dwell in ms, default 400; focus and a tap are immediate' },
       { name: 'disabled', type: 'boolean?' },
     ],
     slots: [{ name: 'default', type: 'no props', note: 'the trigger element' }],
+    exposed: [
+      { name: 'show()', type: '() => void', note: 'opens the tooltip; for a control that speaks after its own action' },
+      { name: 'hide()', type: '() => void', note: 'closes it' },
+    ],
+  },
+  {
+    id: 'copy-button',
+    name: 'CopyButton',
+    subpath: '@aether/ui-kit/controls/copy-button',
+    group: 'Controls',
+    blurb: 'An icon that copies words and says how it went.',
+    detail:
+      'Icon only, so it can end a line of text without taking a column. The label stands in a Tooltip and names the button to a screen reader. After a press the label reads Copied for 1.5 s, or Not copied where the clipboard write is refused or the page has no clipboard, and the icon turns to a check or a cross. After a press by a pointer the tooltip opens to say it. On a coarse pointer the tap area is a 44 px square about the icon, which takes no room in the line.',
+    props: [
+      { name: 'words', type: 'string', note: 'what a press puts on the clipboard' },
+      { name: 'label', type: 'string', note: 'what the control copies, said at rest' },
+    ],
   },
   {
     id: 'menu',

@@ -196,7 +196,8 @@ focus ring), which every component needs and no component owns.
 | **Gallery** | `controls/gallery` | Sample cards in one section per family: a picture, a title, a line, a foot and a note. Emits `open` with the item's id. The page around it stays the app's. |
 | **Spinner** | `controls/spinner` | Indeterminate busy indicator. `label` names it for a screen reader; omit it when text beside it already says what is happening. |
 | **Icon** | `controls/icon` | An icon from an SVG path string on a 24 by 24 grid, the form `@mdi/js` exports; the app keeps the icon set. 1em unless `size` says otherwise; `label` names it, and without one it is hidden from a screen reader. |
-| **Tooltip** | `controls/tooltip` | Hover/focus tooltip that escapes any ancestor clipping it, via the top layer. |
+| **Tooltip** | `controls/tooltip` | Hover, focus and tap tooltip that escapes any ancestor clipping it, via the top layer. |
+| **CopyButton** | `controls/copy-button` | An icon that puts words on the clipboard and says how that went: Copied, or Not copied where the write is refused, for 1.5 s, in its tooltip and its accessible name. A 44 px tap area on a coarse pointer. |
 | **Menu** | `controls/menu` | Dropdown menu with the full APG keyboard model. |
 | **Dialog** | `controls/dialog` | Modal dialog over the native `<dialog>` element. |
 | **SearchField** | `controls/search-field` | Search input whose clear button appears only once there is something to clear. |

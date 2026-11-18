@@ -45,6 +45,8 @@ import SwitchExample from './examples/SwitchExample.vue'
 import SwitchExampleSrc from './examples/SwitchExample.vue?raw'
 import CheckboxExample from './examples/CheckboxExample.vue'
 import CheckboxExampleSrc from './examples/CheckboxExample.vue?raw'
+import CopyButtonExample from './examples/CopyButtonExample.vue'
+import CopyButtonExampleSrc from './examples/CopyButtonExample.vue?raw'
 import TooltipExample from './examples/TooltipExample.vue'
 import TooltipExampleSrc from './examples/TooltipExample.vue?raw'
 import MenuExample from './examples/MenuExample.vue'
@@ -370,6 +372,10 @@ function setGroup(g: Group, open: boolean) {
 
         <GSection v-else-if="c.id === 'tooltip'" :meta="c" :source="TooltipExampleSrc">
           <TooltipExample />
+        </GSection>
+
+        <GSection v-else-if="c.id === 'copy-button'" :meta="c" :source="CopyButtonExampleSrc">
+          <CopyButtonExample />
         </GSection>
 
         <GSection v-else-if="c.id === 'menu'" :meta="c" :source="MenuExampleSrc">

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import Select from '../Select.vue'
 import NumberField from '../NumberField.vue'
+import TextField from '../TextField.vue'
 import { declared, stylesOf } from '../../../__tests__/sfcRules'
 
 /* A control that cannot be used has to read so at a glance. Select's :disabled rule once set only the
@@ -94,6 +95,26 @@ describe('Select: disabled', () => {
         expect(lit[0]!.style.getPropertyValue('background')).toBe('var(--aether-cool-wash)')
       }
     })
+  })
+})
+
+describe('TextField: disabled', () => {
+  stylesOf('controls/vue/TextField.vue')
+  const dimmed = parseFloat(declared(stylesOf('controls/vue/Switch.vue'), '.aether-switch:disabled')['opacity']!)
+
+  it.each([false, true])('is dimmed as the other disabled controls are, multiline %s, and a live one is not', (multiline) => {
+    const live = mount(TextField, { props: { modelValue: 'Batch A-14', multiline }, attachTo: document.body })
+    const off = mount(TextField, { props: { modelValue: 'Batch A-14', multiline, disabled: true }, attachTo: document.body })
+    expect(off.element.matches(':disabled'), 'precondition: the browser calls it disabled').toBe(true)
+    expect(live.element.matches(':disabled'), 'precondition: the live one is not').toBe(false)
+    expect(opacityOf(live.element)).toBe(1)
+    expect(opacityOf(off.element)).toBe(dimmed)
+  })
+
+  it('keeps the ink of a live one: the value is dimmed with the box and not greyed to the ink of a placeholder', () => {
+    const live = mount(TextField, { props: { modelValue: 'Batch A-14' }, attachTo: document.body })
+    const off = mount(TextField, { props: { modelValue: 'Batch A-14', disabled: true }, attachTo: document.body })
+    expect(getComputedStyle(off.element).color).toBe(getComputedStyle(live.element).color)
   })
 })
 

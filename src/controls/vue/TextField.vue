@@ -131,9 +131,11 @@ function onInput(e: Event) {
   outline: none;
   border-color: var(--aether-ink-soft);
 }
+/* Dimmed as the other disabled controls are. The faint ink it had alone is the ink of a placeholder, so
+   a locked value read as an empty field asking for text. */
 .aether-textfield:disabled {
-  color: var(--aether-faint);
   cursor: default;
+  opacity: 0.55;
 }
 .aether-textfield--multiline {
   /* Vertical only: a textarea that can be dragged wider escapes whatever column it sits in, and

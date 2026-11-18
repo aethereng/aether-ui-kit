@@ -10,17 +10,27 @@
  * Position comes from CSS anchor positioning, so the browser tracks the anchor through scroll and
  * resize itself: no listeners, no measuring loop. `position-try-fallbacks` does the collision flip.
  * Where anchor positioning is unsupported the popover still reaches the top layer (that half is
- * broadly available), and a small rect-based fallback places it. */
+ * broadly available), and a small rect-based fallback places it.
+ *
+ * Three ways in, by who is asking. A fine pointer: hover after a dwell. The keyboard: focus, at once.
+ * A finger: a tap on the trigger opens it and a second tap closes it; a tap anywhere else, or Escape,
+ * closes it too. A finger has no hover, and the focus a tap gives is not :focus-visible, so before
+ * this a tooltip could not be opened on a touch screen at all.
+ *
+ * A tap toggles only where the trigger is not itself a control (a button, a link, a field). A tap on
+ * a control does what the control does and nothing more: a tooltip left open after "Fit view" or
+ * "Delete" would sit over the result of the action. A control that has something to say after its
+ * action (a copy that says "Copied") opens its own tooltip through the exposed `show()`. */
 import { onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 
 const props = withDefaults(
   defineProps<{
     /** The tooltip text. Plain string on purpose: rich content in a tooltip is unreachable by
-     *  keyboard and invisible to touch. Anything interactive belongs in a Menu or a Dialog. */
+     *  keyboard and awkward to reach by touch. Anything interactive belongs in a Menu or a Dialog. */
     text: string
     placement?: 'top' | 'bottom' | 'left' | 'right'
-    /** Dwell before showing on hover, in ms. Pointer only: keyboard focus shows immediately, because a
-     *  keyboard user has already committed by landing on the control. */
+    /** Dwell before showing on hover, in ms. Fine pointer only: keyboard focus shows immediately, because a
+     *  keyboard user has already committed by landing on the control, and a tap shows immediately too. */
     delay?: number
     disabled?: boolean
   }>(),
@@ -35,6 +45,11 @@ const shown = ref(false)
 let timer: ReturnType<typeof setTimeout> | null = null
 // True while keyboard focus opened the tip. Only such a tip answers to focus changes.
 let fromFocus = false
+/* A touch press on a trigger that is not a control, waiting for the click that completes the tap. A
+   press the browser takes over for a scroll fires pointercancel and no click, so it never opens a tip.
+   `tapWasOpen` is whether the tip was open when that press began, which is what the tap toggles. */
+let tapping = false
+let tapWasOpen = false
 let watcher: MutationObserver | null = null
 
 const supportsAnchor =
@@ -67,6 +82,7 @@ function show() {
 function hide() {
   clear()
   fromFocus = false
+  listenOutside(false)
   const el = tip.value
   if (!el || !shown.value) return
   if (supportsPopover) el.hidePopover()
@@ -76,6 +92,72 @@ function hide() {
 function showAfterDelay() {
   clear()
   timer = setTimeout(show, props.delay)
+}
+
+/* The pointer's own answer, per event, rather than a media query: a touch laptop's finger is a touch
+   and its trackpad is a mouse, and each is treated as what it is. A pen hovers, so it is a mouse here. */
+const isTouch = (e: PointerEvent) => e.pointerType === 'touch'
+
+const CONTROL = 'button, a[href], input, select, textarea, summary, label, [role="button"], [role="link"], [contenteditable]'
+/* Whether the press landed on a control INSIDE the tooltip's own trigger. `closest` alone would also
+   find a control that merely contains the whole tooltip, and that one is not this trigger. */
+function onControl(target: EventTarget | null): boolean {
+  const a = anchor.value
+  const hit = target instanceof Element ? target.closest(CONTROL) : null
+  return !!a && !!hit && a.contains(hit)
+}
+
+function onPointerEnter(e: PointerEvent) {
+  if (!isTouch(e)) showAfterDelay()
+}
+// A touch pointer leaves the trigger the moment the finger lifts, which is the moment a tap is made.
+function onPointerLeave(e: PointerEvent) {
+  if (!isTouch(e)) hide()
+}
+function onPointerDown(e: PointerEvent) {
+  tapping = false
+  if (isTouch(e) && !onControl(e.target)) {
+    clear()
+    tapping = true
+    tapWasOpen = shown.value
+    return
+  }
+  hide()
+}
+function onPointerCancel() {
+  tapping = false
+}
+function onClick() {
+  if (!tapping) return
+  tapping = false
+  if (tapWasOpen) {
+    hide()
+    return
+  }
+  show()
+  if (shown.value) listenOutside(true)
+}
+
+/* While a tap holds the tip open, a press anywhere outside the trigger and Escape pressed anywhere
+   close it: focus may be nowhere near the trigger, so the document is what hears them. The press is
+   heard in the capture phase, so a page that stops its own bubbling still closes the tip. */
+function onDocPointerDown(e: PointerEvent) {
+  const a = anchor.value
+  if (a && e.target instanceof Node && a.contains(e.target)) return
+  hide()
+}
+function onDocKey(e: KeyboardEvent) {
+  if (e.key === 'Escape') hide()
+}
+function listenOutside(on: boolean) {
+  if (typeof document === 'undefined') return
+  if (on) {
+    document.addEventListener('pointerdown', onDocPointerDown, true)
+    document.addEventListener('keydown', onDocKey, true)
+  } else {
+    document.removeEventListener('pointerdown', onDocPointerDown, true)
+    document.removeEventListener('keydown', onDocKey, true)
+  }
 }
 
 /* Keyboard focus shows the tip, and only that: the browser's own :focus-visible says whether the
@@ -159,6 +241,10 @@ function wireTrigger() {
 }
 watch(() => [props.text, anchor.value], wireTrigger, { flush: 'post' })
 
+/* For a control that has something to say once its own action is done (a copy that says "Copied" or
+   "Not copied"): a tap on a control opens no tip by itself, so that control asks for it. */
+defineExpose({ show, hide })
+
 function onKey(e: KeyboardEvent) {
   // Escape dismisses a tooltip without closing whatever is behind it.
   if (e.key === 'Escape' && shown.value) hide()
@@ -172,6 +258,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clear()
+  listenOutside(false)
   watcher?.disconnect()
   // A popover left open while its element is removed leaves a stranded surface in the top layer.
   if (shown.value && supportsPopover) tip.value?.hidePopover()
@@ -187,9 +274,11 @@ onBeforeUnmount(() => {
   <span
     ref="anchor"
     class="aether-tooltip__anchor"
-    @pointerenter="showAfterDelay"
-    @pointerleave="hide"
-    @pointerdown="hide"
+    @pointerenter="onPointerEnter"
+    @pointerleave="onPointerLeave"
+    @pointerdown="onPointerDown"
+    @pointercancel="onPointerCancel"
+    @click="onClick"
     @focusin="onFocusIn"
     @focusout="hide"
     @keydown="onKey"

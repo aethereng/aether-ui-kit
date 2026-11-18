@@ -1,18 +1,23 @@
 type __VLS_Props = {
     /** The tooltip text. Plain string on purpose: rich content in a tooltip is unreachable by
-     *  keyboard and invisible to touch. Anything interactive belongs in a Menu or a Dialog. */
+     *  keyboard and awkward to reach by touch. Anything interactive belongs in a Menu or a Dialog. */
     text: string;
     placement?: 'top' | 'bottom' | 'left' | 'right';
-    /** Dwell before showing on hover, in ms. Pointer only: keyboard focus shows immediately, because a
-     *  keyboard user has already committed by landing on the control. */
+    /** Dwell before showing on hover, in ms. Fine pointer only: keyboard focus shows immediately, because a
+     *  keyboard user has already committed by landing on the control, and a tap shows immediately too. */
     delay?: number;
     disabled?: boolean;
 };
+declare function show(): void;
+declare function hide(): void;
 declare var __VLS_1: {};
 type __VLS_Slots = {} & {
     default?: (props: typeof __VLS_1) => any;
 };
-declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
+declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {
+    show: typeof show;
+    hide: typeof hide;
+}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
     disabled: boolean;
     placement: "top" | "bottom" | "left" | "right";
     delay: number;

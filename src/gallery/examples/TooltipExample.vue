@@ -22,6 +22,11 @@ const open = ref(true)
          tofu. On a kit whose whole point is shipping no icon font, that was the wrong thing to
          demonstrate. Two of the three were also near-identical at this size: ⤢ and ⤡ differ only in
          which diagonal they run along. -->
+    <!-- A label is not a control, so a tap on a touch screen opens its tooltip and a second tap closes it. -->
+    <Tooltip text="Utilisation 0.92 at member 14, station 0.5, governed by bending about the major axis." placement="top">
+      <span class="g-tt-label" tabindex="0">Utilisation 0.92</span>
+    </Tooltip>
+
     <div class="g-tt-row">
       <Tooltip text="Fit view" placement="bottom">
         <Tool label="Fit view" label-hidden>
@@ -83,6 +88,19 @@ const open = ref(true)
 .g-tt-row {
   display: flex;
   gap: 8px;
+}
+.g-tt-label {
+  align-self: flex-start;
+  font-size: var(--aether-control-font-size);
+  color: var(--aether-ink);
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.g-tt-label:focus-visible {
+  outline: 2px solid var(--aether-cool);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 .g-tt-inner {
   display: flex;

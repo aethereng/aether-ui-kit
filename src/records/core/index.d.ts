@@ -8,7 +8,7 @@ export { ARROW, CHOICE, NUMBER, PAD, TEXT_CEILING, choiceWidth, isCut, measurer,
 export type { Measure } from './widths';
 export { bulkRefusal, cellChange, cellText, cellValue, cellWords, choiceLabels, columnWidths, matches, numberText, ownUnit, pasteRows, textOf, valueFor, } from './cells';
 export type { CellRefusal, Row, RowValue } from './cells';
-export { formFields, groupFields, issueField, keepOnVariant } from './form';
+export { formFields, groupFields, issueField, keepOnVariant, placeholderOf } from './form';
 export type { FieldView, FormContext, Option } from './form';
 export { exampleOf, shapeLine } from './shapes';
 export { deleteClosure, draftKeeper, stepWords } from './steps';

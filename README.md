@@ -61,7 +61,7 @@ Not on a public registry. Depend on it by git ref, pinned to a tag:
 ```json
 {
   "dependencies": {
-    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.25.0"
+    "@aether/ui-kit": "github:aethereng/aether-ui-kit#v0.26.0"
   }
 }
 ```
@@ -368,7 +368,10 @@ differs from the record's; `invalid` with the words for text it cannot read; `op
 record links to; and `restored` when Escape puts back a value typed and not given. With nothing typed, Escape goes on to
 whatever holds the form. A refusal is announced as it appears, and its control is marked invalid and described by it.
 `flush` gives what is typed and not yet given, for a form's Enter and its button for a draft. A number is
-typed in the unit shown and given as the record stores it. A field declared `readonly` is shown and gives nothing. A field
+typed in the unit shown and given as the record stores it. A `placeholder` is a value shown greyed in a number, a free
+text or each box of three numbers, where the box holds no text: a number as a held one shows, in the unit and the digits of
+the field. It is read only, gone as soon as anything is typed, never given to the record, and every other control ignores
+it. A field declared `readonly` is shown and gives nothing. A field
 of `control: 'app'` draws nothing, its label and its `issue` included: the app draws its control in that place, with the
 field's label and any refusal of its value beside it.
 

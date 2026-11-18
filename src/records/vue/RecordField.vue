@@ -12,6 +12,10 @@
 // shown and gives nothing. `flush` gives what is typed and not yet given: a form's Enter, and its button for a draft, call
 // it on every field. Escape puts back a value typed and not given, and uses the key (`restored`); with nothing typed the key
 // goes on to whatever holds the form. A refusal is announced when it appears, and its control is marked and described by it.
+//
+// A `placeholder` is a value shown greyed in a number, a free text, or each box of three numbers, where the box holds no
+// text. A number shows as a held one does, in the unit and the digits of the field. It is read only: it is gone as soon as
+// anything is typed, is never given to the record, and every other control ignores it.
 import { computed, ref, useId, watch } from 'vue'
 import TextField from '../../controls/vue/TextField.vue'
 import Select from '../../controls/vue/Select.vue'
@@ -20,12 +24,13 @@ import Disclosure from '../../controls/vue/Disclosure.vue'
 import Tool from '../../controls/vue/Tool.vue'
 import Callout from '../../controls/vue/Callout.vue'
 import type { Json } from '../../verbs'
-import { STORED, numberText, shapeLine, type FieldView, type Units } from '../core'
+import { STORED, numberText, placeholderOf, shapeLine, type FieldView, type Units } from '../core'
 
-const props = withDefaults(defineProps<{ field: FieldView; value: Json | undefined; units?: Units; issue?: string; summary?: string }>(), {
+const props = withDefaults(defineProps<{ field: FieldView; value: Json | undefined; units?: Units; issue?: string; summary?: string; placeholder?: Json }>(), {
   units: () => STORED,
   issue: undefined,
   summary: undefined,
+  placeholder: undefined,
 })
 const emit = defineEmits<{ commit: [value: Json]; invalid: [words: string]; open: [id: string]; restored: [] }>()
 
@@ -79,6 +84,11 @@ function partValue(text: string, stored: Json | undefined, quantity = f.value.qu
 }
 
 const textOf = (v: Json | undefined): string => (typeof v === 'string' ? v : '')
+
+/** What the field's controls show greyed where they hold no text: one line for a number or a free text, one per box of a vector. */
+const greyed = computed(() => placeholderOf(f.value, props.placeholder, props.units))
+const greyedLine = computed(() => (typeof greyed.value === 'string' ? greyed.value : undefined))
+const greyedAxis = (i: number): string | undefined => (Array.isArray(greyed.value) && (parts.value[i] ?? '') === '' ? greyed.value[i] : undefined)
 
 function fill(): void {
   const v = props.value
@@ -334,6 +344,7 @@ const refused = computed(() => (props.issue ? { 'aria-invalid': 'true' as const,
           :name="field.name"
           :data-field="field.name"
           v-bind="refused"
+          :placeholder="text === '' ? greyedLine : undefined"
           inputmode="decimal"
           autocomplete="off"
           @change="commitNumber"
@@ -376,6 +387,7 @@ const refused = computed(() => (props.issue ? { 'aria-invalid': 'true' as const,
             :data-axis="axis"
             :aria-label="`${field.label} ${axis}`"
             :aria-invalid="issue ? 'true' : undefined"
+            :placeholder="greyedAxis(i)"
             inputmode="decimal"
             autocomplete="off"
             @update:model-value="parts[i] = $event"
@@ -488,6 +500,7 @@ const refused = computed(() => (props.issue ? { 'aria-invalid': 'true' as const,
         :name="field.name"
         :data-field="field.name"
         v-bind="refused"
+        :placeholder="text === '' ? greyedLine : undefined"
         autocomplete="off"
         @change="commitText"
         @keydown.enter="commitText"

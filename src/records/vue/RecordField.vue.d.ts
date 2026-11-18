@@ -6,6 +6,7 @@ type __VLS_Props = {
     units?: Units;
     issue?: string;
     summary?: string;
+    placeholder?: Json;
 };
 /** Gives what is typed and not yet given. */
 declare function flush(): void;
@@ -22,6 +23,7 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {
     onCommit?: ((value: Json) => any) | undefined;
     onRestored?: (() => any) | undefined;
 }>, {
+    placeholder: Json;
     summary: string;
     units: Units;
     issue: string;

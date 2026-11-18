@@ -1,5 +1,5 @@
 import type { Json, Schema } from '../../verbs';
-import type { FieldColumn, KindDecl, OptionGroup } from './types';
+import type { FieldColumn, KindDecl, OptionGroup, Units } from './types';
 /** A choice offered: its value and its words. */
 export interface Option {
     value: string;
@@ -84,3 +84,10 @@ export declare function keepOnVariant(kind: KindDecl, next: string, fields: read
 export declare function issueField(issue: {
     field?: string;
 }): string | undefined;
+/**
+ * What a control shows greyed where it holds no value, for the `placeholder` its field is given: a number or a free text
+ * shows its own in its one box, and three numbers show one each, written as a held number is, in the unit's digits
+ * (`numberText` of the unit's value). A part of a vector that is not a number shows none. Any other control takes none, and
+ * so does a placeholder of another shape than the control holds.
+ */
+export declare function placeholderOf(field: Pick<FieldView, 'kind' | 'quantity'>, placeholder: Json | undefined, units: Units): string | (string | undefined)[] | undefined;

@@ -4,7 +4,8 @@
 import type { Json, Schema } from '../../verbs'
 import { clearsField, takesNull, valueSchema } from './schema'
 import { fieldsTaken } from './columns'
-import type { FieldColumn, KindDecl, OptionGroup } from './types'
+import { numberText } from './cells'
+import type { FieldColumn, KindDecl, OptionGroup, Units } from './types'
 
 /** A choice offered: its value and its words. */
 export interface Option {
@@ -182,4 +183,24 @@ export function keepOnVariant(
 /** The field a verb's refusal belongs to, by its place: `id` for the id, else the field its place names (`/set/e`). */
 export function issueField(issue: { field?: string }): string | undefined {
   return issue.field === '/id' ? 'id' : issue.field?.split('/')[2]
+}
+
+/**
+ * What a control shows greyed where it holds no value, for the `placeholder` its field is given: a number or a free text
+ * shows its own in its one box, and three numbers show one each, written as a held number is, in the unit's digits
+ * (`numberText` of the unit's value). A part of a vector that is not a number shows none. Any other control takes none, and
+ * so does a placeholder of another shape than the control holds.
+ */
+export function placeholderOf(
+  field: Pick<FieldView, 'kind' | 'quantity'>,
+  placeholder: Json | undefined,
+  units: Units,
+): string | (string | undefined)[] | undefined {
+  const shown = (n: Json | undefined): string | undefined =>
+    typeof n === 'number' ? numberText(field.quantity === undefined ? n : units.shown(n, field.quantity)) : undefined
+  if (field.kind === 'number') return shown(placeholder)
+  if (field.kind === 'text') return typeof placeholder === 'string' && placeholder !== '' ? placeholder : undefined
+  if (field.kind !== 'vector' || !Array.isArray(placeholder)) return undefined
+  const parts = [0, 1, 2].map((i) => shown(placeholder[i]))
+  return parts.some((p) => p !== undefined) ? parts : undefined
 }

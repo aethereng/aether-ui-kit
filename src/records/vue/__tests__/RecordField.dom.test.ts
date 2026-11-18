@@ -473,6 +473,129 @@ describe('a form around the fields', () => {
   })
 })
 
+describe('a placeholder', () => {
+  /** The words each input of a field shows greyed, in the order they are drawn: undefined for one that shows none. */
+  const greyed = (w: VueWrapper): (string | undefined)[] => w.findAll('input').map((i) => i.attributes('placeholder'))
+  const held = (w: VueWrapper): string[] => w.findAll('input').map((i) => (i.element as HTMLInputElement).value)
+
+  it.each([
+    ['a length in its unit', 0.0125, UNITS],
+    ['a number written at twelve digits', 0.30000000000000004, STORED],
+    ['a number of many digits', 1 / 3, STORED],
+  ] as const)('shows %s greyed in a number, as the number shows when the field holds it', (_, n, units) => {
+    const w = field('size', undefined, { placeholder: n, units })
+    expect(greyed(w)).toEqual([held(field('size', n, { units }))[0]])
+    expect(greyed(w)[0], 'a text was shown').toMatch(/\d/)
+    expect(held(w), 'the box itself holds nothing').toEqual([''])
+    expect(w.find('.aether-record-field__unit').exists(), 'the unit the number is in').toBe(units === UNITS)
+  })
+
+  it('shows a free text greyed where the field holds none', () => {
+    const w = field('made', undefined, { placeholder: 'Ann' })
+    expect(greyed(w)).toEqual(['Ann'])
+    expect(held(w)).toEqual([''])
+  })
+
+  it('shows each box of three numbers greyed with its own part, as that part shows when the field holds it', () => {
+    const three = [0.1, 0.2, 0.30000000000000004]
+    const w = field('at', undefined, { placeholder: three })
+    expect(greyed(w)).toEqual(['100', '200', '300'])
+    expect(greyed(w)).toEqual(held(field('at', three)))
+    expect(held(w)).toEqual(['', '', ''])
+    expect(w.findAll('.aether-record-field__axis-name').map((a) => a.text()), 'the boxes keep their names').toEqual(['x', 'y', 'z'])
+    expect(greyed(field('at', undefined, { placeholder: [1, null, 3], units: STORED })), 'a part that is not a number shows none').toEqual(['1', undefined, '3'])
+  })
+
+  it.each([
+    ['a number', 'size', 0.02, 0.0125],
+    ['a free text', 'made', 'Bea', 'Ann'],
+    ['three numbers', 'at', [0.4, 0.5, 0.6], [0.1, 0.2, 0.3]],
+  ] as const)('shows none in %s that holds a value', (_, name, value, placeholder) => {
+    const shown = greyed(field(name, value as Json, { placeholder: placeholder as Json }))
+    expect(shown.filter((p) => p !== undefined)).toEqual([])
+    expect(greyed(field(name, undefined, { placeholder: placeholder as Json })).every((p) => p !== undefined), 'the positive arm: the same field empty shows it').toBe(true)
+  })
+
+  it('is gone as soon as anything is typed, from that box only', async () => {
+    const size = field('size', undefined, { placeholder: 0.0125 })
+    await type(size, 'input[data-field="size"]', '3', 'stay')
+    expect(greyed(size)).toEqual([undefined])
+    const made = field('made', undefined, { placeholder: 'Ann' })
+    await type(made, 'input[data-field="made"]', 'B', 'stay')
+    expect(greyed(made)).toEqual([undefined])
+    const at = field('at', undefined, { placeholder: [0.1, 0.2, 0.3] })
+    await type(at, 'input[data-axis="y"]', '5', 'stay')
+    expect(greyed(at)).toEqual(['100', undefined, '300'])
+  })
+
+  it('is never given to the record: leaving a field untouched gives nothing, and a value cleared gives null', async () => {
+    const size = field('size', undefined, { placeholder: 0.0125 })
+    await size.find('input').trigger('change')
+    await size.find('input').trigger('keydown', { key: 'Enter' })
+    ;(size.vm as unknown as { flush(): void }).flush()
+    const made = field('made', undefined, { placeholder: 'Ann' })
+    await made.find('input').trigger('change')
+    ;(made.vm as unknown as { flush(): void }).flush()
+    const at = field('at', undefined, { placeholder: [1, 2, 3] })
+    await at.find('.aether-record-field__vector').trigger('focusout')
+    ;(at.vm as unknown as { flush(): void }).flush()
+    for (const w of [size, made, at]) expect([given(w), said(w)]).toEqual([[], []])
+
+    const cleared = field('size', 0.02, { placeholder: 0.0125 })
+    await type(cleared, 'input[data-field="size"]', '', 'enter')
+    const text = field('made', 'Bea', { placeholder: 'Ann' })
+    await type(text, 'input[data-field="made"]', '')
+    const three = field('at', [4, 5, 6], { placeholder: [1, 2, 3], units: STORED })
+    for (const axis of ['x', 'y', 'z']) await type(three, `input[data-axis="${axis}"]`, '', 'stay')
+    await three.find('.aether-record-field__vector').trigger('focusout')
+    expect([given(cleared), given(text), given(three)]).toEqual([[null], [null], [null]])
+  })
+
+  it('gives what is typed, never the placeholder beside it', async () => {
+    const w = field('at', undefined, { placeholder: [1, 2, 3], units: STORED })
+    for (const [axis, n] of [['x', '4'], ['y', '5'], ['z', '6']] as const) await type(w, `input[data-axis="${axis}"]`, n, 'stay')
+    await w.find('.aether-record-field__vector').trigger('focusout')
+    expect(given(w)).toEqual([[4, 5, 6]])
+  })
+
+  // A value for every control that takes none, and one of another shape for the controls that take one.
+  it.each([
+    ['a choice', 'stock', 's1', PARTS, '', 's2'],
+    ['a flag', 'kept', true, PARTS, '', false],
+    ['switches', 'sides', ['top'], PARTS, '', ['left']],
+    ['a list of references', 'posts', ['s1', 's2'], SHELVES, 'wall', ['s2', 's1']],
+    ['a table', 'layers', [{ depth: 0.001, stock: 's1', push: [0, 0, 0] }], PARTS, '', [{ depth: 7, stock: 's2', push: [7, 7, 7] }]],
+    ['a summary', 'outline', [[0, 0, 0]], SHELVES, 'wall', [[9, 9, 9]]],
+    ['JSON', 'extra', undefined, PARTS, '', { k: 2 }],
+    ['a number, given a text', 'size', undefined, PARTS, '', 'ten'],
+    ['a number, given a list', 'size', undefined, PARTS, '', [1]],
+    ['a free text, given a number', 'made', undefined, PARTS, '', 5],
+    ['a free text, given nothing to show', 'made', undefined, PARTS, '', ''],
+    ['three numbers, given a number', 'at', undefined, PARTS, '', 7],
+    ['three numbers, given a list of none', 'at', undefined, PARTS, '', []],
+    ['three numbers, given an object', 'at', undefined, PARTS, '', { x: 1 }],
+  ] as const)('shows nothing greyed in %s', (_, name, value, kind, variant, placeholder) => {
+    const without = field(name, value as Json | undefined, {}, kind, variant)
+    const shown = field(name, value as Json | undefined, { placeholder: placeholder as Json }, kind, variant)
+    expect(shown.findAll('[placeholder]').map((e) => e.attributes('placeholder'))).toEqual(without.findAll('[placeholder]').map((e) => e.attributes('placeholder')))
+    expect(shown.html().length, 'the field is drawn').toBeGreaterThan(0)
+  })
+
+  it('draws nothing for the control the app draws, whatever it is given', () => {
+    expect(field('pair', undefined, { placeholder: ['s1', 's2'] }).find('.aether-record-field').exists()).toBe(false)
+  })
+
+  it('is not read as the value: the control stays empty and named by its label', () => {
+    const size = field('size', undefined, { placeholder: 0.0125 })
+    const input = size.find('input')
+    expect([(input.element as HTMLInputElement).value, input.attributes('aria-label'), input.attributes('aria-describedby')]).toEqual(['', undefined, undefined])
+    expect(size.find(`label[for="${input.attributes('id')}"]`).text()).toContain('Size of the part')
+    const at = field('at', undefined, { placeholder: [0.1, 0.2, 0.3] })
+    expect(at.findAll('input').map((i) => i.attributes('aria-label'))).toEqual(['Place x', 'Place y', 'Place z'])
+    expect(at.findAll('input').map((i) => i.attributes('aria-describedby'))).toEqual([undefined, undefined, undefined])
+  })
+})
+
 describe('Escape in a field', () => {
   const press = async (w: VueWrapper, selector: string): Promise<KeyboardEvent> => {
     const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })

@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
-import { formFields, groupFields, issueField, keepOnVariant, type FormContext } from '..'
-import { FIXINGS, PARTS, SHELVES } from './toy'
+import { STORED, formFields, groupFields, issueField, keepOnVariant, placeholderOf, type FormContext } from '..'
+import type { Json } from '../../../verbs'
+import { FIXINGS, PARTS, SHELVES, UNITS } from './toy'
 
 const held: Record<string, string[]> = { stocks: ['s1', 's2'], parts: ['p1'] }
 const context: FormContext = { ids: (kind) => held[kind] ?? [], word: (kind) => `one of ${kind}` }
@@ -117,6 +118,52 @@ describe('a change of variant', () => {
     expect(keepOnVariant(FIXINGS, 'weld', fields, { by: 'bolt', part: 'p1' })).toEqual({ by: 'weld' })
     expect(keepOnVariant(FIXINGS, 'weld', fields, { by: 'bolt', part: 's2' })).toEqual({ by: 'weld', part: 's2' })
     expect(keepOnVariant(FIXINGS, '', fields, { by: 'bolt', note: 'n' })).toEqual({})
+  })
+})
+
+describe('what a field shows greyed where it holds no value', () => {
+  const view = (name: string, kind = PARTS, variant = '') => formFields(kind, variant, context).find((f) => f.name === name)!
+
+  it('shows a number in its unit at the digits a held number shows', () => {
+    expect(placeholderOf(view('size'), 0.0125, UNITS)).toBe('12.5')
+    expect(placeholderOf(view('size'), 0.0125, STORED)).toBe('0.0125')
+    expect(placeholderOf(view('size'), 0.30000000000000004, STORED)).toBe('0.3')
+    expect(placeholderOf(view('count'), 3, UNITS), 'a number of no quantity').toBe('3')
+  })
+
+  it('shows a free text as it is, and nothing for an empty one', () => {
+    expect(placeholderOf(view('made'), 'Ann', UNITS)).toBe('Ann')
+    expect(placeholderOf(view('made'), '', UNITS)).toBeUndefined()
+  })
+
+  it('shows each part of three numbers in the unit, and none for a part that is not a number', () => {
+    expect(placeholderOf(view('at'), [0.1, 0.2, 0.30000000000000004], UNITS)).toEqual(['100', '200', '300'])
+    expect(placeholderOf(view('at'), [1, null, 'x'], STORED)).toEqual(['1', undefined, undefined])
+    expect(placeholderOf(view('at'), [], STORED), 'no part is a number').toBeUndefined()
+    expect(placeholderOf(view('at'), [1], STORED), 'the parts after the last').toEqual(['1', undefined, undefined])
+  })
+
+  it('shows nothing for a value of another shape than its control holds', () => {
+    for (const other of [undefined, null, 'ten', true, [1], { k: 1 }]) expect(placeholderOf(view('size'), other, UNITS), JSON.stringify(other)).toBeUndefined()
+    for (const other of [undefined, null, 5, true, ['a'], { k: 1 }]) expect(placeholderOf(view('made'), other, UNITS), JSON.stringify(other)).toBeUndefined()
+    for (const other of [undefined, null, 5, 'x', true, { k: 1 }]) expect(placeholderOf(view('at'), other, UNITS), JSON.stringify(other)).toBeUndefined()
+  })
+
+  it('shows nothing in any other control', () => {
+    const others: [string, Json][] = [
+      ['stock', 's1'],
+      ['kept', true],
+      ['kept', [1, 2, 3]],
+      ['sides', ['top']],
+      ['sides', [1, 2, 3]],
+      ['locks', { a: true }],
+      ['layers', [{ depth: 1, stock: 's1', push: [1, 2, 3] }]],
+      ['extra', { k: 1 }],
+      ['pair', ['s1', 's2']],
+    ]
+    for (const [name, value] of others) expect(placeholderOf(view(name), value, UNITS), name).toBeUndefined()
+    expect(placeholderOf(view('outline', SHELVES, 'wall'), [[1, 2, 3]], UNITS), 'a summary').toBeUndefined()
+    expect(placeholderOf(view('posts', SHELVES, 'wall'), ['s1', 's2'], UNITS), 'a list of references').toBeUndefined()
   })
 })
 

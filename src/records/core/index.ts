@@ -22,7 +22,7 @@ export {
   valueFor,
 } from './cells'
 export type { CellRefusal, Row, RowValue } from './cells'
-export { formFields, groupFields, issueField, keepOnVariant } from './form'
+export { formFields, groupFields, issueField, keepOnVariant, placeholderOf } from './form'
 export type { FieldView, FormContext, Option } from './form'
 export { exampleOf, shapeLine } from './shapes'
 export { deleteClosure, draftKeeper, stepWords } from './steps'

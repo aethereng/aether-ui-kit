@@ -28,7 +28,7 @@
  * condensing, and being non-breaking is what the pair wants anyway: a value and its unit are one
  * token, and this read-out is a 4.5ch column narrow enough to wrap them apart. */
 
-import { computed } from 'vue'
+import { computed, nextTick } from 'vue'
 import type { SliderTick } from '../core/types'
 
 const props = withDefaults(
@@ -58,8 +58,19 @@ const props = withDefaults(
 
 const emit = defineEmits<{ 'update:modelValue': [value: number] }>()
 
+/* The thumb has already moved when `input` fires, and `:value` is patched only when modelValue moves
+ * or the component renders. A parent that refuses, or answers with the value it already held, moves
+ * nothing, so the thumb would stay where the user dragged it while the read-out shows the stored
+ * number. After the parent has answered, a thumb that is not on the prop goes back to it. The test
+ * is on the number the user asked for, so a thumb that only snapped a stored value to its step is
+ * never rewritten. */
 function onInput(e: Event) {
-  emit('update:modelValue', Number((e.target as HTMLInputElement).value))
+  const input = e.target as HTMLInputElement
+  const asked = Number(input.value)
+  emit('update:modelValue', asked)
+  nextTick(() => {
+    if (asked !== props.modelValue) input.value = String(props.modelValue)
+  })
 }
 
 /* Where a value sits along the thumb's TRAVEL, 0..1: the one number both the filled track and

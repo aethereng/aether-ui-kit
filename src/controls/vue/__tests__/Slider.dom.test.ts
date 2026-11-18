@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import Slider from '../Slider.vue'
@@ -64,6 +65,65 @@ describe('Slider announces what it shows', () => {
        of the number the platform already reads. */
     const w = mount(Slider, { props: { modelValue: 40 } })
     expect(w.get('input').attributes('aria-valuetext')).toBeUndefined()
+    w.unmount()
+  })
+})
+
+describe('Slider after a change the parent answers', () => {
+  /* The thumb is moved by the browser before `input` fires, so the test moves it the same way. */
+  function mountAttached(modelValue: number, onUpdate: (v: number) => void) {
+    const w = mount(Slider, {
+      props: { modelValue, min: 0, max: 10, 'onUpdate:modelValue': onUpdate },
+      attachTo: document.body,
+    })
+    const el = w.get('input').element as HTMLInputElement
+    el.focus()
+    return { w, el }
+  }
+  const drag = async (el: HTMLInputElement, value: string) => {
+    el.value = value
+    el.dispatchEvent(new Event('input'))
+    await nextTick()
+    await nextTick()
+  }
+
+  it('reads the held value and keeps focus when the parent refuses', async () => {
+    const asked: number[] = []
+    const { w, el } = mountAttached(1, (v) => asked.push(v))
+    await drag(el, '7')
+    expect(asked).toEqual([7])
+    expect(el.value).toBe('1')
+    expect(document.activeElement).toBe(el)
+    w.unmount()
+  })
+
+  it('reads the held value when the parent refuses the way back', async () => {
+    const asked: number[] = []
+    const { w, el } = mountAttached(7, (v) => asked.push(v))
+    await drag(el, '1')
+    expect(asked).toEqual([1])
+    expect(el.value).toBe('7')
+    expect(document.activeElement).toBe(el)
+    w.unmount()
+  })
+
+  it('reads the dragged value and keeps focus when the parent accepts', async () => {
+    const { w, el } = mountAttached(1, (v) => {
+      void w.setProps({ modelValue: v })
+    })
+    await drag(el, '7')
+    expect(w.props('modelValue')).toBe(7)
+    expect(el.value).toBe('7')
+    expect(document.activeElement).toBe(el)
+    w.unmount()
+  })
+
+  it('follows the parent after a refusal when the value moves later', async () => {
+    const { w, el } = mountAttached(1, () => {})
+    await drag(el, '7')
+    expect(el.value).toBe('1')
+    await w.setProps({ modelValue: 7 })
+    expect(el.value).toBe('7')
     w.unmount()
   })
 })

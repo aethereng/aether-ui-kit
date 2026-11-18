@@ -13,9 +13,10 @@
  * Flattened into a single list those rows are indistinguishable, which is a correctness problem in
  * a structural model rather than a cosmetic one. */
 
+import { nextTick } from 'vue'
 import type { SelectGroup, SelectOption } from '../core/types'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     modelValue: string
     /** Flat options, or groups. Groups render as <optgroup>, which the platform labels for us. */
@@ -27,6 +28,19 @@ withDefaults(
 )
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
+
+/* The browser has already moved the selection when `change` fires, and `:value` is patched only
+ * when modelValue moves or the component renders. A parent that refuses, or answers with the value
+ * it already held, moves nothing, so the box would keep showing the option the parent declined.
+ * After the parent has answered, the selection is set back to the prop; a parent that accepted has
+ * already moved it there. */
+function onChange(e: Event) {
+  const select = e.target as HTMLSelectElement
+  emit('update:modelValue', select.value)
+  nextTick(() => {
+    select.value = props.modelValue
+  })
+}
 </script>
 
 <template>
@@ -34,7 +48,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
     class="aether-select"
     :value="modelValue"
     :disabled="disabled"
-    @change="emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
+    @change="onChange"
   >
     <option
       v-for="opt in options"

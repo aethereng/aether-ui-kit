@@ -281,6 +281,69 @@ describe('Select', () => {
   })
 })
 
+describe('Select after a change the parent answers', () => {
+  const options: SelectOption[] = [
+    { value: 'a', label: 'A' },
+    { value: 'b', label: 'B' },
+  ]
+  /* The box is moved by the browser before `change` fires, so the test moves it the same way. */
+  function mountAttached(modelValue: string, onUpdate: (v: string) => void) {
+    const w = mount(Select, {
+      props: { modelValue, options, 'onUpdate:modelValue': onUpdate },
+      attachTo: document.body,
+    })
+    const el = w.element as HTMLSelectElement
+    el.focus()
+    return { w, el }
+  }
+  const choose = async (el: HTMLSelectElement, value: string) => {
+    el.value = value
+    el.dispatchEvent(new Event('change'))
+    await nextTick()
+    await nextTick()
+  }
+
+  it('reads the held option and keeps focus when the parent refuses', async () => {
+    const asked: string[] = []
+    const { w, el } = mountAttached('a', (v) => asked.push(v))
+    await choose(el, 'b')
+    expect(asked).toEqual(['b'])
+    expect(el.value).toBe('a')
+    expect(document.activeElement).toBe(el)
+    w.unmount()
+  })
+
+  it('reads the held option when the parent refuses the way back', async () => {
+    const asked: string[] = []
+    const { w, el } = mountAttached('b', (v) => asked.push(v))
+    await choose(el, 'a')
+    expect(asked).toEqual(['a'])
+    expect(el.value).toBe('b')
+    expect(document.activeElement).toBe(el)
+    w.unmount()
+  })
+
+  it('reads the chosen option and keeps focus when the parent accepts', async () => {
+    const { w, el } = mountAttached('a', (v) => {
+      void w.setProps({ modelValue: v })
+    })
+    await choose(el, 'b')
+    expect(w.props('modelValue')).toBe('b')
+    expect(el.value).toBe('b')
+    expect(document.activeElement).toBe(el)
+    w.unmount()
+  })
+
+  it('follows the parent after a refusal when the value moves later', async () => {
+    const { w, el } = mountAttached('a', () => {})
+    await choose(el, 'b')
+    expect(el.value).toBe('a')
+    await w.setProps({ modelValue: 'b' })
+    expect(el.value).toBe('b')
+    w.unmount()
+  })
+})
+
 describe('SearchField', () => {
   it('names itself from the placeholder when given no explicit label', () => {
     const w = mount(SearchField, { props: { modelValue: '', placeholder: 'filter by id' } })

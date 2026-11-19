@@ -53,9 +53,9 @@ const props = withDefaults(
     /** The reference scopes drawn as chips: what a `{{scope:path}}` may name. A scope outside this list
      *  is plain text. */
     refScopes?: ReferenceScopes
-    /** The compose box and the three buttons the panel draws: not focusable, no events, and dimmed as the
-     *  kit's other disabled controls are. The log stays readable, and a reference in it still opens. The
-     *  `actions` slot is the caller's own, so what it holds is the caller's to disable. */
+    /** Disables the compose box and the three buttons the panel draws. They take no focus, send no events and
+     *  are dimmed as the kit's other disabled controls are. The log stays readable, and a reference in it
+     *  still opens. The `actions` slot is the caller's own, so what it holds is the caller's to disable. */
     disabled?: boolean
   }>(),
   {

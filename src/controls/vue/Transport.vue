@@ -232,7 +232,7 @@ onBeforeUnmount(() => {
   border-color: var(--aether-cool);
 }
 /* The bar is the visible thing, so it dims as a whole: Switch's, Checkbox's, Slider's and RadioGroup's
-   dimming, once, and not again on each button. */
+   dimming, applied once to the bar and to no button in it. */
 .aether-transport--disabled {
   opacity: 0.55;
 }

@@ -90,7 +90,7 @@ function onChange(e: Event) {
   cursor: pointer;
 }
 /* Dimmed the way Switch, Checkbox, Slider and RadioGroup are, so a control that cannot be used reads
-   so at a glance and not only to the pointer. */
+   so at a glance. */
 .aether-select:disabled {
   cursor: default;
   opacity: 0.55;

@@ -11,7 +11,8 @@ import { declared, stylesOf } from '../../../__tests__/sfcRules'
  * disabled controls do (dimmed by the one opacity Switch declares), cannot be focused, and sends nothing.
  *
  * "Cannot be focused" is asserted of EVERY input, button and textarea the component draws, found by what
- * they are rather than from a list typed here, so a control added later without the attribute fails. A live one
+ * they are (an input, a button, a textarea) and no list typed here names them, so a control added later without
+ * the attribute fails. A live one
  * is read the same way, so the assertion cannot be met by a component that disables everything always.
  * disabled.dom.test.ts pins the opacity against Switch's own sheet. */
 

@@ -347,6 +347,17 @@ describe('what is typed in a cell and not yet given', () => {
       expect([valueOf(w, 'p2:size'), runs]).toEqual(['20', []])
     })
 
+    it('when Escape is pressed after a draw, and the cell is then left', async () => {
+      const { w, runs } = table(PARTS, parts())
+      await type(w, 'p2:size', '99')
+      await redraw(w, parts())
+      expect(valueOf(w, 'p2:size'), 'held through the draw').toBe('99')
+      await cell(w, 'p2:size').trigger('keydown', { key: 'Escape' })
+      await cell(w, 'p2:size').trigger('blur')
+      await nextTick()
+      expect([valueOf(w, 'p2:size'), runs]).toEqual(['20', []])
+    })
+
     it('where a draw comes first, as a scroll that moves the rows brings', async () => {
       const { w } = table(PARTS, parts())
       await type(w, 'p2:size', '99')

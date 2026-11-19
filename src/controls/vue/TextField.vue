@@ -83,6 +83,25 @@ if (props.autogrow) {
 function onInput(e: Event) {
   emit('update:modelValue', (e.target as HTMLInputElement | HTMLTextAreaElement).value)
 }
+
+/* ON COMMIT: ENTER, OR LEAVING THE FIELD. While the user types nothing moves under the caret, whatever the
+ * parent does with each keystroke. When the user commits, the box is set back to `modelValue` once the
+ * parent has had its turn: a parent that accepted has already moved it there, and one that refused, or
+ * answered with a value it already held, leaves the box on text the model does not hold. A textarea takes
+ * Enter as a new line, so it commits on leaving only. Enter that confirms an IME candidate is not a commit. */
+function settle(el: HTMLInputElement | HTMLTextAreaElement) {
+  nextTick(() => {
+    if (el.value !== props.modelValue) el.value = props.modelValue
+    if (props.autogrow && props.multiline) grow()
+  })
+}
+function onEnter(e: KeyboardEvent) {
+  if (e.isComposing) return
+  settle(e.target as HTMLInputElement)
+}
+function onBlur(e: FocusEvent) {
+  settle(e.target as HTMLInputElement | HTMLTextAreaElement)
+}
 </script>
 
 <template>
@@ -96,6 +115,7 @@ function onInput(e: Event) {
     :placeholder="placeholder"
     :disabled="disabled"
     @input="onInput"
+    @blur="onBlur"
   />
   <input
     v-else
@@ -105,6 +125,8 @@ function onInput(e: Event) {
     :placeholder="placeholder"
     :disabled="disabled"
     @input="onInput"
+    @keydown.enter="onEnter"
+    @blur="onBlur"
   />
 </template>
 

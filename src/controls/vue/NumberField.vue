@@ -16,6 +16,7 @@
  * The framework a consumer is migrating off has no separate number component, so its number fields
  * are text fields wearing `type="number"`. That conflation is the framework's, not the domain's,
  * and it is not worth copying in. */
+import { nextTick } from 'vue'
 import { coerceNumberInput, numberStep } from '../../property-editor/core/PropertyEditorEngine'
 
 const props = withDefaults(
@@ -51,6 +52,25 @@ function onInput(e: Event) {
   const result = coerceNumberInput(el.value, el.validity.badInput)
   if (result.commit) emit('update:modelValue', result.value)
 }
+
+/* ON COMMIT: ENTER, OR LEAVING THE FIELD. While the user types nothing moves under the caret, and an
+ * unfinished "1." stays as typed. When the user commits, the box is set back to `modelValue` once the
+ * parent has had its turn: a parent that accepted has already moved it there, and one that refused, or
+ * answered with a value it already held, leaves the box on a number the model does not hold. A number
+ * left unfinished ("1.", "-") has no value to commit, so it goes back to the model's too. */
+function settle(el: HTMLInputElement) {
+  nextTick(() => {
+    const held = props.modelValue === undefined ? '' : String(props.modelValue)
+    if (el.value !== held || el.validity.badInput) el.value = held
+  })
+}
+function onEnter(e: KeyboardEvent) {
+  if (e.isComposing) return
+  settle(e.target as HTMLInputElement)
+}
+function onBlur(e: FocusEvent) {
+  settle(e.target as HTMLInputElement)
+}
 </script>
 
 <template>
@@ -64,6 +84,8 @@ function onInput(e: Event) {
       :placeholder="placeholder"
       :disabled="disabled"
       @input="onInput"
+      @keydown.enter="onEnter"
+      @blur="onBlur"
     />
     <span v-if="suffix" class="aether-numberfield__suffix">{{ suffix }}</span>
   </div>

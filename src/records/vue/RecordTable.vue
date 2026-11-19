@@ -149,6 +149,9 @@ const cellId = (row: string, column: TableColumn) => `${row}:${column.key}`
  * drawn rows, shows it, where a field goes back to its value. It is deliberately not reactive, so that a key draws nothing.
  */
 let typing: { at: string; text: string; input: HTMLInputElement } | null = null
+/** Bumped when what is held is let go, so the one draw that follows hands each field the record's value as its model. A field draws
+ *  its model again at the end of a commit, and one still holding the typed text would put that back. A key does not bump it. */
+const letGoCount = ref(0)
 watch(
   () => props.kind.name,
   () => {
@@ -164,7 +167,10 @@ onUpdated(() => {
 
 const headUnit = (column: TableColumn): string => (column.quantity === undefined ? '' : (props.units.label(column.quantity) ?? ''))
 const textOf = (record: Fields, column: TableColumn): string => cellText(props.kind, record, column, props.units)
-const shownInCell = (row: Row, column: TableColumn): string => (typing?.at === cellId(row.id, column) ? typing.text : textOf(row.record, column))
+function shownInCell(row: Row, column: TableColumn): string {
+  void letGoCount.value // a draw depends on it, so that a let go draws
+  return typing?.at === cellId(row.id, column) ? typing.text : textOf(row.record, column)
+}
 function hold(event: Event, row: Row, column: TableColumn): void {
   const input = event.target as HTMLInputElement
   typing = { at: cellId(row.id, column), text: input.value, input }
@@ -174,6 +180,7 @@ function letGo(row: Row, column: TableColumn): void {
   if (typing?.at !== cellId(row.id, column)) return
   typing.input.value = textOf(row.record, column)
   typing = null
+  letGoCount.value++
 }
 /** A choice's options as its cell offers them: the blank first, then each value in its declared words. */
 function choiceOptions(column: TableColumn, row: Row): { value: string; label: string }[] {
@@ -257,6 +264,7 @@ function paste(event: ClipboardEvent, row: Row, column: TableColumn): void {
 /** Escape puts the cell back as the record holds it. An input method composing keeps its Escape. */
 function revert(event: KeyboardEvent, row: Row, column: TableColumn): void {
   if (event.isComposing) return
+  if (typing !== null) letGoCount.value++
   typing = null
   ;(event.target as HTMLInputElement).value = textOf(row.record, column)
   if (problem.value?.at === cellId(row.id, column)) problem.value = null

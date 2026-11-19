@@ -129,12 +129,18 @@ function anyActive(groups: FilterGroup<V>[]): boolean {
    "n hidden" span, so growing it vertically overlaps no other target, and the negative
    horizontal margin keeps the label optically where it was while widening the hit area. */
 @media (pointer: coarse) {
+  /* The 44px is a ::before past the label, not a taller button: the foot stays one 15px line
+     tall and the tap area reaches half of what it lacks above and below, and 10px to each side.
+     `100%` in an inset is the button's own height, so the offset is negative while the button
+     is shorter than the floor. */
   .aether-rail__clear {
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    padding: 0 10px;
-    margin: 0 -10px;
+    position: relative;
+  }
+  .aether-rail__clear::before {
+    content: '';
+    position: absolute;
+    inset-block: min(0px, calc((100% - var(--aether-touch)) / 2));
+    inset-inline: -10px;
   }
 }
 </style>

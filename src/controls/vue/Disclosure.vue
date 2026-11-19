@@ -228,8 +228,20 @@ const regionId = useId()
      rail (chips, segments), and a full-width panel header is not one of those. Adjacent stacked
      panels mis-tap vertically, which is exactly what the larger figure is for. Mostly a floor
      rather than a change -- a two-line header already measures more than this. */
-  .aether-disclosure__toggle {
+  /* The floor sits on the head and the toggle stretches over all of it, padding included, so the
+     header is 44px tall and the whole of it takes the tap. It was the toggle that carried the
+     floor, inside a head with 10px of padding on both sides, which drew a one-line header 64px
+     tall. An invisible area past the header cannot reach 44px instead: the panel clips at its
+     border (overflow: hidden, for its radius), so the row is where the tap area has to live.
+     The toggle's own padding takes back what its negative margin gives the head, so the label
+     stays where it was. */
+  .aether-disclosure__head {
     min-height: var(--aether-touch);
+  }
+  .aether-disclosure__toggle {
+    align-self: stretch;
+    margin-block: -10px;
+    padding-block: 10px;
   }
 }
 </style>

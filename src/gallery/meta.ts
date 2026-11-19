@@ -380,7 +380,7 @@ export const COMPONENTS: CompMeta[] = [
     group: 'Controls',
     blurb: 'Header action button, in three variants: neutral, primary, destructive.',
     detail:
-      'A compact toolbar button. `hot` marks the active one. It reaches the 44px touch floor on a coarse pointer without growing on a mouse.',
+      'A compact toolbar button. `hot` marks the active one. On a coarse pointer the tap area is 44px and the drawn button keeps the height it has on a mouse.',
     props: [
       { name: 'label', type: 'string', note: 'also the accessible name when the label is hidden' },
       { name: 'hot', type: 'boolean?', note: 'the primary action on a surface' },

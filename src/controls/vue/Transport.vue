@@ -291,22 +291,31 @@ onBeforeUnmount(() => {
    component (it can, by class), but because it would lose to these rules on specificity, since
    scoping adds an attribute selector to them. So the fix belongs here.
 
-   Last block in the file on purpose: `height: 28px` above is overridden by `min-height` here
-   (min-height clamps the used height, so it wins regardless of order), but `min-width` is a
-   straight same-specificity contest against .at-speed's 40px and .at-stop's 28px, and only
-   source order decides it. */
+   Last block in the file on purpose: `min-width` is a straight same-specificity contest against
+   .at-speed's 40px and .at-stop's 28px, and only source order decides it. */
 @media (pointer: coarse) {
   /* Load-bearing, not cosmetic. The bar's declared minimums already exceed a 390px viewport
      before any of this, so growing every child without letting the row wrap would make the
      overflow worse rather than better. Wrapping is what makes the rest of this safe. */
   .aether-transport {
     flex-wrap: wrap;
-    row-gap: 8px;
+    row-gap: 18px;
   }
 
+  /* The buttons stay 28px tall and the 44px is a ::before past them, so the bar is as tall as it
+     is on a mouse. The offset is read off the button (100% is its padding box, 26px inside the
+     border), which is 9px above and below. 18px between wrapped rows is the 9px of each strip,
+     which keeps two rows' tap areas from overlapping. The WIDTH is drawn, not invisible: the
+     buttons sit 6px apart, and two 44px areas that close would share most of their width. */
   .at-btn {
-    min-height: 44px;
+    position: relative;
     min-width: 44px;
+  }
+  .at-btn::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block: min(0px, calc((100% - var(--aether-touch)) / 2));
   }
 
   /* 2px was the tightest spacing between two adjacent targets anywhere in the kit -- adjacent
@@ -328,6 +337,7 @@ onBeforeUnmount(() => {
      keeps a single-row bar. */
   .at-scrub {
     min-height: 44px;
+    margin-block: -8px;
   }
 }
 </style>

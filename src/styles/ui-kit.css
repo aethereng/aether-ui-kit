@@ -1115,13 +1115,20 @@
   /* This rule sets the touch target for .aether-tool, which is also every ChatPanel compose
      button (ChatPanel renders three <Tool>s and carries no button CSS of its own) and every
      .aether-button-group child; .hot and .danger change colour only, so they take it too.
-     inline-flex + center because a bare min-height would leave the label top-aligned in the
-     taller box. */
+     The tap area is 44px and the drawn box keeps its content height: a ::before reaches
+     past the border by half of whatever the button lacks, so a toolbar of tools stays as tall as
+     it is on a mouse. `100%` in an inset is the box's own height, so `(100% - 44px) / 2` is
+     negative exactly when the button is shorter than the floor; min() with 0 leaves a taller
+     button alone. Block axis only, as the floor was. Two tools closer than 16px vertically share
+     the strip between them, and the one later in the document takes a tap there. */
   .aether-tool {
-    min-height: var(--aether-touch);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
+  }
+  .aether-tool::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block: min(0px, calc((100% - var(--aether-touch)) / 2));
   }
 
   /* DENSE floor, not the full one. These repeat: a segmented control is 3 buttons, a filter bar
@@ -1141,6 +1148,9 @@
      standing on its own keeps the full floor. */
   .aether-button-group > .aether-tool {
     min-height: var(--aether-touch-dense);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* .aether-chip--row already declares align-items: center; the base chip does not, so it

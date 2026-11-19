@@ -16,8 +16,10 @@ withDefaults(
     ariaLabel?: string
     /** Tooltip + accessible name for the clear button. */
     clearLabel?: string
+    /** Not focusable, nothing to type or clear, and dimmed as the kit's other disabled controls are. */
+    disabled?: boolean
   }>(),
-  { placeholder: 'Search…', ariaLabel: undefined, clearLabel: 'Clear search' },
+  { placeholder: 'Search…', ariaLabel: undefined, clearLabel: 'Clear search', disabled: false },
 )
 
 const emit = defineEmits<{
@@ -40,13 +42,14 @@ function onClear() {
 </script>
 
 <template>
-  <span class="aether-search" :class="{ has: modelValue.length > 0 }">
+  <span class="aether-search" :class="{ has: modelValue.length > 0, 'aether-search--disabled': disabled }">
     <input
       ref="inputEl"
       type="search"
       :value="modelValue"
       :placeholder="placeholder"
       :aria-label="ariaLabel ?? placeholder"
+      :disabled="disabled"
       autocomplete="off"
       @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     />
@@ -55,6 +58,7 @@ function onClear() {
       type="button"
       :aria-label="clearLabel"
       :title="clearLabel"
+      :disabled="disabled"
       @click="onClear"
     >
       <svg viewBox="0 0 10 10" aria-hidden="true">
@@ -63,3 +67,14 @@ function onClear() {
     </button>
   </span>
 </template>
+
+<style scoped>
+/* The box and its rules are in ui-kit.css. Dimmed as Switch, Checkbox, Slider and RadioGroup are, on the
+   wrapper, so the clear button goes with the field. */
+.aether-search--disabled {
+  opacity: 0.55;
+}
+.aether-search--disabled .aether-search__clear {
+  cursor: default;
+}
+</style>

@@ -4,6 +4,8 @@ type __VLS_Props = {
     ariaLabel?: string;
     /** Tooltip + accessible name for the clear button. */
     clearLabel?: string;
+    /** Not focusable, nothing to type or clear, and dimmed as the kit's other disabled controls are. */
+    disabled?: boolean;
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {
     focus: () => void | undefined;
@@ -14,6 +16,7 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {
     "onUpdate:modelValue"?: ((value: string) => any) | undefined;
     onClear?: (() => any) | undefined;
 }>, {
+    disabled: boolean;
     placeholder: string;
     ariaLabel: string;
     clearLabel: string;

@@ -80,6 +80,7 @@ export const COMPONENTS: CompMeta[] = [
     props: [
       { name: 'modelValue', type: 'string', note: "`YYYY-MM-DD`, or '' for empty; v-model" },
       { name: 'id', type: 'string?', note: 'reaches the inner input, so `<label for>` works' },
+      { name: 'disabled', type: 'boolean?', note: 'the input and the picker button; an open picker closes' },
     ],
     emits: [{ name: 'update:modelValue', type: '[value: string]' }],
   },
@@ -496,6 +497,7 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'placeholder', type: 'string?' },
       { name: 'ariaLabel', type: 'string?', note: 'defaults to the placeholder' },
       { name: 'clearLabel', type: 'string?', note: 'tooltip + accessible name for the clear button' },
+      { name: 'disabled', type: 'boolean?', note: 'the input and the clear button' },
     ],
     emits: [
       { name: 'update:modelValue', type: '[value: string]', note: 'v-model' },
@@ -529,6 +531,7 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'speedLabel', type: '(s: number) => string?', note: 'e.g. ½× instead of 0.5×' },
       { name: 'stoppable', type: 'boolean?', note: 'render the dismiss button; default true' },
       { name: 'computeLabel', type: 'string?', note: 'text beside the precompute bar' },
+      { name: 'disabled', type: 'boolean?', note: 'every button and the scrubber; a drag already begun still ends with scrub-end' },
     ],
     emits: [
       { name: 'toggle', type: '[]' },
@@ -699,6 +702,7 @@ export const COMPONENTS: CompMeta[] = [
       { name: 'rich', type: 'boolean?', note: 'markdown, chips, marks, and a message that arrives; the two props below are read only here' },
       { name: 'resolveRef', type: '(ref: string) => RefChipData | null', note: 'called while rendering for each {{scope:path}}; null draws the warning chip' },
       { name: 'refScopes', type: 'ReferenceScopes?', note: "the scopes drawn as chips; default { indexed: ['m', 'p', 'r'], bare: ['c', 's'] }. A scope outside the list is plain text" },
+      { name: 'disabled', type: 'boolean?', note: 'the box and the three buttons it draws; the log stays readable, and the actions slot is the caller’s to disable' },
     ],
     emits: [
       { name: 'update:modelValue', type: '[value: string]' },

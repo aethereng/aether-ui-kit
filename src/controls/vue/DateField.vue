@@ -39,6 +39,9 @@ const props = defineProps<{
   /** `YYYY-MM-DD`, or '' for empty: the value format of the native input this wraps. */
   modelValue: string
   id?: string
+  /** Not focusable, nothing to type, no picker, and dimmed as the kit's other disabled controls are. A picker
+   *  open when this turns on closes. */
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{ 'update:modelValue': [string] }>()
@@ -77,7 +80,15 @@ function onNativeInput(e: Event) {
   emit('update:modelValue', (e.target as HTMLInputElement).value)
 }
 
+watch(
+  () => props.disabled,
+  (off) => {
+    if (off) closePicker(false)
+  },
+)
+
 function openPicker() {
+  if (props.disabled) return
   const start = selected.value ?? today()
   cursor.value = start
   view.value = { y: start.y, m: start.m }
@@ -153,12 +164,13 @@ function stepMonth(delta: number) {
 </script>
 
 <template>
-  <div ref="root" class="aether-datefield">
+  <div ref="root" class="aether-datefield" :class="{ 'aether-datefield--disabled': disabled }">
     <input
       :id="id"
       type="date"
       class="aether-datefield__input"
       :value="modelValue"
+      :disabled="disabled"
       @input="onNativeInput"
     />
 
@@ -172,6 +184,7 @@ function stepMonth(delta: number) {
       aria-haspopup="dialog"
       :aria-expanded="open"
       aria-label="Choose date"
+      :disabled="disabled"
       @click="open ? closePicker() : openPicker()"
     >
       <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false">
@@ -243,6 +256,15 @@ function stepMonth(delta: number) {
 /* Focus feedback moves to the wrapper, because the wrapper is the thing with a visible edge now. */
 .aether-datefield:focus-within {
   border-color: var(--aether-ink-soft);
+}
+/* On the wrapper for the same reason as focus: the wrapper is the visible box, and the input and the
+   trigger inside it have no edge of their own. The dimming is Switch's, Checkbox's, Slider's and
+   RadioGroup's. */
+.aether-datefield--disabled {
+  opacity: 0.55;
+}
+.aether-datefield__trigger:disabled {
+  cursor: default;
 }
 /* The inner input, styled HERE since 0.13.0 rather than by the form's stylesheet. The wrapper is
    the thing with the border, so the input gives up its own box entirely; and it has to state its

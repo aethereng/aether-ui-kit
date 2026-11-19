@@ -18,6 +18,10 @@ type __VLS_Props = {
     stoppable?: boolean;
     /** Text shown beside the progress bar during `phase: 'precompute'`. */
     computeLabel?: string;
+    /** Not focusable, no events from any button or the scrubber, and dimmed as the kit's other disabled
+     *  controls are. A drag already under way still ends with `scrub-end`, so a caller that paused on
+     *  `scrub-start` is never left paused. */
+    disabled?: boolean;
 };
 type __VLS_Slots = {
     play?: (props: {
@@ -41,6 +45,7 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
     "onScrub-start"?: (() => any) | undefined;
     "onScrub-end"?: (() => any) | undefined;
 }>, {
+    disabled: boolean;
     stoppable: boolean;
     format: (t: number) => string;
     speed: number;

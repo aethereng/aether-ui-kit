@@ -24,6 +24,10 @@ const DIMMERS: Array<[string, string]> = [
   ['controls/vue/Checkbox.vue', '.aether-checkbox:disabled'],
   ['controls/vue/Disclosure.vue', '.aether-disclosure__toggle:disabled'],
   ['controls/vue/RadioGroup.vue', '.aether-radiogroup button:disabled'],
+  ['controls/vue/DateField.vue', '.aether-datefield--disabled'],
+  ['controls/vue/SearchField.vue', '.aether-search--disabled'],
+  ['controls/vue/Transport.vue', '.aether-transport--disabled'],
+  ['controls/vue/ChatPanel.vue', '.aether-chat__compose textarea:disabled'],
 ]
 
 function opacityOf(el: Element): number {

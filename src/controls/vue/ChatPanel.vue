@@ -53,6 +53,10 @@ const props = withDefaults(
     /** The reference scopes drawn as chips: what a `{{scope:path}}` may name. A scope outside this list
      *  is plain text. */
     refScopes?: ReferenceScopes
+    /** The compose box and the three buttons the panel draws: not focusable, no events, and dimmed as the
+     *  kit's other disabled controls are. The log stays readable, and a reference in it still opens. The
+     *  `actions` slot is the caller's own, so what it holds is the caller's to disable. */
+    disabled?: boolean
   }>(),
   {
     placeholder: 'Message…',
@@ -65,6 +69,7 @@ const props = withDefaults(
     rich: false,
     resolveRef: undefined,
     refScopes: () => DEFAULT_REFERENCE_SCOPES,
+    disabled: false,
   },
 )
 
@@ -336,15 +341,16 @@ defineExpose({ focus: () => textareaEl.value?.focus(), announce })
         ref="textareaEl"
         :value="modelValue"
         :placeholder="placeholder"
+        :disabled="disabled"
         @input="emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
         @keydown.enter.ctrl.prevent="emit(shortcut as 'queue')"
         @keydown.enter.meta.prevent="emit(shortcut as 'queue')"
       ></textarea>
       <div class="aether-chat__actions">
         <slot name="actions">
-          <Tool :label="queueLabel" hot @click="emit('queue')" />
-          <Tool :label="sendLabel" @click="emit('send')" />
-          <Tool :label="applyLabel" @click="emit('apply-reply')" />
+          <Tool :label="queueLabel" hot :disabled="disabled" @click="emit('queue')" />
+          <Tool :label="sendLabel" :disabled="disabled" @click="emit('send')" />
+          <Tool :label="applyLabel" :disabled="disabled" @click="emit('apply-reply')" />
           <span class="aether-chat__hint">{{ pending ? pending + ' queued' : 'nothing queued' }}</span>
         </slot>
       </div>
@@ -361,6 +367,14 @@ defineExpose({ focus: () => textareaEl.value?.focus(), announce })
    its containing block so it cannot position against some distant ancestor. */
 .aether-chat__log--rich {
   position: relative;
+}
+
+/* ---- disabled ---- */
+/* The box is dimmed as Switch, Checkbox, Slider and RadioGroup are. The three buttons are not dimmed
+   here: Tool dims itself when disabled, and a second dimming on the compose area would apply twice. */
+.aether-chat__compose textarea:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 /* ---- text ---- */

@@ -38,6 +38,10 @@ const props = withDefaults(
     stoppable?: boolean
     /** Text shown beside the progress bar during `phase: 'precompute'`. */
     computeLabel?: string
+    /** Not focusable, no events from any button or the scrubber, and dimmed as the kit's other disabled
+     *  controls are. A drag already under way still ends with `scrub-end`, so a caller that paused on
+     *  `scrub-start` is never left paused. */
+    disabled?: boolean
   }>(),
   {
     speed: 1,
@@ -49,6 +53,7 @@ const props = withDefaults(
     speedLabel: (s: number) => `${s}×`,
     stoppable: true,
     computeLabel: 'Computing…',
+    disabled: false,
   },
 )
 
@@ -113,7 +118,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="aether-transport" :class="{ compute: phase === 'precompute' }">
+  <div class="aether-transport" :class="{ compute: phase === 'precompute', 'aether-transport--disabled': disabled }">
     <template v-if="phase === 'precompute'">
       <span class="at-label">{{ computeLabel }}</span>
       <div class="at-progress">
@@ -123,6 +128,7 @@ onBeforeUnmount(() => {
       <button
         v-if="stoppable"
         class="at-btn at-stop"
+        :disabled="disabled"
         title="Stop"
         aria-label="Stop"
         @click="emit('stop')"
@@ -134,6 +140,7 @@ onBeforeUnmount(() => {
     <template v-else>
       <button
         class="at-btn at-play"
+        :disabled="disabled"
         :aria-label="atEnd ? 'Replay' : playing ? 'Pause' : 'Play'"
         @click="onToggle"
       >
@@ -144,6 +151,7 @@ onBeforeUnmount(() => {
 
       <input
         class="at-scrub"
+        :disabled="disabled"
         type="range"
         :min="0"
         :max="Math.max(duration, 1e-6)"
@@ -162,6 +170,7 @@ onBeforeUnmount(() => {
             v-for="s in speeds"
             :key="s"
             class="at-btn at-speed-opt"
+            :disabled="disabled"
             :class="{ on: s === speed }"
             :aria-pressed="s === speed"
             @click="emit('set-speed', s)"
@@ -170,13 +179,14 @@ onBeforeUnmount(() => {
           </button>
         </div>
       </template>
-      <button v-else class="at-btn at-speed" aria-label="Playback speed" @click="onSpeed">
+      <button v-else class="at-btn at-speed" aria-label="Playback speed" :disabled="disabled" @click="onSpeed">
         {{ speedLabel(speed) }}
       </button>
 
       <button
         v-if="stoppable"
         class="at-btn at-stop"
+        :disabled="disabled"
         title="Stop"
         aria-label="Stop"
         @click="emit('stop')"
@@ -218,8 +228,16 @@ onBeforeUnmount(() => {
   cursor: pointer;
   font: 13px/1 var(--aether-font-mono);
 }
-.at-btn:hover {
+.at-btn:hover:not(:disabled) {
   border-color: var(--aether-cool);
+}
+/* The bar is the visible thing, so it dims as a whole: Switch's, Checkbox's, Slider's and RadioGroup's
+   dimming, once, and not again on each button. */
+.aether-transport--disabled {
+  opacity: 0.55;
+}
+.at-btn:disabled {
+  cursor: default;
 }
 /* Focus ring, here rather than in ui-kit.css for the same reason the touch targets are: these
    elements are only reachable from this component's own scoped CSS at a specificity a global rule

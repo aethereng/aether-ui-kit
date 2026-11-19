@@ -32,6 +32,10 @@ declare const _default: <E extends ChatEntry = ChatMessage>(__VLS_props: NonNull
         /** The reference scopes drawn as chips: what a `{{scope:path}}` may name. A scope outside this list
          *  is plain text. */
         refScopes?: ReferenceScopes;
+        /** The compose box and the three buttons the panel draws: not focusable, no events, and dimmed as the
+         *  kit's other disabled controls are. The log stays readable, and a reference in it still opens. The
+         *  `actions` slot is the caller's own, so what it holds is the caller's to disable. */
+        disabled?: boolean;
     } & Partial<{}>> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         focus: () => void | undefined;

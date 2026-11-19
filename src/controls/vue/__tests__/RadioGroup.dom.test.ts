@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import RadioGroup from '../RadioGroup.vue'
 import PropertyEditor from '../../../property-editor/vue/PropertyEditor.vue'
 import type { RadioOption } from '../../core/types'
@@ -54,6 +55,56 @@ describe('RadioGroup after a click the caller refuses or accepts', () => {
     await w.setProps({ modelValue: 'risk' })
     expect(chosen(w)).toEqual(['Risk'])
     expect(document.activeElement).toBe(risk.element)
+    w.unmount()
+  })
+})
+
+describe('RadioGroup arrows, where the caller refuses or accepts the option they land on', () => {
+  const buttons = (w: ReturnType<typeof mountGroup>) => w.findAll('[role="radio"]').map((b) => b.element as HTMLElement)
+
+  it('puts the focus back on the checked option when the caller refuses', async () => {
+    const w = mountGroup('idea')
+    const [fact, idea, risk] = buttons(w)
+    idea!.focus()
+    await w.findAll('[role="radio"]')[1]!.trigger('keydown', { key: 'ArrowRight' })
+    await nextTick()
+    expect(picked(w)).toEqual(['risk'])
+    expect(w.findAll('[role="radio"]')[1]!.attributes('aria-checked')).toBe('true')
+    expect(document.activeElement).toBe(idea)
+    expect(document.activeElement).not.toBe(risk)
+    expect(document.activeElement).not.toBe(fact)
+    w.unmount()
+  })
+
+  it('puts the focus on the option the caller accepted', async () => {
+    const w = mount(RadioGroup, {
+      props: {
+        options,
+        modelValue: 'idea',
+        ariaLabel: 'Kind',
+        'onUpdate:modelValue': (v: string) => {
+          void w.setProps({ modelValue: v })
+        },
+      },
+      attachTo: document.body,
+    })
+    const [, idea, risk] = buttons(w)
+    idea!.focus()
+    await w.findAll('[role="radio"]')[1]!.trigger('keydown', { key: 'ArrowRight' })
+    await nextTick()
+    expect(w.findAll('[role="radio"]')[2]!.attributes('aria-checked')).toBe('true')
+    expect(document.activeElement).toBe(risk)
+    w.unmount()
+  })
+
+  it('puts the focus on the option the arrow landed on when nothing is checked', async () => {
+    const w = mountGroup('')
+    const [fact, , risk] = buttons(w)
+    risk!.focus()
+    await w.findAll('[role="radio"]')[2]!.trigger('keydown', { key: 'ArrowRight' })
+    await nextTick()
+    expect(picked(w)).toEqual(['fact'])
+    expect(document.activeElement).toBe(fact)
     w.unmount()
   })
 })

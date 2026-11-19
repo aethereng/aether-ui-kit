@@ -64,13 +64,17 @@ function onKey(e: KeyboardEvent) {
   e.preventDefault()
   const value = opts[next]!.value
   emit('update:modelValue', value)
-  /* Focus follows selection, or the roving tabindex points at a button the user is not on.
-     Post-flush, because the tabindex that makes it focusable renders from the value just set.
+  /* Focus follows the checked option, or the roving tabindex points at a button the user is not on.
+     Post-flush, because the tabindex that makes it focusable renders from the value just set, and
+     because the parent has answered by then: an accepted option is the checked one, and one the
+     parent refused leaves the checked option where it was, so focus goes back to it. With nothing
+     checked there is no option to go back to, and focus goes to the one the arrow landed on.
      Scoped to THIS group's root: a document-wide lookup would find the first matching button on
      the page, so two groups sharing an option value would steal each other's focus: the kind of
      bug that survives a demo. */
   nextTick(() => {
-    root.value?.querySelector<HTMLElement>(`[data-rv="${CSS.escape(value)}"]`)?.focus()
+    const held = props.options.some((o) => o.value === props.modelValue) ? props.modelValue : value
+    root.value?.querySelector<HTMLElement>(`[data-rv="${CSS.escape(held)}"]`)?.focus()
   })
 }
 </script>

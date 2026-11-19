@@ -77,6 +77,43 @@ describe('Disclosure: the header is 44px and the whole of it is the toggle', () 
   })
 })
 
+describe('Disclosure: the header is 44px under either box-sizing a consumer sets', () => {
+  const sheet = stylesOf('controls/vue/Disclosure.vue')
+
+  /* jsdom has no layout, so the drawn height is the head's computed floor plus the padding the head's
+   * computed box-sizing adds to it. The consumer's reset is a stylesheet of its own, which the kit's
+   * rule has to win against. */
+  function drawnHeight(reset: 'content-box' | 'border-box'): number {
+    const consumer = document.createElement('style')
+    consumer.textContent = `* { box-sizing: ${reset}; }`
+    document.head.prepend(consumer)
+    const head = document.createElement('div')
+    head.className = 'aether-disclosure__head'
+    document.body.append(head)
+    try {
+      // The reset has to reach an element of the consumer's own, or the case below is not the one it names.
+      expect(getComputedStyle(document.body).boxSizing).toBe(reset)
+      const sizing = getComputedStyle(head).boxSizing
+      expect(['border-box', 'content-box']).toContain(sizing)
+      expect(declared(sheet, '.aether-disclosure__head', COARSE)['min-height']).toBe('var(--aether-touch)')
+      const floor = parseFloat(declared(sharedSheet(), ':root')['--aether-touch'])
+      const pad = parseFloat(declared(sheet, '.aether-disclosure__head')['padding'].split(' ')[0])
+      return sizing === 'border-box' ? floor : floor + 2 * pad
+    } finally {
+      head.remove()
+      consumer.remove()
+    }
+  }
+
+  it('draws 44px under a consumer reset to content-box', () => {
+    expect(drawnHeight('content-box')).toBe(44)
+  })
+
+  it('draws 44px under a consumer reset to border-box', () => {
+    expect(drawnHeight('border-box')).toBe(44)
+  })
+})
+
 describe('FilterRail: the clear button is one line, with a 44px area past it', () => {
   const sheet = stylesOf('controls/vue/FilterRail.vue')
 

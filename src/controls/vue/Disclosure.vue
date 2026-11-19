@@ -99,8 +99,12 @@ const regionId = useId()
   overflow: hidden;
 }
 /* The head is a plain row, NOT the click target: only .aether-disclosure__toggle toggles, so
-   `cursor: pointer` belongs there and not here, or it would advertise the aside as a toggle. */
+   `cursor: pointer` belongs there and not here, or it would advertise the aside as a toggle.
+   The box-sizing is stated because the 44px floor in the coarse block below counts the head's
+   padding only under border-box. Under a consumer's content-box the same floor draws the head
+   64px, the padding added to it. */
 .aether-disclosure__head {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 12px;

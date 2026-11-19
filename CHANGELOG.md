@@ -3,6 +3,11 @@
 A release is a tag, and a tag is never moved. Each entry names what a consumer of that tag sees. Releases before 0.28.0 are
 described by their tag messages (`git tag -n`).
 
+## Unreleased
+
+- **Disclosure**: the header states `box-sizing: border-box` itself. Its 44px height on a coarse pointer counts the header's padding
+  only under border-box, so an app whose reset is content-box drew it 64px. It now draws 44px under either reset.
+
 ## 0.28.0
 
 A control that a parent refuses a change to now shows what the parent holds, a field commits on Enter or on leaving it, and four more

@@ -66,7 +66,8 @@
  * or `node --test`. After a kill, `node scripts/scoped-test.mjs --record-of <file>` names each part that
  * did not end and what it had started and not ended, adding what a suite guard's own progress record
  * under .suite-guard/ says. A part whose command is none of those, and that no guard recorded, is named
- * with that said.
+ * with that said. The caller also names a directory in SCOPED_TEST_SCRATCH, which holds the run's
+ * scratch and which the caller removes, since a killed run cannot remove its own.
  */
 import { spawn, spawnSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
@@ -631,9 +632,22 @@ function recordOf(path) {
   return PASS
 }
 
+// THE SCRATCH IS REMOVED ON EVERY EXIT THIS PROCESS SEES: each scratch directory is removed where its run
+// ends, and whatever is left when the process exits (a refusal, a thrown error) is removed on the way out.
+// A kill from outside runs neither, so a caller that bounds a run by killing it names a directory of its
+// own in SCOPED_TEST_SCRATCH. Every scratch directory is made inside it, and the caller removes it after
+// the kill (the nightly digest does). Each test_milestone_record.py run used to leave two in the system's
+// temp directory, one for each part its bound killed (PLATFORM-TEST-CAP-7).
+const SCRATCH = new Set()
+process.on('exit', () => {
+  for (const dir of SCRATCH) rmSync(dir, { recursive: true, force: true })
+})
+
 /** A scratch directory holding `files`, and the record file a reporter appends to. */
 function scratchWith(files) {
-  const dir = mkdtempSync(join(tmpdir(), 'scoped-test-'))
+  const parent = process.env.SCOPED_TEST_SCRATCH || tmpdir()
+  const dir = mkdtempSync(join(parent, 'scoped-test-'))
+  SCRATCH.add(dir)
   for (const [name, text] of Object.entries(files)) writeFileSync(join(dir, name), text)
   return { dir, reach: join(dir, 'reach.txt'), path: (name) => join(dir, name) }
 }

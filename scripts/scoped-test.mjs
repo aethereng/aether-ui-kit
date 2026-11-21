@@ -27,6 +27,12 @@
  * the environment of everything it starts. A suite guard that refuses a run without it cannot be
  * started bare by a habit, only through one of the two commands above.
  *
+ * THE WORDS ARRIVE WHOLE, OR NOTHING RUNS. A vitest runner's command can reach vitest through npm, a
+ * workspace script and a suite guard, and a hop that splits a word turns the rest of a `-t` pattern
+ * into file filters, which run every file whose path holds one. So the words handed to that command
+ * are also in SCOPED_TEST_ARGV, as JSON, and a suite guard refuses when its arguments do not end with
+ * them. A run that still reaches a file outside its selection fails.
+ *
  * WHAT IT DID NOT REACH. Before or during the run it records the population the run selected and
  * every result it reports, so a stopped run can name the rest:
  *     pytest      every test id: a plugin records the collected ids and each result (xdist included)
@@ -527,7 +533,9 @@ const KINDS = {
       if (!groups.has(ws)) groups.set(ws, [])
       groups.get(ws).push(ws === '.' ? rel : rel.slice(ws.length + 1))
     }
-    const all = { code: 0, stopped: false, ended: [], left: [], unit: 'file', population: [], reached: [], tests: tally([]), unlisted: [] }
+    // `listed`: the population is vitest's own list of the files these targets select, so a file reached
+    // outside it was selected by something else (named() fails the run on one).
+    const all = { code: 0, stopped: false, ended: [], left: [], unit: 'file', listed: true, population: [], reached: [], tests: tally([]), unlisted: [] }
     const order = [...groups.keys()]
     for (const [at, ws] of order.entries()) {
       const files = groups.get(ws)
@@ -558,8 +566,11 @@ const KINDS = {
         }
       }
       all.population.push(...population.map((f) => (ws === '.' ? f : `${ws}/${f}`)))
-      const env = { ...process.env, SCOPED_TEST_REACH: s.reach }
-      const words = resolveCommand([...runner.command, `--reporter=${slash(s.path('scoped-test-reach.mjs'))}`, ...files, ...extra], cwd)
+      // SCOPED_TEST_ARGV: the words this hands the runner's command, so a suite guard at the far end of npm and
+      // a shell can refuse when they arrive split or joined (a `-t` pattern holding a space, 2026-11-21).
+      const handed = [`--reporter=${slash(s.path('scoped-test-reach.mjs'))}`, ...files, ...extra]
+      const env = { ...process.env, SCOPED_TEST_REACH: s.reach, SCOPED_TEST_ARGV: JSON.stringify(handed) }
+      const words = resolveCommand([...runner.command, ...handed], cwd)
       const r = await runOne(words, cwd, env, deadline, () => {})
       const cases = []
       for (const line of readLines(s.reach)) {
@@ -720,6 +731,18 @@ async function named(args, limitS, milestone) {
     else say('  alive afterwards: none of them')
     say(`scoped test: STOPPED at ${limitS} s, so this run verified nothing it did not reach (exit 3)`)
     return STOP
+  }
+  // A FILE IT WAS NOT GIVEN. vitest reads a loose word as a file filter, so a pattern split on its way ran
+  // every file whose path held a word of it, and the run used to pass over the files it named and the rest
+  // (2 files and 31 tests for 1 and 1, 2026-11-21). A run that reached a file outside its selection fails.
+  // vitest only (r.listed): a node run's population is the targets as named, and a directory named there is
+  // reached as the files under it.
+  const beyond = r.listed && r.population !== null ? [...reached].filter((f) => !r.population.includes(f)) : []
+  if (beyond.length) {
+    say(`  BEYOND        ${beyond.length} file(s) the run was not given${beyond.length > SHOWN ? `, the first ${SHOWN} shown` : ''}:`)
+    for (const f of beyond.slice(0, SHOWN)) say(`      ${f}`)
+    say('scoped test: FAILED, the run reached files outside its selection, so an argument was read as a file filter on its way (exit 1)')
+    return FAIL
   }
   if (r.code !== 0) {
     say(`scoped test: FAILED, the runner exited ${r.code}${failed ? ` with ${failed} failing test(s)` : ''} (exit 1)`)

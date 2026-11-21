@@ -31,7 +31,9 @@
  * workspace script and a suite guard, and a hop that splits a word turns the rest of a `-t` pattern
  * into file filters, which run every file whose path holds one. So the words handed to that command
  * are also in SCOPED_TEST_ARGV, as JSON, and a suite guard refuses when its arguments do not end with
- * them. A run that still reaches a file outside its selection fails.
+ * them. The guard that checks them removes them from the environment of everything it starts, so a test
+ * that starts a guard of its own is not handed words that were sent to the first one. A run that still
+ * reaches a file outside its selection fails.
  *
  * WHAT IT DID NOT REACH. Before or during the run it records the population the run selected and
  * every result it reports, so a stopped run can name the rest:
@@ -537,12 +539,21 @@ const shownId = (id) => {
 }
 
 /** What a suite guard's own progress records under .suite-guard/ say was started and not ended, among the
- *  records written since `since`: [{file, lastTest}]. A guard writes one line per event as it happens. */
+ *  records written since `since`: [{file, lastTest}]. A guard writes one line per event as it happens.
+ *
+ *  A SLOT'S RECORDS ARE READ IN THE ORDER ITS RUNS WROTE THEM. quintus's guard starts again the files whose
+ *  worker did not start, up to three runs, and writes run N's events to progress-N.jsonl beside the first
+ *  run's progress.jsonl (its progressOf). A file the first run queued and a later run ended is not open,
+ *  so the records are read by that run number. Read in directory order, progress-2.jsonl came before
+ *  progress.jsonl, and the first run's lines opened again a file the second run had ended. Each slot is
+ *  read on its own, because a file ended in one slot says nothing about a run in another. */
+const runOfRecord = (name) => Number(/^progress-(\d+)\.jsonl$/.exec(name)?.[1] ?? 1)
+
 function guardOpen(since) {
   const base = join(ROOT, '.suite-guard')
-  const open = new Map()
+  const open = []
   const read = []
-  if (!existsSync(base)) return { open: [], read }
+  if (!existsSync(base)) return { open, read }
   for (const slot of readdirSync(base)) {
     const dir = join(base, slot)
     let names
@@ -551,7 +562,9 @@ function guardOpen(since) {
     } catch {
       continue
     }
-    for (const name of names.filter((n) => /^progress(-\d+)?\.jsonl$/.test(n))) {
+    const records = names.filter((n) => /^progress(-\d+)?\.jsonl$/.test(n)).sort((a, b) => runOfRecord(a) - runOfRecord(b))
+    const inSlot = new Map()
+    for (const name of records) {
       const file = join(dir, name)
       if (statSync(file).mtimeMs < since) continue
       read.push(slash(relative(ROOT, file)))
@@ -563,12 +576,13 @@ function guardOpen(since) {
           continue // a line cut short by the kill
         }
         if (!ev.file) continue
-        if (ev.ev === 'ended') open.delete(ev.file)
-        else if (ev.ev === 'queued' || ev.ev === 'collected' || ev.ev === 'ready') open.set(ev.file, ev.test ?? open.get(ev.file) ?? null)
+        if (ev.ev === 'ended') inSlot.delete(ev.file)
+        else if (ev.ev === 'queued' || ev.ev === 'collected' || ev.ev === 'ready') inSlot.set(ev.file, ev.test ?? inSlot.get(ev.file) ?? null)
       }
     }
+    for (const [file, lastTest] of inSlot) open.push({ file, lastTest })
   }
-  return { open: [...open].map(([file, lastTest]) => ({ file, lastTest })), read }
+  return { open, read }
 }
 
 /** `--record-of <file>`: each part the record shows started and not ended, with what it had started and
@@ -775,7 +789,8 @@ const KINDS = {
       }
       all.population.push(...population.map((f) => (ws === '.' ? f : `${ws}/${f}`)))
       // SCOPED_TEST_ARGV: the words this hands the runner's command, so a suite guard at the far end of npm and
-      // a shell can refuse when they arrive split or joined (a `-t` pattern holding a space, 2026-11-21).
+      // a shell can refuse when they arrive split or joined (a `-t` pattern holding a space, 2026-11-21). They are
+      // that guard's alone: it removes them from what it starts.
       const handed = [`--reporter=${slash(s.path('scoped-test-reach.mjs'))}`, ...files, ...extra]
       const env = { ...process.env, SCOPED_TEST_REACH: s.reach, SCOPED_TEST_ARGV: JSON.stringify(handed) }
       const words = resolveCommand([...runner.command, ...handed], cwd)

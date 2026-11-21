@@ -495,7 +495,7 @@ const MILESTONE_NODE = [
 /** `words` with the record's reporter added where the command is a runner this knows: {words, env, how,
  *  cleanup}. `how` says which, or `unrecorded`. A command run through npm, a script or another tool is
  *  not opened up; what it started is read afterwards from a suite guard's own progress record, if any. */
-function withRecord(words, cwd) {
+function withRecord(words) {
   const plain = { words, env: process.env, how: 'unrecorded', cleanup: () => {} }
   if (!process.env.SCOPED_TEST_RECORD) return plain
   const done = (s, w, how, env = process.env) => ({ words: w, env, how, cleanup: () => rmSync(s.dir, { recursive: true, force: true }) })
@@ -989,7 +989,7 @@ async function milestone(args) {
     recordLine(`PART START ${part.name} ${Date.now()}`)
     let code = part.commands?.length ? 0 : 'no command'
     for (const words of part.commands ?? []) {
-      const watched = withRecord(words, cwd)
+      const watched = withRecord(words)
       recordLine(`CMD ${part.name} ${watched.how} ${words.join(' ')}`)
       const r = await runOne(resolveCommand(watched.words, cwd), cwd, watched.env, Infinity, () => {})
       watched.cleanup()

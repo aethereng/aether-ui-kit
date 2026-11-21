@@ -423,10 +423,27 @@ function tally(states) {
   return out
 }
 
-/** Targets before the runner's `--` that are options rather than files, which only cargo takes. */
+/** Targets before the runner's `--` that are options rather than files, which only cargo takes, or
+ *  that name no path on disk. A target that is not a path is refused before anything runs, because a
+ *  runner reads a word it cannot find as a filter and runs every file it matches: `npm test vitest
+ *  <file> -t "a name"`, typed without the `--` after `npm test`, has npm take `-t` as its own option
+ *  and hand the name's words on as targets, and on the desktop one such run reached 115 files and
+ *  its limit with none of the change verified (PLATFORM-TEST-CAP-3b). A pytest target is checked by
+ *  the file before its `::`. */
 function noOptions(name, targets) {
   const options = targets.filter((t) => t.startsWith('-'))
   if (options.length) refuse(`'${options[0]}' is an option: give the ${name} runner its options after its own --`)
+  // `<file>:<line>` names a place in a file that exists (playwright takes it), so the line goes first.
+  const onDisk = (t) => existsSync(locate(t).at) || existsSync(locate(t.replace(/(:\d+){1,2}$/, '')).at)
+  const strays = targets.filter((t) => !onDisk(t))
+  if (strays.length) {
+    refuse(
+      `${strays.map((t) => `'${t}'`).join(', ')} ${strays.length === 1 ? 'is' : 'are'} not a file or directory here, ` +
+        `so nothing ran: a target is a path that exists, and a test-name pattern goes after the runner's own --, ` +
+        `as in npm test -- ${name} <file> -- ${name === 'pytest' ? '-k' : '-t'} "<pattern>" ` +
+        `(npm takes a -t or -k typed before the first -- as its own option and passes the pattern's words on as targets)`,
+    )
+  }
 }
 
 // ── what a run reached, per runner kind ─────────────────────────────────────────────────────────
@@ -634,6 +651,25 @@ const KINDS = {
   },
 }
 
+// A test runner's option typed before the first `--` of `npm test` is read by npm as its own, and
+// npm leaves it in the environment as npm_config_<name> (measured with npm 11.17 on Windows): `-t`
+// and `--testNamePattern` as `true`, with the pattern passed on as a target; `--grep` the same; `-m
+// "<expr>"` as npm_config_message holding the expression, which never reaches the runner. Each is
+// refused naming the option. `-k "<expr>"` leaves no trace in the arguments or the environment, so
+// it cannot be seen here: the run then covers the named files whole, never more than them.
+const SWALLOWED = { t: '-t', testnamepattern: '--testNamePattern', grep: '--grep', message: '-m' }
+
+function noneSwallowed(name) {
+  const hits = Object.entries(SWALLOWED).filter(([k]) => process.env[`npm_config_${k}`] !== undefined)
+  if (hits.length) {
+    refuse(
+      `npm read ${hits.map(([, flag]) => flag).join(', ')} as its own option (npm_config_${hits.map(([k]) => k).join(', npm_config_')} is set), ` +
+        `so the ${name} runner never received it and nothing ran: put the runner's options after its own --, ` +
+        `as in npm test -- ${name} <file> -- ${hits[0][1]} "<pattern>"`,
+    )
+  }
+}
+
 // ── a run of named tests ────────────────────────────────────────────────────────────────────────
 
 async function named(args, limitS, milestone) {
@@ -644,6 +680,7 @@ async function named(args, limitS, milestone) {
   const targets = cut < 0 ? args.slice(1) : args.slice(1, cut)
   const extra = cut < 0 ? [] : args.slice(cut + 1)
   if (targets.length === 0) refuse(`the ${name} runner was given no target: name the files, crates or test ids to run`)
+  noneSwallowed(name)
   const kind = KINDS[runner.kind]
   if (!kind) refuse(`the ${name} runner has an unknown kind '${runner.kind}' in ${slash(relative(ROOT, CONFIG_PATH))}`)
 

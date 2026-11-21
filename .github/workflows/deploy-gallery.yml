@@ -5,7 +5,7 @@
 # actually install, not whatever landed on main ten minutes ago. Between tags the site lags main,
 # and the local gate stands in for CI meanwhile -- the same two commands this workflow runs:
 #
-#     npm run types:check && npm run test:unit -- --run
+#     npm run types:check && npm run test:full
 #
 # The gate runs on the tag too, so a release cannot be published without passing it -- but it runs
 # AFTER the tag exists, so a red run means a bad tag is already public. The fix is the next patch
@@ -70,7 +70,7 @@ jobs:
         run: npm run types:check
 
       - name: Unit tests
-        run: npm run test:unit -- --run
+        run: npm run test:full
 
       - name: Build gallery
         # `build` runs type-check and the gallery build in parallel (package.json);

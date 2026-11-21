@@ -466,7 +466,8 @@ The gallery is also the kit's own proof. It is a **host app**: it defines the `-
 ## Testing
 
 ```bash
-npm run test:unit    # vitest
+npm test -- vitest src/__tests__/contrast.test.ts   # named test files, stopped at 10 minutes
+npm run test:full    # every test, no time limit: before a release tag
 npm run type-check   # vue-tsc
 npm run lint
 npm run build        # type-check + build the gallery

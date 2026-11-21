@@ -1,0 +1,8 @@
+{
+  "runners": {
+    "vitest": { "kind": "vitest", "command": ["{bin:vitest}", "run", "--reporter=default"] }
+  },
+  "milestone": [
+    { "name": "unit", "commands": [["{bin:vitest}", "run"]] }
+  ]
+}

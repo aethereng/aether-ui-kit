@@ -57,9 +57,17 @@
  *
  * The milestone run prints that it is one on its first line, runs every part to its end whatever
  * an earlier part did, and exits 0 only when every part passed.
+ *
+ * A MILESTONE RUN HAS NO LIMIT, AND ITS CALLER'S BOUND LEAVES A RECORD. The caller (the nightly digest)
+ * names a file in SCOPED_TEST_RECORD; the run appends each part's start and end to it, and each file or
+ * test the part's runner starts and ends where the command is vitest's `run`, pytest, playwright's `test`
+ * or `node --test`. After a kill, `node scripts/scoped-test.mjs --record-of <file>` names each part that
+ * did not end and what it had started and not ended, adding what a suite guard's own progress record
+ * under .suite-guard/ says. A part whose command is none of those, and that no guard recorded, is named
+ * with that said.
  */
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -408,6 +416,206 @@ const NODE_REPORTER = [
   '}',
   '',
 ].join(NL)
+
+// ── the milestone record: what a part had started when its caller ended it ───────────────────────
+//
+// A milestone run has no limit of its own; its caller's bound (the nightly digest's) ends it, and the end
+// leaves nothing to print. So when the caller names a file in SCOPED_TEST_RECORD, the run appends to it as
+// it goes: each part's start and end, and each file or test a part's runner starts and ends, where the
+// part's command is one this runner knows how to watch. Each line is written when it happens, so a killed
+// run leaves the record of everything up to the kill. `--record-of <file>` reads it afterwards.
+
+const MILESTONE_VITEST = [
+  "import { appendFileSync } from 'node:fs'",
+  'const out = process.env.SCOPED_TEST_RECORD',
+  'const line = (text) => out && appendFileSync(out, text + String.fromCharCode(10))',
+  'export default class MilestoneRecord {',
+  "  onTestModuleStart(m) { line('START ' + m.moduleId) }",
+  "  onTestModuleEnd(m) { line('END ' + m.moduleId) }",
+  '}',
+  '',
+].join(NL)
+
+const MILESTONE_PYTEST = [
+  'import os',
+  '',
+  'OUT = os.environ.get("SCOPED_TEST_RECORD")',
+  '',
+  '',
+  'def _line(text):',
+  '    # On the controlling process only: xdist relays the start and the report of each worker to it.',
+  '    if OUT and not os.environ.get("PYTEST_XDIST_WORKER"):',
+  '        with open(OUT, "a", encoding="utf-8") as f:',
+  '            f.write(text + chr(10))',
+  '',
+  '',
+  'def pytest_runtest_logstart(nodeid, location):',
+  '    _line("START " + nodeid)',
+  '',
+  '',
+  'def pytest_runtest_logreport(report):',
+  '    if report.when == "teardown":',
+  '        _line("END " + report.nodeid)',
+  '',
+].join(NL)
+
+const MILESTONE_PLAYWRIGHT = [
+  "import { appendFileSync } from 'node:fs'",
+  'const out = process.env.SCOPED_TEST_RECORD',
+  'const line = (text) => out && appendFileSync(out, text + String.fromCharCode(10))',
+  "const id = (test) => test.location.file + ':' + test.location.line + ' ' + test.titlePath().filter(Boolean).join(' > ')",
+  'export default class MilestoneRecord {',
+  "  onTestBegin(test) { line('START ' + id(test)) }",
+  "  onTestEnd(test) { line('END ' + id(test)) }",
+  '  printsToStdio() { return false }',
+  '}',
+  '',
+].join(NL)
+
+// node 26 with each file in its own process hands a test's `test:start` to the reporter only after the
+// test completes, so a test that never ends shows only its enqueue and dequeue (measured 2026-11-21). The
+// record's start is the dequeue and its end the complete. The entry a file gets for itself is skipped.
+const MILESTONE_NODE = [
+  "import { appendFileSync } from 'node:fs'",
+  'const out = process.env.SCOPED_TEST_RECORD',
+  'const line = (text) => out && appendFileSync(out, text + String.fromCharCode(10))',
+  'const base = (p) => p.split(String.fromCharCode(92)).join("/").split("/").pop()',
+  'export default async function* milestoneRecord(source) {',
+  '  for await (const event of source) {',
+  '    const file = event.data?.file',
+  '    const name = event.data?.name',
+  '    if (!file || typeof name !== "string" || base(name) === base(file)) continue',
+  "    if (event.type === 'test:dequeue') line('START ' + file + ' > ' + name)",
+  "    else if (event.type === 'test:complete') line('END ' + file + ' > ' + name)",
+  '  }',
+  '}',
+  '',
+].join(NL)
+
+/** `words` with the record's reporter added where the command is a runner this knows: {words, env, how,
+ *  cleanup}. `how` says which, or `unrecorded`. A command run through npm, a script or another tool is
+ *  not opened up; what it started is read afterwards from a suite guard's own progress record, if any. */
+function withRecord(words, cwd) {
+  const plain = { words, env: process.env, how: 'unrecorded', cleanup: () => {} }
+  if (!process.env.SCOPED_TEST_RECORD) return plain
+  const done = (s, w, how, env = process.env) => ({ words: w, env, how, cleanup: () => rmSync(s.dir, { recursive: true, force: true }) })
+  if (words[0] === '{bin:vitest}' && words[1] === 'run') {
+    const s = scratchWith({ 'milestone-record.mjs': MILESTONE_VITEST })
+    const own = words.some((w) => w.startsWith('--reporter')) ? [] : ['--reporter=default']
+    return done(s, [...words, ...own, `--reporter=${slash(s.path('milestone-record.mjs'))}`], 'vitest')
+  }
+  const m = words.findIndex((w, i) => w === '-m' && words[i + 1] === 'pytest')
+  if (m >= 0) {
+    const s = scratchWith({ 'scoped_test_record.py': MILESTONE_PYTEST })
+    const env = { ...process.env, PYTHONPATH: [s.dir, process.env.PYTHONPATH].filter(Boolean).join(delimiter) }
+    return done(s, [...words.slice(0, m + 2), '-p', 'scoped_test_record', ...words.slice(m + 2)], 'pytest', env)
+  }
+  if (words[0] === '{bin:playwright}' && words[1] === 'test') {
+    const s = scratchWith({ 'milestone-record.mjs': MILESTONE_PLAYWRIGHT })
+    return done(s, [...words, `--reporter=list,${slash(s.path('milestone-record.mjs'))}`], 'playwright')
+  }
+  if (words[0] === 'node' && words[1] === '--test') {
+    const s = scratchWith({ 'milestone-record.mjs': MILESTONE_NODE })
+    const reporters = [
+      '--test-reporter=spec',
+      '--test-reporter-destination=stdout',
+      `--test-reporter=${pathToFileURL(s.path('milestone-record.mjs')).href}`,
+      `--test-reporter-destination=${slash(s.path('node-reporter-out.txt'))}`,
+    ]
+    return done(s, [words[0], words[1], ...reporters, ...words.slice(2)], 'node')
+  }
+  return plain
+}
+
+const recordLine = (line) => process.env.SCOPED_TEST_RECORD && appendFileSync(process.env.SCOPED_TEST_RECORD, line + NL)
+
+/** A file under the repository as the repository names it, anything else as written. */
+const shownId = (id) => {
+  const at = id.indexOf(' > ')
+  const [path, rest] = at < 0 ? [id, ''] : [id.slice(0, at), id.slice(at)]
+  return (isAbsolute(path) && !relative(ROOT, path).startsWith('..') ? slash(relative(ROOT, path)) : path) + rest
+}
+
+/** What a suite guard's own progress records under .suite-guard/ say was started and not ended, among the
+ *  records written since `since`: [{file, lastTest}]. A guard writes one line per event as it happens. */
+function guardOpen(since) {
+  const base = join(ROOT, '.suite-guard')
+  const open = new Map()
+  const read = []
+  if (!existsSync(base)) return { open: [], read }
+  for (const slot of readdirSync(base)) {
+    const dir = join(base, slot)
+    let names
+    try {
+      names = readdirSync(dir)
+    } catch {
+      continue
+    }
+    for (const name of names.filter((n) => /^progress(-\d+)?\.jsonl$/.test(n))) {
+      const file = join(dir, name)
+      if (statSync(file).mtimeMs < since) continue
+      read.push(slash(relative(ROOT, file)))
+      for (const text of readLines(file)) {
+        let ev
+        try {
+          ev = JSON.parse(text)
+        } catch {
+          continue // a line cut short by the kill
+        }
+        if (!ev.file) continue
+        if (ev.ev === 'ended') open.delete(ev.file)
+        else if (ev.ev === 'queued' || ev.ev === 'collected' || ev.ev === 'ready') open.set(ev.file, ev.test ?? open.get(ev.file) ?? null)
+      }
+    }
+  }
+  return { open: [...open].map(([file, lastTest]) => ({ file, lastTest })), read }
+}
+
+/** `--record-of <file>`: each part the record shows started and not ended, with what it had started and
+ *  not ended. Exit 0 when it read the record, 3 when there is none to read. */
+function recordOf(path) {
+  if (!path || !existsSync(path)) {
+    say(`milestone record: COULD NOT RUN, there is no record at ${path ?? '(no path given)'}`)
+    return STOP
+  }
+  const parts = []
+  for (const text of readLines(path)) {
+    const [kind, ...rest] = text.split(' ')
+    const cur = parts[parts.length - 1]
+    if (kind === 'PART' && rest[0] === 'START') parts.push({ name: rest[1], since: Number(rest[2]), open: new Map(), cmds: [], ended: false })
+    else if (kind === 'PART' && rest[0] === 'END' && cur?.name === rest[1]) cur.ended = true
+    else if (!cur) continue
+    else if (kind === 'CMD') cur.cmds.push({ how: rest[1], words: rest.slice(2).join(' ') })
+    else if (kind === 'START') cur.open.set(rest.join(' '), true)
+    else if (kind === 'END') cur.open.delete(rest.join(' '))
+  }
+  const unended = parts.filter((p) => !p.ended)
+  if (!parts.length) {
+    say('milestone record: no part had started when the run ended, so nothing is named')
+    return PASS
+  }
+  if (!unended.length) {
+    say(`milestone record: ${parts.length} part(s) started and each ended, so nothing is named`)
+    return PASS
+  }
+  for (const p of unended) {
+    say(`milestone record: part ${p.name} started and did not end`)
+    const own = [...p.open.keys()].map(shownId)
+    const guard = guardOpen(p.since)
+    const all = [...own, ...guard.open.map((g) => g.file + (g.lastTest ? ` (last test seen: ${g.lastTest})` : ''))]
+    for (const id of all.slice(0, SHOWN)) say(`  STARTED, NOT ENDED  ${id}`)
+    if (all.length > SHOWN) say(`  ... and ${all.length - SHOWN} more of ${all.length}`)
+    if (guard.read.length) say(`  read from the suite guard's record: ${guard.read.join(', ')}`)
+    if (!all.length) {
+      const cmd = p.cmds[p.cmds.length - 1]
+      say(
+        `  nothing is named: ${cmd ? `its command ${cmd.words} is ${cmd.how === 'unrecorded' ? 'not one this runner watches' : `watched as ${cmd.how}, and started nothing that did not end`}` : 'it started no command'}` +
+          `, and no suite guard wrote a progress record while it ran`,
+      )
+    }
+  }
+  return PASS
+}
 
 /** A scratch directory holding `files`, and the record file a reporter appends to. */
 function scratchWith(files) {
@@ -778,12 +986,17 @@ async function milestone(args) {
     const cwd = resolve(ROOT, part.cwd ?? '.')
     say()
     say(`===== milestone part ${part.name} =====`)
+    recordLine(`PART START ${part.name} ${Date.now()}`)
     let code = part.commands?.length ? 0 : 'no command'
     for (const words of part.commands ?? []) {
-      const r = await runOne(resolveCommand(words, cwd), cwd, process.env, Infinity, () => {})
+      const watched = withRecord(words, cwd)
+      recordLine(`CMD ${part.name} ${watched.how} ${words.join(' ')}`)
+      const r = await runOne(resolveCommand(watched.words, cwd), cwd, watched.env, Infinity, () => {})
+      watched.cleanup()
       code = r.code
       if (code !== 0) break
     }
+    recordLine(`PART END ${part.name} ${code}`)
     results.push({ name: part.name, code })
   }
   say()
@@ -803,6 +1016,10 @@ async function main(argv) {
   const isLimit = (a) => a === '--limit' || a.startsWith('--limit=')
   if (after.some(isLimit)) refuse("--limit goes before the runner's own --, which passes everything after it to the runner")
   const event = process.env.npm_lifecycle_event
+  if (before[0] === '--record-of') {
+    if (argv.length !== 2) refuse('--record-of takes one argument, the record a milestone run wrote to SCOPED_TEST_RECORD')
+    return recordOf(argv[1])
+  }
   if (before[0] === '--milestone') {
     if (event !== undefined && event !== 'test:full') refuse(`--milestone is not taken by 'npm run ${event}': the run with no limit is 'npm run test:full'`)
     if (before.some(isLimit)) refuse('--limit is a scoped run’s, and the milestone run has no limit')

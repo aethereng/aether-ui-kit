@@ -10,7 +10,8 @@
  *
  * The runners and the milestone parts of this repository are in `scripts/scoped-test.json`, beside
  * this file. `npm test` with no runner, or a runner with no target, prints both and exits 3: a run
- * of everything is never what the scoped command does by default.
+ * of everything is never what the scoped command does by default. `npm test -- --milestone` is
+ * refused too: the run with no limit is `npm run test:full` and nothing else.
  *
  * THE LIMIT. A scoped run stops at LIMIT_S seconds of wall clock from its start, listing included.
  * At the limit it reads the process table, ends the runner and every process started under it by
@@ -19,19 +20,34 @@
  * The limit applies per call. A change is tested twice, once before the work starts and once before
  * it is pushed, and two calls at this limit make the 20 minutes those two runs may take together. A
  * per-call limit keeps no state between calls, so no stale record can stop a run early or let one
- * run long. `--limit <seconds>` lowers it for one call and never raises it.
+ * run long. `--limit <seconds>` (or `--limit=<seconds>`), anywhere before the runner's own `--`,
+ * lowers it for one call and never raises it.
+ *
+ * EVERY CHILD KNOWS WHICH RUN STARTED IT. The runner sets SCOPED_TEST_RUN to `scoped` or `full` in
+ * the environment of everything it starts. A suite guard that refuses a run without it cannot be
+ * started bare by a habit, only through one of the two commands above.
  *
  * WHAT IT DID NOT REACH. Before or during the run it records the population the run selected and
  * every result it reports, so a stopped run can name the rest:
- *     pytest   every test id: a plugin records the collected ids and each result (xdist included)
- *     cargo    every test name: `cargo test ... -- --list` first, then the run's own result lines
- *     vitest   every test file: `vitest list --filesOnly` first, then the per-file result lines
- *     playwright and suite runners: each named file
- * A run that reports no result at all fails: a selection that matched nothing is not a pass.
+ *     pytest      every test id: a plugin records the collected ids and each result (xdist included)
+ *     cargo       every test name: `cargo test ... -- --list` first, then the run's own result lines
+ *     vitest      every test file: `vitest list --filesOnly` first; a reporter records each file and
+ *                 each test as it ends
+ *     playwright  every test: a reporter records the tests the run selected, then each result
+ *     node        every named file: a reporter records each test as it ends
+ *     suite       every named suite file
+ * A run that reports no result at all fails: a selection that matched nothing is not a pass. A
+ * skipped or ignored test is counted apart from a passing one, and a run whose every result was a
+ * skip fails. A pytest test that the run's own `-m` or `-k` leaves out is counted apart again.
  *
- * Exit: 0 every selected test ran and passed · 1 a test failed, or the run examined nothing, or it
- * left part of its selection unreached · 3 refused (no target, a bad argument, a runner that is
- * not installed) or stopped at the limit.
+ * WHAT IT CANNOT END. A process whose parent exited before the limit is no longer under the runner
+ * in the process table, so the kill does not find it; it is not named afterwards either. On Linux
+ * and macOS the runner starts its child in a group of its own, so Ctrl-C at the terminal stops the
+ * runner and not that group: end it with the group's PID.
+ *
+ * Exit: 0 every selected test ran, and at least one passed · 1 a test failed, or the run examined
+ * nothing, or it left part of its selection unreached, or it skipped everything · 3 refused (no
+ * target, a bad argument, a runner that is not installed) or stopped at the limit.
  *
  * The milestone run prints that it is one on its first line, runs every part to its end whatever
  * an earlier part did, and exits 0 only when every part passed.
@@ -40,7 +56,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 export const LIMIT_S = 600
 const PASS = 0
@@ -122,6 +138,15 @@ function resolveCommand(words, cwd) {
 
 const QUOTED = new Set([' ', '"', '&', '|', '<', '>', '^', '(', ')', '%', '!', ';', ',', '='])
 const quote = (word) => ([...word].some((c) => QUOTED.has(c)) ? `"${word.split('"').join('""')}"` : word)
+
+/** A target as a session names it: from the directory the command runs in where that holds it (an
+ *  npm script runs in its own workspace), else from the repository root. */
+function locate(target) {
+  const [path, ...rest] = target.split('::')
+  const here = resolve(process.cwd(), path)
+  const at = !isAbsolute(path) && existsSync(here) ? here : resolve(ROOT, path)
+  return { at, rest }
+}
 
 // ── the process table and the kill ──────────────────────────────────────────────────────────────
 
@@ -225,19 +250,22 @@ function endTree(root, since) {
 
 // ── one child process, bounded by the run's deadline ────────────────────────────────────────────
 
+let MODE = 'scoped'
+
 /**
  * Runs one command, echoing its output and handing each line to `onLine`. Resolves with
  * {code, stopped, ended, left}; `stopped` is true when the deadline ended it. A deadline of
- * Infinity sets no timer at all.
+ * Infinity sets no timer at all. The child's environment carries SCOPED_TEST_RUN.
  */
 function runOne(words, cwd, env, deadline, onLine) {
   return new Promise((done) => {
     const since = Date.now() - 2000
     const [cmd, ...args] = words
+    const childEnv = { ...env, SCOPED_TEST_RUN: MODE }
     say(`scoped test: running ${[slash(relative(ROOT, cwd)) || '.', '$', ...words.map(quote)].join(' ')}`)
     const child = WIN
-      ? spawn([cmd, ...args].map(quote).join(' '), [], { cwd, env, shell: true, windowsHide: true })
-      : spawn(cmd, args, { cwd, env, detached: true })
+      ? spawn([cmd, ...args].map(quote).join(' '), [], { cwd, env: childEnv, shell: true, windowsHide: true })
+      : spawn(cmd, args, { cwd, env: childEnv, detached: true })
     let stopped = null
     let finished = false
     const pending = { out: '', err: '' }
@@ -281,7 +309,7 @@ function runOne(words, cwd, env, deadline, onLine) {
   })
 }
 
-// ── what a run reached, per runner kind ─────────────────────────────────────────────────────────
+// ── reporters, written to a scratch directory for one run ───────────────────────────────────────
 
 const PYTEST_PLUGIN = [
   'import os',
@@ -311,6 +339,14 @@ const PYTEST_PLUGIN = [
   '            _write("POP", nodeid)',
   '',
   '',
+  'def pytest_deselected(items):',
+  '    # every xdist worker deselects the same items, so the first one speaks for them',
+  '    if OUT and WORKER in (None, "gw0"):',
+  '        with open(OUT, "a", encoding="utf-8") as f:',
+  '            for item in items:',
+  '                f.write("DESEL " + item.nodeid + chr(10))',
+  '',
+  '',
   'def pytest_runtest_logreport(report):',
   '    if report.when == "call" or (report.when == "setup" and report.outcome != "passed"):',
   '        _write("RAN", report.outcome + " " + report.nodeid)',
@@ -321,58 +357,110 @@ const VITEST_REPORTER = [
   "import { appendFileSync } from 'node:fs'",
   '',
   'const out = process.env.SCOPED_TEST_REACH',
+  'const line = (text) => out && appendFileSync(out, text + String.fromCharCode(10))',
   '',
   'export default class ScopedTestReach {',
+  '  onTestCaseResult(testCase) {',
+  "    line('CASE ' + testCase.result().state + ' ' + testCase.module.moduleId)",
+  '  }',
   '  onTestModuleEnd(testModule) {',
-  "    if (out) appendFileSync(out, 'RAN ' + testModule.state() + ' ' + testModule.moduleId + String.fromCharCode(10))",
+  "    line('RAN ' + testModule.state() + ' ' + testModule.moduleId)",
   '  }',
   '}',
   '',
 ].join(NL)
 
-/** A path given from the repository root, rebased onto the runner's directory. */
-function rebase(target, cwd) {
-  const [path, ...rest] = target.split('::')
-  const fromRoot = resolve(ROOT, path)
-  if (!isAbsolute(path) && existsSync(fromRoot)) return [slash(relative(cwd, fromRoot)), ...rest].join('::')
-  return target
+const PLAYWRIGHT_REPORTER = [
+  "import { appendFileSync } from 'node:fs'",
+  '',
+  'const out = process.env.SCOPED_TEST_REACH',
+  'const line = (text) => out && appendFileSync(out, text + String.fromCharCode(10))',
+  "const id = (test) => test.location.file + ':' + test.location.line + ' ' + test.titlePath().filter(Boolean).join(' > ')",
+  '',
+  'export default class ScopedTestReach {',
+  '  onBegin(config, suite) {',
+  "    for (const test of suite.allTests()) line('POP ' + id(test))",
+  '  }',
+  '  onTestEnd(test, result) {',
+  "    line('RAN ' + result.status + ' ' + id(test))",
+  '  }',
+  '  printsToStdio() {',
+  '    return false',
+  '  }',
+  '}',
+  '',
+].join(NL)
+
+const NODE_REPORTER = [
+  'export default async function* scopedTestReach(source) {',
+  '  for await (const event of source) {',
+  "    if (event.type !== 'test:pass' && event.type !== 'test:fail') continue",
+  "    if (event.data.details?.type === 'suite') continue",
+  "    const state = event.type === 'test:fail' ? 'failed' : event.data.skip || event.data.todo ? 'skipped' : 'passed'",
+  "    yield 'RAN ' + state + ' ' + event.data.file + String.fromCharCode(10)",
+  '  }',
+  '}',
+  '',
+].join(NL)
+
+/** A scratch directory holding `files`, and the record file a reporter appends to. */
+function scratchWith(files) {
+  const dir = mkdtempSync(join(tmpdir(), 'scoped-test-'))
+  for (const [name, text] of Object.entries(files)) writeFileSync(join(dir, name), text)
+  return { dir, reach: join(dir, 'reach.txt'), path: (name) => join(dir, name) }
 }
 
+const readLines = (file) => (existsSync(file) ? readFileSync(file, 'utf8').split(NL).filter(Boolean) : [])
+
+/** {passed, failed, skipped} from outcome words, with each runner's own word for a skip. */
+function tally(states) {
+  const out = { passed: 0, failed: 0, skipped: 0 }
+  for (const s of states) {
+    if (s === 'passed' || s === 'ok' || s === 'expected' || s === 'flaky') out.passed++
+    else if (s === 'skipped' || s === 'ignored' || s === 'pending' || s === 'todo') out.skipped++
+    else out.failed++
+  }
+  return out
+}
+
+/** Targets before the runner's `--` that are options rather than files, which only cargo takes. */
+function noOptions(name, targets) {
+  const options = targets.filter((t) => t.startsWith('-'))
+  if (options.length) refuse(`'${options[0]}' is an option: give the ${name} runner its options after its own --`)
+}
+
+// ── what a run reached, per runner kind ─────────────────────────────────────────────────────────
+
 const KINDS = {
-  async pytest(runner, targets, extra, deadline) {
+  async pytest(name, runner, targets, extra, deadline) {
+    noOptions(name, targets)
     const cwd = resolve(ROOT, runner.cwd)
-    const scratch = mkdtempSync(join(tmpdir(), 'scoped-test-'))
-    writeFileSync(join(scratch, 'scoped_test_reach.py'), PYTEST_PLUGIN)
-    const reach = join(scratch, 'reach.txt')
+    const s = scratchWith({ 'scoped_test_reach.py': PYTEST_PLUGIN })
     const env = {
       ...process.env,
-      SCOPED_TEST_REACH: reach,
-      PYTHONPATH: [scratch, process.env.PYTHONPATH].filter(Boolean).join(delimiter),
+      SCOPED_TEST_REACH: s.reach,
+      PYTHONPATH: [s.dir, process.env.PYTHONPATH].filter(Boolean).join(delimiter),
     }
-    const words = resolveCommand(
-      [...runner.command, ...(runner.defaults ?? []), '-p', 'scoped_test_reach', ...targets.map((t) => rebase(t, cwd)), ...extra],
-      cwd,
-    )
+    const named = targets.map((t) => {
+      const { at, rest } = locate(t)
+      return [slash(relative(cwd, at)), ...rest].join('::')
+    })
+    const words = resolveCommand([...runner.command, ...(runner.defaults ?? []), '-p', 'scoped_test_reach', ...named, ...extra], cwd)
     const r = await runOne(words, cwd, env, deadline, () => {})
-    const lines = existsSync(reach) ? readFileSync(reach, 'utf8').split(NL).filter(Boolean) : []
-    rmSync(scratch, { recursive: true, force: true })
+    const lines = readLines(s.reach)
+    rmSync(s.dir, { recursive: true, force: true })
     const population = lines.filter((l) => l.startsWith('POP ')).map((l) => l.slice(4))
     const ran = new Map()
     for (const l of lines.filter((x) => x.startsWith('RAN '))) {
       const [outcome, ...id] = l.slice(4).split(' ')
       ran.set(id.join(' '), outcome)
     }
-    const failed = [...ran.values()].filter((o) => o === 'failed').length
-    return {
-      ...r,
-      unit: 'test',
-      population: population.length ? population : null,
-      reached: [...ran.keys()],
-      failed,
-    }
+    const tests = tally(ran.values())
+    tests.deselected = new Set(lines.filter((l) => l.startsWith('DESEL ')).map((l) => l.slice(6))).size
+    return { ...r, unit: 'test', population: population.length ? population : null, reached: [...ran.keys()], tests }
   },
 
-  async cargo(runner, targets, extra, deadline) {
+  async cargo(name, runner, targets, extra, deadline) {
     const cwd = resolve(ROOT, runner.cwd)
     const has = (flag) => targets.some((t) => t === flag || t.startsWith(`${flag}=`))
     if (!has('-p') && !has('--package')) refuse('a cargo run names its crate: -p <crate> [--test <name>] [<filter>]')
@@ -383,21 +471,26 @@ const KINDS = {
     const listing = await runOne([...base, '--', ...extra, '--list', '--format', 'terse'], cwd, process.env, deadline, (line) => {
       if (line.endsWith(': test')) population.push(line.slice(0, -': test'.length))
     })
-    if (listing.stopped || listing.code !== 0) return { ...listing, unit: 'test', population: null, reached: [], failed: 0, phase: 'listing' }
+    if (listing.stopped || listing.code !== 0) {
+      return { ...listing, unit: 'test', population: null, reached: [], tests: tally([]), phase: 'listing' }
+    }
     const reached = []
-    let failed = 0
+    const states = []
     const r = await runOne([...base, '--', ...extra], cwd, process.env, deadline, (line) => {
       if (!line.startsWith('test ')) return
       const rest = line.slice(5)
       const at = rest.lastIndexOf(' ... ')
       if (at < 0) return
       reached.push(rest.slice(0, at))
-      if (rest.slice(at + 5).startsWith('FAILED')) failed++
+      // `ok`, `FAILED`, or `ignored` (`ignored, <reason>` where the test gives one)
+      const word = rest.slice(at + 5).split(' ')[0].split(',')[0]
+      states.push(word === 'FAILED' ? 'failed' : word)
     })
-    return { ...r, unit: 'test', population, reached, failed }
+    return { ...r, unit: 'test', population, reached, tests: tally(states) }
   },
 
-  async vitest(runner, targets, extra, deadline) {
+  async vitest(name, runner, targets, extra, deadline) {
+    noOptions(name, targets)
     // the workspace each target is in, read from the root manifest's `workspaces`
     const manifest = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
     const dirs = []
@@ -412,75 +505,130 @@ const KINDS = {
     }
     const groups = new Map()
     for (const t of targets) {
-      const rel = slash(relative(ROOT, resolve(ROOT, t)))
+      const rel = slash(relative(ROOT, locate(t).at))
       const ws = dirs.filter((d) => rel === d || rel.startsWith(`${d}/`)).sort((a, b) => b.length - a.length)[0] ?? '.'
       if (!groups.has(ws)) groups.set(ws, [])
       groups.get(ws).push(ws === '.' ? rel : rel.slice(ws.length + 1))
     }
-    const all = { code: 0, stopped: false, ended: [], left: [], unit: 'file', population: [], reached: [], failed: 0 }
-    for (const [ws, files] of groups) {
+    const all = { code: 0, stopped: false, ended: [], left: [], unit: 'file', population: [], reached: [], tests: tally([]), unlisted: [] }
+    const order = [...groups.keys()]
+    for (const [at, ws] of order.entries()) {
+      const files = groups.get(ws)
       const cwd = resolve(ROOT, ws)
-      const scratch = mkdtempSync(join(tmpdir(), 'scoped-test-'))
-      const listed = join(scratch, 'population.json')
+      const s = scratchWith({ 'scoped-test-reach.mjs': VITEST_REPORTER })
+      const listed = s.path('population.json')
       const vitest = resolveCommand(['{bin:vitest}'], cwd)
-      const listing = await runOne([...vitest, 'list', '--filesOnly', `--json=${listed}`, ...files], cwd, process.env, deadline, () => {})
-      const population = existsSync(listed)
-        ? JSON.parse(readFileSync(listed, 'utf8')).map((e) => slash(relative(cwd, typeof e === 'string' ? e : e.file)))
-        : null
+      const listing = await runOne([...vitest, 'list', '--filesOnly', `--json=${listed}`, ...(runner.listArgs ?? []), ...files], cwd, process.env, deadline, () => {})
+      let population = null
+      let unreadable = null
+      if (existsSync(listed)) {
+        try {
+          population = JSON.parse(readFileSync(listed, 'utf8')).map((e) => slash(relative(cwd, typeof e === 'string' ? e : e.file)))
+        } catch (err) {
+          unreadable = err.message
+        }
+      }
       if (listing.stopped || listing.code !== 0 || population === null) {
-        rmSync(scratch, { recursive: true, force: true })
-        return { ...all, ...listing, population: null, phase: `listing ${ws}` }
+        rmSync(s.dir, { recursive: true, force: true })
+        const later = order.slice(at + 1).flatMap((w) => groups.get(w).map((f) => (w === '.' ? f : `${w}/${f}`)))
+        return {
+          ...all,
+          ...listing,
+          code: listing.code === 0 && unreadable ? 1 : listing.code,
+          population: null,
+          unlisted: later,
+          phase: unreadable ? `listing of ${ws}, whose JSON is unreadable (${unreadable})` : `listing of ${ws}`,
+        }
       }
       all.population.push(...population.map((f) => (ws === '.' ? f : `${ws}/${f}`)))
-      // vitest prints no line for a passing file outside a terminal, so a reporter records each
-      // file as it ends, appended at once so a stopped run leaves its record behind
-      const reporter = join(scratch, 'scoped-test-reach.mjs')
-      writeFileSync(reporter, VITEST_REPORTER)
-      const reach = join(scratch, 'reach.txt')
-      const env = { ...process.env, SCOPED_TEST_REACH: reach }
-      const words = resolveCommand([...runner.command, `--reporter=${slash(reporter)}`, ...files, ...extra], cwd)
+      const env = { ...process.env, SCOPED_TEST_REACH: s.reach }
+      const words = resolveCommand([...runner.command, `--reporter=${slash(s.path('scoped-test-reach.mjs'))}`, ...files, ...extra], cwd)
       const r = await runOne(words, cwd, env, deadline, () => {})
-      for (const line of existsSync(reach) ? readFileSync(reach, 'utf8').split(NL).filter(Boolean) : []) {
-        const [, state, ...file] = line.split(' ')
+      const cases = []
+      for (const line of readLines(s.reach)) {
+        const [kind, state, ...file] = line.split(' ')
+        if (kind === 'CASE') cases.push(state)
+        if (kind !== 'RAN') continue
         const id = slash(relative(ROOT, resolve(cwd, file.join(' '))))
         if (!all.reached.includes(id)) all.reached.push(id)
-        if (state === 'failed') all.failed++
       }
-      rmSync(scratch, { recursive: true, force: true })
+      const t = tally(cases)
+      for (const k of Object.keys(t)) all.tests[k] += t[k]
+      rmSync(s.dir, { recursive: true, force: true })
       all.code = all.code || r.code
       all.stopped = r.stopped
       all.ended.push(...r.ended)
       all.left = r.left
-      if (r.stopped) break
+      if (r.stopped) {
+        all.unlisted = order.slice(at + 1).flatMap((w) => groups.get(w).map((f) => (w === '.' ? f : `${w}/${f}`)))
+        break
+      }
     }
     return all
   },
 
-  async playwright(runner, targets, extra, deadline) {
+  async playwright(name, runner, targets, extra, deadline) {
+    noOptions(name, targets)
     const cwd = resolve(ROOT, runner.cwd)
-    const files = targets.map((t) => slash(relative(cwd, resolve(ROOT, t))))
-    const reached = []
-    const r = await runOne(resolveCommand([...runner.command, ...(runner.defaults ?? []), ...files, ...extra], cwd), cwd, process.env, deadline, (line) => {
-      // the list reporter names a file from the config's testDir, so match its name after a separator too
-      for (const f of files) {
-        const name = f.split('/').pop()
-        if ((line.includes(`${f}:`) || line.includes(` ${name}:`) || line.includes(`/${name}:`)) && !reached.includes(f)) reached.push(f)
-      }
-    })
-    return { ...r, unit: 'file', population: files, reached, failed: 0 }
+    const files = targets.map((t) => slash(relative(cwd, locate(t).at)))
+    const s = scratchWith({ 'scoped-test-reach.mjs': PLAYWRIGHT_REPORTER })
+    const env = { ...process.env, SCOPED_TEST_REACH: s.reach }
+    const reporters = [...(runner.reporters ?? ['list']), slash(s.path('scoped-test-reach.mjs'))].join(',')
+    const r = await runOne(resolveCommand([...runner.command, `--reporter=${reporters}`, ...files, ...extra], cwd), cwd, env, deadline, () => {})
+    const lines = readLines(s.reach)
+    rmSync(s.dir, { recursive: true, force: true })
+    const shown = (id) => {
+      const at = id.indexOf(':')
+      const colon = id.indexOf(':', at === 1 ? 2 : 0)
+      return slash(relative(cwd, id.slice(0, colon))) + id.slice(colon)
+    }
+    const population = lines.filter((l) => l.startsWith('POP ')).map((l) => shown(l.slice(4)))
+    const ran = new Map()
+    for (const l of lines.filter((x) => x.startsWith('RAN '))) {
+      const [status, ...id] = l.slice(4).split(' ')
+      ran.set(shown(id.join(' ')), status)
+    }
+    return { ...r, unit: 'test', population: population.length ? population : null, reached: [...ran.keys()], tests: tally(ran.values()) }
   },
 
-  async suite(runner, targets, extra, deadline) {
+  async node(name, runner, targets, extra, deadline) {
+    noOptions(name, targets)
+    const cwd = resolve(ROOT, runner.cwd ?? '.')
+    const files = targets.map((t) => locate(t).at)
+    const s = scratchWith({ 'scoped-test-reach.mjs': NODE_REPORTER })
+    const words = [
+      ...resolveCommand(runner.command, cwd),
+      '--test-reporter=spec',
+      '--test-reporter-destination=stdout',
+      `--test-reporter=${pathToFileURL(s.path('scoped-test-reach.mjs')).href}`,
+      `--test-reporter-destination=${slash(s.reach)}`,
+      ...extra,
+      ...files.map((f) => slash(relative(cwd, f))),
+    ]
+    const r = await runOne(words, cwd, process.env, deadline, () => {})
+    const states = []
+    const reached = new Set()
+    for (const line of readLines(s.reach)) {
+      const [, state, ...file] = line.split(' ')
+      states.push(state)
+      reached.add(slash(relative(ROOT, resolve(file.join(' ')))))
+    }
+    rmSync(s.dir, { recursive: true, force: true })
+    return { ...r, unit: 'file', population: files.map((f) => slash(relative(ROOT, f))), reached: [...reached], tests: tally(states) }
+  },
+
+  async suite(name, runner, targets, extra, deadline) {
+    noOptions(name, targets)
     const cwd = resolve(ROOT, runner.cwd)
-    const out = { code: 0, stopped: false, ended: [], left: [], unit: 'suite', population: targets, reached: [], failed: 0 }
+    const out = { code: 0, stopped: false, ended: [], left: [], unit: 'suite', population: targets, reached: [], tests: tally([]) }
     for (const t of targets) {
-      const r = await runOne(resolveCommand([...runner.command, slash(relative(cwd, resolve(ROOT, t))), ...extra], cwd), cwd, process.env, deadline, () => {})
-      if (r.stopped) return { ...out, ...r, population: targets, reached: out.reached, failed: out.failed, unit: 'suite' }
+      const r = await runOne(resolveCommand([...runner.command, slash(relative(cwd, locate(t).at)), ...extra], cwd), cwd, process.env, deadline, () => {})
+      if (r.stopped) return { ...out, ...r, population: targets, reached: out.reached, tests: out.tests, unit: 'suite' }
       out.reached.push(t)
       if (r.code !== 0) {
-        out.failed++
+        out.tests.failed++
         out.code = r.code
-      }
+      } else out.tests.passed++
     }
     return out
   },
@@ -506,19 +654,26 @@ async function named(args, limitS, milestone) {
       ? `scoped test: ${name} over ${targets.length} target(s), as a milestone run with no limit`
       : `scoped test: ${name} over ${targets.length} target(s), limit ${limitS} s of wall clock`,
   )
-  const r = await kind(runner, targets, extra, deadline)
+  const r = await kind(name, runner, targets, extra, deadline)
   const took = Math.round((Date.now() - started) / 1000)
 
   const reached = new Set(r.reached)
   const missing = r.population === null ? null : r.population.filter((p) => !reached.has(p))
+  const { passed, failed, skipped } = r.tests
   say()
   say(`scoped test: ${name}, ${took} s`)
   say(`  reached       ${reached.size} ${r.unit}(s)${r.population === null ? '' : ` of ${r.population.length} selected`}`)
+  const leftOut = r.tests.deselected ? `, and ${r.tests.deselected} left out by the run's own filter` : ''
+  if (r.unit !== 'suite') say(`  tests         ${passed} passed, ${skipped} skipped, ${failed} failed${leftOut}`)
   if (missing === null) {
     say(`  not reached   unknown: the ${r.phase ?? 'run'} ended before the selection was known`)
   } else if (missing.length) {
     say(`  NOT REACHED   ${missing.length} ${r.unit}(s)${missing.length > SHOWN ? `, the first ${SHOWN} shown` : ''}:`)
     for (const m of missing.slice(0, SHOWN)) say(`      ${m}`)
+  }
+  if (r.unlisted?.length) {
+    say(`  NOT REACHED   ${r.unlisted.length} named target(s) whose workspace never started:`)
+    for (const m of r.unlisted.slice(0, SHOWN)) say(`      ${m}`)
   }
   if (r.stopped) {
     say(`  STOPPED AT THE LIMIT: ${r.ended.length} process(es) ended by PID`)
@@ -530,24 +685,29 @@ async function named(args, limitS, milestone) {
     return STOP
   }
   if (r.code !== 0) {
-    say(`scoped test: FAILED, the runner exited ${r.code}${r.failed ? ` with ${r.failed} failing ${r.unit}(s)` : ''} (exit 1)`)
+    say(`scoped test: FAILED, the runner exited ${r.code}${failed ? ` with ${failed} failing test(s)` : ''} (exit 1)`)
     return FAIL
   }
   if (reached.size === 0) {
     say('scoped test: FAILED, the run reported no result, and a selection that ran nothing has not passed (exit 1)')
     return FAIL
   }
-  if (missing !== null && missing.length) {
-    say(`scoped test: FAILED, the runner exited 0 and left ${missing.length} ${r.unit}(s) of its selection unreached (exit 1)`)
+  if ((missing !== null && missing.length) || r.unlisted?.length) {
+    say(`scoped test: FAILED, the runner exited 0 and left part of its selection unreached (exit 1)`)
     return FAIL
   }
-  say(`scoped test: PASSED, ${reached.size} ${r.unit}(s) ran`)
+  if (r.unit !== 'suite' && passed === 0) {
+    say(`scoped test: FAILED, every one of the ${skipped} test(s) it reached was skipped, and a run that passed nothing has not passed (exit 1)`)
+    return FAIL
+  }
+  say(`scoped test: PASSED, ${reached.size} ${r.unit}(s) ran${r.unit === 'suite' ? '' : `: ${passed} test(s) passed, ${skipped} skipped${leftOut}`}`)
   return PASS
 }
 
 // ── the milestone run ───────────────────────────────────────────────────────────────────────────
 
 async function milestone(args) {
+  MODE = 'full'
   say('MILESTONE RUN: the full suite, with no wall-clock limit. Named tests run with `npm test -- <runner> <target...>` instead.')
   if (args.length && CONFIG.runners[args[0]]) return named(args, Infinity, true)
   const known = new Map(CONFIG.milestone.map((p) => [p.name, p]))
@@ -558,8 +718,8 @@ async function milestone(args) {
     const cwd = resolve(ROOT, part.cwd ?? '.')
     say()
     say(`===== milestone part ${part.name} =====`)
-    let code = 0
-    for (const words of part.commands) {
+    let code = part.commands?.length ? 0 : 'no command'
+    for (const words of part.commands ?? []) {
       const r = await runOne(resolveCommand(words, cwd), cwd, process.env, Infinity, () => {})
       code = r.code
       if (code !== 0) break
@@ -568,7 +728,7 @@ async function milestone(args) {
   }
   say()
   say('MILESTONE RUN, by part')
-  for (const r of results) say(`  ${r.name.padEnd(16)} ${r.code === 0 ? 'passed' : `FAILED (exit ${r.code})`}`)
+  for (const r of results) say(`  ${r.name.padEnd(16)} ${r.code === 0 ? 'passed' : r.code === 'no command' ? 'FAILED: the part names no command' : `FAILED (exit ${r.code})`}`)
   const failed = results.filter((r) => r.code !== 0).length
   say(failed ? `MILESTONE RUN: FAILED, ${failed} of ${results.length} part(s)` : `MILESTONE RUN: all ${results.length} part(s) passed`)
   return failed ? FAIL : PASS
@@ -577,15 +737,32 @@ async function milestone(args) {
 // ── entry ───────────────────────────────────────────────────────────────────────────────────────
 
 async function main(argv) {
-  if (argv[0] === '--milestone') return milestone(argv.slice(1))
-  let limitS = LIMIT_S
-  if (argv[0] === '--limit') {
-    const n = Number(argv[1])
-    if (!(Number.isInteger(n) && n > 0 && n <= LIMIT_S)) refuse(`--limit takes whole seconds from 1 to ${LIMIT_S} (got ${argv[1]})`)
-    limitS = n
-    argv = argv.slice(2)
+  const cut = argv.indexOf('--')
+  const before = cut < 0 ? argv : argv.slice(0, cut)
+  const after = cut < 0 ? [] : argv.slice(cut + 1)
+  const isLimit = (a) => a === '--limit' || a.startsWith('--limit=')
+  if (after.some(isLimit)) refuse("--limit goes before the runner's own --, which passes everything after it to the runner")
+  const event = process.env.npm_lifecycle_event
+  if (before[0] === '--milestone') {
+    if (event !== undefined && event !== 'test:full') refuse(`--milestone is not taken by 'npm run ${event}': the run with no limit is 'npm run test:full'`)
+    if (before.some(isLimit)) refuse('--limit is a scoped run’s, and the milestone run has no limit')
+    return milestone(argv.slice(1))
   }
-  return named(argv, limitS, false)
+  if (before.includes('--milestone')) refuse('--milestone is never a scoped run’s: the run with no limit is `npm run test:full`')
+  let limitS = LIMIT_S
+  const rest = []
+  for (let i = 0; i < before.length; i++) {
+    const a = before[i]
+    if (!isLimit(a)) {
+      rest.push(a)
+      continue
+    }
+    const value = a === '--limit' ? before[++i] : a.slice('--limit='.length)
+    const n = Number(value)
+    if (!(Number.isInteger(n) && n > 0 && n <= LIMIT_S)) refuse(`--limit takes whole seconds from 1 to ${LIMIT_S} (got ${value === undefined ? 'nothing' : `'${value}'`})`)
+    limitS = n
+  }
+  return named(cut < 0 ? rest : [...rest, '--', ...after], limitS, false)
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

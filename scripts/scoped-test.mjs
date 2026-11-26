@@ -542,9 +542,9 @@ const shownId = (id) => {
 /** What a suite guard's own progress records under .suite-guard/ say was started and not ended, among the
  *  records written since `since`: [{file, lastTest}]. A guard writes one line per event as it happens.
  *
- *  A SLOT'S RECORDS ARE READ IN THE ORDER ITS RUNS WROTE THEM. quintus's guard starts again the files whose
- *  worker did not start, up to three runs, and writes run N's events to progress-N.jsonl beside the first
- *  run's progress.jsonl (its progressOf). A file the first run queued and a later run ended is not open,
+ *  A SLOT'S RECORDS ARE READ IN THE ORDER ITS RUNS WROTE THEM. A guard may start again the files whose
+ *  worker did not start, up to three runs, writing run N's events to progress-N.jsonl beside the first
+ *  run's progress.jsonl. A file the first run queued and a later run ended is not open,
  *  so the records are read by that run number. Read in directory order, progress-2.jsonl came before
  *  progress.jsonl, and the first run's lines opened again a file the second run had ended. Each slot is
  *  read on its own, because a file ended in one slot says nothing about a run in another. */

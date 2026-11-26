@@ -336,6 +336,17 @@ class Overlay extends View implements Draft {
     list.splice(Math.min(position, list.length), 0, id)
     this.order.set(kind, list)
   }
+  /** The entities the overlay leaves, by kind, a kind holding none left out as `State.entitiesJson` leaves it out: what the content hash reads. */
+  entitiesJson(): { [kind: string]: { [id: string]: Json } } {
+    const out: { [kind: string]: { [id: string]: Json } } = {}
+    for (const kind of new Set([...this.base.entities.keys(), ...this.layer.keys()])) {
+      const ids = this.ids(kind)
+      if (ids.length === 0) continue
+      out[kind] = Object.fromEntries(ids.map((id) => [id, this.get(kind, id)! as Json]))
+    }
+    return out
+  }
+
   /** Starts keeping a kind's ids in order, from the order they have now. */
   private keep(kind: string): string[] {
     const list = this.ids(kind)
@@ -551,8 +562,12 @@ interface GestureState {
   actor: Actor
   /** Where the sequence of records stood: the step of a gesture is numbered from here, as if its last move had run alone. */
   seq: number
-  /** The content hash the log reaches: what a save made during the gesture holds. */
-  hash: string
+  /**
+   * The content hash the log reaches, which is that of the state the gesture began from: what a save made during the
+   * gesture holds. The open takes it only when the store holds it already, so an open hashes nothing; a save that finds
+   * none derives it from the state with the last move taken back, and keeps it here.
+   */
+  hash: string | undefined
   counters: ReadonlyMap<string, number>
   touched: number
   last: { records: readonly ChangeRecord[]; calls: Array<{ verb: string; input: Json; basis?: Json }>; ids: { [handle: string]: string }; changed: boolean } | null
@@ -692,7 +707,7 @@ class VerbStore implements Store {
     return { entities: plainCopy(this.state.entitiesJson()), counters: Object.fromEntries(this.state.counters), ...(Object.keys(order).length === 0 ? {} : { order }) }
   }
   save(): Saved {
-    return { base: plainCopy(this.base as unknown as Json) as unknown as Snapshot, baseHash: this.baseHash, log: plainCopy(this.entries as unknown as Json) as unknown as LogEntry[], hash: this.gesturing?.hash ?? this.hash(), counters: digestOfCounters(this.gesturing?.counters ?? this.state.counters), limit: this.limit }
+    return { base: plainCopy(this.base as unknown as Json) as unknown as Snapshot, baseHash: this.baseHash, log: plainCopy(this.entries as unknown as Json) as unknown as LogEntry[], hash: this.gesturing === null ? this.hash() : this.startHash(this.gesturing), counters: digestOfCounters(this.gesturing?.counters ?? this.state.counters), limit: this.limit }
   }
 
   lock(reason: string): () => void {
@@ -943,7 +958,7 @@ class VerbStore implements Store {
     const busy = this.busy()
     if (busy !== null) return { ok: false, refusal: busy }
     if (!this.registry.actors.includes(options.actor)) return unregistered(options.actor)
-    const open: GestureState = { actor: options.actor, seq: this.nextSeq, hash: this.hash(), counters: new Map(this.state.counters), touched: this.touched.length, last: null }
+    const open: GestureState = { actor: options.actor, seq: this.nextSeq, hash: this.cached, counters: new Map(this.state.counters), touched: this.touched.length, last: null }
     this.gesturing = open
     return {
       ok: true,
@@ -998,6 +1013,22 @@ class VerbStore implements Store {
     open.last = { records, calls: built.calls, ids: built.ids, changed: true }
     this.emit({ batch: this.nextBatch, cause: 'verb', actor: open.actor, records: Object.freeze([...built.reversal, ...records]) })
     return { ok: true, changed: true, records, ids: built.ids, trimmed: 0 }
+  }
+
+  /**
+   * The content hash of the state the gesture began from. The state stands at that start plus the gesture's last move, so
+   * an overlay that takes the move back holds the start, and nothing is committed.
+   */
+  private startHash(open: GestureState): string {
+    if (open.hash !== undefined) return open.hash
+    const made = open.last?.records ?? []
+    if (made.length === 0) return (open.hash = this.hash())
+    const start = new Overlay(this.registry, this.state, this.nextBatch, open.seq)
+    for (const r of made.slice().reverse()) {
+      const issue = start.reapply(inverse(r, r.seq))
+      if (issue !== null) throw new Error(`the state under the gesture is not its start plus its last move: ${issue.message}`)
+    }
+    return (open.hash = sha256(canonical(start.entitiesJson())))
   }
 
   /** Takes back the last move the gesture made, leaving the state it began from; returns the records that did it. */
